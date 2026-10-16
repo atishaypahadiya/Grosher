@@ -94,7 +94,7 @@ function CheckoutCard({ trip, summary, onFinish }: { trip: TripState; summary: T
           <tr className="saved">
             <th scope="row">Saved</th>
             <td>
-              {metres(saved)}, about {minutes(saved)}
+              {metres(saved)}, {minutes(saved)}
             </td>
           </tr>
         </tbody>

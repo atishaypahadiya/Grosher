@@ -37,13 +37,15 @@ export function App() {
         <span className="store-name">Demo Supercenter</span>
         <span className="mode">{trip ? (isDone(trip) ? "Checkout" : "On the trip") : "Plan"}</span>
       </header>
-      <StoreMap
-        store={store}
-        route={route}
-        currentNodeId={inTrip ? trip.route.legs[0]?.nodeId : null}
-        positionNodeId={inTrip ? trip.positionNodeId : null}
-        className="app-map"
-      />
+      <div className="map-wrap">
+        <StoreMap
+          store={store}
+          route={route}
+          currentNodeId={inTrip ? trip.route.legs[0]?.nodeId : null}
+          positionNodeId={inTrip ? trip.positionNodeId : null}
+          className="app-map"
+        />
+      </div>
       {trip && summary ? (
         <TripPanel
           store={store}

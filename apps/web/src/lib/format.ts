@@ -7,10 +7,11 @@ export function metres(m: number): string {
   return `${Math.round(m)} m`;
 }
 
+/** "about 4 min" / "under a minute" at shopping pace. */
 export function minutes(m: number): string {
   const min = m / WALK_MPS / 60;
   if (min < 1) return "under a minute";
-  return `${min.toFixed(min < 10 ? 1 : 0)} min`;
+  return `about ${min.toFixed(min < 10 ? 1 : 0)} min`;
 }
 
 const SIDE: Record<string, string> = { L: "left", R: "right" };

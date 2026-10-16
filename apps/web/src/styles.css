@@ -61,7 +61,10 @@ body {
 .brand { font-weight: 600; font-size: 18px; letter-spacing: 0.01em; }
 .store-name { color: var(--ink-soft); font-size: 15px; }
 
-.app-map { width: 100%; height: 100%; display: block; min-height: 0; }
+/* The map row is 1fr; the svg fills it via an absolutely positioned child so
+   its size never depends on percentage-height resolution for replaced elements. */
+.map-wrap { position: relative; min-height: 0; }
+.app-map { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
 .legend {
   display: flex;
@@ -156,7 +159,7 @@ textarea:focus-visible, input:focus-visible, .btn:focus-visible { outline: 2px s
 .next-where { margin: 4px 0 0; color: var(--ink-soft); }
 .actions { margin-top: 12px; align-items: stretch; }
 .actions .big { flex: 1 1 60%; margin-top: 0; }
-.actions .ghost { flex: 1 1 35%; }
+.actions .ghost { flex: 1 1 35%; padding: 0 10px; }
 .row.nowrap { flex-wrap: nowrap; margin-top: 0; }
 .row.nowrap input { flex: 1; }
 .add-item { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--line); }

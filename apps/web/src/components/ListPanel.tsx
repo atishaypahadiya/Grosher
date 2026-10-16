@@ -72,7 +72,7 @@ export function ListPanel({ store, catalog, text, onTextChange, plan, onPlan, on
             <>
               <p className="summary">
                 {plan.stops.length} {plan.stops.length === 1 ? "stop" : "stops"}, {metres(plan.route.distanceM)} of walking,
-                about {minutes(plan.route.distanceM)}.
+                {minutes(plan.route.distanceM)}.
               </p>
               <ol className="legs">
                 {plan.route.legs
