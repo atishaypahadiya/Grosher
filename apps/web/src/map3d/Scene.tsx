@@ -4,7 +4,7 @@
 import { Suspense, useEffect, useMemo, type RefObject } from "react";
 import { useThree } from "@react-three/fiber";
 import { Line } from "@react-three/drei";
-import { Bloom, EffectComposer, Vignette } from "@react-three/postprocessing";
+import { Bloom, EffectComposer } from "@react-three/postprocessing";
 import { CanvasTexture, SRGBColorSpace } from "three";
 import type { GraphNode, StoreGraph } from "@grosher/core";
 import { Fixtures } from "./Fixtures.tsx";
@@ -12,7 +12,7 @@ import { Ribbon } from "./Ribbon.tsx";
 import { OverlayProjector, type OverlayItem, type OverlayRegistry } from "./Overlay.tsx";
 import { CameraRig, type CameraRigHandle } from "./CameraRig.tsx";
 import { Perf } from "./Perf.tsx";
-import type { Framing } from "./layout.ts";
+import type { Focus } from "./CameraRig.tsx";
 
 const HAZE = "#F9D7A8";
 const DEEP = "#184D2E";
@@ -59,7 +59,7 @@ export interface SceneProps {
   litFixtureId: string | null;
   ribbon: { walked: string[]; current: string[]; ahead: string[] };
   overlay: { items: OverlayItem[]; registry: OverlayRegistry };
-  framing: Framing;
+  focus: Focus;
   flat: boolean;
   reducedMotion: boolean;
   cameraRef: RefObject<CameraRigHandle | null>;
@@ -67,7 +67,7 @@ export interface SceneProps {
   perf: boolean;
 }
 
-export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, footprint, litFixtureId, ribbon, overlay, framing, flat, reducedMotion, cameraRef, onOverZoomOut, perf }: SceneProps) {
+export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, footprint, litFixtureId, ribbon, overlay, focus, flat, reducedMotion, cameraRef, onOverZoomOut, perf }: SceneProps) {
   const edge = useMemo<[number, number, number][]>(() => {
     const { x, z, w, d } = footprint;
     return [
@@ -97,11 +97,10 @@ export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, fo
       </Suspense>
       <Ribbon nodes={nodes} walked={ribbon.walked} current={ribbon.current} ahead={ribbon.ahead} />
       <OverlayProjector items={overlay.items} registry={overlay.registry} />
-      <CameraRig ref={cameraRef} framing={framing} flat={flat} reducedMotion={reducedMotion} onOverZoomOut={onOverZoomOut} />
+      <CameraRig ref={cameraRef} focus={focus} flat={flat} reducedMotion={reducedMotion} onOverZoomOut={onOverZoomOut} />
 
       <EffectComposer multisampling={0}>
         <Bloom luminanceThreshold={0.9} intensity={0.6} mipmapBlur />
-        <Vignette offset={0.3} darkness={0.35} />
       </EffectComposer>
       {perf && <Perf />}
     </>

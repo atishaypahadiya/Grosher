@@ -8,7 +8,8 @@ import type { StoreBundle } from "@grosher/stores";
 import type { TripState } from "../lib/trip.ts";
 import { Scene } from "./Scene.tsx";
 import type { CameraRigHandle } from "./CameraRig.tsx";
-import { fixtureBox, fixtureForLocation, frameLeg } from "./layout.ts";
+import { fixtureBox, fixtureForLocation } from "./layout.ts";
+import type { Focus } from "./CameraRig.tsx";
 import { OverlayDom, useOverlayItems, type NextLabel, type OverlayRegistry } from "./Overlay.tsx";
 
 export interface TripMap3DProps {
@@ -70,10 +71,11 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
     () => ({ walked: trip.visited, current: current?.path ?? [], ahead: legs.slice(1).flatMap((l) => l.path) }),
     [trip.visited, current, legs],
   );
-  const framing = useMemo(() => {
-    const pts = (current?.path ?? [trip.positionNodeId]).map((id) => nodes.get(id)).filter((n): n is NonNullable<typeof n> => !!n);
-    return frameLeg(pts, nextNode);
-  }, [current, trip.positionNodeId, nodes, nextNode]);
+  const youNode = nodes.get(trip.positionNodeId);
+  const focus = useMemo<Focus>(
+    () => ({ you: youNode ? { x: youNode.x, y: youNode.y } : { x: 0, y: 0 }, next: nextNode ? { x: nextNode.x, y: nextNode.y } : undefined }),
+    [youNode, nextNode],
+  );
 
   const registry = useRef<OverlayRegistry>(new Map()).current;
   const items = useOverlayItems({
@@ -159,7 +161,7 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
           litFixtureId={litFixtureId}
           ribbon={ribbon}
           overlay={{ items, registry }}
-          framing={framing}
+          focus={focus}
           flat={flat}
           reducedMotion={reducedMotion}
           cameraRef={cameraRef}
@@ -167,6 +169,7 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
           perf={perf}
         />
       </Canvas>
+      <div className="trip-vignette" aria-hidden />
       <OverlayDom items={items} registry={registry} />
     </div>
   );

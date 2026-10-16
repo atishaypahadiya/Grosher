@@ -106,30 +106,4 @@ export interface Framing {
   distance: number;
 }
 
-/** Frame a set of points with the "next" point biased toward the upper third. */
-export function frameLeg(points: { x: number; y: number }[], next: { x: number; y: number } | undefined): Framing {
-  if (points.length === 0) return { tx: 0, tz: 0, distance: 30 };
-  let x0 = Infinity;
-  let x1 = -Infinity;
-  let y0 = Infinity;
-  let y1 = -Infinity;
-  for (const p of points) {
-    x0 = Math.min(x0, p.x);
-    x1 = Math.max(x1, p.x);
-    y0 = Math.min(y0, p.y);
-    y1 = Math.max(y1, p.y);
-  }
-  let tx = (x0 + x1) / 2;
-  let tz = (y0 + y1) / 2;
-  const extent = Math.max(x1 - x0, y1 - y0, 6);
-  // 42° horizontal field: visible width ≈ 0.77 × distance. Frame the leg with
-  // room around it, then slide the target toward the camera so the leg sits in
-  // the upper part of the screen, above the bottom sheet.
-  // Keep enough of the store in frame to orient by: never closer than 36 m.
-  const distance = Math.min(MAX_DISTANCE, Math.max(36, extent * 1.6 + 14));
-  if (next) tx += (next.x - tx) * 0.2;
-  tz += distance * 0.18;
-  return { tx, tz, distance };
-}
-
 export const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);

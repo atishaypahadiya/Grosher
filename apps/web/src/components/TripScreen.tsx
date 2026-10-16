@@ -68,6 +68,7 @@ export function TripScreen({ bundle, router, trip, flat, onFlatChange, onGotIt, 
       className="trip-flat"
     />
   );
+  const vignette = <div className="trip-vignette" aria-hidden />;
 
   return (
     <div className="trip-screen">
@@ -77,7 +78,10 @@ export function TripScreen({ bundle, router, trip, flat, onFlatChange, onGotIt, 
             <TripMap3D bundle={bundle} trip={trip} flat={flat} onFlatChange={onFlatChange} nextLabel={nextLabel} checkoutLabel={checkoutLabel} perf={perf} />
           </Suspense>
         ) : (
-          flatMap
+          <>
+            {flatMap}
+            {vignette}
+          </>
         )}
       </div>
 

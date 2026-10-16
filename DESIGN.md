@@ -101,7 +101,7 @@ Stack: `three` + `@react-three/fiber` + `@react-three/drei` + `@react-three/post
    - walked: white 40%, width 2px, solid
    - current leg: white 100%, width 2px, with a second copy at width 5px, 35% opacity, blurred by bloom (the glow)
    - ahead: white 85%, width 2px, dashed `1 6`
-6. **Markers** (always face the camera, constant screen size via drei `Html` or billboard sprites):
+6. **Markers** (always face the camera, constant screen size: one DOM overlay outside the canvas, every marker projected each rendered frame; no per-marker React roots, no draw calls):
    - you: lime dot 11px with a 28px halo (pulsing)
    - next stop: lime point 8px on the shelf face at location height; a 1px lime leader rising to its label
    - ahead stops: white 12px circle with the number in Outfit 600 soil
@@ -109,12 +109,12 @@ Stack: `three` + `@react-three/fiber` + `@react-three/drei` + `@react-three/post
    - chosen lane: lime point; other lanes nothing
    - entrance: white ring with arrow-in glyph; exit: lime ring
 7. **Labels** (drei `Html`, screen space, no scaling): next stop = eyebrow in lime (`DAIRY · A10 · 6 OF 8`) over the item name (Outfit 500, 17px) over distance (Outfit 300, 12px, white 85%), with `text-shadow: 0 1px 10px rgba(0,0,0,.25)`. Checkout callout = eyebrow `CHECKOUT · LANE 5` over `2 min walk (118 m)`. Only these two labels exist on the map.
-8. **Post**: `Bloom` (threshold .9, intensity .6, mipmap blur) and a subtle `Vignette` (deep green, .35). No DoF on phones by default; enable behind a flag for the launch video.
+8. **Post**: `Bloom` (threshold .9, intensity .6, mipmap blur). The vignette is CSS, not a pass: a full-screen overlay on the trip screen above the canvas and below the markers, `linear-gradient(180deg, rgba(249,215,168,.35) 0%, rgba(249,215,168,0) 30%, rgba(24,77,46,0) 65%, rgba(24,77,46,.55) 100%)`, `pointer-events: none`. No DoF on phones by default; enable behind a flag for the launch video.
 
 **Camera**
 
-- Default: perspective, FOV 42, tilt 58° from vertical, yaw −18°, framing the current leg with the next stop in the upper third. On every reroute / check-off the camera eases (480ms) to re-frame the new current leg.
-- Gestures: one-finger drag orbits yaw ±25° and pans; pinch zooms (distance 12–60 m); the header **flatten** button (and pinching past max zoom-out) tweens tilt to 0° top-down, same lighting, same markers; tap again to tilt back. Flatten state persists in `localStorage`.
+- Default: perspective, **42° horizontal** field (the vertical angle is derived from the aspect ratio and clamped to 42–80°), tilt 58° from vertical, yaw −18°. Framing is solved in screen space: the next stop sits in the upper third of the viewport and the you-dot in the lower third, never centred, so the bottom sheet does not cover the leg. Minimum framing distance 36 m, so the leg always has store around it. On every reroute / check-off the camera eases (480ms) to the new framing.
+- Gestures: one-finger drag pans; shift-drag or a two-finger twist orbits yaw ±25°; pinch and wheel zoom (distance 12–90 m, the whole demo store needs ~90 m at this field); the header **flatten** button (and pinching past max zoom-out) tweens tilt to top-down, same lighting, same markers; tap again to tilt back. Flatten state persists in `localStorage`.
 
 **Lighting**: hemisphere light (sky `--haze`, ground `--deep`, .9) + one directional from front-left (.5). No shadows (cost on phone).
 

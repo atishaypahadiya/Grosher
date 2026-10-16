@@ -4,7 +4,15 @@
 
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
+import { PerspectiveCamera, Vector3 } from "three";
 import { easeOutCubic, MAX_DISTANCE, MIN_DISTANCE, type Framing } from "./layout.ts";
+
+/** What the camera should frame: where the shopper is, and the next stop if any. */
+export interface Focus {
+  you: { x: number; y: number };
+  next?: { x: number; y: number };
+}
+const MIN_FRAME = 36;
 
 export const DEFAULT_TILT = 58;
 export const DEFAULT_YAW = -18;
@@ -16,6 +24,56 @@ const H_FOV = 42; // the design's 42° is the horizontal field; three's fov is v
 
 /** Vertical fov (deg) that gives a 42° horizontal field at this aspect, kept between 42° and 80°. */
 export const verticalFov = (aspect: number) => Math.min(80, Math.max(42, (2 * Math.atan(Math.tan((H_FOV * Math.PI) / 360) / aspect) * 180) / Math.PI));
+
+function placeCamera(cam: PerspectiveCamera, p: { tx: number; tz: number; distance: number; tilt: number; yaw: number }) {
+  const tilt = (Math.max(p.tilt, 1.5) * Math.PI) / 180;
+  const yaw = (p.yaw * Math.PI) / 180;
+  cam.position.set(p.tx + p.distance * Math.sin(tilt) * Math.sin(yaw), p.distance * Math.cos(tilt), p.tz + p.distance * Math.sin(tilt) * Math.cos(yaw));
+  cam.up.set(0, 1, 0);
+  cam.lookAt(p.tx, 0, p.tz);
+  cam.updateProjectionMatrix();
+  cam.updateMatrixWorld(true);
+}
+
+/**
+ * Solve the framing in screen space: the next stop pinned a third from the
+ * top; the distance chosen so the you-dot falls a third from the bottom when
+ * the leg has that much depth (a leg along the back wall has none, and then
+ * both sit in the upper third, clear of the bottom sheet); horizontally
+ * centred between them. Iterates a few times on a scratch camera.
+ */
+export function solveFraming(focus: Focus, flat: boolean, aspect: number, yawDeg = flat ? 0 : DEFAULT_YAW): Framing {
+  const fov = verticalFov(aspect);
+  const tilt = flat ? 2 : DEFAULT_TILT;
+  const cam = new PerspectiveCamera(fov, aspect, 0.5, 400);
+  const v = new Vector3();
+  const ndc = (p: { x: number; y: number }) => v.set(p.x, 0.6, p.y).project(cam).clone();
+  const yawRad = (yawDeg * Math.PI) / 180;
+  const f = { x: -Math.sin(yawRad), z: -Math.cos(yawRad) }; // screen-up along the ground
+  const r = { x: Math.cos(yawRad), z: -Math.sin(yawRad) }; // screen-right along the ground
+  let tx = focus.next ? (focus.you.x + focus.next.x) / 2 : focus.you.x;
+  let tz = focus.next ? (focus.you.y + focus.next.y) / 2 : focus.you.y;
+  let distance = MIN_FRAME;
+  const groundPerNdc = () => (distance * Math.tan((fov * Math.PI) / 360)) / (flat ? 1 : Math.sin((tilt * Math.PI) / 180));
+  for (let i = 0; i < 8; i++) {
+    placeCamera(cam, { tx, tz, distance, tilt, yaw: yawDeg });
+    const you = ndc(focus.you);
+    const next = focus.next ? ndc(focus.next) : null;
+    if (next) {
+      const spread = next.y - you.y; // want +2/3 (next above you)
+      if (spread > 0.05) distance = Math.min(MAX_DISTANCE, Math.max(MIN_FRAME, distance * (spread / (2 / 3))));
+      placeCamera(cam, { tx, tz, distance, tilt, yaw: yawDeg });
+    }
+    const a = ndc(focus.you);
+    const b = focus.next ? ndc(focus.next) : a;
+    const errY = focus.next ? b.y - 1 / 3 : a.y; // next stop at the upper third; alone, you at centre
+    const midX = (a.x + b.x) / 2; // want 0
+    const g = groundPerNdc();
+    tx += f.x * errY * g + r.x * midX * g * aspect;
+    tz += f.z * errY * g + r.z * midX * g * aspect;
+  }
+  return { tx, tz, distance };
+}
 
 interface Pose {
   tx: number;
@@ -34,16 +92,17 @@ export interface CameraRigHandle {
 }
 
 export interface CameraRigProps {
-  framing: Framing;
+  focus: Focus;
   flat: boolean;
   reducedMotion?: boolean;
   /** fires when pinching out past max zoom (caller may flatten) */
   onOverZoomOut?: () => void;
 }
 
-export const CameraRig = forwardRef<CameraRigHandle, CameraRigProps>(function CameraRig({ framing, flat, reducedMotion, onOverZoomOut }, ref) {
+export const CameraRig = forwardRef<CameraRigHandle, CameraRigProps>(function CameraRig({ focus, flat, reducedMotion, onOverZoomOut }, ref) {
   const { camera, invalidate, size } = useThree();
-  const pose = useRef<Pose>({ ...framing, tilt: flat ? 2 : DEFAULT_TILT, yaw: flat ? 0 : DEFAULT_YAW });
+  const initial = solveFraming(focus, flat, size.width / size.height);
+  const pose = useRef<Pose>({ ...initial, tilt: flat ? 2 : DEFAULT_TILT, yaw: flat ? 0 : DEFAULT_YAW });
   const from = useRef<Pose>({ ...pose.current });
   const to = useRef<Pose>({ ...pose.current });
   const t0 = useRef<number | null>(null);
@@ -68,11 +127,13 @@ export const CameraRig = forwardRef<CameraRigHandle, CameraRigProps>(function Ca
     invalidate();
   };
 
-  // New framing (reroute / check-off) or flat toggle.
+  // New focus (reroute / check-off), flat toggle or resize: re-solve and ease there.
   useEffect(() => {
-    animateTo({ ...framing, tilt: flat ? 2 : DEFAULT_TILT, yaw: flat ? 0 : Math.max(-YAW_RANGE + DEFAULT_YAW, Math.min(YAW_RANGE + DEFAULT_YAW, to.current.yaw)) });
+    const yaw = flat ? 0 : Math.max(-YAW_RANGE + DEFAULT_YAW, Math.min(YAW_RANGE + DEFAULT_YAW, to.current.yaw));
+    const framing = solveFraming(focus, flat, size.width / size.height, yaw);
+    animateTo({ ...framing, tilt: flat ? 2 : DEFAULT_TILT, yaw });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [framing.tx, framing.tz, framing.distance, flat]);
+  }, [focus.you.x, focus.you.y, focus.next?.x, focus.next?.y, flat, size.width, size.height]);
 
   useImperativeHandle(ref, () => ({
     pan: (dx, dy) => {
