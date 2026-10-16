@@ -1,0 +1,14 @@
+{
+  "name": "grosher",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Grocery navigation: shortest path through the store.",
+  "engines": { "node": ">=22.18" },
+  "workspaces": ["packages/*", "apps/*"],
+  "scripts": {
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "bench": "npm run bench -w @grosher/core",
+    "dev": "npm run dev -w @grosher/web"
+  }
+}
