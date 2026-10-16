@@ -42,7 +42,7 @@ export function ListPanel({ store, catalog, text, onTextChange, plan, onPlan, on
         <textarea
           value={text}
           onChange={(e) => onTextChange(e.target.value)}
-          rows={Math.min(10, Math.max(4, names.length + 1))}
+          rows={Math.min(6, Math.max(3, names.length + 1))}
           placeholder={"milk\neggs\nbananas"}
           autoCapitalize="none"
           autoCorrect="off"
@@ -71,7 +71,7 @@ export function ListPanel({ store, catalog, text, onTextChange, plan, onPlan, on
           ) : (
             <>
               <p className="summary">
-                {plan.stops.length} {plan.stops.length === 1 ? "stop" : "stops"}, {metres(plan.route.distanceM)} of walking,
+                {plan.stops.length} {plan.stops.length === 1 ? "stop" : "stops"}, {metres(plan.route.distanceM)} of walking,{" "}
                 {minutes(plan.route.distanceM)}.
               </p>
               <ol className="legs">

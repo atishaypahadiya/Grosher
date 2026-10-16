@@ -285,7 +285,14 @@ export function StoreMap({ store, route, currentNodeId, positionNodeId, onTap, c
         ))}
       </g>
 
-      {/* entrance, exit, checkouts */}
+      {/* route */}
+      {routePts.length > 1 && (
+        <g data-layer="route" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points={routePts.map((p) => `${p.x},${p.y}`).join(" ")} stroke="var(--map-floor, #EEF1EE)" strokeWidth={1.7} />
+          <polyline points={routePts.map((p) => `${p.x},${p.y}`).join(" ")} stroke="var(--map-route, #2457F5)" strokeWidth={0.9} />
+        </g>
+      )}
+      {/* entrance, exit, checkouts: above the route */}
       <g data-layer="landmarks">
         {store.nodes.map((n) => {
           if (checkouts.has(n.id))
@@ -298,13 +305,6 @@ export function StoreMap({ store, route, currentNodeId, positionNodeId, onTap, c
         })}
       </g>
 
-      {/* route */}
-      {routePts.length > 1 && (
-        <g data-layer="route" fill="none" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points={routePts.map((p) => `${p.x},${p.y}`).join(" ")} stroke="var(--map-floor, #EEF1EE)" strokeWidth={1.7} />
-          <polyline points={routePts.map((p) => `${p.x},${p.y}`).join(" ")} stroke="var(--map-route, #2457F5)" strokeWidth={0.9} />
-        </g>
-      )}
       {/* aisle signs: above the route, below stop markers */}
       <g data-layer="signs" fontFamily="Barlow, system-ui, sans-serif" fontSize={1.1} fontWeight={600} textAnchor="middle">
         {signs.map((s) => (
