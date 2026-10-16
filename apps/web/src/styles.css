@@ -372,6 +372,7 @@ button { cursor: pointer; touch-action: manipulation; }
 
 .ed-map { position: relative; min-width: 0; min-height: 0; background: var(--ed-canvas); }
 .ed-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.ed-canvas.underlay-live { cursor: move; }
 .layer-pills { position: absolute; top: 14px; right: 14px; display: flex; gap: 8px; }
 .scale-bar { position: absolute; left: 20px; bottom: 16px; display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--soil); }
 .scale-bar .bar { height: 0; border-top: 1.5px solid var(--soil); position: relative; }

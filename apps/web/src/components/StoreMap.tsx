@@ -60,6 +60,8 @@ export interface StoreMapProps {
   onTap?: (pt: Pt) => void;
   /** pointer position in map metres, null when it leaves */
   onHover?: (pt: Pt | null) => void;
+  /** when set, drags and pinch / wheel scaling are handed to these instead of moving the view */
+  gestureOverride?: { onDrag: (deltaM: Pt) => void; onScale: (factor: number, atM: Pt) => void } | null;
   /** current view box and map units per CSS pixel, for scale bars */
   onViewChange?: (view: ViewBox, unitsPerPx: number) => void;
   /** extra SVG in map coordinates, drawn on top */
@@ -108,6 +110,9 @@ interface Gesture {
   moved: boolean;
   a: Pt;
   b?: Pt;
+  /** last seen pointer positions, for incremental deltas */
+  last: Pt;
+  lastB?: Pt;
 }
 
 function pathPoints(ids: string[], nodes: Map<string, GraphNode>): Pt[] {
@@ -152,6 +157,7 @@ export function StoreMap({
   onTap,
   onHover,
   onViewChange,
+  gestureOverride,
   children,
   className,
 }: StoreMapProps) {
@@ -212,7 +218,7 @@ export function StoreMap({
   };
   const restartGesture = (moved: boolean) => {
     const ps = [...pointers.current.values()];
-    gesture.current = ps.length ? { view: viewRef.current, moved, a: ps[0], b: ps[1] } : null;
+    gesture.current = ps.length ? { view: viewRef.current, moved, a: ps[0], b: ps[1], last: ps[0], lastB: ps[1] } : null;
   };
   const onPointerDown = (e: ReactPointerEvent<SVGSVGElement>) => {
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -232,9 +238,25 @@ export function StoreMap({
       if (Math.hypot(dx, dy) > 4) g.moved = true;
       if (!g.moved) return;
       const u = unitsPerPx(g.view);
-      setView({ ...g.view, x: g.view.x - dx * u, y: g.view.y - dy * u });
+      if (gestureOverride) {
+        gestureOverride.onDrag({ x: (ps[0].x - g.last.x) * u, y: (ps[0].y - g.last.y) * u });
+      } else {
+        setView({ ...g.view, x: g.view.x - dx * u, y: g.view.y - dy * u });
+      }
+      g.last = ps[0];
     } else if (g.b) {
       g.moved = true;
+      if (gestureOverride && g.lastB) {
+        const u = unitsPerPx(g.view);
+        const f = dist(ps[0], ps[1]) / Math.max(dist(g.last, g.lastB), 1);
+        const m0 = mid(g.last, g.lastB);
+        const m1 = mid(ps[0], ps[1]);
+        gestureOverride.onScale(f, clientToMap(m1.x, m1.y, g.view));
+        gestureOverride.onDrag({ x: (m1.x - m0.x) * u, y: (m1.y - m0.y) * u });
+        g.last = ps[0];
+        g.lastB = ps[1];
+        return;
+      }
       const f = dist(ps[0], ps[1]) / Math.max(dist(g.a, g.b), 1);
       const m0 = mid(g.a, g.b);
       const m1 = mid(ps[0], ps[1]);
@@ -257,12 +279,18 @@ export function StoreMap({
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
       const v = viewRef.current;
-      setView(zoomAt(v, Math.exp(-e.deltaY * 0.0015), clientToMap(e.clientX, e.clientY, v), maxW));
+      const f = Math.exp(-e.deltaY * 0.0015);
+      const at = clientToMap(e.clientX, e.clientY, v);
+      const o = overrideRef.current;
+      if (o) o.onScale(f, at);
+      else setView(zoomAt(v, f, at, maxW));
     };
     svg.addEventListener("wheel", onWheel, { passive: false });
     return () => svg.removeEventListener("wheel", onWheel);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [maxW]);
+  const overrideRef = useRef(gestureOverride);
+  overrideRef.current = gestureOverride;
 
   // ---- derived drawing data
   const deptColor = useMemo(() => new Map((store.departments ?? []).map((d) => [d.id, d.color])), [store]);

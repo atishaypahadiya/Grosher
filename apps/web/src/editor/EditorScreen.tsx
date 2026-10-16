@@ -37,6 +37,7 @@ import {
   type Selection,
 } from "./model.ts";
 import { IconCorridor, IconCube, IconCursor, IconDoor, IconFixture, IconImage, IconPin, IconRuler } from "../components/Icons.tsx";
+import { moveBy, scaleAbout, withWidth, type Underlay } from "./underlay.ts";
 
 type Tool = "select" | "corridor" | "fixture" | "location" | "doors" | "texture" | "measure";
 const TOOLS: { id: Tool; label: string; icon: ReactNode }[] = [
@@ -55,16 +56,6 @@ interface Layers {
   locations: boolean;
   textures: boolean;
   underlay: boolean;
-}
-
-interface Underlay {
-  url: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  opacity: number;
-  aspect: number;
 }
 
 const draftKey = (storeId: string) => `grosher.editor.${storeId}`;
@@ -227,6 +218,13 @@ export function EditorScreen({ bundle, onExit }: { bundle: StoreBundle; onExit: 
       ? { nodeId: chainFrom }
       : null;
 
+  const underlayLive = !!underlay && layers.underlay && !underlay.locked && tool === "select";
+  const underlayGestures = underlayLive
+    ? {
+        onDrag: (d: Pt) => setUnderlay((u) => (u ? moveBy(u, d) : u)),
+        onScale: (f: number, at: Pt) => setUnderlay((u) => (u ? scaleAbout(u, f, at) : u)),
+      }
+    : null;
   const scaleBarPx = 10 / viewInfo.upp;
   const measureM = measure.length === 2 ? Math.hypot(measure[1].x - measure[0].x, measure[1].y - measure[0].y) : null;
   const store: StoreGraph = draft.store;
@@ -289,8 +287,12 @@ export function EditorScreen({ bundle, onExit }: { bundle: StoreBundle; onExit: 
           onTap={onTap}
           onHover={setHover}
           onViewChange={(view, upp) => setViewInfo({ view, upp })}
-          className="ed-canvas"
+          gestureOverride={underlayGestures}
+          className={`ed-canvas${underlayLive ? " underlay-live" : ""}`}
         >
+          {underlayLive && underlay && (
+            <rect x={underlay.x} y={underlay.y} width={underlay.w} height={underlay.h} fill="none" stroke="#D4FF4A" strokeWidth={viewInfo.upp * 2} strokeDasharray={`${viewInfo.upp * 6} ${viewInfo.upp * 4}`} pointerEvents="none" />
+          )}
           {rectA && hover && (
             <rect x={Math.min(rectA.x, hover.x)} y={Math.min(rectA.y, hover.y)} width={Math.abs(hover.x - rectA.x)} height={Math.abs(hover.y - rectA.y)} fill="rgba(212,255,74,0.35)" stroke="#0F2A1A" strokeWidth={viewInfo.upp} strokeDasharray={`${viewInfo.upp * 4} ${viewInfo.upp * 4}`} />
           )}
@@ -538,11 +540,15 @@ function ToolOptions(p: ToolOptionsProps) {
                 if (!f) return;
                 const bmp = await createImageBitmap(f);
                 const w = 60;
-                p.setUnderlay({ url: URL.createObjectURL(f), x: 0, y: 0, w, h: (w * bmp.height) / bmp.width, opacity: 0.5, aspect: bmp.width / bmp.height });
+                p.setUnderlay({ url: URL.createObjectURL(f), x: 0, y: 0, w, h: (w * bmp.height) / bmp.width, opacity: 0.5, aspect: bmp.width / bmp.height, locked: false });
               }}
             />
           </label>
           {p.underlay && (
+            <>
+              <button type="button" className={`pill-s${p.underlay.locked ? "" : " on"}`} aria-pressed={!p.underlay.locked} onClick={() => p.setUnderlay({ ...p.underlay!, locked: !p.underlay!.locked })}>
+                {p.underlay.locked ? "Locked · tap to move and scale" : "Unlocked · drag moves, scroll or pinch scales"}
+              </button>
             <div className="ed-grid-3">
               <label className="ed-field">
                 <span className="ed-label">x (m)</span>
@@ -554,13 +560,14 @@ function ToolOptions(p: ToolOptionsProps) {
               </label>
               <label className="ed-field">
                 <span className="ed-label">width (m)</span>
-                <input type="number" value={p.underlay.w} onChange={(e) => p.setUnderlay({ ...p.underlay!, w: Number(e.target.value), h: Number(e.target.value) / p.underlay!.aspect })} />
+                <input type="number" value={p.underlay.w} onChange={(e) => p.setUnderlay(withWidth(p.underlay!, Number(e.target.value)))} />
               </label>
               <label className="ed-field">
                 <span className="ed-label">opacity</span>
                 <input type="range" min="0" max="1" step="0.05" value={p.underlay.opacity} onChange={(e) => p.setUnderlay({ ...p.underlay!, opacity: Number(e.target.value) })} />
               </label>
             </div>
+            </>
           )}
           <span className="eyebrow soil ed-section">Draft</span>
           <p className="ed-sub">Edits autosave in this browser. Export JSON or Write to package to ship them.</p>
