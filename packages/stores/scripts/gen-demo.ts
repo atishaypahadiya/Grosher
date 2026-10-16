@@ -1,5 +1,8 @@
-// A synthetic Walmart-Supercenter-style grocery side, used for tests and
-// benchmarks until the real Story Rd / Almaden map exists. Units: meters.
+// Generates data/demo-supercenter/{store,catalog}.json: a synthetic
+// Walmart-Supercenter-style grocery side, used for tests and benchmarks
+// until the real Story Rd / Almaden map exists. Units: meters.
+//
+// Run: npm run gen:demo -w @grosher/stores
 //
 //   y=0   ┌──────────────── back wall: meat / dairy ─────────────────┐
 //   y=12  │ ┬   ┬   ┬   ┬   ┬   ┬   ┬   ┬   ┬   ┬   ┬   ┬           │
@@ -9,7 +12,9 @@
 //   y=60  │      ║  ║  ║  ║  ║   checkout lanes (one-way)            │
 //   y=66  └──────╨──╨──╨──╨──╨───────────────── front ── exit/entry ─┘
 
-import type { GraphEdge, GraphNode, ShelfLocation, StoreGraph, Stop } from "../types.ts";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import type { GraphEdge, GraphNode, ShelfLocation, StoreGraph, Stop } from "@grosher/core";
 
 const AISLES = 12;
 const AISLE_X0 = 10;
@@ -21,7 +26,7 @@ const RIGHT_X = AISLE_X0 + AISLE_GAP * (AISLES - 1) + 6; // 60
 const LANE_Y = 60;
 const FRONT_CORRIDOR_Y = 66;
 
-export function makeDemoStore(): StoreGraph {
+function makeDemoStore(): StoreGraph {
   const nodes: GraphNode[] = [];
   const edges: GraphEdge[] = [];
   const locations: ShelfLocation[] = [];
@@ -121,7 +126,7 @@ export function makeDemoStore(): StoreGraph {
 }
 
 /** Catalog of resolved items for the demo store. */
-export const DEMO_ITEMS: Stop[] = [
+const DEMO_ITEMS: Stop[] = [
   { id: "bananas", name: "Bananas", locationIds: ["PRODUCE-6"], tags: ["produce"] },
   { id: "spinach", name: "Spinach", locationIds: ["PRODUCE-18"], tags: ["produce"] },
   { id: "onions", name: "Onions", locationIds: ["PRODUCE-30"], tags: ["produce"] },
@@ -153,3 +158,9 @@ export const DEMO_ITEMS: Stop[] = [
   { id: "berries", name: "Frozen berries", locationIds: ["A11-32"], tags: ["frozen"] },
   { id: "snacks", name: "Granola bars", locationIds: ["A5-20", "END-6"] },
 ];
+
+const out = join(import.meta.dirname, "..", "data", "demo-supercenter");
+mkdirSync(out, { recursive: true });
+writeFileSync(join(out, "store.json"), JSON.stringify(makeDemoStore(), null, 2) + "\n");
+writeFileSync(join(out, "catalog.json"), JSON.stringify(DEMO_ITEMS, null, 2) + "\n");
+console.log(`wrote ${out}`);

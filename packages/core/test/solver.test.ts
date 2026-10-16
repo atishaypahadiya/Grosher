@@ -1,9 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { Router, WalkGraph, type Stop } from "../src/index.ts";
-import { DEMO_ITEMS, makeDemoStore } from "../src/fixtures/demoStore.ts";
+import { demoSupercenter } from "@grosher/stores";
 
-const router = new Router(new WalkGraph(makeDemoStore()));
+const { store: DEMO_STORE, catalog: DEMO_ITEMS } = demoSupercenter;
+
+const router = new Router(new WalkGraph(DEMO_STORE));
 
 function rng(seed: number) {
   return () => {

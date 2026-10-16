@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "description": "Grosher routing core: store graph, Dijkstra, Held-Karp / 2-opt solver with shopping constraints, live reroute.",
-  "engines": { "node": ">=22.18" },
+  "engines": {
+    "node": ">=22.18"
+  },
   "scripts": {
     "test": "node --test test/*.test.ts",
     "bench": "node bench/bench.ts",
@@ -12,6 +14,10 @@
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
-    "typescript": "^5.6.0"
+    "typescript": "^5.6.0",
+    "@grosher/stores": "*"
+  },
+  "exports": {
+    ".": "./src/index.ts"
   }
 }

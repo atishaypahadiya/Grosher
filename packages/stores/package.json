@@ -1,0 +1,21 @@
+{
+  "name": "@grosher/stores",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Grosher store data: StoreGraph + item catalog per store, as JSON.",
+  "engines": { "node": ">=22.18" },
+  "exports": { ".": "./src/index.ts" },
+  "scripts": {
+    "test": "node --test test/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "gen:demo": "node scripts/gen-demo.ts"
+  },
+  "dependencies": {
+    "@grosher/core": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}

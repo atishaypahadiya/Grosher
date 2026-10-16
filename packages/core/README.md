@@ -9,16 +9,14 @@ Routing core for Grosher: turns a grocery list into one line through the store, 
 | `src/types.ts` | Store graph, shelf locations, stops, weights, route types |
 | `src/graph.ts` | Builds the walkable graph, splits aisle edges at shelf locations (virtual nodes), Dijkstra |
 | `src/solver.ts` | Held–Karp (exact, ≤13 stops) and greedy + 2-opt + Or-opt (above), multi-location items, constraint penalties, reroute, list-order baseline |
-| `src/fixtures/demoStore.ts` | Synthetic Supercenter grocery side + 30 items, until the real store map exists |
-| `test/solver.test.ts` | DP vs brute force, heuristic gap, cold-last, path continuity, reroute |
+| `test/solver.test.ts` | DP vs brute force, heuristic gap, cold-last, path continuity, reroute (on the demo store from `@grosher/stores`) |
 | `bench/bench.ts` | Grosher route vs walking the list in typed order |
 
 ## Run
 
-Needs Node ≥ 22.18 (runs `.ts` directly, no build step).
+Needs Node ≥ 22.18 (runs `.ts` directly, no build step). Install from the repo root (`npm install`), then here:
 
 ```bash
-npm install
 npm test
 npm run bench
 npm run typecheck

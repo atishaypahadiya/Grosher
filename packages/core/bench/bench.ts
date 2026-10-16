@@ -2,9 +2,11 @@
 // Run: npm run bench
 
 import { Router, WalkGraph, type Stop } from "../src/index.ts";
-import { DEMO_ITEMS, makeDemoStore } from "../src/fixtures/demoStore.ts";
+import { demoSupercenter } from "@grosher/stores";
 
-const router = new Router(new WalkGraph(makeDemoStore()));
+const { store: DEMO_STORE, catalog: DEMO_ITEMS } = demoSupercenter;
+
+const router = new Router(new WalkGraph(DEMO_STORE));
 const WALK_MPS = 1.0; // shopping pace with a cart, m/s (rough)
 
 function rng(seed: number) {
