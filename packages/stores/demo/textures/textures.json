@@ -1,0 +1,65 @@
+{
+  "produce": {
+    "file": "produce.jpg",
+    "w": 512,
+    "h": 512,
+    "shotAt": null,
+    "repeatMeters": 2
+  },
+  "dairy": {
+    "file": "dairy.jpg",
+    "w": 512,
+    "h": 512,
+    "shotAt": null,
+    "repeatMeters": 2
+  },
+  "frozen": {
+    "file": "frozen.jpg",
+    "w": 512,
+    "h": 512,
+    "shotAt": null,
+    "repeatMeters": 2
+  },
+  "bakery": {
+    "file": "bakery.jpg",
+    "w": 512,
+    "h": 512,
+    "shotAt": null,
+    "repeatMeters": 2
+  },
+  "meat": {
+    "file": "meat.jpg",
+    "w": 512,
+    "h": 512,
+    "shotAt": null,
+    "repeatMeters": 2
+  },
+  "dry": {
+    "file": "dry.jpg",
+    "w": 512,
+    "h": 512,
+    "shotAt": null,
+    "repeatMeters": 2
+  },
+  "snack": {
+    "file": "snack.jpg",
+    "w": 512,
+    "h": 512,
+    "shotAt": null,
+    "repeatMeters": 2
+  },
+  "drinks": {
+    "file": "drinks.jpg",
+    "w": 512,
+    "h": 512,
+    "shotAt": null,
+    "repeatMeters": 2
+  },
+  "household": {
+    "file": "household.jpg",
+    "w": 512,
+    "h": 512,
+    "shotAt": null,
+    "repeatMeters": 2
+  }
+}

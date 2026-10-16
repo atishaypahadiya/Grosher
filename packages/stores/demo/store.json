@@ -1,6 +1,6 @@
 {
   "storeId": "demo-supercenter",
-  "version": 1,
+  "version": 2,
   "nodes": [
     {
       "id": "BL",
@@ -1110,5 +1110,860 @@
     "L4",
     "L5"
   ],
-  "exitId": "EXIT"
+  "exitId": "EXIT",
+  "fixtures": [
+    {
+      "id": "f-A1-L",
+      "kind": "shelf",
+      "polygon": [
+        [
+          8,
+          12.8
+        ],
+        [
+          9.4,
+          12.8
+        ],
+        [
+          9.4,
+          51.2
+        ],
+        [
+          8,
+          51.2
+        ]
+      ],
+      "department": "dry",
+      "aisle": "A1"
+    },
+    {
+      "id": "f-A1-A2",
+      "kind": "shelf",
+      "polygon": [
+        [
+          10.6,
+          12.8
+        ],
+        [
+          13.4,
+          12.8
+        ],
+        [
+          13.4,
+          51.2
+        ],
+        [
+          10.6,
+          51.2
+        ]
+      ],
+      "department": "dry",
+      "aisle": "A1"
+    },
+    {
+      "id": "f-A2-A3",
+      "kind": "shelf",
+      "polygon": [
+        [
+          14.6,
+          12.8
+        ],
+        [
+          17.4,
+          12.8
+        ],
+        [
+          17.4,
+          51.2
+        ],
+        [
+          14.6,
+          51.2
+        ]
+      ],
+      "department": "dry",
+      "aisle": "A2"
+    },
+    {
+      "id": "f-A3-A4",
+      "kind": "shelf",
+      "polygon": [
+        [
+          18.6,
+          12.8
+        ],
+        [
+          21.4,
+          12.8
+        ],
+        [
+          21.4,
+          51.2
+        ],
+        [
+          18.6,
+          51.2
+        ]
+      ],
+      "department": "dry",
+      "aisle": "A3"
+    },
+    {
+      "id": "f-A4-A5",
+      "kind": "shelf",
+      "polygon": [
+        [
+          22.6,
+          12.8
+        ],
+        [
+          25.4,
+          12.8
+        ],
+        [
+          25.4,
+          51.2
+        ],
+        [
+          22.6,
+          51.2
+        ]
+      ],
+      "department": "dry",
+      "aisle": "A4"
+    },
+    {
+      "id": "f-A5-R",
+      "kind": "shelf",
+      "polygon": [
+        [
+          26.6,
+          12.8
+        ],
+        [
+          28,
+          12.8
+        ],
+        [
+          28,
+          51.2
+        ],
+        [
+          26.6,
+          51.2
+        ]
+      ],
+      "department": "dry",
+      "aisle": "A5"
+    },
+    {
+      "id": "f-A6-L",
+      "kind": "shelf",
+      "polygon": [
+        [
+          28,
+          12.8
+        ],
+        [
+          29.4,
+          12.8
+        ],
+        [
+          29.4,
+          51.2
+        ],
+        [
+          28,
+          51.2
+        ]
+      ],
+      "department": "snack",
+      "aisle": "A6"
+    },
+    {
+      "id": "f-A6-R",
+      "kind": "shelf",
+      "polygon": [
+        [
+          30.6,
+          12.8
+        ],
+        [
+          32,
+          12.8
+        ],
+        [
+          32,
+          51.2
+        ],
+        [
+          30.6,
+          51.2
+        ]
+      ],
+      "department": "snack",
+      "aisle": "A6"
+    },
+    {
+      "id": "f-A7-L",
+      "kind": "shelf",
+      "polygon": [
+        [
+          32,
+          12.8
+        ],
+        [
+          33.4,
+          12.8
+        ],
+        [
+          33.4,
+          51.2
+        ],
+        [
+          32,
+          51.2
+        ]
+      ],
+      "department": "drinks",
+      "aisle": "A7"
+    },
+    {
+      "id": "f-A7-R",
+      "kind": "shelf",
+      "polygon": [
+        [
+          34.6,
+          12.8
+        ],
+        [
+          36,
+          12.8
+        ],
+        [
+          36,
+          51.2
+        ],
+        [
+          34.6,
+          51.2
+        ]
+      ],
+      "department": "drinks",
+      "aisle": "A7"
+    },
+    {
+      "id": "f-A8-L",
+      "kind": "shelf",
+      "polygon": [
+        [
+          36,
+          12.8
+        ],
+        [
+          37.4,
+          12.8
+        ],
+        [
+          37.4,
+          51.2
+        ],
+        [
+          36,
+          51.2
+        ]
+      ],
+      "department": "household",
+      "aisle": "A8"
+    },
+    {
+      "id": "f-A8-A9",
+      "kind": "shelf",
+      "polygon": [
+        [
+          38.6,
+          12.8
+        ],
+        [
+          41.4,
+          12.8
+        ],
+        [
+          41.4,
+          51.2
+        ],
+        [
+          38.6,
+          51.2
+        ]
+      ],
+      "department": "household",
+      "aisle": "A8"
+    },
+    {
+      "id": "f-A9-R",
+      "kind": "shelf",
+      "polygon": [
+        [
+          42.6,
+          12.8
+        ],
+        [
+          44,
+          12.8
+        ],
+        [
+          44,
+          51.2
+        ],
+        [
+          42.6,
+          51.2
+        ]
+      ],
+      "department": "household",
+      "aisle": "A9"
+    },
+    {
+      "id": "f-A10-L",
+      "kind": "shelf",
+      "polygon": [
+        [
+          44,
+          12.8
+        ],
+        [
+          45.4,
+          12.8
+        ],
+        [
+          45.4,
+          51.2
+        ],
+        [
+          44,
+          51.2
+        ]
+      ],
+      "department": "frozen",
+      "aisle": "A10"
+    },
+    {
+      "id": "f-A10-A11",
+      "kind": "shelf",
+      "polygon": [
+        [
+          46.6,
+          12.8
+        ],
+        [
+          49.4,
+          12.8
+        ],
+        [
+          49.4,
+          51.2
+        ],
+        [
+          46.6,
+          51.2
+        ]
+      ],
+      "department": "frozen",
+      "aisle": "A10"
+    },
+    {
+      "id": "f-A11-A12",
+      "kind": "shelf",
+      "polygon": [
+        [
+          50.6,
+          12.8
+        ],
+        [
+          53.4,
+          12.8
+        ],
+        [
+          53.4,
+          51.2
+        ],
+        [
+          50.6,
+          51.2
+        ]
+      ],
+      "department": "frozen",
+      "aisle": "A11"
+    },
+    {
+      "id": "f-A12-R",
+      "kind": "shelf",
+      "polygon": [
+        [
+          54.6,
+          12.8
+        ],
+        [
+          56,
+          12.8
+        ],
+        [
+          56,
+          51.2
+        ],
+        [
+          54.6,
+          51.2
+        ]
+      ],
+      "department": "frozen",
+      "aisle": "A12"
+    },
+    {
+      "id": "f-PRODUCE",
+      "kind": "wall",
+      "polygon": [
+        [
+          2,
+          12.8
+        ],
+        [
+          3.4,
+          12.8
+        ],
+        [
+          3.4,
+          51.2
+        ],
+        [
+          2,
+          51.2
+        ]
+      ],
+      "department": "produce",
+      "aisle": "PRODUCE"
+    },
+    {
+      "id": "f-BAKERY",
+      "kind": "wall",
+      "polygon": [
+        [
+          60.6,
+          12.8
+        ],
+        [
+          62,
+          12.8
+        ],
+        [
+          62,
+          51.2
+        ],
+        [
+          60.6,
+          51.2
+        ]
+      ],
+      "department": "bakery",
+      "aisle": "BAKERY"
+    },
+    {
+      "id": "f-MEAT",
+      "kind": "wall",
+      "polygon": [
+        [
+          2,
+          10
+        ],
+        [
+          32,
+          10
+        ],
+        [
+          32,
+          11.4
+        ],
+        [
+          2,
+          11.4
+        ]
+      ],
+      "department": "meat",
+      "aisle": "MEAT"
+    },
+    {
+      "id": "f-DAIRY",
+      "kind": "wall",
+      "polygon": [
+        [
+          32,
+          10
+        ],
+        [
+          62,
+          10
+        ],
+        [
+          62,
+          11.4
+        ],
+        [
+          32,
+          11.4
+        ]
+      ],
+      "department": "dairy",
+      "aisle": "DAIRY"
+    },
+    {
+      "id": "f-L0-L",
+      "kind": "counter",
+      "height": 1,
+      "polygon": [
+        [
+          14,
+          53
+        ],
+        [
+          15.4,
+          53
+        ],
+        [
+          15.4,
+          65
+        ],
+        [
+          14,
+          65
+        ]
+      ],
+      "department": "checkout"
+    },
+    {
+      "id": "f-L0-R",
+      "kind": "counter",
+      "height": 1,
+      "polygon": [
+        [
+          16.6,
+          53
+        ],
+        [
+          18,
+          53
+        ],
+        [
+          18,
+          65
+        ],
+        [
+          16.6,
+          65
+        ]
+      ],
+      "department": "checkout"
+    },
+    {
+      "id": "f-L1-L",
+      "kind": "counter",
+      "height": 1,
+      "polygon": [
+        [
+          19,
+          53
+        ],
+        [
+          20.4,
+          53
+        ],
+        [
+          20.4,
+          65
+        ],
+        [
+          19,
+          65
+        ]
+      ],
+      "department": "checkout"
+    },
+    {
+      "id": "f-L1-R",
+      "kind": "counter",
+      "height": 1,
+      "polygon": [
+        [
+          21.6,
+          53
+        ],
+        [
+          23,
+          53
+        ],
+        [
+          23,
+          65
+        ],
+        [
+          21.6,
+          65
+        ]
+      ],
+      "department": "checkout"
+    },
+    {
+      "id": "f-L2-L",
+      "kind": "counter",
+      "height": 1,
+      "polygon": [
+        [
+          24,
+          53
+        ],
+        [
+          25.4,
+          53
+        ],
+        [
+          25.4,
+          65
+        ],
+        [
+          24,
+          65
+        ]
+      ],
+      "department": "checkout"
+    },
+    {
+      "id": "f-L2-R",
+      "kind": "counter",
+      "height": 1,
+      "polygon": [
+        [
+          26.6,
+          53
+        ],
+        [
+          28,
+          53
+        ],
+        [
+          28,
+          65
+        ],
+        [
+          26.6,
+          65
+        ]
+      ],
+      "department": "checkout"
+    },
+    {
+      "id": "f-L3-L",
+      "kind": "counter",
+      "height": 1,
+      "polygon": [
+        [
+          29,
+          53
+        ],
+        [
+          30.4,
+          53
+        ],
+        [
+          30.4,
+          65
+        ],
+        [
+          29,
+          65
+        ]
+      ],
+      "department": "checkout"
+    },
+    {
+      "id": "f-L3-R",
+      "kind": "counter",
+      "height": 1,
+      "polygon": [
+        [
+          31.6,
+          53
+        ],
+        [
+          33,
+          53
+        ],
+        [
+          33,
+          65
+        ],
+        [
+          31.6,
+          65
+        ]
+      ],
+      "department": "checkout"
+    },
+    {
+      "id": "f-L4-L",
+      "kind": "counter",
+      "height": 1,
+      "polygon": [
+        [
+          34,
+          53
+        ],
+        [
+          35.4,
+          53
+        ],
+        [
+          35.4,
+          65
+        ],
+        [
+          34,
+          65
+        ]
+      ],
+      "department": "checkout"
+    },
+    {
+      "id": "f-L4-R",
+      "kind": "counter",
+      "height": 1,
+      "polygon": [
+        [
+          36.6,
+          53
+        ],
+        [
+          38,
+          53
+        ],
+        [
+          38,
+          65
+        ],
+        [
+          36.6,
+          65
+        ]
+      ],
+      "department": "checkout"
+    },
+    {
+      "id": "f-L5-L",
+      "kind": "counter",
+      "height": 1,
+      "polygon": [
+        [
+          39,
+          53
+        ],
+        [
+          40.4,
+          53
+        ],
+        [
+          40.4,
+          65
+        ],
+        [
+          39,
+          65
+        ]
+      ],
+      "department": "checkout"
+    },
+    {
+      "id": "f-L5-R",
+      "kind": "counter",
+      "height": 1,
+      "polygon": [
+        [
+          41.6,
+          53
+        ],
+        [
+          43,
+          53
+        ],
+        [
+          43,
+          65
+        ],
+        [
+          41.6,
+          65
+        ]
+      ],
+      "department": "checkout"
+    }
+  ],
+  "departments": [
+    {
+      "id": "produce",
+      "name": "Produce",
+      "color": "#6CB26A",
+      "texture": "produce.jpg"
+    },
+    {
+      "id": "dairy",
+      "name": "Dairy",
+      "color": "#F2EAD2",
+      "texture": "dairy.jpg"
+    },
+    {
+      "id": "frozen",
+      "name": "Frozen",
+      "color": "#DDEFF0",
+      "texture": "frozen.jpg"
+    },
+    {
+      "id": "bakery",
+      "name": "Bakery",
+      "color": "#E9B46A",
+      "texture": "bakery.jpg"
+    },
+    {
+      "id": "meat",
+      "name": "Meat",
+      "color": "#E5A2A0",
+      "texture": "meat.jpg"
+    },
+    {
+      "id": "dry",
+      "name": "Dry goods",
+      "color": "#E2C9A2",
+      "texture": "dry.jpg"
+    },
+    {
+      "id": "snack",
+      "name": "Snacks",
+      "color": "#F3C96B",
+      "texture": "snack.jpg"
+    },
+    {
+      "id": "drinks",
+      "name": "Drinks",
+      "color": "#8FC9E8",
+      "texture": "drinks.jpg"
+    },
+    {
+      "id": "household",
+      "name": "Household",
+      "color": "#D8D4CC",
+      "texture": "household.jpg"
+    },
+    {
+      "id": "checkout",
+      "name": "Checkout",
+      "color": "#DCE3D4"
+    }
+  ]
 }

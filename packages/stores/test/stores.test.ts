@@ -29,3 +29,24 @@ for (const { store, catalog } of STORES) {
     }
   });
 }
+
+import { fixtureProblems, isSimplePolygon, segmentOverlapsPolygon } from "../src/geometry.ts";
+
+test("geometry helpers", () => {
+  const sq: [number, number][] = [[0, 0], [2, 0], [2, 2], [0, 2]];
+  assert.ok(isSimplePolygon(sq));
+  assert.ok(!isSimplePolygon([[0, 0], [2, 2], [2, 0], [0, 2]]), "bow-tie is not simple");
+  assert.ok(!isSimplePolygon([[0, 0], [1, 1]]));
+  assert.ok(segmentOverlapsPolygon([-1, 1], [3, 1], sq), "crossing");
+  assert.ok(segmentOverlapsPolygon([1, 1], [5, 5], sq), "endpoint inside");
+  assert.ok(!segmentOverlapsPolygon([-1, 3], [3, 3], sq), "clear");
+});
+
+for (const { store } of STORES) {
+  test(`${store.storeId}: fixtures are simple closed polygons clear of every corridor edge, with known departments`, () => {
+    assert.ok((store.fixtures ?? []).length > 0, "store has no fixtures");
+    assert.ok((store.departments ?? []).length > 0, "store has no departments");
+    assert.deepEqual(fixtureProblems(store), []);
+    for (const f of store.fixtures ?? []) assert.ok(f.department, `${f.id} has no department`);
+  });
+}

@@ -46,6 +46,25 @@ export interface Stop {
   confidence?: number; // 0..1, from item resolution
 }
 
+/** A physical block on the floor: shelf run, wall shelving, counter. A box in 3D, a filled polygon in 2D. */
+export interface Fixture {
+  id: string;
+  kind: "shelf" | "wall" | "counter" | "selfcheckout" | "service" | "other";
+  polygon: [number, number][]; // meters, y down, closed implicitly
+  height?: number; // meters, default 1.8; counters 1.0
+  department?: string; // key into departments; picks color + texture
+  aisle?: string; // "A12" → aisle sign on the front face
+}
+
+export interface Department {
+  id: string;
+  name: string;
+  color: string; // hex, flat-map fill and the grade on the 3D texture
+  texture?: string; // file name in the store's textures/ folder
+  anchor?: [number, number]; // where the department name sits on the flat map
+  angle?: number; // degrees, label rotation
+}
+
 export interface StoreGraph {
   storeId: string;
   version: number;
@@ -55,6 +74,9 @@ export interface StoreGraph {
   entranceId: string;
   checkoutIds: string[]; // any lane; solver picks the best one
   exitId: string;
+  /** Rendering only. The solver never reads these. */
+  fixtures?: Fixture[];
+  departments?: Department[];
 }
 
 export interface Weights {

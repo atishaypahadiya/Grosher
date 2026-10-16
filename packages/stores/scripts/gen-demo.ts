@@ -1,4 +1,4 @@
-// Generates data/demo-supercenter/{store,catalog}.json: a synthetic
+// Generates demo/{store,catalog}.json: a synthetic
 // Walmart-Supercenter-style grocery side, used for tests and benchmarks
 // until the real Story Rd / Almaden map exists. Units: meters.
 //
@@ -14,7 +14,8 @@
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import type { GraphEdge, GraphNode, ShelfLocation, StoreGraph, Stop } from "@grosher/core";
+import type { Fixture, GraphEdge, GraphNode, ShelfLocation, StoreGraph, Stop } from "@grosher/core";
+import { DEPARTMENTS } from "../src/departments.ts";
 
 const AISLES = 12;
 const AISLE_X0 = 10;
@@ -115,14 +116,82 @@ function makeDemoStore(): StoreGraph {
 
   return {
     storeId: "demo-supercenter",
-    version: 1,
+    version: 2,
     nodes,
     edges,
     locations,
     entranceId: "ENTRANCE",
     checkoutIds,
     exitId: "EXIT",
+    fixtures: makeFixtures(),
+    departments: DEPARTMENTS,
   };
+}
+
+// ----- fixtures (DESIGN.md §6): 1.4 m shelf blocks each side of every aisle
+// corridor, merged where neighbours meet and share a department; wall
+// shelving behind the perimeter corridors; 1.0 m counters beside each lane.
+
+const HALF = 0.6; // half the walkable corridor width, kept clear
+const DEPTH = 1.4; // shelf depth
+const END_INSET = 0.8; // keep the back / front corridors clear
+const COUNTER_H = 1.0;
+
+function deptOfAisle(i: number): string {
+  if (i <= 5) return "dry";
+  if (i === 6) return "snack";
+  if (i === 7) return "drinks";
+  if (i <= 9) return "household";
+  return "frozen";
+}
+
+const rect = (x0: number, y0: number, x1: number, y1: number): [number, number][] => [
+  [x0, y0],
+  [x1, y0],
+  [x1, y1],
+  [x0, y1],
+];
+
+function makeFixtures(): Fixture[] {
+  const out: Fixture[] = [];
+  const y0 = BACK_Y + END_INSET;
+  const y1 = FRONT_Y - END_INSET;
+  const ax = (i: number) => AISLE_X0 + AISLE_GAP * (i - 1);
+
+  // Left side of A1 and right side of A12 stand alone.
+  out.push({ id: "f-A1-L", kind: "shelf", polygon: rect(ax(1) - HALF - DEPTH, y0, ax(1) - HALF, y1), department: deptOfAisle(1), aisle: "A1" });
+  for (let i = 1; i < AISLES; i++) {
+    const right = ax(i) + HALF; // right block of aisle i
+    const left = ax(i + 1) - HALF; // left block of aisle i+1
+    const d1 = deptOfAisle(i);
+    const d2 = deptOfAisle(i + 1);
+    if (d1 === d2) {
+      out.push({ id: `f-A${i}-A${i + 1}`, kind: "shelf", polygon: rect(right, y0, left, y1), department: d1, aisle: `A${i}` });
+    } else {
+      out.push({ id: `f-A${i}-R`, kind: "shelf", polygon: rect(right, y0, right + DEPTH, y1), department: d1, aisle: `A${i}` });
+      out.push({ id: `f-A${i + 1}-L`, kind: "shelf", polygon: rect(left - DEPTH, y0, left, y1), department: d2, aisle: `A${i + 1}` });
+    }
+  }
+  out.push({ id: "f-A12-R", kind: "shelf", polygon: rect(ax(AISLES) + HALF, y0, ax(AISLES) + HALF + DEPTH, y1), department: deptOfAisle(AISLES), aisle: "A12" });
+
+  // Perimeter walls: produce (left), bakery (right), meat + dairy (back).
+  out.push({ id: "f-PRODUCE", kind: "wall", polygon: rect(LEFT_X - HALF - DEPTH, y0, LEFT_X - HALF, y1), department: "produce", aisle: "PRODUCE" });
+  out.push({ id: "f-BAKERY", kind: "wall", polygon: rect(RIGHT_X + HALF, y0, RIGHT_X + HALF + DEPTH, y1), department: "bakery", aisle: "BAKERY" });
+  const wallY0 = BACK_Y - HALF - DEPTH;
+  const wallY1 = BACK_Y - HALF;
+  const midX = (LEFT_X + RIGHT_X) / 2;
+  out.push({ id: "f-MEAT", kind: "wall", polygon: rect(LEFT_X - HALF - DEPTH, wallY0, midX, wallY1), department: "meat", aisle: "MEAT" });
+  out.push({ id: "f-DAIRY", kind: "wall", polygon: rect(midX, wallY0, RIGHT_X + HALF + DEPTH, wallY1), department: "dairy", aisle: "DAIRY" });
+
+  // Checkout counters: one each side of every lane, between the lane access row and the front corridor.
+  const cy0 = FRONT_Y + 1;
+  const cy1 = FRONT_CORRIDOR_Y - 1;
+  for (let k = 0; k < 6; k++) {
+    const x = 16 + k * 5;
+    out.push({ id: `f-L${k}-L`, kind: "counter", height: COUNTER_H, polygon: rect(x - HALF - DEPTH, cy0, x - HALF, cy1), department: "checkout" });
+    out.push({ id: `f-L${k}-R`, kind: "counter", height: COUNTER_H, polygon: rect(x + HALF, cy0, x + HALF + DEPTH, cy1), department: "checkout" });
+  }
+  return out;
 }
 
 /** Catalog of resolved items for the demo store. */
@@ -159,7 +228,7 @@ const DEMO_ITEMS: Stop[] = [
   { id: "snacks", name: "Granola bars", locationIds: ["A5-20", "END-6"] },
 ];
 
-const out = join(import.meta.dirname, "..", "data", "demo-supercenter");
+const out = join(import.meta.dirname, "..", "demo");
 mkdirSync(out, { recursive: true });
 writeFileSync(join(out, "store.json"), JSON.stringify(makeDemoStore(), null, 2) + "\n");
 writeFileSync(join(out, "catalog.json"), JSON.stringify(DEMO_ITEMS, null, 2) + "\n");
