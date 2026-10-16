@@ -1,7 +1,7 @@
 // Trip (DESIGN.md §5): full-screen map, glass header with the Doto timer and
 // the flatten button, progress strip, glass bottom sheet.
 
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import type { Router, Stop } from "@grosher/core";
 import type { StoreBundle } from "@grosher/stores";
 import { elapsedMs, isDone, nextLeg, nextStop, type TripState } from "../lib/trip.ts";
@@ -37,6 +37,27 @@ export function TripScreen({ bundle, router, trip, flat, onFlatChange, onGotIt, 
     return () => clearInterval(id);
   }, []);
   const [addOpen, setAddOpen] = useState(false);
+  // the map may use the area between the progress strip and the bottom sheet
+  const screenRef = useRef<HTMLDivElement>(null);
+  const sheetRef = useRef<HTMLElement>(null);
+  const [safe, setSafe] = useState({ top: 0.16, bottom: 0.36 });
+  useEffect(() => {
+    const el = screenRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const measure = () => {
+      const h = el.clientHeight || 844;
+      const strip = el.querySelector(".progress-strip")?.getBoundingClientRect();
+      const sheet = sheetRef.current?.getBoundingClientRect();
+      const top = strip ? (strip.bottom - el.getBoundingClientRect().top + 12) / h : 0.16;
+      const bottom = sheet ? (el.getBoundingClientRect().bottom - sheet.top + 8) / h : 0.36;
+      setSafe((s) => (Math.abs(s.top - top) > 0.005 || Math.abs(s.bottom - bottom) > 0.005 ? { top, bottom } : s));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    if (sheetRef.current) ro.observe(sheetRef.current);
+    return () => ro.disconnect();
+  }, [addOpen, trip.remaining.length]);
   const webgl = useMemo(() => webglAvailable(), []);
   const perf = typeof location !== "undefined" && new URLSearchParams(location.search).has("perf");
 
@@ -54,7 +75,8 @@ export function TripScreen({ bundle, router, trip, flat, onFlatChange, onGotIt, 
 
   const remainingM = trip.route.legs.reduce((s, l) => s + l.distanceM, 0);
   const lane = trip.route.legs.find((l) => l.label === "Checkout");
-  const nextLabel = leg && stop ? { eyebrow: `${dept?.name ?? loc?.aisle ?? ""} · ${loc?.aisle ?? ""} · ${position} of ${total}`, name: stop.name, distance: `${Math.round(leg.distanceM)} m` } : null;
+  const eyebrowParts = [dept?.name, loc?.aisle].filter((p, i, arr): p is string => !!p && arr.findIndex((q) => q?.toLowerCase() === p.toLowerCase()) === i);
+  const nextLabel = leg && stop ? { eyebrow: `${eyebrowParts.join(" · ")} · ${position} of ${total}`, name: stop.name, distance: `${Math.round(leg.distanceM)} m` } : null;
   const checkoutLabel = lane ? { eyebrow: `Checkout · lane ${laneNumber(lane.nodeId)}`, line: `${Math.max(1, Math.round(remainingM / WALK_MPS / 60))} min walk (${Math.round(remainingM)} m)` } : null;
 
   const flatMap = (
@@ -71,11 +93,11 @@ export function TripScreen({ bundle, router, trip, flat, onFlatChange, onGotIt, 
   const vignette = <div className="trip-vignette" aria-hidden />;
 
   return (
-    <div className="trip-screen">
+    <div className="trip-screen" ref={screenRef}>
       <div className="trip-map">
         {webgl ? (
           <Suspense fallback={flatMap}>
-            <TripMap3D bundle={bundle} trip={trip} flat={flat} onFlatChange={onFlatChange} nextLabel={nextLabel} checkoutLabel={checkoutLabel} perf={perf} />
+            <TripMap3D bundle={bundle} trip={trip} flat={flat} onFlatChange={onFlatChange} nextLabel={nextLabel} checkoutLabel={checkoutLabel} perf={perf} safe={safe} />
           </Suspense>
         ) : (
           <>
@@ -104,7 +126,7 @@ export function TripScreen({ bundle, router, trip, flat, onFlatChange, onGotIt, 
       </div>
 
       {!isDone(trip) && leg && stop && (
-        <section className="trip-sheet glass sheet" aria-label="Trip">
+        <section className="trip-sheet glass sheet" aria-label="Trip" ref={sheetRef}>
           <span className="eyebrow now">
             Next · {position} of {total}
           </span>

@@ -9,7 +9,7 @@ import type { TripState } from "../lib/trip.ts";
 import { Scene } from "./Scene.tsx";
 import type { CameraRigHandle } from "./CameraRig.tsx";
 import { fixtureBox, fixtureForLocation } from "./layout.ts";
-import type { Focus } from "./CameraRig.tsx";
+import type { Focus, SafeArea } from "./CameraRig.tsx";
 import { OverlayDom, useOverlayItems, type NextLabel, type OverlayRegistry } from "./Overlay.tsx";
 
 export interface TripMap3DProps {
@@ -21,6 +21,8 @@ export interface TripMap3DProps {
   checkoutLabel: { eyebrow: string; line: string } | null;
   perf?: boolean;
   className?: string;
+  /** fractions of the map height covered by the header strip (top) and the bottom sheet (bottom) */
+  safe?: SafeArea;
 }
 
 interface Pt {
@@ -52,7 +54,7 @@ export function footprintOf(store: StoreGraph) {
   return { x: (x0 + x1) / 2, z: (y0 + y1) / 2, w: x1 - x0 + 2 * pad, d: y1 - y0 + 2 * pad };
 }
 
-export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel, checkoutLabel, perf = false, className }: TripMap3DProps) {
+export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel, checkoutLabel, perf = false, className, safe = { top: 0.16, bottom: 0.36 } }: TripMap3DProps) {
   const { store } = bundle;
   const graph = useMemo(() => new WalkGraph(store), [store]);
   const nodes = graph.nodes;
@@ -73,8 +75,13 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
   );
   const youNode = nodes.get(trip.positionNodeId);
   const focus = useMemo<Focus>(
-    () => ({ you: youNode ? { x: youNode.x, y: youNode.y } : { x: 0, y: 0 }, next: nextNode ? { x: nextNode.x, y: nextNode.y } : undefined }),
-    [youNode, nextNode],
+    () => ({
+      you: youNode ? { x: youNode.x, y: youNode.y } : { x: 0, y: 0 },
+      next: nextNode ? { x: nextNode.x, y: nextNode.y } : undefined,
+      points: (current?.path ?? []).map((id) => nodes.get(id)).filter((n): n is NonNullable<typeof n> => !!n).map((n) => ({ x: n.x, y: n.y })),
+      footprint,
+    }),
+    [youNode, nextNode, current, nodes, footprint],
   );
 
   const registry = useRef<OverlayRegistry>(new Map()).current;
@@ -162,6 +169,7 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
           ribbon={ribbon}
           overlay={{ items, registry }}
           focus={focus}
+          safe={safe}
           flat={flat}
           reducedMotion={reducedMotion}
           cameraRef={cameraRef}

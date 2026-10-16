@@ -7,11 +7,20 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { PerspectiveCamera, Vector3 } from "three";
 import { easeOutCubic, MAX_DISTANCE, MIN_DISTANCE, type Framing } from "./layout.ts";
 
-/** What the camera should frame: where the shopper is, and the next stop if any. */
+/** What the camera should frame: the shopper, the next stop if any, and the current leg's path. */
 export interface Focus {
   you: { x: number; y: number };
   next?: { x: number; y: number };
+  points?: { x: number; y: number }[];
+  /** the store footprint; the view slides toward it so a short leg does not leave empty floor around a corner */
+  footprint?: { x: number; z: number; w: number; d: number };
 }
+/** The part of the viewport the map may use, as fractions of height from the top and from the bottom. */
+export interface SafeArea {
+  top: number;
+  bottom: number;
+}
+export const DEFAULT_SAFE: SafeArea = { top: 0.16, bottom: 0.36 };
 const MIN_FRAME = 36;
 
 export const DEFAULT_TILT = 58;
@@ -36,13 +45,13 @@ function placeCamera(cam: PerspectiveCamera, p: { tx: number; tz: number; distan
 }
 
 /**
- * Solve the framing in screen space: the next stop pinned a third from the
- * top; the distance chosen so the you-dot falls a third from the bottom when
- * the leg has that much depth (a leg along the back wall has none, and then
- * both sit in the upper third, clear of the bottom sheet); horizontally
- * centred between them. Iterates a few times on a scratch camera.
+ * Solve the framing in screen space on a scratch camera: fit the leg (you,
+ * the path, the next stop) padded 15% into the safe area between the header
+ * strip and the bottom sheet; pin the next stop at that area's upper third
+ * and let the distance grow until the you-dot reaches its lower third when
+ * the leg has that depth. Never closer than 36 m. Same rule when flat.
  */
-export function solveFraming(focus: Focus, flat: boolean, aspect: number, yawDeg = flat ? 0 : DEFAULT_YAW): Framing {
+export function solveFraming(focus: Focus, flat: boolean, aspect: number, yawDeg = flat ? 0 : DEFAULT_YAW, safe: SafeArea = DEFAULT_SAFE): Framing {
   const fov = verticalFov(aspect);
   const tilt = flat ? 2 : DEFAULT_TILT;
   const cam = new PerspectiveCamera(fov, aspect, 0.5, 400);
@@ -51,26 +60,111 @@ export function solveFraming(focus: Focus, flat: boolean, aspect: number, yawDeg
   const yawRad = (yawDeg * Math.PI) / 180;
   const f = { x: -Math.sin(yawRad), z: -Math.cos(yawRad) }; // screen-up along the ground
   const r = { x: Math.cos(yawRad), z: -Math.sin(yawRad) }; // screen-right along the ground
-  let tx = focus.next ? (focus.you.x + focus.next.x) / 2 : focus.you.x;
-  let tz = focus.next ? (focus.you.y + focus.next.y) / 2 : focus.you.y;
+
+  const ndcTop = 1 - 2 * safe.top;
+  const ndcBot = -1 + 2 * safe.bottom;
+  const height = ndcTop - ndcBot;
+  const third = height / 3;
+  const yNext = ndcTop - third;
+  const yYou = ndcBot + third;
+  const PAD = 0.15;
+  const availY = height * (1 - PAD);
+  const availX = 2 * (1 - PAD);
+  const padY = (height * PAD) / 2;
+
+  const pts = [focus.you, ...(focus.next ? [focus.next] : []), ...(focus.points ?? [])];
+  let tx = pts.reduce((s, p) => s + p.x, 0) / pts.length;
+  let tz = pts.reduce((s, p) => s + p.y, 0) / pts.length;
   let distance = MIN_FRAME;
   const groundPerNdc = () => (distance * Math.tan((fov * Math.PI) / 360)) / (flat ? 1 : Math.sin((tilt * Math.PI) / 180));
-  for (let i = 0; i < 8; i++) {
+
+  for (let i = 0; i < 12; i++) {
     placeCamera(cam, { tx, tz, distance, tilt, yaw: yawDeg });
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
+    for (const p of pts) {
+      const q = ndc(p);
+      minX = Math.min(minX, q.x);
+      maxX = Math.max(maxX, q.x);
+      minY = Math.min(minY, q.y);
+      maxY = Math.max(maxY, q.y);
+    }
     const you = ndc(focus.you);
     const next = focus.next ? ndc(focus.next) : null;
-    if (next) {
-      const spread = next.y - you.y; // want +2/3 (next above you)
-      if (spread > 0.05) distance = Math.min(MAX_DISTANCE, Math.max(MIN_FRAME, distance * (spread / (2 / 3))));
-      placeCamera(cam, { tx, tz, distance, tilt, yaw: yawDeg });
+    // distance: grow until the padded box and the next/you spread fit; shrink toward the fit but never below the floor
+    let ratio = Math.max((maxX - minX) / availX, (maxY - minY) / availY);
+    if (next) ratio = Math.max(ratio, (next.y - you.y) / (yNext - yYou));
+    if (ratio > 1.001) distance = Math.min(MAX_DISTANCE, distance * ratio);
+    else if (ratio < 0.9 && distance > MIN_FRAME) distance = Math.max(MIN_FRAME, distance * Math.max(ratio, 0.6));
+    placeCamera(cam, { tx, tz, distance, tilt, yaw: yawDeg });
+    minX = Infinity;
+    maxX = -Infinity;
+    minY = Infinity;
+    maxY = -Infinity;
+    for (const p of pts) {
+      const q = ndc(p);
+      minX = Math.min(minX, q.x);
+      maxX = Math.max(maxX, q.x);
+      minY = Math.min(minY, q.y);
+      maxY = Math.max(maxY, q.y);
     }
-    const a = ndc(focus.you);
-    const b = focus.next ? ndc(focus.next) : a;
-    const errY = focus.next ? b.y - 1 / 3 : a.y; // next stop at the upper third; alone, you at centre
-    const midX = (a.x + b.x) / 2; // want 0
+    const you2 = ndc(focus.you);
+    const next2 = focus.next ? ndc(focus.next) : null;
+    // vertical: next stop at the upper third (alone: you at the area's centre), then keep the box inside the area
+    let errY = next2 ? next2.y - yNext : you2.y - (ndcTop + ndcBot) / 2;
+    if (minY - errY < ndcBot + padY) errY -= ndcBot + padY - (minY - errY);
+    if (maxY - errY > ndcTop - padY) errY += maxY - errY - (ndcTop - padY);
+    const errX = (minX + maxX) / 2;
     const g = groundPerNdc();
-    tx += f.x * errY * g + r.x * midX * g * aspect;
-    tz += f.z * errY * g + r.z * midX * g * aspect;
+    tx += f.x * errY * g + r.x * errX * g * aspect;
+    tz += f.z * errY * g + r.z * errX * g * aspect;
+  }
+
+  // Slide toward the store footprint within the slack the leg rule leaves:
+  // the next stop may sit anywhere in the upper third, the box must stay in the area.
+  if (focus.footprint) {
+    placeCamera(cam, { tx, tz, distance, tilt, yaw: yawDeg });
+    const { x, z, w, d } = focus.footprint;
+    const corners = [
+      { x: x - w / 2, y: z - d / 2 },
+      { x: x + w / 2, y: z - d / 2 },
+      { x: x + w / 2, y: z + d / 2 },
+      { x: x - w / 2, y: z + d / 2 },
+    ].map((p) => ndc(p));
+    const fx0 = Math.min(...corners.map((c) => c.x));
+    const fx1 = Math.max(...corners.map((c) => c.x));
+    const fy0 = Math.min(...corners.map((c) => c.y));
+    const leg = pts.map((p) => ndc(p));
+    const lx0 = Math.min(...leg.map((q) => q.x));
+    const lx1 = Math.max(...leg.map((q) => q.x));
+    const ly0 = Math.min(...leg.map((q) => q.y));
+    const ly1 = Math.max(...leg.map((q) => q.y));
+    const nextY = focus.next ? ndc(focus.next).y : null;
+    // wanted content shift (ndc): close empty strips between the footprint and the view / area edges
+    let sx = 0;
+    if (fx0 > -1) sx = -(fx0 + 1); // empty strip on the left: move content left
+    else if (fx1 < 1) sx = 1 - fx1; // empty strip on the right: move content right
+    // vertical: only close empty floor below the store (never trade sky for the leg's position)
+    let sy = 0;
+    if (fy0 > ndcBot) sy = ndcBot - fy0;
+    // clamp to the slack
+    const sxMin = -1 + PAD - lx0; // content may move left until the leg touches the padded left edge
+    const sxMax = 1 - PAD - lx1;
+    sx = Math.max(sxMin, Math.min(sxMax, sx));
+    let syMin = ndcBot + padY - ly0;
+    let syMax = ndcTop - padY - ly1;
+    if (nextY !== null) {
+      // the next stop stays inside the upper third band
+      syMin = Math.max(syMin, yNext - third / 2 - nextY);
+      syMax = Math.min(syMax, yNext + third / 2 - nextY);
+    }
+    sy = Math.max(syMin, Math.min(syMax, sy));
+    const g = groundPerNdc();
+    // moving content by +s means moving the target by −s along the screen axes
+    tx += -(f.x * sy * g + r.x * sx * g * aspect);
+    tz += -(f.z * sy * g + r.z * sx * g * aspect);
   }
   return { tx, tz, distance };
 }
@@ -93,15 +187,16 @@ export interface CameraRigHandle {
 
 export interface CameraRigProps {
   focus: Focus;
+  safe?: SafeArea;
   flat: boolean;
   reducedMotion?: boolean;
   /** fires when pinching out past max zoom (caller may flatten) */
   onOverZoomOut?: () => void;
 }
 
-export const CameraRig = forwardRef<CameraRigHandle, CameraRigProps>(function CameraRig({ focus, flat, reducedMotion, onOverZoomOut }, ref) {
+export const CameraRig = forwardRef<CameraRigHandle, CameraRigProps>(function CameraRig({ focus, safe = DEFAULT_SAFE, flat, reducedMotion, onOverZoomOut }, ref) {
   const { camera, invalidate, size } = useThree();
-  const initial = solveFraming(focus, flat, size.width / size.height);
+  const initial = solveFraming(focus, flat, size.width / size.height, undefined, safe);
   const pose = useRef<Pose>({ ...initial, tilt: flat ? 2 : DEFAULT_TILT, yaw: flat ? 0 : DEFAULT_YAW });
   const from = useRef<Pose>({ ...pose.current });
   const to = useRef<Pose>({ ...pose.current });
@@ -130,10 +225,10 @@ export const CameraRig = forwardRef<CameraRigHandle, CameraRigProps>(function Ca
   // New focus (reroute / check-off), flat toggle or resize: re-solve and ease there.
   useEffect(() => {
     const yaw = flat ? 0 : Math.max(-YAW_RANGE + DEFAULT_YAW, Math.min(YAW_RANGE + DEFAULT_YAW, to.current.yaw));
-    const framing = solveFraming(focus, flat, size.width / size.height, yaw);
+    const framing = solveFraming(focus, flat, size.width / size.height, yaw, safe);
     animateTo({ ...framing, tilt: flat ? 2 : DEFAULT_TILT, yaw });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [focus.you.x, focus.you.y, focus.next?.x, focus.next?.y, flat, size.width, size.height]);
+  }, [focus.you.x, focus.you.y, focus.next?.x, focus.next?.y, focus.points?.length, flat, size.width, size.height, safe.top, safe.bottom]);
 
   useImperativeHandle(ref, () => ({
     pan: (dx, dy) => {

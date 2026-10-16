@@ -2,8 +2,9 @@
 // faces), one merged edge-line set per department, one atlas mesh for the
 // aisle signs, and the lit fixture (next stop) drawn on its own with lime.
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { BoxGeometry, Color, DoubleSide, EdgesGeometry, LineBasicMaterial, LineSegments, Mesh, MeshStandardMaterial, PlaneGeometry, RepeatWrapping, SRGBColorSpace, Texture, TextureLoader } from "three";
+import { Line } from "@react-three/drei";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { useLoader } from "@react-three/fiber";
 import type { Department, GraphNode, StoreGraph } from "@grosher/core";
@@ -12,7 +13,6 @@ import { buildSignAtlas } from "./signs.ts";
 
 const LIME = new Color("#D4FF4A");
 const EDGE_WHITE = new LineBasicMaterial({ color: "#FFFFFF", transparent: true, opacity: 0.35 });
-const EDGE_LIME = new LineBasicMaterial({ color: LIME, transparent: true, opacity: 1 });
 
 /** A box with UVs scaled so the texture repeats every `repeat` metres on every face. */
 function boxGeometry(b: Box, repeat: number) {
@@ -50,9 +50,11 @@ export interface FixturesProps {
   litFixtureId?: string | null;
   nodes: Map<string, GraphNode>;
   fromEntrance: Map<string, number>;
+  /** the mesh of the lit fixture, for the selective bloom pass */
+  onLitMesh?: (mesh: Mesh | null) => void;
 }
 
-export function Fixtures({ store, textureUrl, repeatMeters = 2, litFixtureId, nodes, fromEntrance }: FixturesProps) {
+export function Fixtures({ store, textureUrl, repeatMeters = 2, litFixtureId, nodes, fromEntrance, onLitMesh }: FixturesProps) {
   const departments = useMemo(() => store.departments ?? [], [store]);
   const withTexture = useMemo(() => departments.filter((d) => d.texture), [departments]);
   const textures = useLoader(TextureLoader, withTexture.map((d) => textureUrl(d.texture!)));
@@ -104,11 +106,18 @@ export function Fixtures({ store, textureUrl, repeatMeters = 2, litFixtureId, no
       map,
       color: dept ? (map ? tint(dept.color).lerp(new Color("#FFFFFF"), 0.25) : new Color(dept.color)) : new Color("#DCE3D4"),
       emissive: LIME,
-      emissiveIntensity: 0.25,
+      emissiveIntensity: 0.45,
       roughness: 0.8,
     });
-    return { mesh: new Mesh(geo, mat), edges: new LineSegments(new EdgesGeometry(geo), EDGE_LIME) };
+    // rim: the box's edges as a 2 px screen-space line (WebGL ignores line widths on LineSegments)
+    const pos = new EdgesGeometry(geo).attributes.position;
+    const rim: [number, number, number][] = [];
+    for (let i = 0; i < pos.count; i++) rim.push([pos.getX(i), pos.getY(i), pos.getZ(i)]);
+    return { mesh: new Mesh(geo, mat), rim };
   }, [boxes, litFixtureId, repeatMeters, departments, textureFor]);
+  useEffect(() => {
+    onLitMesh?.(lit?.mesh ?? null);
+  }, [lit, onLitMesh]);
 
   // Aisle signs: one plane per labelled fixture on its entrance-facing end, one atlas texture.
   const signs = useMemo(() => {
@@ -146,7 +155,7 @@ export function Fixtures({ store, textureUrl, repeatMeters = 2, litFixtureId, no
       {lit && (
         <group name="lit">
           <primitive object={lit.mesh} />
-          <primitive object={lit.edges} />
+          <Line segments points={lit.rim} color="#D4FF4A" lineWidth={2} toneMapped={false} />
         </group>
       )}
       {signs && <primitive object={signs} />}

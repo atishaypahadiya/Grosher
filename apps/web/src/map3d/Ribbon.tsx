@@ -3,12 +3,15 @@
 
 import { Line } from "@react-three/drei";
 import type { GraphNode } from "@grosher/core";
+import type { Object3D } from "three";
 
 export interface RibbonProps {
   nodes: Map<string, GraphNode>;
   walked: string[];
   current: string[];
   ahead: string[];
+  /** receives the current leg's wide glow line, for the selective bloom pass */
+  onGlowLine?: (line: Object3D | null) => void;
 }
 
 const Y = 0.03;
@@ -25,7 +28,7 @@ function toPoints(ids: string[], nodes: Map<string, GraphNode>): [number, number
   return pts;
 }
 
-export function Ribbon({ nodes, walked, current, ahead }: RibbonProps) {
+export function Ribbon({ nodes, walked, current, ahead, onGlowLine }: RibbonProps) {
   const w = toPoints(walked, nodes);
   const c = toPoints(current, nodes);
   const a = toPoints(ahead, nodes);
@@ -34,7 +37,7 @@ export function Ribbon({ nodes, walked, current, ahead }: RibbonProps) {
       {w.length > 1 && <Line points={w} color="#FFFFFF" transparent opacity={0.4} lineWidth={2} depthTest={false} />}
       {c.length > 1 && (
         <>
-          <Line points={c} color="#FFFFFF" transparent opacity={0.35} lineWidth={5} depthTest={false} />
+          <Line ref={(l) => onGlowLine?.(l)} points={c} color="#FFFFFF" transparent opacity={0.35} lineWidth={5} depthTest={false} toneMapped={false} />
           <Line points={c} color="#FFFFFF" lineWidth={2} depthTest={false} toneMapped={false} />
         </>
       )}
