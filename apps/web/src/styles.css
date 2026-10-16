@@ -148,3 +148,20 @@ textarea:focus-visible, input:focus-visible, .btn:focus-visible { outline: 2px s
 .legs li::marker { color: var(--map-route); font-weight: 600; }
 .leg-name { display: block; }
 .leg-where { display: block; color: var(--ink-soft); font-size: 13px; }
+
+/* ---- trip */
+.mode { margin-left: auto; color: var(--ink-soft); font-size: 14px; }
+.progress { margin: 0; color: var(--ink-soft); font-size: 14px; }
+.next-name { margin: 2px 0 0; font-size: 26px; font-weight: 600; line-height: 1.15; }
+.next-where { margin: 4px 0 0; color: var(--ink-soft); }
+.actions { margin-top: 12px; align-items: stretch; }
+.actions .big { flex: 1 1 60%; margin-top: 0; }
+.actions .ghost { flex: 1 1 35%; }
+.row.nowrap { flex-wrap: nowrap; margin-top: 0; }
+.row.nowrap input { flex: 1; }
+.add-item { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--line); }
+
+.stats { width: 100%; border-collapse: collapse; margin-top: 12px; }
+.stats th, .stats td { text-align: left; padding: 6px 0; border-top: 1px solid var(--line); font-weight: 400; }
+.stats td { text-align: right; font-variant-numeric: tabular-nums; }
+.stats .saved th, .stats .saved td { font-weight: 600; color: var(--map-entrance); }
