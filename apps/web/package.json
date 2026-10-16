@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "description": "Grosher web app: list in, route through the store out. Mobile-first PWA on @grosher/core.",
-  "engines": { "node": ">=22.18" },
+  "engines": {
+    "node": ">=22.18"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
@@ -15,6 +17,7 @@
   "dependencies": {
     "@grosher/core": "*",
     "@grosher/stores": "*",
+    "html-to-image": "^1.11.13",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },

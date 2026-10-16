@@ -117,6 +117,8 @@ function makeDemoStore(): StoreGraph {
   return {
     storeId: "demo-supercenter",
     version: 2,
+    name: "Demo Supercenter",
+    address: "Synthetic layout · San José",
     nodes,
     edges,
     locations,

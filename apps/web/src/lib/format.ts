@@ -14,6 +14,19 @@ export function minutes(m: number): string {
   return `about ${min.toFixed(min < 10 ? 1 : 0)} min`;
 }
 
+/** mm:ss, or h:mm:ss past an hour. For the Doto timers. */
+export function clock(ms: number): string {
+  const s = Math.max(0, Math.round(ms / 1000));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  const mm = h ? String(m).padStart(2, "0") : String(m);
+  return `${h ? `${h}:` : ""}${mm}:${String(sec).padStart(2, "0")}`;
+}
+
+/** Rounded minutes as a plain number string, for Doto metrics. */
+export const minutesNum = (m: number) => String(Math.max(1, Math.round(m / WALK_MPS / 60)));
+
 const SIDE: Record<string, string> = { L: "left", R: "right" };
 
 /** "A12, left, section 100" style description of a shelf location. */

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { Router, WalkGraph } from "@grosher/core";
 import { demoSupercenter } from "@grosher/stores";
-import { addItem, fromSnapshot, gotIt, isDone, nextStop, skipStop, startTrip, summarize, toSnapshot } from "../src/lib/trip.ts";
+import { addItem, aislesNeverEntered, fromSnapshot, gotIt, isDone, nextStop, skipStop, startTrip, summarize, toSnapshot } from "../src/lib/trip.ts";
 
 const { store, catalog } = demoSupercenter;
 const router = new Router(new WalkGraph(store));
@@ -60,5 +60,24 @@ describe("trip", () => {
     expect(t1.route.costM).toBeCloseTo(t0.route.costM, 6);
     expect(fromSnapshot(router, catalog, null)).toBeNull();
     expect(fromSnapshot(router, catalog, { ...toSnapshot(t0), positionNodeId: "nope" })).toBeNull();
+  });
+});
+
+describe("trip timing and coverage", () => {
+  test("timestamps, visited nodes and aisles never entered", () => {
+    let t = startTrip(router, list);
+    expect(t.startedAt).toBeGreaterThan(0);
+    expect(t.doneAt).toBeUndefined();
+    expect(t.visited).toEqual([store.entranceId]);
+    while (!isDone(t)) t = gotIt(router, t);
+    expect(t.doneAt).toBeGreaterThanOrEqual(t.startedAt);
+    expect(t.visited.length).toBeGreaterThan(5);
+    const { never, total } = aislesNeverEntered(store, t);
+    expect(total).toBe(12);
+    expect(never.length).toBeLessThan(total);
+    expect(never).not.toContain("A1"); // rice lives in A1
+    const snap = fromSnapshot(router, catalog, JSON.parse(JSON.stringify(toSnapshot(t))))!;
+    expect(snap.startedAt).toBe(t.startedAt);
+    expect(snap.visited).toEqual(t.visited);
   });
 });

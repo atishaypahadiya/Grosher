@@ -2,7 +2,7 @@
 // Every change re-solves the remaining stops from the current position.
 // Pure functions over a Router so the flow is testable without React.
 
-import type { Route, RouteLeg, Router, Stop } from "@grosher/core";
+import type { Route, RouteLeg, Router, Stop, StoreGraph } from "@grosher/core";
 
 export interface TripState {
   /** planned list in typed order, with mid-trip additions appended */
@@ -15,6 +15,11 @@ export interface TripState {
   walkedM: number;
   /** route for the remaining stops from positionNodeId */
   route: Route;
+  /** ms epoch */
+  startedAt: number;
+  doneAt?: number;
+  /** every node walked through so far, in order (for "aisles never entered") */
+  visited: string[];
 }
 
 export function startTrip(router: Router, stops: Stop[]): TripState {
@@ -27,6 +32,8 @@ export function startTrip(router: Router, stops: Stop[]): TripState {
     positionNodeId,
     walkedM: 0,
     route: router.solve({ stops }),
+    startedAt: Date.now(),
+    visited: [positionNodeId],
   };
 }
 
@@ -53,6 +60,8 @@ export function gotIt(router: Router, t: TripState): TripState {
     positionNodeId: leg.nodeId,
     walkedM: t.walkedM + leg.distanceM,
     route: router.reroute(remaining, leg.nodeId),
+    visited: [...t.visited, ...leg.path.slice(1)],
+    doneAt: remaining.length === 0 ? Date.now() : t.doneAt,
   };
 }
 
@@ -61,14 +70,35 @@ export function skipStop(router: Router, t: TripState): TripState {
   const stop = nextStop(t);
   if (!stop) return t;
   const remaining = t.remaining.filter((s) => s.id !== stop.id);
-  return { ...t, remaining, skipped: [...t.skipped, stop], route: router.reroute(remaining, t.positionNodeId) };
+  return {
+    ...t,
+    remaining,
+    skipped: [...t.skipped, stop],
+    route: router.reroute(remaining, t.positionNodeId),
+    doneAt: remaining.length === 0 ? Date.now() : t.doneAt,
+  };
 }
 
 export function addItem(router: Router, t: TripState, stop: Stop): TripState {
   if (t.remaining.some((s) => s.id === stop.id) || t.got.some((s) => s.id === stop.id)) return t;
   const remaining = [...t.remaining, stop];
   const original = t.original.some((s) => s.id === stop.id) ? t.original : [...t.original, stop];
-  return { ...t, original, remaining, route: router.reroute(remaining, t.positionNodeId) };
+  return { ...t, original, remaining, route: router.reroute(remaining, t.positionNodeId), doneAt: undefined };
+}
+
+export const elapsedMs = (t: TripState, now = Date.now()) => (t.doneAt ?? now) - t.startedAt;
+
+/** Aisles (A1, A2, …) the shopper never walked into, counting the route still ahead as walked. */
+export function aislesNeverEntered(store: StoreGraph, t: TripState): { never: string[]; total: number } {
+  const aisleOf = new Map<string, string[]>(); // aisle -> virtual node ids of its locations
+  for (const loc of store.locations) {
+    if (!/^A\d+$/i.test(loc.aisle)) continue;
+    aisleOf.set(loc.aisle, [...(aisleOf.get(loc.aisle) ?? []), `loc:${loc.id}`]);
+  }
+  const walked = new Set<string>([...t.visited, ...t.route.legs.flatMap((l) => l.path)]);
+  const never = [...aisleOf].filter(([, nodes]) => !nodes.some((n) => walked.has(n))).map(([a]) => a);
+  never.sort((a, b) => Number(a.slice(1)) - Number(b.slice(1)));
+  return { never, total: aisleOf.size };
 }
 
 export interface TripSummary {
@@ -99,11 +129,24 @@ export interface TripSnapshot {
   skipped: string[];
   positionNodeId: string;
   walkedM: number;
+  startedAt?: number;
+  doneAt?: number;
+  visited?: string[];
 }
 
 export function toSnapshot(t: TripState): TripSnapshot {
   const ids = (xs: Stop[]) => xs.map((s) => s.id);
-  return { original: ids(t.original), remaining: ids(t.remaining), got: ids(t.got), skipped: ids(t.skipped), positionNodeId: t.positionNodeId, walkedM: t.walkedM };
+  return {
+    original: ids(t.original),
+    remaining: ids(t.remaining),
+    got: ids(t.got),
+    skipped: ids(t.skipped),
+    positionNodeId: t.positionNodeId,
+    walkedM: t.walkedM,
+    startedAt: t.startedAt,
+    doneAt: t.doneAt,
+    visited: t.visited,
+  };
 }
 
 export function fromSnapshot(router: Router, catalog: Stop[], snap: TripSnapshot | null): TripState | null {
@@ -121,6 +164,9 @@ export function fromSnapshot(router: Router, catalog: Stop[], snap: TripSnapshot
       positionNodeId: snap.positionNodeId,
       walkedM: snap.walkedM,
       route: router.reroute(remaining, snap.positionNodeId),
+      startedAt: snap.startedAt ?? Date.now(),
+      doneAt: snap.doneAt,
+      visited: snap.visited ?? [snap.positionNodeId],
     };
   } catch {
     return null;

@@ -255,7 +255,7 @@ export function StoreMap({ store, route, currentNodeId, positionNodeId, onTap, c
       role="img"
       aria-label={`Map of ${store.storeId}`}
     >
-      <rect x={initial.x - 50} y={initial.y - 50} width={initial.w + 100} height={initial.h + 100} fill="var(--map-floor, #EEF1EE)" />
+      <rect x={initial.x - 50} y={initial.y - 50} width={initial.w + 100} height={initial.h + 100} fill="var(--map-floor, #EDE9DB)" />
 
       {/* walkable edges */}
       <g data-layer="edges" stroke="var(--map-walk, #D7DDD6)" strokeWidth={1.8} strokeLinecap="round">
@@ -288,8 +288,8 @@ export function StoreMap({ store, route, currentNodeId, positionNodeId, onTap, c
       {/* route */}
       {routePts.length > 1 && (
         <g data-layer="route" fill="none" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points={routePts.map((p) => `${p.x},${p.y}`).join(" ")} stroke="var(--map-floor, #EEF1EE)" strokeWidth={1.7} />
-          <polyline points={routePts.map((p) => `${p.x},${p.y}`).join(" ")} stroke="var(--map-route, #2457F5)" strokeWidth={0.9} />
+          <polyline points={routePts.map((p) => `${p.x},${p.y}`).join(" ")} stroke="var(--map-floor, #EDE9DB)" strokeWidth={1.7} />
+          <polyline points={routePts.map((p) => `${p.x},${p.y}`).join(" ")} stroke="var(--map-route, #FFFFFF)" strokeWidth={0.9} />
         </g>
       )}
       {/* entrance, exit, checkouts: above the route */}
@@ -320,8 +320,8 @@ export function StoreMap({ store, route, currentNodeId, positionNodeId, onTap, c
           {stops.map((s) =>
             s.node ? (
               <g key={s.n} transform={`translate(${s.node.x} ${s.node.y})`} data-stop={s.n}>
-                <circle r={1.3} fill="var(--map-floor, #EEF1EE)" stroke="var(--map-route, #2457F5)" strokeWidth={0.35} />
-                <text y={0.5} fill="var(--map-route, #2457F5)">{s.n}</text>
+                <circle r={1.3} fill="var(--map-floor, #EDE9DB)" stroke="var(--map-route, #FFFFFF)" strokeWidth={0.35} />
+                <text y={0.5} fill="var(--map-route, #FFFFFF)">{s.n}</text>
               </g>
             ) : null,
           )}
@@ -332,7 +332,7 @@ export function StoreMap({ store, route, currentNodeId, positionNodeId, onTap, c
       )}
 
       {position && (
-        <circle cx={position.x} cy={position.y} r={0.95} fill="var(--map-you, #1C2528)" stroke="var(--map-floor, #EEF1EE)" strokeWidth={0.35} data-landmark="you" />
+        <circle cx={position.x} cy={position.y} r={0.95} fill="var(--map-you, #1C2528)" stroke="var(--map-floor, #EDE9DB)" strokeWidth={0.35} data-landmark="you" />
       )}
 
       {children}

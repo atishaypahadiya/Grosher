@@ -68,6 +68,9 @@ export interface Department {
 export interface StoreGraph {
   storeId: string;
   version: number;
+  name?: string; // "Walmart Supercenter"
+  address?: string; // "Story Rd · San José"
+
   nodes: GraphNode[];
   edges: GraphEdge[];
   locations: ShelfLocation[];
