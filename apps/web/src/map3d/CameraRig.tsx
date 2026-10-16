@@ -21,12 +21,12 @@ export interface SafeArea {
   bottom: number;
 }
 export const DEFAULT_SAFE: SafeArea = { top: 0.16, bottom: 0.36 };
-const MIN_FRAME = 36;
 
 export const DEFAULT_TILT = 58;
 export const DEFAULT_YAW = -18;
 const YAW_RANGE = 25;
 const MIN_DIST = MIN_DISTANCE;
+export const MIN_DISTANCE_PINCH = MIN_DISTANCE;
 const MAX_DIST = MAX_DISTANCE;
 const EASE_MS = 480;
 const H_FOV = 42; // the design's 42° is the horizontal field; three's fov is vertical
@@ -44,12 +44,35 @@ function placeCamera(cam: PerspectiveCamera, p: { tx: number; tz: number; distan
   cam.updateMatrixWorld(true);
 }
 
+/** Minimum visible store width across the frame, metres. The camera is never closer than this needs. */
+export const MIN_SPAN_M = 30;
+/** Camera distance at which the 42° horizontal field shows MIN_SPAN_M metres. */
+export const minFramingDistance = () => MIN_SPAN_M / (2 * Math.tan((H_FOV * Math.PI) / 360));
+
+interface Box {
+  minX: number;
+  maxX: number;
+  minY: number;
+  maxY: number;
+}
+const boxOf = (qs: { x: number; y: number }[]): Box => ({
+  minX: Math.min(...qs.map((q) => q.x)),
+  maxX: Math.max(...qs.map((q) => q.x)),
+  minY: Math.min(...qs.map((q) => q.y)),
+  maxY: Math.max(...qs.map((q) => q.y)),
+});
+
 /**
- * Solve the framing in screen space on a scratch camera: fit the leg (you,
- * the path, the next stop) padded 15% into the safe area between the header
- * strip and the bottom sheet; pin the next stop at that area's upper third
- * and let the distance grow until the you-dot reaches its lower third when
- * the leg has that depth. Never closer than 36 m. Same rule when flat.
+ * Solve the framing in screen space on a scratch camera.
+ *  - fit: the leg's path plus the next stop, padded 15%, inside the map area
+ *    between the header strip and the bottom sheet; next stop at that area's
+ *    upper third, the distance grows until the you-dot reaches its lower third
+ *    when the leg has the depth; never closer than a 30 m visible span.
+ *  - slide: toward the store footprint within the slack the rule leaves, in
+ *    both directions, so neither empty floor nor sky is kept for nothing.
+ *  - hard constraints: both endpoints (you, next) end inside the padded area;
+ *    if no shift can satisfy that, the distance grows and it solves again.
+ * Same rule when flat.
  */
 export function solveFraming(focus: Focus, flat: boolean, aspect: number, yawDeg = flat ? 0 : DEFAULT_YAW, safe: SafeArea = DEFAULT_SAFE): Framing {
   const fov = verticalFov(aspect);
@@ -68,103 +91,103 @@ export function solveFraming(focus: Focus, flat: boolean, aspect: number, yawDeg
   const yNext = ndcTop - third;
   const yYou = ndcBot + third;
   const PAD = 0.15;
-  const availY = height * (1 - PAD);
-  const availX = 2 * (1 - PAD);
   const padY = (height * PAD) / 2;
+  const availY = height - 2 * padY;
+  const availX = 2 * (1 - PAD);
+  const xLo = -1 + PAD;
+  const xHi = 1 - PAD;
+  const yLo = ndcBot + padY;
+  const yHi = ndcTop - padY;
 
   const pts = [focus.you, ...(focus.next ? [focus.next] : []), ...(focus.points ?? [])];
+  const ends = focus.next ? [focus.you, focus.next] : [focus.you];
+  const minD = minFramingDistance();
   let tx = pts.reduce((s, p) => s + p.x, 0) / pts.length;
   let tz = pts.reduce((s, p) => s + p.y, 0) / pts.length;
-  let distance = MIN_FRAME;
+  let distance = minD;
   const groundPerNdc = () => (distance * Math.tan((fov * Math.PI) / 360)) / (flat ? 1 : Math.sin((tilt * Math.PI) / 180));
-
-  for (let i = 0; i < 12; i++) {
-    placeCamera(cam, { tx, tz, distance, tilt, yaw: yawDeg });
-    let minX = Infinity;
-    let maxX = -Infinity;
-    let minY = Infinity;
-    let maxY = -Infinity;
-    for (const p of pts) {
-      const q = ndc(p);
-      minX = Math.min(minX, q.x);
-      maxX = Math.max(maxX, q.x);
-      minY = Math.min(minY, q.y);
-      maxY = Math.max(maxY, q.y);
-    }
-    const you = ndc(focus.you);
-    const next = focus.next ? ndc(focus.next) : null;
-    // distance: grow until the padded box and the next/you spread fit; shrink toward the fit but never below the floor
-    let ratio = Math.max((maxX - minX) / availX, (maxY - minY) / availY);
-    if (next) ratio = Math.max(ratio, (next.y - you.y) / (yNext - yYou));
-    if (ratio > 1.001) distance = Math.min(MAX_DISTANCE, distance * ratio);
-    else if (ratio < 0.9 && distance > MIN_FRAME) distance = Math.max(MIN_FRAME, distance * Math.max(ratio, 0.6));
-    placeCamera(cam, { tx, tz, distance, tilt, yaw: yawDeg });
-    minX = Infinity;
-    maxX = -Infinity;
-    minY = Infinity;
-    maxY = -Infinity;
-    for (const p of pts) {
-      const q = ndc(p);
-      minX = Math.min(minX, q.x);
-      maxX = Math.max(maxX, q.x);
-      minY = Math.min(minY, q.y);
-      maxY = Math.max(maxY, q.y);
-    }
-    const you2 = ndc(focus.you);
-    const next2 = focus.next ? ndc(focus.next) : null;
-    // vertical: next stop at the upper third (alone: you at the area's centre), then keep the box inside the area
-    let errY = next2 ? next2.y - yNext : you2.y - (ndcTop + ndcBot) / 2;
-    if (minY - errY < ndcBot + padY) errY -= ndcBot + padY - (minY - errY);
-    if (maxY - errY > ndcTop - padY) errY += maxY - errY - (ndcTop - padY);
-    const errX = (minX + maxX) / 2;
+  const place = () => placeCamera(cam, { tx, tz, distance, tilt, yaw: yawDeg });
+  /** move the content by (sx, sy) ndc: the target moves the other way along the screen axes */
+  const shiftContent = (sx: number, sy: number) => {
     const g = groundPerNdc();
-    tx += f.x * errY * g + r.x * errX * g * aspect;
-    tz += f.z * errY * g + r.z * errX * g * aspect;
-  }
+    tx -= f.x * sy * g + r.x * sx * g * aspect;
+    tz -= f.z * sy * g + r.z * sx * g * aspect;
+  };
 
-  // Slide toward the store footprint within the slack the leg rule leaves:
-  // the next stop may sit anywhere in the upper third, the box must stay in the area.
-  if (focus.footprint) {
-    placeCamera(cam, { tx, tz, distance, tilt, yaw: yawDeg });
-    const { x, z, w, d } = focus.footprint;
-    const corners = [
-      { x: x - w / 2, y: z - d / 2 },
-      { x: x + w / 2, y: z - d / 2 },
-      { x: x + w / 2, y: z + d / 2 },
-      { x: x - w / 2, y: z + d / 2 },
-    ].map((p) => ndc(p));
-    const fx0 = Math.min(...corners.map((c) => c.x));
-    const fx1 = Math.max(...corners.map((c) => c.x));
-    const fy0 = Math.min(...corners.map((c) => c.y));
-    const leg = pts.map((p) => ndc(p));
-    const lx0 = Math.min(...leg.map((q) => q.x));
-    const lx1 = Math.max(...leg.map((q) => q.x));
-    const ly0 = Math.min(...leg.map((q) => q.y));
-    const ly1 = Math.max(...leg.map((q) => q.y));
-    const nextY = focus.next ? ndc(focus.next).y : null;
-    // wanted content shift (ndc): close empty strips between the footprint and the view / area edges
-    let sx = 0;
-    if (fx0 > -1) sx = -(fx0 + 1); // empty strip on the left: move content left
-    else if (fx1 < 1) sx = 1 - fx1; // empty strip on the right: move content right
-    // vertical: only close empty floor below the store (never trade sky for the leg's position)
-    let sy = 0;
-    if (fy0 > ndcBot) sy = ndcBot - fy0;
-    // clamp to the slack
-    const sxMin = -1 + PAD - lx0; // content may move left until the leg touches the padded left edge
-    const sxMax = 1 - PAD - lx1;
-    sx = Math.max(sxMin, Math.min(sxMax, sx));
-    let syMin = ndcBot + padY - ly0;
-    let syMax = ndcTop - padY - ly1;
-    if (nextY !== null) {
-      // the next stop stays inside the upper third band
-      syMin = Math.max(syMin, yNext - third / 2 - nextY);
-      syMax = Math.min(syMax, yNext + third / 2 - nextY);
+  for (let attempt = 0; attempt < 6; attempt++) {
+    // ---- fit
+    for (let i = 0; i < 10; i++) {
+      place();
+      const box = boxOf(pts.map(ndc));
+      const you = ndc(focus.you);
+      const next = focus.next ? ndc(focus.next) : null;
+      let ratio = Math.max((box.maxX - box.minX) / availX, (box.maxY - box.minY) / availY);
+      if (next) ratio = Math.max(ratio, (next.y - you.y) / (yNext - yYou));
+      if (ratio > 1.001) distance = Math.min(MAX_DISTANCE, distance * ratio);
+      else if (ratio < 0.9 && distance > minD) distance = Math.max(minD, distance * Math.max(ratio, 0.6));
+      place();
+      const box2 = boxOf(pts.map(ndc));
+      const you2 = ndc(focus.you);
+      const next2 = focus.next ? ndc(focus.next) : null;
+      let errY = next2 ? next2.y - yNext : you2.y - (ndcTop + ndcBot) / 2;
+      if (box2.minY - errY < yLo) errY -= yLo - (box2.minY - errY);
+      if (box2.maxY - errY > yHi) errY += box2.maxY - errY - yHi;
+      shiftContent(-(box2.minX + box2.maxX) / 2, -errY);
     }
-    sy = Math.max(syMin, Math.min(syMax, sy));
-    const g = groundPerNdc();
-    // moving content by +s means moving the target by −s along the screen axes
-    tx += -(f.x * sy * g + r.x * sx * g * aspect);
-    tz += -(f.z * sy * g + r.z * sx * g * aspect);
+
+    // ---- slide toward the store footprint within the slack
+    if (focus.footprint) {
+      place();
+      const { x, z, w, d } = focus.footprint;
+      const fb = boxOf(
+        [
+          { x: x - w / 2, y: z - d / 2 },
+          { x: x + w / 2, y: z - d / 2 },
+          { x: x + w / 2, y: z + d / 2 },
+          { x: x - w / 2, y: z + d / 2 },
+        ].map(ndc),
+      );
+      const lb = boxOf(pts.map(ndc));
+      const nextY = focus.next ? ndc(focus.next).y : null;
+      let sx = 0;
+      if (fb.minX > -1) sx = -(fb.minX + 1);
+      else if (fb.maxX < 1) sx = 1 - fb.maxX;
+      // sky above the store is closed first (content up), else empty floor below it (content down)
+      let sy = 0;
+      if (fb.maxY < ndcTop) sy = ndcTop - fb.maxY;
+      else if (fb.minY > ndcBot) sy = ndcBot - fb.minY;
+      sx = Math.max(xLo - lb.minX, Math.min(xHi - lb.maxX, sx));
+      let syMin = yLo - lb.minY;
+      let syMax = yHi - lb.maxY;
+      if (nextY !== null) {
+        syMin = Math.max(syMin, yNext - third / 2 - nextY);
+        syMax = Math.min(syMax, yNext + third / 2 - nextY);
+      }
+      if (syMin <= syMax) sy = Math.max(syMin, Math.min(syMax, sy));
+      else sy = 0;
+      shiftContent(sx, sy);
+    }
+
+    // ---- hard constraints on the endpoints: shift if possible, else zoom out and solve again
+    let ok = false;
+    for (let k = 0; k < 4; k++) {
+      place();
+      const qs = ends.map(ndc);
+      const sxLo = Math.max(...qs.map((q) => xLo - q.x));
+      const sxHi = Math.min(...qs.map((q) => xHi - q.x));
+      const syLo = Math.max(...qs.map((q) => yLo - q.y));
+      const syHi = Math.min(...qs.map((q) => yHi - q.y));
+      if (sxLo > sxHi + 1e-6 || syLo > syHi + 1e-6) break; // cannot fit at this distance
+      const sx = Math.max(sxLo, Math.min(sxHi, 0));
+      const sy = Math.max(syLo, Math.min(syHi, 0));
+      if (Math.abs(sx) < 1e-4 && Math.abs(sy) < 1e-4) {
+        ok = true;
+        break;
+      }
+      shiftContent(sx, sy);
+    }
+    if (ok || distance >= MAX_DISTANCE) break;
+    distance = Math.min(MAX_DISTANCE, distance * 1.15);
   }
   return { tx, tz, distance };
 }
@@ -188,13 +211,15 @@ export interface CameraRigHandle {
 export interface CameraRigProps {
   focus: Focus;
   safe?: SafeArea;
+  /** written every frame with the current camera distance (metres) */
+  distanceRef?: { current: number };
   flat: boolean;
   reducedMotion?: boolean;
   /** fires when pinching out past max zoom (caller may flatten) */
   onOverZoomOut?: () => void;
 }
 
-export const CameraRig = forwardRef<CameraRigHandle, CameraRigProps>(function CameraRig({ focus, safe = DEFAULT_SAFE, flat, reducedMotion, onOverZoomOut }, ref) {
+export const CameraRig = forwardRef<CameraRigHandle, CameraRigProps>(function CameraRig({ focus, safe = DEFAULT_SAFE, distanceRef, flat, reducedMotion, onOverZoomOut }, ref) {
   const { camera, invalidate, size } = useThree();
   const initial = solveFraming(focus, flat, size.width / size.height, undefined, safe);
   const pose = useRef<Pose>({ ...initial, tilt: flat ? 2 : DEFAULT_TILT, yaw: flat ? 0 : DEFAULT_YAW });
@@ -203,6 +228,7 @@ export const CameraRig = forwardRef<CameraRigHandle, CameraRigProps>(function Ca
   const t0 = useRef<number | null>(null);
 
   const apply = (p: Pose) => {
+    if (distanceRef) distanceRef.current = p.distance;
     if ("fov" in camera) {
       const fov = verticalFov(size.width / size.height);
       if (Math.abs(camera.fov - fov) > 0.01) camera.fov = fov;

@@ -2,15 +2,16 @@
 // white edge, fixtures, ribbon, markers, lights, bloom + vignette.
 
 import { Suspense, useEffect, useMemo, useRef, useState, type RefObject } from "react";
-import { useThree } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { Line } from "@react-three/drei";
 import { EffectComposer, SelectiveBloom } from "@react-three/postprocessing";
 import { CanvasTexture, SRGBColorSpace, type DirectionalLight, type HemisphereLight, type Mesh, type Object3D } from "three";
+import type { SelectiveBloomEffect } from "postprocessing";
 import type { GraphNode, StoreGraph } from "@grosher/core";
 import { Fixtures } from "./Fixtures.tsx";
 import { Ribbon } from "./Ribbon.tsx";
 import { OverlayProjector, type OverlayItem, type OverlayRegistry } from "./Overlay.tsx";
-import { CameraRig, type CameraRigHandle } from "./CameraRig.tsx";
+import { CameraRig, MIN_DISTANCE_PINCH, type CameraRigHandle } from "./CameraRig.tsx";
 import { Perf } from "./Perf.tsx";
 import type { Focus, SafeArea } from "./CameraRig.tsx";
 
@@ -34,6 +35,17 @@ function gradientTexture() {
   const t = new CanvasTexture(c);
   t.colorSpace = SRGBColorSpace;
   return t;
+}
+
+/** Bloom intensity follows the camera distance: full at ≥ 36 m, 40% at the pinch minimum. */
+function BloomDriver({ effect, distanceRef, full }: { effect: RefObject<SelectiveBloomEffect | null>; distanceRef: { current: number }; full: number }) {
+  useFrame(() => {
+    const e = effect.current;
+    if (!e) return;
+    const t = Math.max(0, Math.min(1, (distanceRef.current - MIN_DISTANCE_PINCH) / (36 - MIN_DISTANCE_PINCH)));
+    e.intensity = full * (0.4 + 0.6 * t);
+  });
+  return null;
 }
 
 function Background() {
@@ -71,6 +83,8 @@ export interface SceneProps {
 export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, footprint, litFixtureId, ribbon, overlay, focus, safe, flat, reducedMotion, cameraRef, onOverZoomOut, perf }: SceneProps) {
   const [litMesh, setLitMesh] = useState<Mesh | null>(null);
   const [glowLine, setGlowLine] = useState<Object3D | null>(null);
+  const bloomRef = useRef<SelectiveBloomEffect | null>(null);
+  const distanceRef = useRef(36);
   const selection = useMemo(() => [litMesh, glowLine].filter((o): o is Object3D => !!o), [litMesh, glowLine]);
   const hemi = useRef<HemisphereLight>(null);
   const sun = useRef<DirectionalLight>(null);
@@ -104,12 +118,13 @@ export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, fo
       </Suspense>
       <Ribbon nodes={nodes} walked={ribbon.walked} current={ribbon.current} ahead={ribbon.ahead} onGlowLine={setGlowLine} />
       <OverlayProjector items={overlay.items} registry={overlay.registry} />
-      <CameraRig ref={cameraRef} focus={focus} safe={safe} flat={flat} reducedMotion={reducedMotion} onOverZoomOut={onOverZoomOut} />
+      <CameraRig ref={cameraRef} focus={focus} safe={safe} distanceRef={distanceRef} flat={flat} reducedMotion={reducedMotion} onOverZoomOut={onOverZoomOut} />
+      <BloomDriver effect={bloomRef} distanceRef={distanceRef} full={0.7} />
 
       {/* One bloom pass, selective: the lit fixture and the current leg's wide ribbon copy. The rest of the
           frame never blooms, so the haze stays clean and the pass stays within the draw-call budget. */}
       <EffectComposer multisampling={0}>
-        {selection.length ? <SelectiveBloom selection={selection} lights={[hemi, sun]} luminanceThreshold={0.15} intensity={0.7} mipmapBlur ignoreBackground /> : <></>}
+        {selection.length ? <SelectiveBloom ref={bloomRef} selection={selection} lights={[hemi, sun]} luminanceThreshold={0.15} intensity={0.7} radius={0.42} mipmapBlur ignoreBackground /> : <></>}
       </EffectComposer>
       {perf && <Perf />}
     </>

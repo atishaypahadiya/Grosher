@@ -109,12 +109,15 @@ gzipped). The store stays 2D; the scene maps `(x, y) → (x, 0, y)`.
   by `OverlayProjector`. Never use drei `Html` here: one React root per marker, and React 19 warns on each
   unmount. Never `createPortal` DOM from inside the Canvas: R3F's reconciler rejects it.
 - `CameraRig.tsx`: 42° **horizontal** field (`verticalFov(aspect)`, clamped 42–80°), tilt 58°, yaw −18°.
-  `solveFraming` works in screen space on a scratch camera: next stop pinned a third from the top, the
-  you-dot a third from the bottom when the leg has the depth, never closer than 36 m, zoom 12–90 m. Eases
-  480 ms. Drag pans, shift-drag or two-finger twist orbits ±25°, pinch/wheel zooms, flatten tweens to
+  `solveFraming` works in screen space on a scratch camera: fits the leg (padded 15%) into the area the
+  trip screen measures between the progress strip and the sheet, next stop at that area's upper third, the
+  you-dot at its lower third when the leg has the depth; both endpoints are hard constraints; the floor is
+  a 30 m visible span (≈39 m); slack slides the store up first, then toward the footprint. Zoom 12–90 m,
+  eases 480 ms. Drag pans, shift-drag or two-finger twist orbits ±25°, pinch/wheel zooms, flatten tweens to
   top-down and persists in `localStorage`.
-- `Scene.tsx`: gradient background texture, `fogExp2` in haze (0.0145), hemisphere + directional light,
-  floor at white 8% with a white 30% edge, Bloom only. The vignette is CSS on the trip screen (`.trip-vignette`).
+- `Scene.tsx`: gradient background texture, `fogExp2` in haze (0.006), hemisphere + directional light,
+  floor at white 8% with a white 30% edge, one selective bloom pass over the lit fixture and the ribbon glow
+  with intensity driven by camera distance. The vignette is CSS on the trip screen (`.trip-vignette`).
 - `frameloop="demand"`: anything that should repaint must `invalidate()`.
 
 **Perf gate** (DESIGN.md §3: ≤ 60 draw calls): open the trip with `?perf=1`; `Perf.tsx` writes

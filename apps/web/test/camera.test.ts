@@ -1,10 +1,14 @@
 import { describe, expect, test } from "vitest";
 import { PerspectiveCamera, Vector3 } from "three";
-import { DEFAULT_TILT, DEFAULT_YAW, solveFraming, verticalFov } from "../src/map3d/CameraRig.tsx";
+import { DEFAULT_SAFE, DEFAULT_TILT, DEFAULT_YAW, minFramingDistance, solveFraming, verticalFov } from "../src/map3d/CameraRig.tsx";
 
 const aspect = 390 / 844;
+const ndcTop = 1 - 2 * DEFAULT_SAFE.top;
+const ndcBot = -1 + 2 * DEFAULT_SAFE.bottom;
+const third = (ndcTop - ndcBot) / 3;
+const padY = ((ndcTop - ndcBot) * 0.15) / 2;
 
-function ndcY(p: { x: number; y: number }, f: { tx: number; tz: number; distance: number }, flat: boolean) {
+function ndcOf(p: { x: number; y: number }, f: { tx: number; tz: number; distance: number }, flat: boolean) {
   const cam = new PerspectiveCamera(verticalFov(aspect), aspect, 0.5, 400);
   const tilt = ((flat ? 2 : DEFAULT_TILT) * Math.PI) / 180;
   const yaw = ((flat ? 0 : DEFAULT_YAW) * Math.PI) / 180;
@@ -14,6 +18,7 @@ function ndcY(p: { x: number; y: number }, f: { tx: number; tz: number; distance
   cam.updateMatrixWorld(true);
   return new Vector3(p.x, 0.6, p.y).project(cam);
 }
+const inside = (q: Vector3) => q.x >= -0.85 - 1e-3 && q.x <= 0.85 + 1e-3 && q.y >= ndcBot + padY - 1e-3 && q.y <= ndcTop - padY + 1e-3;
 
 describe("camera framing", () => {
   test("42° horizontal field: vertical fov grows on portrait, clamped", () => {
@@ -22,83 +27,94 @@ describe("camera framing", () => {
     expect(verticalFov(0.2)).toBe(80);
   });
 
-  test("next stop is pinned at the upper third; you falls as low as the 36 m floor allows", () => {
+  test("the floor is a visible span: 30 m across the frame ≈ 39 m of distance", () => {
+    expect(minFramingDistance()).toBeCloseTo(39.1, 0);
+    const f = solveFraming({ you: { x: 5, y: 5 } }, false, aspect);
+    expect(f.distance).toBeCloseTo(minFramingDistance(), 3);
+  });
+
+  test("a 30 m leg: next stop in the upper third band, you below it, both inside the padded area", () => {
     const you = { x: 30, y: 50 };
     const next = { x: 34, y: 20 };
     const f = solveFraming({ you, next }, false, aspect);
-    expect(f.distance).toBeGreaterThanOrEqual(36);
-    const yn = ndcY(next, f, false);
-    const yy = ndcY(you, f, false);
-    expect(yn.y).toBeGreaterThan(0.2);
-    expect(yn.y).toBeLessThan(0.5);
-    expect(yy.y).toBeLessThan(yn.y - 0.2); // clearly below the next stop, never centred on it
-    expect(Math.abs((yn.x + yy.x) / 2)).toBeLessThan(0.25);
+    const yn = ndcOf(next, f, false);
+    const yy = ndcOf(you, f, false);
+    expect(Math.abs(yn.y - (ndcTop - third))).toBeLessThan(third / 2 + 1e-3);
+    expect(yy.y).toBeLessThan(yn.y - 0.2);
+    expect(inside(yn)).toBe(true);
+    expect(inside(yy)).toBe(true);
   });
 
   test("a deep leg puts you in the lower third", () => {
     const you = { x: 30, y: 66 };
     const next = { x: 30, y: 12 };
     const f = solveFraming({ you, next }, false, aspect);
-    expect(ndcY(next, f, false).y).toBeGreaterThan(0.2);
-    expect(ndcY(you, f, false).y).toBeLessThan(0.15); // the area's lower third (safe area 16% / 36%)
+    expect(ndcOf(next, f, false).y).toBeGreaterThan(0.2);
+    expect(ndcOf(you, f, false).y).toBeLessThan(ndcBot + third + 0.05);
   });
 
-  test("a long leg path is fitted inside the safe area, not cut off", () => {
-    const you = { x: 4, y: 60 };
-    const next = { x: 58, y: 14 };
-    const path = [you, { x: 4, y: 14 }, { x: 30, y: 14 }, next];
-    const f = solveFraming({ you, next, points: path }, false, aspect);
-    for (const p of path) {
-      const q = ndcY(p, f, false);
-      expect(q.x).toBeGreaterThan(-1);
-      expect(q.x).toBeLessThan(1);
-      expect(q.y).toBeGreaterThan(-0.3); // above the sheet (ndc bottom of the area is -0.28)
-      expect(q.y).toBeLessThan(0.7); // below the strip (area top is 0.68)
-    }
-  });
-
-  test("a leg with no depth still keeps both points in the upper half, clear of the sheet", () => {
+  test("a leg with no depth keeps both points in the upper third band", () => {
     const you = { x: 10, y: 20 };
     const next = { x: 14, y: 20 };
     const f = solveFraming({ you, next }, false, aspect);
-    expect(f.distance).toBe(36);
-    expect(ndcY(next, f, false).y).toBeGreaterThan(0.2);
-    expect(ndcY(you, f, false).y).toBeGreaterThan(0.1);
+    expect(f.distance).toBeCloseTo(minFramingDistance(), 3);
+    expect(ndcOf(next, f, false).y).toBeGreaterThan(0.2);
+    expect(inside(ndcOf(you, f, false))).toBe(true);
   });
 
-  test("flat view keeps the same bias", () => {
-    const f = solveFraming({ you: { x: 10, y: 60 }, next: { x: 20, y: 20 } }, true, aspect);
-    expect(ndcY({ x: 20, y: 20 }, f, true).y).toBeGreaterThan(0.2);
-    expect(ndcY({ x: 10, y: 60 }, f, true).y).toBeLessThan(0.15);
+  test("hard constraints: a long diagonal leg keeps both endpoints inside the padded area", () => {
+    const you = { x: 60, y: 68 }; // entrance corner
+    const next = { x: 4, y: 14 }; // far produce corner
+    const path = [you, { x: 60, y: 52 }, { x: 4, y: 52 }, next];
+    const f = solveFraming({ you, next, points: path, footprint: { x: 31, z: 38, w: 66, d: 62 } }, false, aspect);
+    expect(inside(ndcOf(you, f, false))).toBe(true);
+    expect(inside(ndcOf(next, f, false))).toBe(true);
+    for (const p of path) {
+      const q = ndcOf(p, f, false);
+      expect(q.x).toBeGreaterThan(-1);
+      expect(q.x).toBeLessThan(1);
+    }
   });
 
-  test("no next stop: you alone, at the minimum distance", () => {
-    const f = solveFraming({ you: { x: 5, y: 5 } }, false, aspect);
-    expect(f.distance).toBe(36);
-    expect(Math.abs(ndcY({ x: 5, y: 5 }, f, false).y)).toBeLessThan(0.2);
+  test("flat view keeps the same rules", () => {
+    const you = { x: 10, y: 60 };
+    const next = { x: 20, y: 20 };
+    const f = solveFraming({ you, next }, true, aspect);
+    expect(ndcOf(next, f, true).y).toBeGreaterThan(0.2);
+    expect(ndcOf(you, f, true).y).toBeLessThan(0.15);
+    expect(inside(ndcOf(you, f, true))).toBe(true);
   });
 });
 
-describe("footprint bias", () => {
-  test("a short leg near the back wall: next stop stays in the upper third, the store fills the width, the view slides down as far as the rule allows", () => {
+describe("footprint slide", () => {
+  test("a short leg near the back wall: store fills the width as far as the leg's padding allows, next stays in its band", () => {
     const you = { x: 10, y: 20 };
     const next = { x: 14, y: 20 };
     const footprint = { x: 31, z: 38, w: 66, d: 62 };
     const focus = { you, next, points: [you, { x: 10, y: 12 }, { x: 14, y: 12 }, next] };
     const plain = solveFraming(focus, false, aspect);
     const biased = solveFraming({ ...focus, footprint }, false, aspect);
-    const n = ndcY(next, biased, false);
-    expect(n.y).toBeGreaterThan(0.15);
-    expect(n.y).toBeLessThan(0.75);
-    // the view slides toward the store as far as the 15% padding on the leg allows:
-    // the right side fills, and the strip of outside floor on the left shrinks against the plain solve
-    const left = ndcY({ x: footprint.x - footprint.w / 2, y: 20 }, biased, false).x;
-    const plainLeft = ndcY({ x: footprint.x - footprint.w / 2, y: 20 }, plain, false).x;
-    const right = ndcY({ x: footprint.x + footprint.w / 2, y: 20 }, biased, false).x;
-    expect(right).toBeGreaterThan(0.95);
+    const n = ndcOf(next, biased, false);
+    expect(Math.abs(n.y - (ndcTop - third))).toBeLessThan(third / 2 + 1e-3);
+    expect(inside(ndcOf(you, biased, false))).toBe(true);
+    const left = ndcOf({ x: footprint.x - footprint.w / 2, y: 20 }, biased, false).x;
+    const plainLeft = ndcOf({ x: footprint.x - footprint.w / 2, y: 20 }, plain, false).x;
+    expect(ndcOf({ x: footprint.x + footprint.w / 2, y: 20 }, biased, false).x).toBeGreaterThan(0.95);
     expect(left).toBeLessThan(plainLeft - 0.1);
-    expect(left).toBeLessThan(-0.6);
-    // and the content moved down from the plain pin toward the store, not up
-    expect(n.y).toBeLessThanOrEqual(ndcY(next, plain, false).y + 1e-6);
+  });
+
+  test("vertical slack is used upward: a small store behind a short leg is lifted toward the strip", () => {
+    const you = { x: 12, y: 38 };
+    const next = { x: 16, y: 32 };
+    const footprint = { x: 12, z: 30, w: 30, d: 20 }; // store spans y 20..40, its back wall sits below the strip at the plain solve
+    const focus = { you, next, points: [you, next] };
+    const plain = solveFraming(focus, false, aspect);
+    const biased = solveFraming({ ...focus, footprint }, false, aspect);
+    const backPlain = ndcOf({ x: 12, y: 20 }, plain, false).y;
+    const backBiased = ndcOf({ x: 12, y: 20 }, biased, false).y;
+    expect(backPlain).toBeLessThan(ndcTop); // there was slack
+    expect(backBiased).toBeGreaterThan(backPlain + 0.02);
+    expect(inside(ndcOf(you, biased, false))).toBe(true);
+    expect(inside(ndcOf(next, biased, false))).toBe(true);
   });
 });
