@@ -118,3 +118,19 @@ describe("trip mode", () => {
     expect(screen.getByText(/next · 2 of 2/i)).toBeTruthy();
   });
 });
+
+describe("editor", () => {
+  test("#/edit opens the editor with stats, tools, layers and the inspector", () => {
+    location.hash = "#/edit";
+    render(<App />);
+    expect(screen.getByText(/nodes · .* edges · .* locations · 9 textures · 0 unreachable/i)).toBeTruthy();
+    expect(screen.getByRole("button", { name: /shelf location/i })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /preview in 3d/i })).toBeTruthy();
+    expect(screen.getByRole("group", { name: /layers/i }).querySelectorAll("button")).toHaveLength(5);
+    fireEvent.click(screen.getByRole("button", { name: /^validate$/i }));
+    expect(screen.getByText(/map is valid/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /^done$/i }));
+    expect(screen.getByText(/tap a node, location, corridor or fixture/i)).toBeTruthy();
+    location.hash = "";
+  });
+});

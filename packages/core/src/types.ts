@@ -25,17 +25,23 @@ export interface GraphEdge {
   oneWay?: boolean; // e.g. entrance turnstiles
 }
 
-/** A shelf position: aisle + side + bay, pinned to an aisle edge at an offset from edge.from. */
+export type ItemTag = "frozen" | "chilled" | "heavy" | "fragile" | "produce";
+
+/** Walmart store zones: grocery, market/deli, general merchandise, bakery, front end. */
+export type StoreZone = "GR" | "MD" | "GM" | "BK" | "FT";
+
+/** A shelf position: aisle + side + section, pinned to an aisle edge at an offset from edge.from. */
 export interface ShelfLocation {
   id: string;
-  aisle: string; // e.g. "A12" (Walmart aisle code)
-  side?: "L" | "R";
-  bay?: string; // Walmart section/modular
+  aisle: string; // e.g. "A12" (Walmart aisle code), or a wall name
+  side?: "L" | "R" | "E"; // left, right, or endcap
+  bay?: string; // Walmart section, e.g. "100" = endcap
+  modular?: string; // Walmart modular within the section
+  zone?: StoreZone;
+  tags?: ItemTag[]; // what the shelf holds (chilled wall, frozen case); defaults for items placed here
   edgeId: string;
   offsetM: number;
 }
-
-export type ItemTag = "frozen" | "chilled" | "heavy" | "fragile" | "produce";
 
 /** One thing on the list, resolved to one or more candidate shelf locations. */
 export interface Stop {

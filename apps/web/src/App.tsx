@@ -5,6 +5,7 @@ import { Ground } from "./components/Ground.tsx";
 import { ListScreen } from "./components/ListScreen.tsx";
 import { TripScreen } from "./components/TripScreen.tsx";
 import { CheckoutScreen } from "./components/CheckoutScreen.tsx";
+import { EditorScreen } from "./editor/EditorScreen.tsx";
 import { resolveItems } from "./lib/resolve.ts";
 import { addItem, fromSnapshot, gotIt, isDone, skipStop, startTrip, toSnapshot, type TripSnapshot, type TripState } from "./lib/trip.ts";
 import { load, save } from "./lib/storage.ts";
@@ -15,7 +16,18 @@ const USUAL_KEY = "grosher.usual";
 const NOTES_KEY = "grosher.notes";
 const FLAT_KEY = "grosher.flat";
 
+function useHash() {
+  const [hash, setHash] = useState(() => (typeof location !== "undefined" ? location.hash : ""));
+  useEffect(() => {
+    const on = () => setHash(location.hash);
+    window.addEventListener("hashchange", on);
+    return () => window.removeEventListener("hashchange", on);
+  }, []);
+  return hash;
+}
+
 export function App() {
+  const hash = useHash();
   const bundle = demoSupercenter;
   const { store, catalog } = bundle;
   const router = useMemo(() => new Router(new WalkGraph(store)), [store]);
@@ -52,6 +64,17 @@ export function App() {
       }
       return out;
     });
+
+  if (hash === "#/edit") {
+    return (
+      <EditorScreen
+        bundle={bundle}
+        onExit={() => {
+          location.hash = "";
+        }}
+      />
+    );
+  }
 
   if (trip && !isDone(trip) && !paused) {
     return (

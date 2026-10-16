@@ -48,8 +48,20 @@ export interface StoreMapProps {
   selection?: MapSelection | null;
   /** editor: show the walk graph's nodes and one-way chevrons */
   showGraph?: boolean;
+  /** editor layers */
+  showFixtures?: boolean;
+  showLocations?: boolean;
+  /** fill fixtures with their department texture instead of the flat color */
+  textureUrls?: Map<string, string>;
+  repeatMeters?: number;
+  /** a floor-plan image under everything, in metres */
+  underlay?: { url: string; x: number; y: number; w: number; h: number; opacity: number } | null;
   /** tap on the map (not a drag), in map metres */
   onTap?: (pt: Pt) => void;
+  /** pointer position in map metres, null when it leaves */
+  onHover?: (pt: Pt | null) => void;
+  /** current view box and map units per CSS pixel, for scale bars */
+  onViewChange?: (view: ViewBox, unitsPerPx: number) => void;
   /** extra SVG in map coordinates, drawn on top */
   children?: ReactNode;
   className?: string;
@@ -132,7 +144,14 @@ export function StoreMap({
   doneNodeIds,
   selection,
   showGraph,
+  showFixtures = true,
+  showLocations = true,
+  textureUrls,
+  repeatMeters = 2,
+  underlay,
   onTap,
+  onHover,
+  onViewChange,
   children,
   className,
 }: StoreMapProps) {
@@ -173,6 +192,10 @@ export function StoreMap({
   /** map units per CSS pixel (preserveAspectRatio meet) */
   const upp = Math.max(view.w / sizePx.w, view.h / sizePx.h);
   const px = (n: number) => n * upp;
+  useEffect(() => {
+    onViewChange?.(view, upp);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view.x, view.y, view.w, view.h, upp]);
 
   const unitsPerPx = (v: ViewBox) => {
     const r = svgRef.current?.getBoundingClientRect();
@@ -197,6 +220,7 @@ export function StoreMap({
     restartGesture(gesture.current?.moved ?? false);
   };
   const onPointerMove = (e: ReactPointerEvent<SVGSVGElement>) => {
+    if (onHover && pointers.current.size === 0) onHover(clientToMap(e.clientX, e.clientY, viewRef.current));
     if (!pointers.current.has(e.pointerId)) return;
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     const g = gesture.current;
@@ -366,6 +390,7 @@ export function StoreMap({
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
+      onPointerLeave={() => onHover?.(null)}
       role="img"
       aria-label={`Map of ${store.name ?? store.storeId}`}
     >
@@ -376,14 +401,22 @@ export function StoreMap({
         <filter id="map-glow" x="-50%" y="-50%" width="200%" height="200%">
           <feGaussianBlur stdDeviation={px(3)} />
         </filter>
+        {textureUrls &&
+          [...textureUrls].map(([dept, url]) => (
+            <pattern key={dept} id={`tex-${dept}`} width={repeatMeters} height={repeatMeters} patternUnits="userSpaceOnUse">
+              <image href={url} width={repeatMeters} height={repeatMeters} preserveAspectRatio="none" />
+            </pattern>
+          ))}
       </defs>
       <rect x={initial.x - 100} y={initial.y - 100} width={initial.w + 200} height={initial.h + 200} fill="var(--map-canvas, #EDE9DB)" />
       <rect x={initial.x - 100} y={initial.y - 100} width={initial.w + 200} height={initial.h + 200} fill="url(#map-dots)" />
+      {underlay && <image data-layer="underlay" href={underlay.url} x={underlay.x} y={underlay.y} width={underlay.w} height={underlay.h} opacity={underlay.opacity} preserveAspectRatio="none" />}
 
       {/* fixtures */}
-      <g data-layer="fixtures" stroke={SOIL_35} strokeWidth={hair} strokeLinejoin="round">
+      <g data-layer="fixtures" stroke={SOIL_35} strokeWidth={hair} strokeLinejoin="round" style={showFixtures ? undefined : { display: "none" }}>
         {fixtures.map((f) => {
-          const fill = (f.department && deptColor.get(f.department)) || "#DCE3D4";
+          const tex = f.department && textureUrls?.get(f.department) ? `url(#tex-${f.department})` : null;
+          const fill = tex ?? ((f.department && deptColor.get(f.department)) || "#DCE3D4");
           const selected = selection?.fixtureId === f.id;
           const r = asRect(f.polygon);
           const common = { "data-fixture": f.id, fill: selected ? "rgba(212,255,74,0.55)" : fill, stroke: selected ? SOIL : undefined, strokeWidth: selected ? px(1.5) : undefined };
@@ -422,7 +455,7 @@ export function StoreMap({
       )}
 
       {/* shelf locations */}
-      <g data-layer="locations" fill={SOIL_55}>
+      <g data-layer="locations" fill={SOIL_55} style={showLocations ? undefined : { display: "none" }}>
         {locs.map((l) => (
           <circle key={l.loc.id} cx={l.x} cy={l.y} r={px(2)} data-location={l.loc.id} />
         ))}

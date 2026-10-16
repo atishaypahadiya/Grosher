@@ -163,6 +163,10 @@ export function ListScreen({ store, items, resolution, plan, baselineM, usual, n
         )}
       </section>
 
+      <p className="caption-line muted edit-link">
+        <a href="#/edit">Edit the map</a>
+      </p>
+
       <div className="cta-wrap">
         <button type="button" className="cta" onClick={onRoute} disabled={!resume && (!plan || placed === 0)}>
           <span className="label">
