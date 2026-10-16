@@ -4,194 +4,191 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What Grosher is
 
-Grocery navigation app: given a shopping list, route the shopper through the store on the shortest path
-(entrance → every item → checkout → exit), with live reroute as items are checked off. Target stores are
-Walmart Supercenters in San Jose (the fixture names Story Rd / Almaden); no real store map exists yet.
+Grocery navigation: a shopping list in, the shortest walk through the store out, with live reroute as
+items are checked off. One store map exists, a synthetic Walmart-style Supercenter in `packages/stores/demo`.
+Real stores get surveyed with the built-in map editor. `DESIGN.md` is the visual contract; its boards are in
+`design/boards/`. The boards win on feel, `DESIGN.md` wins on numbers.
 
-## Repo at a glance (audited 2026-10-16)
+## Layout
 
-Three unrelated pieces. No root package.json, no workspace, no shared tooling, no CI.
+```
+package.json          npm workspaces: packages/*, apps/*. Root scripts: test, typecheck, bench, dev.
+packages/core         @grosher/core  routing engine. Zero deps, no build step, Node ≥ 22.18 runs the .ts.
+packages/stores       @grosher/stores store data: demo/{store,catalog}.json, demo/textures/, departments,
+                      geometry validation, generator scripts.
+apps/web              @grosher/web   Vite + React 19 + TypeScript PWA: list, 3D trip, checkout, editor.
+docs/superpowers/specs design notes from earlier sessions.
+```
 
-| Dir | Stack | State | Verdict |
-| --- | --- | --- | --- |
-| `backend/` | Python 3.13, FastAPI, one 456-line `main.py` | Working V0 demo, no tests | Superseded for routing. Keep only the store-comparison idea |
-| `frontend/` | Create React App 5.0.1 + React 19, one `App.js` | Working V0 demo UI, 1 stale failing test | Outdated (CRA deprecated). Replace, don't port |
-| `packages/core/` | TypeScript, Node ≥ 22.18, zero runtime deps | Working, 6 tests pass, benchmarked | **This is the product.** Build on it |
+Dependency direction: `web → core, stores`; `stores → core` (types, and the engine in its tests); core's
+tests take the demo store from stores as a devDependency. Workspace packages resolve by symlink; `exports`
+point straight at `src/index.ts`, so nothing is compiled.
 
-### backend/ — FastAPI "trip optimizer" (Nov 2025)
-
-- `POST /optimize-trip`: lat/lon + list of item names → evaluates two hard-coded stores (Walmart and
-  Target San Jose, ~12 items each with price and an (x, y) on a unitless grid, 1 unit ≈ 2 m). Per store it
-  returns availability, total price, round-trip drive estimate (haversine at 35 km/h), an in-store route
-  (nearest-neighbour over Euclidean points, entrance → items → fixed checkout), walking and checkout time
-  estimates, and a total trip time. Best store = (all items available, lowest trip time, lowest price).
-- `GET /stores`, `GET /health`, `GET /` also exist. CORS is open to `http://localhost:3000` only.
-- Complete for what it is. No DB, no real map, no tests, no item resolution beyond `.strip().lower()`.
+## Commands
 
 ```bash
-cd backend
-pip install -r requirements.txt            # fastapi, uvicorn, pydantic (already installed globally here)
-python3 -m uvicorn main:app --reload --port 8000     # or: python3 main.py
-curl -X POST localhost:8000/optimize-trip -H 'Content-Type: application/json' \
-  -d '{"user_location":{"latitude":37.3382,"longitude":-121.8863},"shopping_list":["milk","eggs","bananas"]}'
+npm install                              # once, at the root
+npm test                                 # core (node --test), stores (node --test), web (vitest)
+npm run typecheck                        # tsc --noEmit in every workspace
+npm run dev                              # Vite dev server for apps/web, http://localhost:5173 (host: true for phones)
+npm run bench                            # core: route vs. list-order baseline, 5–30 stops
+
+cd packages/core && node --test --test-name-pattern="reroute" test/solver.test.ts     # one core test
+cd apps/web && npx vitest run test/trip.test.ts                                      # one web file
+cd apps/web && npm run build && npx vite preview                                     # production build + SW
+npm run gen:demo -w @grosher/stores      # regenerate demo/store.json + catalog.json from scripts/gen-demo.ts
+npm run gen:textures -w @grosher/stores  # regenerate the placeholder textures + textures.json
 ```
 
-Verified 2026-10-16: all endpoints return 200; a 5-item list picks Walmart at 9.2 min total trip.
+Web tests run in jsdom, where WebGL does not exist, so the trip screen under test always uses the flat
+map fallback. Node's own `localStorage` stub shadows jsdom's; `apps/web/test/setup.ts` replaces it and
+stubs `canvas.getContext`.
 
-### frontend/ — CRA single-page demo (Nov 2025)
+## Routing engine (`packages/core`)
 
-- One component, `src/App.js`: textarea list, lat/lon inputs with browser geolocation, POSTs to a hardcoded
-  `http://localhost:8000/optimize-trip`, then renders best-store summary cards, available/missing items,
-  other stores, numbered route steps, and an SVG polyline of the route on a grid. `App.css` is 647 lines.
-- Boilerplate never cleaned up: `<title>React App</title>`, `logo.svg`, `reportWebVitals`, and `App.test.js`
-  is still the stock "renders learn react link" test, which fails because that text is gone.
-- `react-scripts` 5.0.1 (CRA) was deprecated by the React team in Feb 2025 and is unmaintained. It still boots
-  on Node 25 but prints webpack-dev-server deprecation warnings, and caniuse-lite is 11 months stale.
+Read `src/types.ts`, then `graph.ts`, then `solver.ts`.
 
-```bash
-cd frontend
-npm install
-npm start                                   # http://localhost:3000, needs the backend on :8000
-CI=true npm test -- --watchAll=false        # 1 test, currently fails (stale boilerplate)
-```
+- `StoreGraph`: nodes in local metres (y down), edges (optionally one-way: turnstiles, checkout lanes),
+  `ShelfLocation`s pinned to an edge at an offset, one entrance, many checkout lanes, one exit. Rendering-only
+  additions: `fixtures` (polygons with height, department, aisle sign) and `departments` (color, texture file).
+  A `Stop` is a list item resolved to one or more candidate locations plus tags
+  (`frozen|chilled|heavy|fragile|produce`).
+- `WalkGraph` splits each edge at its shelf locations into virtual `loc:<id>` nodes and runs heap Dijkstra;
+  `Router` caches one single-source run per node.
+- `Router.solve({stops, fromNodeId?, weights?, mode?})`: up to `EXACT_LIMIT` (13) stops → Held–Karp over
+  (visited mask, last stop, candidate point), exact with penalties and multi-location items; above that →
+  greedy + 2-opt + Or-opt with candidates chosen by a layered shortest path. The end cost picks the best
+  checkout lane. `routeForOrder` scores a fixed order (the "vs. your list in order" baseline); `reroute`
+  re-solves the remaining stops from the current node.
+- Constraints are penalty metres (`DEFAULT_WEIGHTS`): ambient-after-cold 60/stop, heavy-late 4/position,
+  fragile-early 3/position, produce-after-fragile 15/stop. A new penalty must depend only on (stop being
+  added, set already visited, position) or Held–Karp stops being exact. Add it in `prepare()`'s `penalty`
+  closure and extend the brute-force comparison test. Bitmasks cap stops at 31 (heuristic) and 20 (exact).
 
-Verified 2026-10-16: dev server compiles and serves. Worth keeping from it: the UX shape (list in, summary
-cards, step list plus map). Not worth keeping: the code.
+## Store data (`packages/stores`)
 
-### packages/core/ — `@grosher/core` routing engine (Oct 2026)
+- `demo/store.json` (StoreGraph with 33 fixtures and the department table), `demo/catalog.json` (30
+  `Stop`s), `demo/textures/<dept>.jpg` + `textures.json` (`{dept: {file, w, h, shotAt, repeatMeters}}`).
+- `src/index.ts` exports `StoreBundle` = `{store, catalog, textures, textureUrl(file)}`. `textureUrl` is a
+  `new URL(..., import.meta.url)` so Vite emits the JPEGs as hashed assets (precached by the PWA) and Node
+  resolves the same files.
+- `src/departments.ts` is the canonical table from DESIGN.md §2; each store carries a copy.
+- `src/geometry.ts`: simple-polygon and segment-overlap checks; `fixtureProblems(store)` is used by the
+  tests and the editor's Validate.
+- `scripts/gen-demo.ts` derives the demo fixtures from the aisle edges (1.4 m blocks each side, merged where
+  they meet and share a department; 1.0 m counters). Real stores are not generated; they are surveyed.
 
-Pure TypeScript library, no build step: Node ≥ 22.18 runs `.ts` directly (type stripping), so
-`tsconfig.json` sets `erasableSyntaxOnly` (no enums, no parameter properties, no namespaces) and
-`verbatimModuleSyntax` with explicit `.ts` import extensions. Keep writing it that way.
+## Web app (`apps/web/src`)
 
-```bash
-cd packages/core
-npm install
-npm test                                    # node --test test/*.test.ts   (6 tests, ~0.3 s)
-node --test --test-name-pattern="reroute" test/solver.test.ts   # single test
-npm run typecheck                           # tsc --noEmit
-npm run bench                               # route vs. list-order baseline, 5–30 stops
-```
+Screens are state-driven in `App.tsx`: list → trip → checkout, plus `#/edit` (hash route; path routes need a
+host rewrite, deliberately not done yet). The ground gradient and blooms sit behind every phone screen in a
+centred 430px column.
 
-Verified 2026-10-16: tests pass, typecheck clean. Bench on the demo store (walking distance only):
+- `components/ListScreen` resolves typed names against the catalog (`lib/resolve.ts`), shows department-dot
+  chips (`lib/chips.ts`), hold-to-speak (`lib/speech.ts`) and the lime Route CTA.
+- `lib/trip.ts` is the pure trip state: `gotIt` / `skipStop` / `addItem` reroute from the last checked-off
+  node; `summarize` compares walked + to-go against `routeForOrder` of the collected items; snapshots (ids
+  only) persist across reloads.
+- `components/TripScreen` + `map3d/` is the trip view; `components/CheckoutScreen` + `ShareCard` the share
+  card (1080×1920 PNG via html-to-image, off-screen copy, fonts need the `crossorigin` link).
+- `components/StoreMap` is the flat SVG map (DESIGN.md §4): editor renderer and WebGL fallback. Everything
+  in it is sized in screen pixels via the current units-per-px so markers never scale with zoom.
+- `editor/` is the map editor, see below.
 
-```
-stops   solver     list order  grosher  saved  solve p50 / max (ms)
-   5    held-karp      324 m     274 m   16%     0.0 / 0.2
-  10    held-karp      550 m     377 m   31%     0.5 / 1.1
-  13    held-karp      655 m     425 m   35%     5.3 / 6.2
-  18    heuristic      928 m     546 m   41%     7.0 / 9.0
-  30    heuristic     1404 m     751 m   46%    69.9 / 70.7
-```
+### 3D stack (`apps/web/src/map3d`)
 
-How it works (read `src/types.ts` first, then `graph.ts`, then `solver.ts`):
+three + @react-three/fiber + drei + @react-three/postprocessing, loaded lazily (the chunk is ~1 MB, 285 KB
+gzipped). The store stays 2D; the scene maps `(x, y) → (x, 0, y)`.
 
-- **StoreGraph** (`types.ts`): nodes in local metres (y down), edges (optionally one-way, used for entrance
-  turnstiles and checkout lanes), `ShelfLocation`s pinned to an edge at an offset, one entrance, many
-  checkout lanes, one exit. A `Stop` is a list item resolved to one or more candidate location ids plus
-  tags (`frozen|chilled|heavy|fragile|produce`).
-- **WalkGraph** (`graph.ts`): splits each aisle edge at its shelf locations into virtual `loc:<id>` nodes, so
-  entering an aisle from the near vs. far end is costed correctly. Binary-heap Dijkstra; `Router` caches one
-  single-source run per node.
-- **Router** (`solver.ts`): `solve({stops, fromNodeId?, weights?, mode?})`. ≤ `EXACT_LIMIT` (13) stops →
-  Held–Karp DP over (visited mask, last stop, candidate point), exact including penalties and multi-location
-  items. Above that → greedy + 2-opt + Or-opt, with the best candidate per stop chosen by a layered shortest
-  path. End cost picks the best checkout lane. `routeForOrder` scores a fixed order (the honest "time saved"
-  baseline); `reroute(remaining, currentNodeId)` just re-solves from the current node.
-- **Constraints are penalties in metres** (`DEFAULT_WEIGHTS`): ambient-after-cold, heavy-late, fragile-early,
-  produce-after-fragile. Each depends only on (stop added, set already visited), which is what keeps
-  Held–Karp exact. Bitmasks cap stops at 31 in the heuristic and 20 in exact mode.
-- `src/fixtures/demoStore.ts`: synthetic 12-aisle supercenter grocery side plus a 30-item catalog. The only
-  store map that exists. Replace with a real map when one is surveyed.
+- `Fixtures.tsx`: one merged mesh per department (texture tiled every `repeatMeters` on top and side faces,
+  department hex at 70% as the grade), one merged `EdgesGeometry` per department, all aisle signs in one
+  canvas atlas on one merged plane mesh, and the lit fixture (next stop) drawn alone with lime emissive and
+  rim. `fixtureForLocation` picks the block on the location's side of the corridor.
+- `Ribbon.tsx`: walked / current (with a wide copy for the bloom) / ahead (dashed) as drei `Line`.
+- `Overlay.tsx`: markers and the two labels are plain DOM outside the Canvas, projected every rendered frame
+  by `OverlayProjector`. Never use drei `Html` here: one React root per marker, and React 19 warns on each
+  unmount. Never `createPortal` DOM from inside the Canvas: R3F's reconciler rejects it.
+- `CameraRig.tsx`: 42° **horizontal** field (`verticalFov(aspect)`, clamped 42–80°), tilt 58°, yaw −18°.
+  `solveFraming` works in screen space on a scratch camera: next stop pinned a third from the top, the
+  you-dot a third from the bottom when the leg has the depth, never closer than 36 m, zoom 12–90 m. Eases
+  480 ms. Drag pans, shift-drag or two-finger twist orbits ±25°, pinch/wheel zooms, flatten tweens to
+  top-down and persists in `localStorage`.
+- `Scene.tsx`: gradient background texture, `fogExp2` in haze (0.0145), hemisphere + directional light,
+  floor at white 8% with a white 30% edge, Bloom only. The vignette is CSS on the trip screen (`.trip-vignette`).
+- `frameloop="demand"`: anything that should repaint must `invalidate()`.
 
-What core does **not** have: an HTTP API, a UI, item-name → `Stop` resolution, inventory or prices, multiple
-stores, or a real store map.
+**Perf gate** (DESIGN.md §3: ≤ 60 draw calls): open the trip with `?perf=1`; `Perf.tsx` writes
+`window.__grosherPerf = {calls, triangles, programs, frameMs}` with `gl.info` accumulated across all passes.
+Last measured on the demo store at 390×844 in headless Chromium: 42–46 calls, ~750–900 triangles. Frame
+time from headless Chromium is SwiftShader (software) and is not a device number; measure that on a phone.
+The Playwright scripts that drove these checks live outside the repo; the pattern is: `vite dev`, fill the
+list, Route, `waitForFunction(() => window.__grosherPerf.frames > 100)`, read the object, screenshot.
 
-## Git history
+### Texture pipeline
 
-```
-91e0ce2  2025-11-25  Initial commit – Grosher v0          backend/main.py (+ a committed .pyc), frontend as a broken submodule
-1d7d93e  2025-11-25  Fix: convert frontend from submodule  frontend/ added as a normal folder (CRA app)
-a6850c7  2026-10-16  Routing core                           packages/core/ added, .pyc removed, root .gitignore added
-```
+One 512×512 JPEG (q80) per department, tiled every 2 m on every shelf of that department. Placeholders
+come from `npm run gen:textures -w @grosher/stores` (color + grain + soft shelf bands). Real photos replace
+them file for file: shoot straight on from ~1.5 m, square crop. Two ways in:
 
-Eleven-month gap between the V0 demo and the core. The root `.gitignore` lists `.expo/`, which suggests an
-Expo / React Native app was considered but never committed.
+1. Editor → texture tool (or the Fixture texture slot on a location) → Replace: any image is cover-cropped
+   and re-encoded to 512² JPEG in the browser, shown immediately in the Textures layer and in Preview in 3D,
+   and included in Export / Write to package together with an updated `textures.json` (`shotAt` = today).
+2. Drop the file into `packages/stores/<store>/textures/` and edit `textures.json` by hand.
 
-## How the pieces relate
+Budget: 9 × ~30 KB today; keep the set under ~1.2 MB. Everything in `textures/` is precached by the PWA.
 
-Nothing imports anything. The backend and frontend talk over HTTP; core is standalone.
+### Editor (`apps/web/src/editor`, route `#/edit`, desktop 1280)
 
-The old backend's in-store routing (nearest-neighbour on Euclidean coordinates, no walls, no aisles, fixed
-checkout) is strictly worse than core's graph-based exact/heuristic solver and should be considered dead.
-The one thing the backend does that core does not is **compare stores**: price totals, availability, and a
-drive-time estimate. That is a product feature worth re-adding later, on top of core, not a reason to keep
-the Python service.
+`model.ts` is pure: hit-testing (`pick` prefers node → location → edge → fixture), operations that return a
+new draft (nodes snap within 0.8 m, corridors chain and dedupe, doors, fixture rectangles, locations with the
+corridor's aisle as default, items on shelves, department textures) and `validateDraft` (doors, fixture
+geometry and departments, catalog references, reachability of every location and lane from the entrance to
+the exit). `io.ts` builds the export (`store.json` with `version + 1`, `catalog.json`,
+`textures/textures.json`, new images) and writes it.
 
-### Current architecture
+**Write-to-package flow.** Drafts autosave per store in `localStorage` (`grosher.editor.<storeId>`). "Write
+to package" (Chrome / Edge only: File System Access API) opens a directory picker; choose
+`packages/stores/<storeId>` and the editor writes the files in place, then `git diff` shows the survey.
+Elsewhere, "Export JSON" downloads the same files to copy in by hand. "Import JSON" accepts a store, a
+catalog, or a `{store, catalog}` bundle. "Reset draft to the package" discards local edits.
 
-```
-  frontend/ (CRA, React 19)            backend/ (FastAPI)                 packages/core/ (TS)
-  ┌──────────────────────┐   HTTP      ┌───────────────────────┐          ┌─────────────────────┐
-  │ list + lat/lon input │ ──────────▶ │ POST /optimize-trip   │          │ StoreGraph/WalkGraph│
-  │ summary cards        │ ◀────────── │ 2 hard-coded stores   │          │ Dijkstra            │
-  │ step list + SVG map  │  JSON       │ haversine drive est.  │          │ Held-Karp / 2-opt   │
-  └──────────────────────┘             │ nearest-neighbour     │          │ penalties, reroute  │
-                                       │ route (Euclidean)     │          │ demo store fixture  │
-                                       └───────────────────────┘          └─────────────────────┘
-                                                                           (nothing uses it yet)
-```
+### PWA
 
-### Recommended architecture
+`vite-plugin-pwa` (`registerType: autoUpdate`, registered in `main.tsx`). Workbox precaches every emitted
+file including the texture JPEGs, falls back to `index.html` for navigations, and runtime-caches Google
+Fonts. The app works offline after one online load. Icons are in `public/icons/` (lime dot on soil).
+Check with `npm run build && npx vite preview`, load once, go offline, reload.
 
-```
-                     apps/web  (Vite + React + TS, mobile-first PWA)
-                     ┌────────────────────────────────────────────┐
-                     │ list entry → resolve items → Stop[]        │
-                     │ store map (SVG from StoreGraph) + route    │
-                     │ check-off → Router.reroute() in-browser   │
-                     └───────────────┬────────────────────────────┘
-                                     │ import (npm workspace)
-                     ┌───────────────▼────────────────────────────┐
-                     │ packages/core   (@grosher/core, unchanged) │
-                     └───────────────┬────────────────────────────┘
-                                     │ StoreGraph + catalog JSON
-                     ┌───────────────▼────────────────────────────┐
-                     │ packages/stores  (real store maps, items)  │
-                     │ demoStore now; surveyed Walmart maps later │
-                     └────────────────────────────────────────────┘
+## Design rules a future session must not break (DESIGN.md §7, plus what the code relies on)
 
-  Later, only if needed: a thin TS API for multi-store comparison and shared lists.
-  The solver runs in < 100 ms in the browser, so a server is not required for routing.
-```
+- No blue anywhere. Lime `#D4FF4A` is the only accent and it means *now*: you, the next stop, the chosen
+  lane, the one primary button. No second accent, no status colours on the map.
+- No flat background colours on phone screens: the gradient ground + blooms, with white glass for controls
+  and deep glass (`--glass-deep`) for content cards. Editor chrome is cream.
+- Outfit for words, Doto for every number that matters. No emoji, no Inter / Roboto, no drop shadows (glows
+  and blur only).
+- Only two labels on the map: the next stop and the checkout callout. Markers and labels never scale with zoom.
+- No animation longer than 480 ms; everything respects `prefers-reduced-motion`.
+- No "amazing / smart / optimized" copy. Numbers say it.
+- Phone screens are a centred column, max 430px; verify at 390×844 and 1440×900.
+- Keep the solver's penalties position-and-mask only (exactness), keep Fixture/Department optional (the
+  solver never reads them), keep `.ts` imports with extensions and `erasableSyntaxOnly`-safe syntax in
+  packages (Node runs them directly).
 
-## What to build next: options
+## How to map a new store
 
-1. **Web app on core (recommended).** New `apps/web` with Vite + React + TypeScript, npm workspaces at the
-   root, importing `@grosher/core` directly. Render the demo store from `StoreGraph` as an SVG map, type a
-   list, draw the route, tap items to check off and reroute. Mobile-first so it works on a phone in-store;
-   make it a PWA. Tradeoffs: ships the differentiator (real routing, live reroute) fastest and proves the
-   core API against a real consumer; still on the synthetic map, and no multi-store comparison yet.
-2. **Expo / React Native app on core.** Same idea, native. The `.expo/` ignore hints this was considered.
-   Tradeoffs: closer to the end-state phone product and gets camera/location APIs; much slower iteration on
-   map rendering, more toolchain, and the core API will still change. Premature until the UX is settled.
-3. **Real store map first.** Survey one Walmart (Story Rd), encode it as a `StoreGraph` plus an item
-   catalog in a `packages/stores` package, add validation tests (connectivity, every item reachable).
-   Tradeoffs: this is the real moat and the thing the solver is waiting for, but there is no UI to show it
-   in and the survey format is easier to design once a map renderer exists.
-
-Recommendation: option 1, then fold option 3 in as the second milestone once the renderer exists. Delete
-`backend/` and `frontend/` when the web app reaches parity with the frontend's current screen (list in,
-route out), keeping the store-comparison idea on the roadmap.
-
-## Conventions and gotchas
-
-- Core coordinates are metres with y pointing down (floor-plan convention); the old backend used an
-  arbitrary grid with 1 unit ≈ 2 m. Do not mix them.
-- Penalty weights are in metres so they trade off directly against walking distance.
-- Adding a new constraint to the solver: it must depend only on (stop being added, set already visited,
-  position), or Held–Karp stops being exact. Add it in `prepare()`'s `penalty` closure, then extend the
-  "held-karp matches brute force" test.
-- `Stop.locationIds` with more than one entry means the item is in several places (endcaps); the solver
-  picks the location, so never pre-pick it in the caller.
-- Node 25 is installed on this machine; core needs ≥ 22.18, CRA runs but warns.
+1. **Underlay.** Open `#/edit`, select tool, "Add image" with a floor-plan photo or sketch. Unlock it, drag
+   to position, scroll or pinch to scale until a known distance (a 10 m scale bar, aisle spacing) matches;
+   lock it. Use the measure tool to check.
+2. **Corridors.** Corridor tool: tap along each walkable line; taps snap to existing nodes so loops close.
+   Mark checkout lanes and turnstiles one-way in the edge inspector. Doors tool: entrance, exit, lanes.
+3. **Fixtures.** Fixture tool: two taps per shelf block; set kind, department, height (1.8 shelves, 1.0
+   counters) and the aisle sign code. Walls get `kind: wall`.
+4. **Locations.** Location tool: tap on a corridor beside the shelf; fill Walmart aisle / section / modular,
+   side (Left / Right / Endcap), zone, tags. Add the items that live there; confidence starts at 0.6.
+5. **Textures.** Texture tool: one straight-on photo per department.
+6. **Validate.** Fix every error (unreachable locations, missing departments, broken references); warnings
+   are floating nodes and unlabelled locations.
+7. **Write.** "Write to package" into `packages/stores/<storeId>` (create the folder first; give the store a
+   new `storeId`, `name`, `address`), register the bundle in `packages/stores/src/index.ts`, run
+   `npm test` (the stores tests validate every registered store), commit. Preview in 3D along the way.
