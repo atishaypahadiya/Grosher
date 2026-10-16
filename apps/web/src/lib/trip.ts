@@ -20,6 +20,8 @@ export interface TripState {
   doneAt?: number;
   /** every node walked through so far, in order (for "aisles never entered") */
   visited: string[];
+  /** shelf node of each collected stop, in order */
+  doneNodeIds: string[];
 }
 
 export function startTrip(router: Router, stops: Stop[]): TripState {
@@ -34,6 +36,7 @@ export function startTrip(router: Router, stops: Stop[]): TripState {
     route: router.solve({ stops }),
     startedAt: Date.now(),
     visited: [positionNodeId],
+    doneNodeIds: [],
   };
 }
 
@@ -61,6 +64,7 @@ export function gotIt(router: Router, t: TripState): TripState {
     walkedM: t.walkedM + leg.distanceM,
     route: router.reroute(remaining, leg.nodeId),
     visited: [...t.visited, ...leg.path.slice(1)],
+    doneNodeIds: [...t.doneNodeIds, leg.nodeId],
     doneAt: remaining.length === 0 ? Date.now() : t.doneAt,
   };
 }
@@ -132,6 +136,7 @@ export interface TripSnapshot {
   startedAt?: number;
   doneAt?: number;
   visited?: string[];
+  doneNodeIds?: string[];
 }
 
 export function toSnapshot(t: TripState): TripSnapshot {
@@ -146,6 +151,7 @@ export function toSnapshot(t: TripState): TripSnapshot {
     startedAt: t.startedAt,
     doneAt: t.doneAt,
     visited: t.visited,
+    doneNodeIds: t.doneNodeIds,
   };
 }
 
@@ -167,6 +173,7 @@ export function fromSnapshot(router: Router, catalog: Stop[], snap: TripSnapshot
       startedAt: snap.startedAt ?? Date.now(),
       doneAt: snap.doneAt,
       visited: snap.visited ?? [snap.positionNodeId],
+      doneNodeIds: snap.doneNodeIds ?? [],
     };
   } catch {
     return null;

@@ -267,5 +267,6 @@ button { cursor: pointer; touch-action: manipulation; }
 .row input[type="text"] { flex: 1; min-width: 0; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 999px; padding: 10px 16px; font-size: 16px; }
 .add-item { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--hairline); }
 
-.map-current { animation: map-pulse 1.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
-@keyframes map-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.55; transform: scale(1.18); } }
+/* the you-dot halo: scale 1 → 1.5, opacity .35 → 0, 1.6 s (DESIGN.md §2 Motion) */
+.map-halo { animation: map-halo 1.6s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes map-halo { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.5); } }

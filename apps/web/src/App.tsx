@@ -62,7 +62,15 @@ export function App() {
             <span className="mode">On the trip</span>
           </header>
           <div className="map-wrap">
-            <StoreMap store={store} route={trip.route} currentNodeId={trip.route.legs[0]?.nodeId} positionNodeId={trip.positionNodeId} className="app-map" />
+            <StoreMap
+              store={store}
+              route={trip.route}
+              currentNodeId={trip.route.legs[0]?.stopId ? trip.route.legs[0].nodeId : null}
+              positionNodeId={trip.positionNodeId}
+              walkedPath={trip.visited}
+              doneNodeIds={trip.doneNodeIds}
+              className="app-map"
+            />
           </div>
           <TripPanel
             store={store}
