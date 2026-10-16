@@ -27,8 +27,10 @@ export interface Pt {
 export interface StoreMapProps {
   store: StoreGraph;
   route?: Route | null;
-  /** node id to emphasise, e.g. the current stop in trip mode */
+  /** node id to ring, e.g. the next stop in trip mode */
   currentNodeId?: string | null;
+  /** where the shopper is (last checked-off node) */
+  positionNodeId?: string | null;
   /** tap on the map (not a drag), in map metres */
   onTap?: (pt: Pt) => void;
   /** extra SVG in map coordinates, drawn above the route */
@@ -85,7 +87,7 @@ function routePoints(route: Route, nodes: Map<string, GraphNode>): Pt[] {
   return pts;
 }
 
-export function StoreMap({ store, route, currentNodeId, onTap, children, className }: StoreMapProps) {
+export function StoreMap({ store, route, currentNodeId, positionNodeId, onTap, children, className }: StoreMapProps) {
   const graph = useMemo(() => new WalkGraph(store), [store]);
   const nodes = graph.nodes;
   const initial = useMemo(() => boundsOf(nodes.values()), [nodes]);
@@ -184,18 +186,6 @@ export function StoreMap({ store, route, currentNodeId, onTap, children, classNa
       }),
     [store, graph, nodes],
   );
-  const signs = useMemo(() => {
-    const groups = new Map<string, Pt[]>();
-    for (const l of locs) groups.set(l.loc.aisle, [...(groups.get(l.loc.aisle) ?? []), l]);
-    const out: { aisle: string; x: number; y: number }[] = [];
-    for (const [aisle, pts] of groups) {
-      const c = { x: pts.reduce((s, p) => s + p.x, 0) / pts.length, y: pts.reduce((s, p) => s + p.y, 0) / pts.length };
-      const spread = Math.max(...pts.map((p) => dist(p, c)));
-      // Hang the sign just above the centroid so it does not cover a shelf dot.
-      if (spread <= 14) out.push({ aisle, x: c.x, y: c.y - 2.2 });
-    }
-    return out;
-  }, [locs]);
   const routePts = useMemo(() => (route ? routePoints(route, nodes) : []), [route, nodes]);
   const stops = useMemo(
     () =>
@@ -206,8 +196,49 @@ export function StoreMap({ store, route, currentNodeId, onTap, children, classNa
         : [],
     [route, nodes],
   );
+  // Aisle signs hang at the end of the aisle you approach from (nearest the
+  // entrance by walking distance), 1.6 m in. A sign a stop marker overlaps
+  // is dropped: stop numbers always win.
+  const signs = useMemo(() => {
+    const fromEntrance = graph.dijkstra(store.entranceId).dist;
+    const edgeById = new Map(store.edges.map((e) => [e.id, e]));
+    const groups = new Map<string, { pts: Pt[]; edges: Set<string> }>();
+    for (const l of locs) {
+      const g = groups.get(l.loc.aisle) ?? { pts: [], edges: new Set<string>() };
+      g.pts.push(l);
+      g.edges.add(l.loc.edgeId);
+      groups.set(l.loc.aisle, g);
+    }
+    const out: { aisle: string; x: number; y: number; w: number }[] = [];
+    for (const [aisle, g] of groups) {
+      const c = { x: g.pts.reduce((s, p) => s + p.x, 0) / g.pts.length, y: g.pts.reduce((s, p) => s + p.y, 0) / g.pts.length };
+      if (Math.max(...g.pts.map((p) => dist(p, c))) > 14) continue;
+      let end: GraphNode | undefined;
+      let best = Infinity;
+      for (const eid of g.edges) {
+        const e = edgeById.get(eid);
+        for (const id of e ? [e.from, e.to] : []) {
+          const d = fromEntrance.get(id) ?? Infinity;
+          const n = nodes.get(id);
+          if (n && d < best) {
+            best = d;
+            end = n;
+          }
+        }
+      }
+      if (!end) continue;
+      const len = Math.hypot(c.x - end.x, c.y - end.y) || 1;
+      const x = end.x + ((c.x - end.x) / len) * 1.6;
+      const y = end.y + ((c.y - end.y) / len) * 1.6;
+      const w = aisle.length * 0.7 + 1;
+      const covered = stops.some((s) => s.node && Math.abs(s.node.x - x) < w / 2 + 1.3 && Math.abs(s.node.y - y) < 0.8 + 1.3);
+      if (!covered) out.push({ aisle, x, y, w });
+    }
+    return out;
+  }, [locs, graph, store, nodes, stops]);
   const checkouts = new Set(store.checkoutIds);
   const current = currentNodeId ? nodes.get(currentNodeId) : undefined;
+  const position = positionNodeId ? nodes.get(positionNodeId) : undefined;
 
   return (
     <svg
@@ -254,19 +285,6 @@ export function StoreMap({ store, route, currentNodeId, onTap, children, classNa
         ))}
       </g>
 
-      {/* aisle signs */}
-      <g data-layer="signs" fontFamily="Barlow, system-ui, sans-serif" fontSize={1.1} fontWeight={600} textAnchor="middle">
-        {signs.map((s) => {
-          const w = s.aisle.length * 0.7 + 1;
-          return (
-            <g key={s.aisle} transform={`translate(${s.x} ${s.y})`}>
-              <rect x={-w / 2} y={-0.8} width={w} height={1.6} rx={0.3} fill="var(--map-sign, #2B3A42)" />
-              <text y={0.4} fill="var(--map-sign-ink, #FFFFFF)">{s.aisle}</text>
-            </g>
-          );
-        })}
-      </g>
-
       {/* entrance, exit, checkouts */}
       <g data-layer="landmarks">
         {store.nodes.map((n) => {
@@ -287,6 +305,16 @@ export function StoreMap({ store, route, currentNodeId, onTap, children, classNa
           <polyline points={routePts.map((p) => `${p.x},${p.y}`).join(" ")} stroke="var(--map-route, #2457F5)" strokeWidth={0.9} />
         </g>
       )}
+      {/* aisle signs: above the route, below stop markers */}
+      <g data-layer="signs" fontFamily="Barlow, system-ui, sans-serif" fontSize={1.1} fontWeight={600} textAnchor="middle">
+        {signs.map((s) => (
+          <g key={s.aisle} transform={`translate(${s.x} ${s.y})`} data-sign={s.aisle}>
+            <rect x={-s.w / 2} y={-0.8} width={s.w} height={1.6} rx={0.3} fill="var(--map-sign, #2B3A42)" />
+            <text y={0.4} fill="var(--map-sign-ink, #FFFFFF)">{s.aisle}</text>
+          </g>
+        ))}
+      </g>
+
       {stops.length > 0 && (
         <g data-layer="stops" fontFamily="Barlow, system-ui, sans-serif" fontSize={1.4} fontWeight={600} textAnchor="middle">
           {stops.map((s) =>
@@ -301,6 +329,10 @@ export function StoreMap({ store, route, currentNodeId, onTap, children, classNa
       )}
       {current && (
         <circle className="map-current" cx={current.x} cy={current.y} r={2.4} fill="none" stroke="var(--map-current, #F2A900)" strokeWidth={0.5} data-landmark="current" />
+      )}
+
+      {position && (
+        <circle cx={position.x} cy={position.y} r={0.95} fill="var(--map-you, #1C2528)" stroke="var(--map-floor, #EEF1EE)" strokeWidth={0.35} data-landmark="you" />
       )}
 
       {children}

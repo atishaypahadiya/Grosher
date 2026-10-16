@@ -1,21 +1,24 @@
-import { useMemo } from "react";
-import { Router, WalkGraph } from "@grosher/core";
+import { useEffect, useMemo, useState } from "react";
+import { Router, WalkGraph, type Stop } from "@grosher/core";
 import { demoSupercenter } from "@grosher/stores";
 import { StoreMap } from "./components/StoreMap.tsx";
+import { ListPanel, type Plan } from "./components/ListPanel.tsx";
+import { load, save } from "./lib/storage.ts";
 
-const { store, catalog } = demoSupercenter;
-
-// Checkpoint build: render the demo store with a sample route so the map
-// can be checked visually. The list screen replaces this.
-const SAMPLE = ["bananas", "milk", "eggs", "rice", "pasta", "chips", "icecream", "bread"];
+const LIST_KEY = "grosher.list";
 
 export function App() {
-  const route = useMemo(() => {
-    const router = new Router(new WalkGraph(store));
-    const stops = SAMPLE.map((id) => catalog.find((s) => s.id === id)!);
-    return router.solve({ stops });
-  }, []);
-  const currentNodeId = route.legs[2]?.nodeId;
+  const bundle = demoSupercenter;
+  const { store, catalog } = bundle;
+  const router = useMemo(() => new Router(new WalkGraph(store)), [store]);
+
+  const [text, setText] = useState<string>(() => load(LIST_KEY, ""));
+  useEffect(() => save(LIST_KEY, text), [text]);
+
+  const [plan, setPlan] = useState<Plan | null>(null);
+  const onPlan = (stops: Stop[], notFound: string[]) => {
+    setPlan({ stops, notFound, route: router.solve({ stops }) });
+  };
 
   return (
     <div className="app">
@@ -23,14 +26,18 @@ export function App() {
         <span className="brand">Grosher</span>
         <span className="store-name">Demo Supercenter</span>
       </header>
-      <StoreMap store={store} route={route} currentNodeId={currentNodeId} className="app-map" />
-      <footer className="legend">
-        <span><i className="sw sw-entrance" />Entrance</span>
-        <span><i className="sw sw-exit" />Exit</span>
-        <span><i className="sw sw-checkout" />Checkout</span>
-        <span><i className="sw sw-route" />Route</span>
-        <span><i className="sw sw-current" />You</span>
-      </footer>
+      <StoreMap store={store} route={plan?.stops.length ? plan.route : null} className="app-map" />
+      <ListPanel
+        store={store}
+        catalog={catalog}
+        text={text}
+        onTextChange={setText}
+        plan={plan}
+        onPlan={onPlan}
+        onStart={() => {
+          /* trip mode: next commit */
+        }}
+      />
     </div>
   );
 }
