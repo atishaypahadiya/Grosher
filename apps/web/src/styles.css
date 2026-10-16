@@ -1,0 +1,90 @@
+:root {
+  --bg: #F7F8F6;
+  --ink: #1C2528;
+  --ink-soft: #5E6A70;
+  --line: #DDE2DE;
+  --map-floor: #EEF1EE;
+  --map-walk: #D7DDD6;
+  --map-ink: #2B3A42;
+  --map-ink-soft: #8A969C;
+  --map-sign: #2B3A42;
+  --map-sign-ink: #FFFFFF;
+  --map-route: #2457F5;
+  --map-current: #F2A900;
+  --map-entrance: #1F7A4D;
+  --map-checkout: #E8B23A;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121614;
+    --ink: #E6EBE7;
+    --ink-soft: #99A5A0;
+    --line: #273029;
+    --map-floor: #171C19;
+    --map-walk: #2A332E;
+    --map-ink: #C9D3CD;
+    --map-ink-soft: #7C8A84;
+    --map-sign: #DCE3DE;
+    --map-sign-ink: #121614;
+    --map-route: #6A8DFF;
+    --map-current: #FFC43D;
+    --map-entrance: #3DB37A;
+    --map-checkout: #D9A63A;
+  }
+}
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: Barlow, system-ui, -apple-system, sans-serif;
+  font-size: 16px;
+  line-height: 1.35;
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+}
+
+.app {
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+.topbar {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
+  border-bottom: 1px solid var(--line);
+}
+.brand { font-weight: 600; font-size: 18px; letter-spacing: 0.01em; }
+.store-name { color: var(--ink-soft); font-size: 15px; }
+
+.app-map { width: 100%; height: 100%; display: block; min-height: 0; }
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  padding: 8px 16px calc(8px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { display: inline-block; width: 12px; height: 12px; border-radius: 50%; }
+.sw-entrance { background: var(--map-entrance); }
+.sw-exit { border: 2px solid var(--map-ink); }
+.sw-checkout { background: var(--map-checkout); border-radius: 3px; width: 8px; }
+.sw-route { background: var(--map-route); height: 4px; width: 16px; border-radius: 2px; }
+.sw-current { border: 2.5px solid var(--map-current); }
+
+.map-current { animation: map-pulse 1.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes map-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(1.18); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .map-current { animation: none; }
+}
