@@ -1,0 +1,170 @@
+# Grosher — DESIGN.md
+
+**The feeling:** the produce aisle at 7 in the morning. Light through lettuce, mist just hit the shelves. Apricot haze up front, deep leaf at the back. Thin white lines for everything measured, and one lime point that means *now*.
+
+This is the contract for `apps/web`. The canvas with the mockups is exported at `design/boards/*.png` (Mood, List, Trip, Checkout, Editor, Tokens). When this file and a board disagree, the board wins on feel and this file wins on numbers.
+
+## 1. Principles
+
+1. **The ground is light, never a fill.** Every screen sits on the same gradient and the same blurred blooms. Nothing is a flat color block except glass.
+2. **Fixtures are photographed.** The 3D map shows the real shelves of the real store: one tiling photo per department on every shelf run. The store reads as color from far away and as product up close.
+3. **One accent, one meaning.** Lime `#D4FF4A` is *now*: the dot that is you, the point on the shelf you're heading to, the chosen lane, the single primary button. Nothing else is lime. Blue does not exist in this app.
+4. **Everything measured is a white hairline.** Route, stops, wireframe art, progress: thin white, 40–95% opacity. Meaning comes from opacity and shape, not hue.
+5. **Numbers brag, words don't.** Every number that matters is set in Doto (dot matrix), large. Copy is short and on your side: "Got it", "Not here", "Tell me where".
+6. **Mist is rendered, not styled.** Fog, bloom, depth of field in the 3D view; blurred radial blooms and backdrop blur in 2D. Soft edges everywhere except type.
+
+## 2. Tokens
+
+### Light (gradient stops, front of store → back)
+
+| Token | Hex | Where |
+| --- | --- | --- |
+| `--haze` | `#F9D7A8` | Top / front, 0% |
+| `--apricot` | `#F0C27A` | ~10% |
+| `--lime-green` | `#B9D96A` | ~30% |
+| `--moss` | `#6CB26A` | ~50% |
+| `--leaf` | `#2E7D46` | ~75% |
+| `--deep` | `#184D2E` | 100% / back wall fog |
+| `--soil` | `#0F2A1A` | Dark text, lime-on-soil buttons (editor) |
+
+Screen background: `linear-gradient(170deg, haze 0%, apricot 10–12%, lime-green 30–34%, moss 48–55%, leaf 72–80%, deep 100%)`.
+Blooms (position absolute, `border-radius:50%`, `filter: blur(24–40px)`): cream `rgba(255,240,210,.9)` top-left, lime `rgba(212,255,74,.45)` center, deep `rgba(10,50,28,.8)` bottom-right.
+
+### Ink
+
+- On green regions: white `#FFFFFF`; muted `rgba(255,255,255,.85)`; eyebrow `rgba(255,255,255,.8)`.
+- On haze regions (top ~25% of List/Checkout): `--soil`; muted `rgba(15,42,26,.7)`.
+- Rule: pick ink by the region's luminance, never by component. Contrast ≥ 4.5:1 for body, ≥ 3:1 at 24px+.
+
+### Accent and surfaces
+
+| Token | Value |
+| --- | --- |
+| `--lime` | `#D4FF4A` · glow `0 0 24px rgba(212,255,74,.45)` on buttons, `0 0 18px rgba(212,255,74,.8)` on dots |
+| `--glass` | `rgba(255,255,255,.14)` fill · `1px solid rgba(255,255,255,.28)` · `backdrop-filter: blur(18px) saturate(140%)` |
+| `--glass-strong` | same with fill `.20` (editor pills on cream use `rgba(255,255,255,.7)`) |
+| `--hairline` | `rgba(255,255,255,.18)` row dividers inside glass; `.25` section rules |
+| Editor ground | `#F4F1E6` chrome, `#EDE9DB` canvas with 24px dot grid `rgba(15,42,26,.12)` |
+
+### Department colors (the flat-map fills, and the grade applied to each photo in 3D)
+
+| Dept | Hex | Texture file |
+| --- | --- | --- |
+| produce | `#6CB26A` | `produce.jpg` |
+| dairy | `#F2EAD2` | `dairy.jpg` |
+| frozen | `#DDEFF0` | `frozen.jpg` |
+| bakery | `#E9B46A` | `bakery.jpg` |
+| meat | `#E5A2A0` | `meat.jpg` |
+| dry | `#E2C9A2` | `dry.jpg` |
+| snack | `#F3C96B` | `snack.jpg` |
+| drinks | `#8FC9E8` | `drinks.jpg` |
+| household | `#D8D4CC` | `household.jpg` |
+| checkout | `#DCE3D4` | none (flat) |
+
+Status in text only: confirmed = `--lime`, guess = bakery `#F6D28C`, not here = meat `#F2B5B0`. No separate red/green/yellow.
+
+### Type
+
+- **Outfit** (Google Fonts) 200 / 300 / 400 / 500 / 600. Fallback `system-ui`.
+- **Doto** (Google Fonts, dot matrix) 500 / 700 / 900. Only for numbers. Units next to a Doto number are Outfit 300, 40–45% of the number's size.
+
+| Role | Spec |
+| --- | --- |
+| Hero number | Doto 700 · 72–96 · `letter-spacing: .03em` · `line-height: .9` |
+| Metric | Doto 700 · 17–28 · `.04em` (timer, meters, route preview) |
+| Display | Outfit 200 · 40–64 · `-.02em` · `line-height 1.02` |
+| Title | Outfit 300 · 26 · `-.01em` |
+| Heading | Outfit 500 · 15 |
+| Body | Outfit 300 · 13–14 |
+| Eyebrow | Outfit 500 · 10 · `.14em` · uppercase · white 80%, **lime** when it names the current thing |
+| Aisle sign (3D shelf front) | Outfit 500 · ~7 map units · `.08em` · white 90% on `rgba(10,40,22,.55)` |
+
+### Shape, space, motion
+
+- Radius: 999 on every button, pill, chip and input; 26–28 on sheets and the share card; 18 on tiles; 2–3 on map fixtures.
+- Gutter 16 (sheets inset 12). Safe-area top 58. Touch targets ≥ 44. Primary button 52–58 tall.
+- No drop shadows. Only glows (lime) and blur (glass, blooms).
+- Motion: the you-dot halo pulses (1.6s, scale 1→1.5, opacity .35→0). Reroute: old ribbon fades 120ms, new ribbon draws 240ms. Camera moves ease-out 480ms. Everything respects `prefers-reduced-motion`.
+
+## 3. The 3D trip map (`apps/web/src/map3d/`)
+
+Stack: `three` + `@react-three/fiber` + `@react-three/drei` + `@react-three/postprocessing`. The store graph stays 2D meters (y down); the scene maps `(x, y) → (x, 0, y)` so the floor is the XZ plane.
+
+**Scene, back to front**
+
+1. **Fog**: `fogExp2`, color `--haze`, density tuned so the back wall is ~60% hazed at default zoom. Scene background is the same gradient as the chrome (a full-screen gradient plane behind the camera, or CSS behind a transparent canvas).
+2. **Floor**: plane the size of the store footprint, material `rgba(255,255,255,.08)` over the gradient, 1px white 30% edge (a thin line geometry around the perimeter).
+3. **Fixtures**: one `BoxGeometry` per `Fixture`, height `fixture.height ?? 1.8` m. Material: `MeshStandardMaterial` with `map` = the department's texture (repeat along the long axis, `wrapS/T = RepeatWrapping`, repeat ≈ length / 2 m), `color` = department hex at 70% blend so the grade shows through, roughness .85. **Front face** of each shelf run (the end nearest the front corridor) carries an aisle-sign decal: a small plane with a canvas texture, `rgba(10,40,22,.55)` fill, white text (Outfit 500). Edges: `EdgesGeometry` line at white 35%.
+4. **Lit fixture** (the one holding the next stop): emissive lime at .25, plus a lime rim (edges line at `--lime`, 1.5px) and a bloom pass picks it up.
+5. **Route ribbon** on the floor (y = .02): `Line2` from drei, three segments:
+   - walked: white 40%, width 2px, solid
+   - current leg: white 100%, width 2px, with a second copy at width 5px, 35% opacity, blurred by bloom (the glow)
+   - ahead: white 85%, width 2px, dashed `1 6`
+6. **Markers** (always face the camera, constant screen size via drei `Html` or billboard sprites):
+   - you: lime dot 11px with a 28px halo (pulsing)
+   - next stop: lime point 8px on the shelf face at location height; a 1px lime leader rising to its label
+   - ahead stops: white 12px circle with the number in Outfit 600 soil
+   - done stops: 12px white 80% ring with a white check
+   - chosen lane: lime point; other lanes nothing
+   - entrance: white ring with arrow-in glyph; exit: lime ring
+7. **Labels** (drei `Html`, screen space, no scaling): next stop = eyebrow in lime (`DAIRY · A10 · 6 OF 8`) over the item name (Outfit 500, 17px) over distance (Outfit 300, 12px, white 85%), with `text-shadow: 0 1px 10px rgba(0,0,0,.25)`. Checkout callout = eyebrow `CHECKOUT · LANE 5` over `2 min walk (118 m)`. Only these two labels exist on the map.
+8. **Post**: `Bloom` (threshold .9, intensity .6, mipmap blur) and a subtle `Vignette` (deep green, .35). No DoF on phones by default; enable behind a flag for the launch video.
+
+**Camera**
+
+- Default: perspective, FOV 42, tilt 58° from vertical, yaw −18°, framing the current leg with the next stop in the upper third. On every reroute / check-off the camera eases (480ms) to re-frame the new current leg.
+- Gestures: one-finger drag orbits yaw ±25° and pans; pinch zooms (distance 12–60 m); the header **flatten** button (and pinching past max zoom-out) tweens tilt to 0° top-down, same lighting, same markers; tap again to tilt back. Flatten state persists in `localStorage`.
+
+**Lighting**: hemisphere light (sky `--haze`, ground `--deep`, .9) + one directional from front-left (.5). No shadows (cost on phone).
+
+**Performance budget** (iPhone 13 class): ≤ 60 draw calls (merge fixtures per department into one `InstancedMesh` or merged geometry), ≤ 1.2 MB of textures (9 × 512² JPEG q80 ≈ 350 KB; KTX2 later if needed), 60 fps idle, bloom at half resolution. `frameloop="demand"`: render only on gesture, camera tween, marker pulse ticks, or state change.
+
+**Fallback**: if WebGL is unavailable, mount the flat `StoreMap` SVG (editor renderer) styled with the department colors and the same markers. Never a blank screen.
+
+## 4. The flat map (`StoreMap`, SVG) — editor and fallback
+
+Keep the existing SVG component; restyle it:
+
+- Canvas `#EDE9DB` with the dot grid; fixtures filled with the department hex, stroke `rgba(15,42,26,.35)` 1px, radius 2; walk graph thin `rgba(15,42,26,.35)` lines with white node dots; shelf locations `rgba(15,42,26,.55)` 2px dots; aisle codes Outfit 500 at the aisle ends; department names tracked caps along walls.
+- Selection: the pinned edge in `--soil` 2px, the bay in `rgba(212,255,74,.55)` with a soil stroke, the location dot lime with soil ring, offset label in soil.
+- Route in fallback mode: white ribbon over department fills as in 3D.
+
+## 5. Screens
+
+**List** (`/`): gradient ground + cream bloom; header on haze in soil (eyebrow chain, store name, "Change" pill); display "Your list, / not their layout." in Outfit 200 soil; glass pill input (`+`, placeholder "Add items, paste a list, or hold to speak", mic button); glass sheet (radius 26) with rows: name Outfit 400 16 · chip (9px department dot + text, `rgba(255,255,255,.16)`, "Dairy · last", "A6 or endcap"); unresolved row: muted line "Not placed yet · probably A4, international" + "Tell me where" ghost pill; sticky lime CTA pill: "Route 9 items" left, Doto `410 m · 11 min` right, soil circle with arrow; caption "36% shorter than walking your list in order".
+
+**Trip** (`/trip`): full-screen 3D map; glass header row (back circle · glass pill with store name and Doto timer · flatten circle); 8-segment progress strip (done white, current lime with glow, ahead white 30%); glass bottom sheet (radius 26, inset 12): eyebrow `NEXT · 6 OF 8`, name Outfit 300 26, location line, Doto distance right with "meters" caption, buttons **Got it** (lime pill, check icon, glow) · **Not here** (glass pill) · **+** (glass circle).
+
+**Checkout** (`/done`): gradient ground; "Trip done" / "Close" in soil on the haze; the share card = glass, radius 28: eyebrow row (`IN AND OUT` · `STORY RD · THU`), Doto hero time centered 96px, "9 of 9 items · lane 5", hairline torus art (SVG ellipses at white 55%, .8px, one lime dot at the center) as the card's middle band, two glass tiles (icon circle + label, Doto number + unit, caption): **Walked 408 m / 7 aisles never entered** and **Vs list in order −36 % / about 4 minutes saved** (the −36 in lime), footer strip: lime-dot wordmark "grosher" · "Get in. Get it. Get out." Below: "Make the map better" glass row(s) with a lime "Pick aisle" pill. Bottom: **Share card** (white pill, soil text) · **Save as usual trip** (glass pill). Share exports the card as a 1080×1920 PNG (html-to-image), gradient included.
+
+**Editor** (`/edit`, desktop 1280): cream chrome; top bar (lime-dot wordmark / editor, store · #5435 · map v3, stats incl. texture count, Validate pill, lime-on-soil Export JSON); 64px rail (select, corridor, fixture, location, entrance/exit/checkout, **texture**, measure; "Preview in 3D" at the bottom opens the trip renderer on the current map); flat map; layer pills top-right (Graph · Fixtures · Locations · Textures · Underlay); scale bar + cursor meters bottom-left; 320px inspector: location id · wall, Aisle / Section / Modular, Side segmented (Left / Right / Endcap), Walmart zone select (GR/MD/GM/BK/FT), tag pills, **Fixture texture** slot (thumbnail, filename, size, shot date, Replace), Items here with confidence, Save (soil/lime) · Delete (rose text).
+
+## 6. Data additions
+
+In `packages/core/src/types.ts` (optional fields, demo store keeps working):
+
+```ts
+export interface Fixture {
+  id: string;
+  kind: "shelf" | "wall" | "counter" | "selfcheckout" | "service" | "other";
+  polygon: [number, number][];   // meters, y down, closed implicitly
+  height?: number;               // meters, default 1.8; counters 1.0
+  department?: string;           // key into departments; picks color + texture
+  aisle?: string;                // "A12" → aisle sign on the front face
+}
+export interface Department { id: string; name: string; color: string; texture?: string; anchor?: [number, number]; angle?: number }
+// StoreGraph gains:
+fixtures?: Fixture[];
+departments?: Department[];
+```
+
+`packages/stores/<store>/textures/<dept>.jpg` + `textures.json` manifest `{ dept: { file, w, h, shotAt, repeatMeters } }`. The demo store derives fixtures from its aisle edges (1.4 m-wide blocks each side, merged) and uses generated placeholder textures (`scripts/make-placeholder-textures.ts` writes 512² JPEGs with the department color and a soft grain) so the 3D view works before the survey walk. Real photos replace them file-for-file.
+
+## 7. Don'ts
+
+- No blue, anywhere. No flat background colors on phone screens. No second accent.
+- No emoji, no Inter/Roboto, no drop shadows.
+- No status color on the map; the map only knows white, lime, and the photos.
+- No map label other than the next stop and the checkout callout.
+- Don't scale markers or labels with zoom. Don't animate longer than 480ms; the user is walking.
+- No "amazing / smart / optimized". The numbers say it.
