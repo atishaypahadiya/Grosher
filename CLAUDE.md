@@ -90,7 +90,7 @@ centred 430px column.
   node; `summarize` compares walked + to-go against `routeForOrder` of the collected items; snapshots (ids
   only) persist across reloads.
 - `components/TripScreen` + `map3d/` is the trip view; `components/CheckoutScreen` + `ShareCard` the share
-  card (1080×1920 PNG via html-to-image, off-screen copy, fonts need the `crossorigin` link).
+  card (1080×1920 PNG via html-to-image, off-screen copy; fonts embed because they are same-origin).
 - `components/StoreMap` is the flat SVG map (DESIGN.md §4): editor renderer and WebGL fallback. Everything
   in it is sized in screen pixels via the current units-per-px so markers never scale with zoom.
 - `editor/` is the map editor, see below.
@@ -155,9 +155,10 @@ catalog, or a `{store, catalog}` bundle. "Reset draft to the package" discards l
 ### PWA
 
 `vite-plugin-pwa` (`registerType: autoUpdate`, registered in `main.tsx`). Workbox precaches every emitted
-file including the texture JPEGs, falls back to `index.html` for navigations, and runtime-caches Google
-Fonts. The app works offline after one online load. Icons are in `public/icons/` (lime dot on soil).
-Check with `npm run build && npx vite preview`, load once, go offline, reload.
+file: app, texture JPEGs and the self-hosted fonts (`public/fonts/*.woff2`, declared in `src/fonts.css`;
+Outfit and Doto are not loaded from Google, which would miss the cache on the first visit). Navigations fall
+back to `index.html`. The app works offline after one online load. Icons are in `public/icons/` (lime dot
+on soil). Check with `npm run build && npx vite preview`, load once, go offline, reload.
 
 ## Design rules a future session must not break (DESIGN.md §7, plus what the code relies on)
 
