@@ -4,7 +4,7 @@ const RINGS = 14;
 export function TorusArt({ className }: { className?: string }) {
   const rings = Array.from({ length: RINGS }, (_, i) => {
     const t = i / (RINGS - 1);
-    return { rx: 36 + t * 134, ry: 10 + t * 56, rot: (i % 2 ? 1 : -1) * t * 9, cy: 76 + Math.sin(t * Math.PI) * 4 };
+    return { rx: 36 + t * 134, ry: 10 + t * 56, rot: (i % 2 ? 1 : -1) * t * 9, cy: 76 };
   });
   return (
     <svg className={["torus", className].filter(Boolean).join(" ")} viewBox="0 0 340 152" aria-hidden>

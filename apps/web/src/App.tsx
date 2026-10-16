@@ -119,7 +119,7 @@ export function App() {
         onRemove={(name) => setItems((cur) => cur.filter((n) => n !== name))}
         onLoadUsual={() => usual && setItems(usual)}
         onNote={note}
-        onRoute={() => resolution.stops.length && setTrip(startTrip(router, resolution.stops))}
+        onRoute={() => resolution.stops.length && setTrip(startTrip(router, resolution.stops, resolution.notFound))}
       />
     </>
   );

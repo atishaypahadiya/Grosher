@@ -22,9 +22,11 @@ export interface TripState {
   visited: string[];
   /** shelf node of each collected stop, in order */
   doneNodeIds: string[];
+  /** typed names the catalog could not place; asked about on the checkout screen */
+  unplaced: string[];
 }
 
-export function startTrip(router: Router, stops: Stop[]): TripState {
+export function startTrip(router: Router, stops: Stop[], unplaced: string[] = []): TripState {
   const positionNodeId = router.graph.store.entranceId;
   return {
     original: stops,
@@ -37,6 +39,7 @@ export function startTrip(router: Router, stops: Stop[]): TripState {
     startedAt: Date.now(),
     visited: [positionNodeId],
     doneNodeIds: [],
+    unplaced,
   };
 }
 
@@ -137,6 +140,7 @@ export interface TripSnapshot {
   doneAt?: number;
   visited?: string[];
   doneNodeIds?: string[];
+  unplaced?: string[];
 }
 
 export function toSnapshot(t: TripState): TripSnapshot {
@@ -152,6 +156,7 @@ export function toSnapshot(t: TripState): TripSnapshot {
     doneAt: t.doneAt,
     visited: t.visited,
     doneNodeIds: t.doneNodeIds,
+    unplaced: t.unplaced,
   };
 }
 
@@ -174,6 +179,7 @@ export function fromSnapshot(router: Router, catalog: Stop[], snap: TripSnapshot
       doneAt: snap.doneAt,
       visited: snap.visited ?? [snap.positionNodeId],
       doneNodeIds: snap.doneNodeIds ?? [],
+      unplaced: snap.unplaced ?? [],
     };
   } catch {
     return null;

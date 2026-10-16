@@ -91,7 +91,7 @@ export function ListScreen({ store, items, resolution, plan, baselineM, usual, n
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onPaste={onPaste}
-          placeholder={speechSupported() ? "Add items, paste, or hold to speak" : "Add items or paste a list"}
+          placeholder={speechSupported() ? "Add items, paste a list, or hold to speak" : "Add items or paste a list"}
           aria-label="Add items"
           autoCapitalize="none"
           autoCorrect="off"
@@ -114,7 +114,7 @@ export function ListScreen({ store, items, resolution, plan, baselineM, usual, n
       </form>
       {hint && <p className="caption-line muted">{hint}</p>}
 
-      <section className="list-sheet glass sheet" aria-label="Items">
+      <section className="list-sheet glass-deep sheet" aria-label="Items">
         <div className="sheet-head">
           <span className="eyebrow">
             {items.length} {items.length === 1 ? "item" : "items"} · {placed} placed
@@ -162,32 +162,26 @@ export function ListScreen({ store, items, resolution, plan, baselineM, usual, n
       </section>
 
       <div className="cta-wrap">
-        {plan && placed > 0 ? (
-          <>
-            <button type="button" className="cta" onClick={onRoute}>
-              <span className="label">
-                Route {placed} {placed === 1 ? "item" : "items"}
+        <button type="button" className="cta" onClick={onRoute} disabled={!plan || placed === 0}>
+          <span className="label">
+            Route {placed} {placed === 1 ? "item" : "items"}
+          </span>
+          {plan && placed > 0 && (
+            <span className="metrics">
+              <Num value={Math.round(plan.distanceM)} unit="m" />
+              <span className="sep" aria-hidden>
+                ·
               </span>
-              <span className="metrics">
-                <Num value={Math.round(plan.distanceM)} unit="m" />
-                <span className="sep" aria-hidden>
-                  ·
-                </span>
-                <Num value={minutesNum(plan.distanceM)} unit="min" />
-              </span>
-              <span className="go">
-                <IconArrowRight />
-              </span>
-            </button>
-            <span className="cta-caption">
-              {savedPct > 0 ? `${savedPct}% shorter than walking your list in order` : "Same as walking your list in order"}
+              <Num value={minutesNum(plan.distanceM)} unit="min" />
             </span>
-          </>
-        ) : (
-          <button type="button" className="cta muted" disabled>
-            <span className="label">{items.length ? "Nothing placed yet" : "Add items to route"}</span>
-          </button>
-        )}
+          )}
+          <span className="go">
+            <IconArrowRight />
+          </span>
+        </button>
+        <span className="cta-caption">
+          {plan && placed > 0 ? (savedPct > 0 ? `${savedPct}% shorter than walking your list in order` : "Same as walking your list in order") : "\u00a0"}
+        </span>
       </div>
     </main>
   );

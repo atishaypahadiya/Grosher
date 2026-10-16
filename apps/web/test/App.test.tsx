@@ -32,19 +32,19 @@ describe("list screen", () => {
     fireEvent.click(screen.getByRole("button", { name: /^milk$/i }));
     fireEvent.click(screen.getByRole("button", { name: /remove/i }));
     expect(screen.getByText(/1 item · 0 placed/i)).toBeTruthy();
-    expect(screen.getByRole("button", { name: /nothing placed yet/i })).toBeTruthy();
+    expect((screen.getByRole("button", { name: /route 0 items/i }) as HTMLButtonElement).disabled).toBe(true);
   });
 
   test("empty list shows the muted call to action", () => {
     render(<App />);
-    expect(screen.getByRole("button", { name: /add items to route/i })).toBeTruthy();
+    expect((screen.getByRole("button", { name: /route 0 items/i }) as HTMLButtonElement).disabled).toBe(true);
   });
 });
 
 describe("trip mode", () => {
   test("list in, route, check off, reroute, checkout card, share and usual trip", () => {
     render(<App />);
-    add("bread, milk, bananas, ice cream");
+    add("bread, milk, bananas, ice cream, ghee");
     fireEvent.click(screen.getByRole("button", { name: /route 4 items/i }));
 
     expect(screen.getByText(/next · 1 of 4/i)).toBeTruthy();
@@ -74,7 +74,9 @@ describe("trip mode", () => {
     expect(within(card).getByText(/walked/i)).toBeTruthy();
     expect(within(card).getByText(/vs list in order/i)).toBeTruthy();
     expect(within(card).getByText(/aisles? never entered/i)).toBeTruthy();
-    expect(screen.getAllByTestId("improve-row")).toHaveLength(1);
+    // one skipped item, one unplaced (ghee)
+    expect(screen.getAllByTestId("improve-row")).toHaveLength(2);
+    expect(screen.getByText(/where did you find the ghee/i)).toBeTruthy();
     expect(screen.getByRole("button", { name: /share card/i })).toBeTruthy();
 
     fireEvent.click(screen.getByRole("button", { name: /save as usual trip/i }));

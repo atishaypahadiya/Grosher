@@ -43,6 +43,7 @@ Blooms (position absolute, `border-radius:50%`, `filter: blur(24–40px)`): crea
 | `--lime` | `#D4FF4A` · glow `0 0 24px rgba(212,255,74,.45)` on buttons, `0 0 18px rgba(212,255,74,.8)` on dots |
 | `--glass` | `rgba(255,255,255,.14)` fill · `1px solid rgba(255,255,255,.28)` · `backdrop-filter: blur(18px) saturate(140%)` |
 | `--glass-strong` | same with fill `.20` (editor pills on cream use `rgba(255,255,255,.7)`) |
+| `--glass-deep` | `rgba(15,42,26,.22)` fill · `1px solid rgba(255,255,255,.28)` · same blur. Every card that holds content: share card, stat tiles, list sheet, "make the map better" rows. Eyebrows inside it are white 85%. White glass stays for pills, inputs, header controls and the Trip bottom sheet. |
 | `--hairline` | `rgba(255,255,255,.18)` row dividers inside glass; `.25` section rules |
 | Editor ground | `#F4F1E6` chrome, `#EDE9DB` canvas with 24px dot grid `rgba(15,42,26,.12)` |
 
@@ -130,6 +131,8 @@ Keep the existing SVG component; restyle it:
 - Route in fallback mode: white ribbon over department fills as in 3D.
 
 ## 5. Screens
+
+Phone screens render in a centred column, max-width 430px, full viewport height; the gradient and blooms fill the whole viewport behind it. Verify at 1440×900 and 390×844.
 
 **List** (`/`): gradient ground + cream bloom; header on haze in soil (eyebrow chain, store name, "Change" pill); display "Your list, / not their layout." in Outfit 200 soil; glass pill input (`+`, placeholder "Add items, paste a list, or hold to speak", mic button); glass sheet (radius 26) with rows: name Outfit 400 16 · chip (9px department dot + text, `rgba(255,255,255,.16)`, "Dairy · last", "A6 or endcap"); unresolved row: muted line "Not placed yet · probably A4, international" + "Tell me where" ghost pill; sticky lime CTA pill: "Route 9 items" left, Doto `410 m · 11 min` right, soil circle with arrow; caption "36% shorter than walking your list in order".
 

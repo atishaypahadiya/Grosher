@@ -18,7 +18,7 @@ export interface ShareCardData {
 export const ShareCard = forwardRef<HTMLDivElement, { data: ShareCardData; className?: string }>(function ShareCard({ data, className }, ref) {
   const pct = `${data.savedPct > 0 ? "−" : data.savedPct < 0 ? "+" : ""}${Math.abs(data.savedPct)}`;
   return (
-    <article ref={ref} className={["share-card glass", className].filter(Boolean).join(" ")} aria-label="Trip card">
+    <article ref={ref} className={["share-card glass-deep", className].filter(Boolean).join(" ")} aria-label="Trip card">
       <div className="card-eyebrows">
         <span className="eyebrow">In and out</span>
         <span className="eyebrow">{data.storeTag}</span>
@@ -31,7 +31,7 @@ export const ShareCard = forwardRef<HTMLDivElement, { data: ShareCardData; class
       </p>
       <TorusArt />
       <div className="tiles">
-        <div className="stat-tile glass tile">
+        <div className="stat-tile glass-deep tile">
           <div className="label-row">
             <span className="icon-circle">
               <IconWalk />
@@ -45,7 +45,7 @@ export const ShareCard = forwardRef<HTMLDivElement, { data: ShareCardData; class
             {data.aislesNever} {data.aislesNever === 1 ? "aisle" : "aisles"} never entered
           </div>
         </div>
-        <div className="stat-tile glass tile">
+        <div className="stat-tile glass-deep tile">
           <div className="label-row">
             <span className="icon-circle">
               <IconCheck />

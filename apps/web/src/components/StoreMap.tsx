@@ -259,11 +259,19 @@ export function StoreMap({
     const out: { key: string; text: string; x: number; y: number; rotate: number; kind: "aisle" | "wall" }[] = [];
     if (fixtures.length) {
       const seen = new Set<string>();
+      // Aisle codes sit over the corridor (the aisle's shelf locations), not the shelf block.
+      const corridor = new Map<string, Pt>();
+      for (const l of locs) {
+        const c = corridor.get(l.loc.aisle) ?? { x: 0, y: 0 };
+        const n = locs.filter((o) => o.loc.aisle === l.loc.aisle).length;
+        corridor.set(l.loc.aisle, { x: c.x + l.x / n, y: c.y + l.y / n });
+      }
       for (const f of fixtures) {
         if (!f.aisle || seen.has(f.aisle)) continue;
         const b = fixtureBounds(f);
-        const cx = b.x + b.w / 2;
-        const cy = b.y + b.h / 2;
+        const cor = corridor.get(f.aisle);
+        const cx = AISLE.test(f.aisle) && cor ? cor.x : b.x + b.w / 2;
+        const cy = AISLE.test(f.aisle) && cor ? cor.y : b.y + b.h / 2;
         if (AISLE.test(f.aisle)) {
           seen.add(f.aisle);
           // which end faces the entrance?

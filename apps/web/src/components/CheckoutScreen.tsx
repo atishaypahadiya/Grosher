@@ -5,7 +5,7 @@ import { clock, WALK_MPS } from "../lib/format.ts";
 import { renderCardPng, shareOrDownload } from "../lib/share.ts";
 import { ShareCard, type ShareCardData } from "./ShareCard.tsx";
 import { Ground } from "./Ground.tsx";
-import { IconUpload } from "./Icons.tsx";
+import { IconCheck, IconUpload } from "./Icons.tsx";
 
 export interface CheckoutScreenProps {
   store: StoreGraph;
@@ -37,8 +37,38 @@ export function cardData(store: StoreGraph, router: Router, trip: TripState): Sh
   };
 }
 
+const AISLE = /^A\d+$/i;
+const where = (store: StoreGraph, locId: string) => {
+  const loc = store.locations.find((l) => l.id === locId);
+  if (!loc) return "somewhere else";
+  return AISLE.test(loc.aisle) ? `in ${loc.aisle.toUpperCase()}` : `on the ${loc.aisle.toLowerCase()}`;
+};
+
+interface Ask {
+  key: string;
+  question: string;
+  hint: string;
+  confirmed?: boolean;
+}
+
+/** Rows for the "Make the map better" section: unplaced, skipped, and corrected (an alternate shelf was used). */
+export function mapQuestions(store: StoreGraph, trip: TripState): Ask[] {
+  const out: Ask[] = [];
+  for (const name of trip.unplaced) out.push({ key: `unplaced:${name.toLowerCase()}`, question: `Where did you find the ${name.toLowerCase()}?`, hint: "Not on the map yet · tap the aisle, or skip" });
+  for (const s of trip.skipped) out.push({ key: s.id, question: `Where was the ${s.name.toLowerCase()}?`, hint: "Not where the map said · tap the aisle, or skip" });
+  trip.got.forEach((s, i) => {
+    const node = trip.doneNodeIds[i];
+    const used = node?.startsWith("loc:") ? node.slice(4) : undefined;
+    if (used && s.locationIds.length > 1 && used !== s.locationIds[0]) {
+      out.push({ key: `confirmed:${s.id}`, question: `${s.name} ${s.name.endsWith("s") ? "were" : "was"} ${where(store, used)}`, hint: "Confirmed · the map learns from this", confirmed: true });
+    }
+  });
+  return out;
+}
+
 export function CheckoutScreen({ store, router, trip, usualSaved, noted, onNote, onSaveUsual, onClose }: CheckoutScreenProps) {
   const data = cardData(store, router, trip);
+  const asks = mapQuestions(store, trip);
   const exportRef = useRef<HTMLDivElement>(null);
   const [sharing, setSharing] = useState<"idle" | "busy" | "done" | "failed">("idle");
 
@@ -67,19 +97,23 @@ export function CheckoutScreen({ store, router, trip, usualSaved, noted, onNote,
 
       <ShareCard data={data} />
 
-      {trip.skipped.length > 0 && (
+      {asks.length > 0 && (
         <section className="improve">
           <span className="eyebrow">Make the map better</span>
-          {trip.skipped.map((s) => (
-            <div key={s.id} className="improve-row glass" data-testid="improve-row">
+          {asks.map((a) => (
+            <div key={a.key} className="improve-row glass-deep" data-testid="improve-row">
               <div>
-                <p className="q">Where was the {s.name.toLowerCase()}?</p>
-                <p className="hint">Not where the map said. Tell us the aisle next time you see it.</p>
+                <p className="q">{a.question}</p>
+                <p className="hint">{a.hint}</p>
               </div>
-              {noted.has(s.id) ? (
+              {a.confirmed ? (
+                <span className="confirm" aria-label="Confirmed">
+                  <IconCheck />
+                </span>
+              ) : noted.has(a.key.replace(/^unplaced:/, "")) ? (
                 <span className="pill ghost">Noted</span>
               ) : (
-                <button type="button" className="pill lime" onClick={() => onNote(s.id)}>
+                <button type="button" className="pill lime" onClick={() => onNote(a.key.replace(/^unplaced:/, ""))}>
                   Pick aisle
                 </button>
               )}
