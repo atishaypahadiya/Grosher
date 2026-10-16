@@ -60,6 +60,7 @@ describe("trip mode", () => {
     fireEvent.click(screen.getByRole("button", { name: /not here/i }));
     expect(screen.getByText(/next · 3 of 4/i)).toBeTruthy();
 
+    fireEvent.click(screen.getByRole("button", { name: /add item/i }));
     fireEvent.change(screen.getByPlaceholderText(/coffee/i), { target: { value: "Coffee" } });
     fireEvent.click(screen.getByRole("button", { name: /^add$/i }));
     expect(screen.getByText(/next · 3 of 5/i)).toBeTruthy();
@@ -89,6 +90,22 @@ describe("trip mode", () => {
     fireEvent.click(screen.getByRole("button", { name: /remove/i }));
     fireEvent.click(screen.getByRole("button", { name: /usual trip/i }));
     expect(screen.getByText(/5 items · 5 placed/i)).toBeTruthy();
+  });
+
+  test("progress strip, back pauses, the list resumes", () => {
+    render(<App />);
+    add("milk, eggs, bread");
+    fireEvent.click(screen.getByRole("button", { name: /route 3 items/i }));
+    const bar = screen.getByRole("progressbar");
+    expect(bar.querySelectorAll(".seg")).toHaveLength(3);
+    expect(bar.querySelectorAll(".seg.current")).toHaveLength(1);
+    fireEvent.click(screen.getByRole("button", { name: /got it/i }));
+    expect(bar.querySelectorAll(".seg.done")).toHaveLength(1);
+    fireEvent.click(screen.getByRole("button", { name: /flatten the map/i }));
+    expect(localStorage.getItem("grosher.flat")).toBe("true");
+    fireEvent.click(screen.getByRole("button", { name: /back to the list/i }));
+    fireEvent.click(screen.getByRole("button", { name: /resume trip · 2 left/i }));
+    expect(screen.getByText(/next · 2 of 3/i)).toBeTruthy();
   });
 
   test("a trip survives a reload", () => {

@@ -26,3 +26,6 @@ Object.defineProperty(globalThis, "localStorage", { value: new MemoryStorage(), 
 import { afterEach } from "vitest";
 import { cleanup } from "@testing-library/react";
 afterEach(cleanup);
+
+// jsdom has no canvas: make the WebGL check return "unavailable" quietly so the flat map is used.
+HTMLCanvasElement.prototype.getContext = (() => null) as unknown as HTMLCanvasElement["getContext"];

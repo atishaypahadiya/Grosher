@@ -3,17 +3,17 @@ import { Router, WalkGraph, type Stop } from "@grosher/core";
 import { demoSupercenter } from "@grosher/stores";
 import { Ground } from "./components/Ground.tsx";
 import { ListScreen } from "./components/ListScreen.tsx";
-import { StoreMap } from "./components/StoreMap.tsx";
-import { TripPanel } from "./components/TripPanel.tsx";
+import { TripScreen } from "./components/TripScreen.tsx";
 import { CheckoutScreen } from "./components/CheckoutScreen.tsx";
 import { resolveItems } from "./lib/resolve.ts";
-import { addItem, fromSnapshot, gotIt, isDone, skipStop, startTrip, summarize, toSnapshot, type TripSnapshot, type TripState } from "./lib/trip.ts";
+import { addItem, fromSnapshot, gotIt, isDone, skipStop, startTrip, toSnapshot, type TripSnapshot, type TripState } from "./lib/trip.ts";
 import { load, save } from "./lib/storage.ts";
 
 const ITEMS_KEY = "grosher.items";
 const TRIP_KEY = "grosher.trip";
 const USUAL_KEY = "grosher.usual";
 const NOTES_KEY = "grosher.notes";
+const FLAT_KEY = "grosher.flat";
 
 export function App() {
   const bundle = demoSupercenter;
@@ -31,6 +31,9 @@ export function App() {
 
   const [trip, setTrip] = useState<TripState | null>(() => fromSnapshot(router, catalog, load<TripSnapshot | null>(TRIP_KEY, null)));
   useEffect(() => save(TRIP_KEY, trip ? toSnapshot(trip) : null), [trip]);
+  const [flat, setFlat] = useState<boolean>(() => load<boolean>(FLAT_KEY, false));
+  useEffect(() => save(FLAT_KEY, flat), [flat]);
+  const [paused, setPaused] = useState(false);
 
   const resolution = useMemo(() => resolveItems(items, catalog), [items, catalog]);
   const plan = useMemo(() => (resolution.stops.length ? router.solve({ stops: resolution.stops }) : null), [resolution, router]);
@@ -50,43 +53,26 @@ export function App() {
       return out;
     });
 
-  if (trip && !isDone(trip)) {
-    const summary = summarize(router, trip);
+  if (trip && !isDone(trip) && !paused) {
     return (
       <>
         <Ground />
-        <div className="app">
-          <header className="topbar">
-            <span className="brand">Grosher</span>
-            <span className="store-name">{store.name}</span>
-            <span className="mode">On the trip</span>
-          </header>
-          <div className="map-wrap">
-            <StoreMap
-              store={store}
-              route={trip.route}
-              currentNodeId={trip.route.legs[0]?.stopId ? trip.route.legs[0].nodeId : null}
-              positionNodeId={trip.positionNodeId}
-              walkedPath={trip.visited}
-              doneNodeIds={trip.doneNodeIds}
-              className="app-map"
-            />
-          </div>
-          <TripPanel
-            store={store}
-            catalog={catalog}
-            trip={trip}
-            summary={summary}
-            onGotIt={() => setTrip(gotIt(router, trip))}
-            onSkip={() => setTrip(skipStop(router, trip))}
-            onAdd={(stop: Stop) => setTrip(addItem(router, trip, stop))}
-          />
-        </div>
+        <TripScreen
+          bundle={bundle}
+          router={router}
+          trip={trip}
+          flat={flat}
+          onFlatChange={setFlat}
+          onGotIt={() => setTrip(gotIt(router, trip))}
+          onSkip={() => setTrip(skipStop(router, trip))}
+          onAdd={(stop: Stop) => setTrip(addItem(router, trip, stop))}
+          onBack={() => setPaused(true)}
+        />
       </>
     );
   }
 
-  if (trip) {
+  if (trip && isDone(trip)) {
     return (
       <>
         <Ground />
@@ -119,7 +105,11 @@ export function App() {
         onRemove={(name) => setItems((cur) => cur.filter((n) => n !== name))}
         onLoadUsual={() => usual && setItems(usual)}
         onNote={note}
-        onRoute={() => resolution.stops.length && setTrip(startTrip(router, resolution.stops, resolution.notFound))}
+        resume={trip && paused ? { remaining: trip.remaining.length, distanceM: trip.route.legs.reduce((s, l) => s + l.distanceM, 0) } : null}
+        onRoute={() => {
+          if (trip && paused) setPaused(false);
+          else if (resolution.stops.length) setTrip(startTrip(router, resolution.stops, resolution.notFound));
+        }}
       />
     </>
   );

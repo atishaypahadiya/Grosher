@@ -20,6 +20,8 @@ export interface ListScreenProps {
   onLoadUsual: () => void;
   onNote: (name: string) => void;
   onRoute: () => void;
+  /** a paused trip: the CTA resumes it instead of routing the list */
+  resume?: { remaining: number; distanceM: number } | null;
 }
 
 /** "milk, eggs\nbread" → ["milk", "eggs", "bread"] */
@@ -29,7 +31,7 @@ export const splitItems = (text: string) =>
     .map((s) => s.trim())
     .filter(Boolean);
 
-export function ListScreen({ store, items, resolution, plan, baselineM, usual, noted, onAdd, onRemove, onLoadUsual, onNote, onRoute }: ListScreenProps) {
+export function ListScreen({ store, items, resolution, plan, baselineM, usual, noted, onAdd, onRemove, onLoadUsual, onNote, onRoute, resume }: ListScreenProps) {
   const [draft, setDraft] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
@@ -162,11 +164,15 @@ export function ListScreen({ store, items, resolution, plan, baselineM, usual, n
       </section>
 
       <div className="cta-wrap">
-        <button type="button" className="cta" onClick={onRoute} disabled={!plan || placed === 0}>
+        <button type="button" className="cta" onClick={onRoute} disabled={!resume && (!plan || placed === 0)}>
           <span className="label">
-            Route {placed} {placed === 1 ? "item" : "items"}
+            {resume ? `Resume trip · ${resume.remaining} left` : `Route ${placed} ${placed === 1 ? "item" : "items"}`}
           </span>
-          {plan && placed > 0 && (
+          {resume ? (
+            <span className="metrics">
+              <Num value={Math.round(resume.distanceM)} unit="m" />
+            </span>
+          ) : plan && placed > 0 && (
             <span className="metrics">
               <Num value={Math.round(plan.distanceM)} unit="m" />
               <span className="sep" aria-hidden>

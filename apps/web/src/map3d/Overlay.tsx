@@ -1,0 +1,141 @@
+// Screen-space markers and labels. The DOM lives outside the Canvas
+// (OverlayDom); a small component inside the Canvas (OverlayProjector)
+// projects each marker every rendered frame and writes its transform.
+// One React tree, no per-marker roots, nothing scales with zoom.
+
+import { useEffect, useMemo, type ReactNode } from "react";
+import { useFrame, useThree } from "@react-three/fiber";
+import { Vector3 } from "three";
+import type { GraphNode } from "@grosher/core";
+import { IconArrowRight, IconCheck } from "../components/Icons.tsx";
+
+export interface NextLabel {
+  eyebrow: string;
+  name: string;
+  distance: string;
+}
+
+export interface OverlayProps {
+  nodes: Map<string, GraphNode>;
+  positionNodeId: string;
+  nextNodeId?: string | null;
+  nextLabel?: NextLabel | null;
+  aheadNodeIds: string[];
+  doneNodeIds: string[];
+  laneNodeId?: string | null;
+  checkoutLabel?: { eyebrow: string; line: string } | null;
+  entranceId: string;
+  exitId: string;
+  shelfHeight?: number;
+}
+
+export interface OverlayItem {
+  key: string;
+  pos: [number, number, number];
+  node: ReactNode;
+  className?: string;
+}
+
+/** Element registry shared between the DOM tree and the projector. */
+export type OverlayRegistry = Map<string, HTMLDivElement>;
+
+export function useOverlayItems(p: OverlayProps): OverlayItem[] {
+  const h = p.shelfHeight ?? 1.2;
+  return useMemo<OverlayItem[]>(() => {
+    const at = (id: string | null | undefined, y: number): [number, number, number] | null => {
+      const n = id ? p.nodes.get(id) : undefined;
+      return n ? [n.x, y, n.y] : null;
+    };
+    const out: OverlayItem[] = [];
+    const entrance = at(p.entranceId, 0.1);
+    const exit = at(p.exitId, 0.1);
+    if (entrance) out.push({ key: "entrance", pos: entrance, node: <span className="m-ring m-entrance"><IconArrowRight /></span> });
+    if (exit) out.push({ key: "exit", pos: exit, node: <span className="m-ring m-exit" /> });
+    p.doneNodeIds.forEach((id, i) => {
+      const pos = at(id, h);
+      if (pos) out.push({ key: `done-${i}`, pos, node: <span className="m-done"><IconCheck /></span> });
+    });
+    p.aheadNodeIds.forEach((id, i) => {
+      const pos = at(id, h);
+      if (pos) out.push({ key: `ahead-${id}-${i}`, pos, node: <span className="m-ahead">{i + 2}</span> });
+    });
+    const lane = at(p.laneNodeId, 0.1);
+    if (lane) {
+      out.push({ key: "lane", pos: lane, node: <span className="m-lane" /> });
+      if (p.checkoutLabel)
+        out.push({
+          key: "lane-label",
+          pos: [lane[0], 0.1, lane[2] + 1.4],
+          className: "m-anchor-top",
+          node: (
+            <div className="m-label m-label-checkout">
+              <span className="eyebrow now">{p.checkoutLabel.eyebrow}</span>
+              <span className="m-label-line">{p.checkoutLabel.line}</span>
+            </div>
+          ),
+        });
+    }
+    const next = at(p.nextNodeId, h);
+    if (next) {
+      out.push({ key: "next", pos: next, node: <span className="m-next"><i className="m-leader" /></span> });
+      if (p.nextLabel)
+        out.push({
+          key: "next-label",
+          pos: [next[0], next[1] + 2.6, next[2]],
+          className: "m-anchor-bottom",
+          node: (
+            <div className="m-label m-label-next">
+              <span className="eyebrow now">{p.nextLabel.eyebrow}</span>
+              <span className="m-label-name">{p.nextLabel.name}</span>
+              <span className="m-label-line">{p.nextLabel.distance}</span>
+            </div>
+          ),
+        });
+    }
+    const you = at(p.positionNodeId, 0.1);
+    if (you) out.push({ key: "you", pos: you, node: <span className="m-you"><i className="m-halo" /></span> });
+    return out;
+  }, [p.nodes, p.positionNodeId, p.nextNodeId, p.nextLabel, p.aheadNodeIds, p.doneNodeIds, p.laneNodeId, p.checkoutLabel, p.entranceId, p.exitId, h]);
+}
+
+/** Plain DOM, rendered by TripMap3D next to the Canvas. */
+export function OverlayDom({ items, registry }: { items: OverlayItem[]; registry: OverlayRegistry }) {
+  return (
+    <div className="m-overlay" aria-hidden>
+      {items.map((it) => (
+        <div
+          key={it.key}
+          className={["m-item", it.className].filter(Boolean).join(" ")}
+          ref={(el) => {
+            if (el) registry.set(it.key, el);
+            else registry.delete(it.key);
+          }}
+        >
+          {it.node}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Inside the Canvas: projects every item each rendered frame. */
+export function OverlayProjector({ items, registry }: { items: OverlayItem[]; registry: OverlayRegistry }) {
+  const { camera, size, invalidate } = useThree();
+  const v = useMemo(() => new Vector3(), []);
+  const project = () => {
+    for (const it of items) {
+      const el = registry.get(it.key);
+      if (!el) continue;
+      v.set(it.pos[0], it.pos[1], it.pos[2]).project(camera);
+      const x = ((v.x + 1) / 2) * size.width;
+      const y = ((1 - v.y) / 2) * size.height;
+      el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
+      el.style.visibility = v.z < 1 ? "visible" : "hidden";
+    }
+  };
+  useFrame(project);
+  useEffect(() => {
+    invalidate();
+  }, [items, invalidate]);
+  return null;
+}

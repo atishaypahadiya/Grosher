@@ -279,3 +279,50 @@ button { cursor: pointer; touch-action: manipulation; }
 /* the you-dot halo: scale 1 → 1.5, opacity .35 → 0, 1.6 s (DESIGN.md §2 Motion) */
 .map-halo { animation: map-halo 1.6s ease-out infinite; transform-box: fill-box; transform-origin: center; }
 @keyframes map-halo { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.5); } }
+
+/* ---- Trip screen (DESIGN.md §5): full-screen map, glass header, progress strip, bottom sheet */
+.trip-screen { position: relative; height: 100dvh; max-width: var(--column); margin: 0 auto; overflow: hidden; z-index: 1; }
+.trip-map { position: absolute; inset: 0; }
+.trip-map .map3d, .trip-map .trip-flat { position: absolute; inset: 0; width: 100%; height: 100%; }
+.trip-map canvas { display: block; }
+.trip-head { position: absolute; top: max(58px, env(safe-area-inset-top)); left: var(--gutter); right: var(--gutter); display: flex; gap: 10px; align-items: center; z-index: 3; }
+.trip-title { flex: 1; justify-content: space-between; min-height: 48px; padding: 0 18px; font-weight: 400; font-size: 15px; }
+.trip-title .num { font-size: 20px; }
+.trip-store { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.progress-strip { position: absolute; top: calc(max(58px, env(safe-area-inset-top)) + 58px); left: var(--gutter); right: var(--gutter); display: flex; gap: 6px; z-index: 3; }
+.seg { flex: 1; height: 3px; border-radius: 2px; background: rgba(255, 255, 255, 0.3); }
+.seg.done { background: #FFFFFF; }
+.seg.current { background: var(--lime); box-shadow: var(--glow-dot); }
+.trip-sheet { position: absolute; left: 12px; right: 12px; bottom: calc(12px + var(--safe-bottom)); padding: 18px 20px 20px; z-index: 3; }
+.trip-row { display: flex; justify-content: space-between; gap: 14px; align-items: flex-start; margin-top: 4px; }
+.trip-where { margin: 4px 0 0; font-size: 14px; }
+.trip-dist { text-align: right; flex: none; }
+.trip-dist .num { font-size: 34px; display: block; }
+.trip-dist .muted { font-size: 13px; }
+.trip-actions { display: flex; gap: 10px; margin-top: 16px; }
+.trip-actions .lime { flex: 1 1 55%; }
+.trip-actions .pill.primary:not(.lime) { flex: 1 1 30%; }
+
+/* ---- 3D markers (drei Html): constant screen size, never scale with zoom */
+.m-you { position: relative; display: block; width: 11px; height: 11px; border-radius: 50%; background: var(--lime); box-shadow: var(--glow-dot); }
+.m-halo { position: absolute; left: 50%; top: 50%; width: 28px; height: 28px; margin: -14px 0 0 -14px; border-radius: 50%; background: rgba(212, 255, 74, 0.35); animation: m-halo 1.6s ease-out infinite; }
+@keyframes m-halo { from { transform: scale(1); opacity: 1; } to { transform: scale(1.5); opacity: 0; } }
+.m-next { position: relative; display: block; width: 8px; height: 8px; border-radius: 50%; background: var(--lime); box-shadow: var(--glow-dot); }
+.m-leader { position: absolute; left: 50%; bottom: 8px; width: 1px; height: 46px; background: var(--lime); }
+.m-ahead { display: block; width: 12px; height: 12px; border-radius: 50%; background: #FFFFFF; color: var(--soil); font: 600 8px/12px var(--font); text-align: center; }
+.m-done { display: grid; place-items: center; width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.8); color: #FFFFFF; }
+.m-done .icon { width: 8px; height: 8px; }
+.m-lane { display: block; width: 8px; height: 8px; border-radius: 50%; background: var(--lime); box-shadow: var(--glow-dot); }
+.m-ring { display: grid; place-items: center; width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid #FFFFFF; color: #FFFFFF; }
+.m-ring .icon { width: 8px; height: 8px; }
+.m-exit { border-color: var(--lime); }
+.m-label { display: flex; flex-direction: column; gap: 2px; white-space: nowrap; color: #FFFFFF; text-shadow: 0 1px 10px rgba(0, 0, 0, 0.25); }
+.m-label-next { align-items: center; text-align: center; }
+.m-label-name { font-weight: 500; font-size: 17px; }
+.m-label-line { font-weight: 300; font-size: 12px; color: rgba(255, 255, 255, 0.85); }
+.m-overlay { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.m-item { position: absolute; left: 0; top: 0; will-change: transform; }
+.m-item > * { transform: translate(-50%, -50%); }
+.m-item.m-anchor-bottom > * { transform: translate(-50%, -100%); }
+.m-item.m-anchor-top > * { transform: translate(-50%, 0); }
+.m-item .m-you, .m-item .m-next, .m-item .m-lane, .m-item .m-ahead, .m-item .m-done, .m-item .m-ring { position: absolute; }
