@@ -9,7 +9,8 @@
 //   e. unknown
 //
 // First hit wins unless its confidence is below 0.6, then the next layer is
-// tried. Pure: no I/O, no async. The app owns fetching and caching.
+// tried; the llm layer is last, so its guess stands even when weak. Pure: no
+// I/O, no async. The app owns fetching and caching.
 
 import type { Department, ItemTag, Stop } from "../types.ts";
 import { forms, normalize, similarity, singularize } from "./text.ts";
@@ -204,6 +205,8 @@ export function resolveItem(query: string, ctx: ResolveContext, cands = candidat
     if (r.confidence >= FALLTHROUGH) return r;
     if (!weak || r.confidence > weak.confidence) weak = r;
   }
+  // The llm layer is last: a weak guess from it still beats "unknown" (the UI shows it as a guess).
+  if (weak?.source === "llm") return weak;
   // nothing confident: an unknown, but keep the best weak guess's name so the UI can show it
   return result(query, {
     locationIds: [],
