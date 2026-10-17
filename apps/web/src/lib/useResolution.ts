@@ -5,7 +5,7 @@
 // time; and the learning updates the trip and checkout screens call.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { confirmMemory, confirmed, demoteMemory, missed, normalize, pendingEntry, placeMemory, resolveList, type ItemMemory, type ItemTag, type LlmGuess, type ResolveResult, type Stop } from "@grosher/core";
+import { candidates, categoryCandidates, confirmMemory, confirmed, demoteMemory, missed, normalize, pendingEntry, placeMemory, resolveList, type ItemMemory, type ItemTag, type LlmGuess, type ResolveResult, type Stop } from "@grosher/core";
 import { departmentLocations, llmOptions, type StoreBundle } from "@grosher/stores";
 import { defaultProvider, fetchGuesses, type LlmProvider } from "./resolver.ts";
 import { EMPTY_LEARNING, loadLearning, mergedCatalog, saveLearning, type Learning } from "./learning.ts";
@@ -63,6 +63,11 @@ export function useResolution(bundle: StoreBundle, items: string[], provider?: L
   }, [learning, loaded, storeId]);
 
   const merged = useMemo(() => mergedCatalog(catalog, learning.pending), [catalog, learning.pending]);
+  // the candidate index for a seeded catalog takes a few hundred ms to build: do it now, not on the first keystroke
+  useEffect(() => {
+    candidates(merged);
+    categoryCandidates(categories);
+  }, [merged, categories]);
   const deptLocs = useMemo(() => departmentLocations(store), [store]);
   const llmMap = useMemo(() => new Map<string, LlmGuess | null>(learning.llm), [learning.llm]);
 
