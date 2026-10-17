@@ -94,14 +94,21 @@ re-resolves 150 ms after any change; once the list has been idle 1.5 s, unknowns
 the LLM provider in one batch.
 Learning loop: "Got it" → `confirmMemory` (confirms +1, confidence half-way to 1); "Not here" →
 `demoteMemory` (−.3, below .6 the next trip re-asks); "Tell me where" / "Pick aisle" → `placeMemory`
-(.9), and from the checkout screen also a confirmed catalog entry (`source: "memory"`). The editor exports
-`memory.json` only when "Include my item memory" is ticked (it is the shopper's history).
+(.9), and from the checkout screen also a confirmed catalog entry (`source: "memory"`).
+
+**Brand memory.** An `ItemMemory` row is `{name (canonical), locationId, confirms, confidence, tags,
+typedForms[] (every exact string typed for it, first spelling kept, most recent last, max 8), lastUsed,
+lastConfirmed}`. "Got it" and the picker pass the typed string through (`Stop.query` carries it onto the
+trip). `suggestFromMemory(query, memory)` offers the fullest remembered form whose words contain the query
+("yogurt" → "Chobani greek yogurt"; spelling variants count; exact word matches rank first, then recency,
+then length); never the LLM. The list row shows it as a dashed lime chip ending in "?"; tapping replaces
+the row's text. Typed forms also resolve through the memory layer.
 
 **LLM providers** (`lib/resolver.ts`, chosen by `VITE_RESOLVER_PROVIDER`, default `ollama`):
 
 - `ollama`: `POST {VITE_OLLAMA_URL}/api/chat` (default `http://localhost:11434`), model `VITE_OLLAMA_MODEL`
-  (default `qwen3:8b`), `think: false`, `format` = the terse JSON schema `{name, dept, sub, conf}` so output is
-  strict and short (`num_predict` = 32 + 50 per item; measured 23 output tokens per item), temperature 0, one
+  (default `qwen3:8b`), `think: false`, `format` = the terse JSON schema `{name, dept, sub, conf, tags}` so
+  output is strict and short (`num_predict` = 32 + 45 per item; measured 26.6 output tokens per item), temperature 0, one
   call for the whole list after a 1.5 s idle debounce, never per keystroke, 20 s timeout. On mount the list
   screen sends an empty-messages chat with `keep_alive: 24h` so the model loads before the user types; before
   each call `/api/ps` is checked, and if the model is not resident that one call gets a 60 s timeout and the
@@ -114,8 +121,8 @@ Learning loop: "Got it" → `confirmMemory` (confirms +1, confidence half-way to
   (`VITE_OLLAMA_URL=http://192.168.1.20:11434`); the phone resolves only while on the same Wi-Fi as the Mac.
 - `anthropic`: the worker in `apps/resolver` at `VITE_RESOLVER_URL` (dev: `/api`, proxied to `wrangler dev`
   on :8787). One Claude call (`claude-haiku-5-5`, effort low, strict tool output in the same terse schema)
-  per list. Tags are derived from the department (dairy / meat → chilled, frozen → frozen, produce → produce,
-  bakery → fragile) because the terse schema carries none.
+  per list. `tags[]` in the schema comes from the fixed set; when the model gives none, tags are derived from
+  the department (dairy / meat → chilled, frozen → frozen, produce → produce, bakery → fragile).
 
 Any provider failure (unreachable, timeout, bad JSON) leaves the items unknown and shows the provider's
 one-line note in the list header ("Local model offline · unknown items need a tap"). Never an error state.
@@ -135,6 +142,43 @@ zero misses. `resolution-heldout.json` is 30 items written blind after it (India
 different typos, multi-word); the test prints its table but never asserts, and nothing is ever tuned
 against it. Both print per-layer hit rates: at the time of writing both are 100%. If the held-out fuzzy
 rate drops below 85%, say so and leave it.
+
+## Lists, history and personal data (`apps/web/src/lib/lists.ts`, `history.ts`, `useLists.ts`, `useHistory.ts`)
+
+All of it is per store, in IndexedDB (`lists:<storeId>`, `history:<storeId>`, `learning:<storeId>`), with
+the in-memory fallback of `lib/db.ts` where IndexedDB is blocked.
+
+- `List` = `{id, name, items: string[], storeId, createdAt, updatedAt, kind: "draft" | "saved" | "usual",
+  usedAt: number[]}`. Exactly one `draft` exists; it is the current list and autosaves (the old localStorage
+  items and usual trip migrated into it once). `usedAt` is appended whenever a list is loaded onto the draft
+  or saved from a trip, capped at 60. "Save as usual trip" writes a `usual` list named after the trip's
+  weekday ("Saturday trip") from the bought items only; a second save on that weekday updates it in place.
+  `predictUsual` picks, for today's weekday, the usual list used most often on that weekday, else the most
+  recently used or updated; the list screen offers it in a deep-glass row when the draft is empty.
+- The Lists sheet (`components/ListsSheet`): usual trips, saved lists, history. Tap loads onto the draft
+  (Replace / Keep mine when the draft has items matching no saved list), swipe left reveals Delete,
+  long-press (500 ms) renames, "Save this list" names the draft as `saved`.
+- `TripRecord` = `{id ("t_" + the trip's startedAt, so a trip is recorded once), storeId, date, bought[],
+  skipped[], unknown[], walkedM, baselineM, savedM, timeMs, lane, aislesNever, aislesTotal}`, newest first.
+  Recorded when the checkout screen shows a finished trip. The card's "vs your last trip" compares time and
+  walked metres with the previous record at the store. A history row reopens the checkout screen read-only
+  from the record (Share and Save as usual trip work; the map-better questions do not show).
+- **Export / import.** The editor's "Include my item memory, lists and trip history" box (off by default:
+  this is the shopper's own data) adds `memory.json` (`ItemMemory[]`) and `lists.json`
+  (`{lists: List[] without the draft, history: TripRecord[]}`) to Export JSON and Write to package. Import
+  JSON recognises both shapes and merges by id (a `draft` is never imported). `buildExport` takes a
+  `Personal` = `{memory, lists, history}`.
+
+**Voice entry** (`lib/speech.ts`). Hold the mic, release to stop: Web Speech API (`SpeechRecognition` or
+`webkitSpeechRecognition`), `interimResults` and `continuous` on; interim words show in the add pill in
+lime, each final result (a pause) is split on "and", "then", commas and semicolons and added as items.
+Permission denial shows "Microphone not allowed · type instead"; other failures "Voice entry stopped · type
+instead"; never an error state. Caveats: the mic is hidden when the API is missing, and hidden in **iOS
+standalone (home-screen) mode** by default because WebKit's recogniser has been reported not to start
+there; that is unverified on a device from this machine, and `VITE_SPEECH_STANDALONE=1` shows the mic for
+testing it. Keyboard dictation covers voice entry wherever the mic is hidden. Headless Chromium exposes a
+native `SpeechRecognition`, so a test double must replace both names (the Vitest setup and the Playwright
+scripts do).
 
 ## Store data (`packages/stores`)
 
@@ -163,8 +207,9 @@ centred 430px column.
 
 - `components/ListScreen` shows the resolved rows (`useResolution`): a source glyph per row (exact check,
   fuzzy wave, memory clock, llm star, unknown mark), chip opacity = confidence, llm guesses in the amber
-  guess colour ("probably A4 · cereal"), "Tell me where" opening `PickerSheet` (the flat map, tap a shelf),
-  hold-to-speak (`lib/speech.ts`) and the lime Route CTA.
+  guess colour ("probably A4 · cereal"), brand suggestion chips, "Tell me where" opening `PickerSheet` (the
+  flat map, tap a shelf), the Lists pill and sheet, the usual-trip row, hold-to-speak (`lib/speech.ts`) and
+  the lime Route CTA.
 - `lib/trip.ts` is the pure trip state: `gotIt` / `skipStop` / `addItem` reroute from the last checked-off
   node; `summarize` compares walked + to-go against `routeForOrder` of the collected items; snapshots (ids
   only) persist across reloads.
