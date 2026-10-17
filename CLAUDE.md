@@ -5,8 +5,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## What Grosher is
 
 Grocery navigation: a shopping list in, the shortest walk through the store out, with live reroute as
-items are checked off. One store map exists, a synthetic Walmart-style Supercenter in `packages/stores/demo`.
-Real stores get surveyed with the built-in map editor. `DESIGN.md` is the visual contract; its boards are in
+items are checked off. One store map exists, a synthetic Walmart-style Supercenter in `packages/stores/demo`
+(30 aisles, 298 shelf categories, a 4,000-item seeded catalog) that resolves most everyday items at aisle
+precision without a survey. Real stores get surveyed with the built-in map editor. `DESIGN.md` is the visual contract; its boards are in
 `design/boards/`. The boards win on feel, `DESIGN.md` wins on numbers.
 
 ## Layout
@@ -37,7 +38,9 @@ npm run bench                            # core: route vs. list-order baseline, 
 cd packages/core && node --test --test-name-pattern="reroute" test/solver.test.ts     # one core test
 cd apps/web && npx vitest run test/trip.test.ts                                      # one web file
 cd apps/web && npm run build && npx vite preview                                     # production build + SW
-npm run gen:demo -w @grosher/stores      # regenerate demo/store.json + catalog.json from scripts/gen-demo.ts
+npm run gen:demo -w @grosher/stores      # regenerate demo/store.json, categories.json and the base catalog rows from scripts/taxonomy.ts
+npm run seed:catalog -w @grosher/stores  # fill catalog.json from the local model, resumable (--only a,b · --redo · --reconcile)
+npm run eval:everyday -w @grosher/stores # the blind 150-item fixture, offline and with the local model
 npm run gen:textures -w @grosher/stores  # regenerate the placeholder textures + textures.json
 cd packages/core && node --test test/resolution-fixture.test.ts   # prints the per-layer hit-rate tables
 npm run dev -w @grosher/resolver         # wrangler dev on :8787 (anthropic provider only; needs .dev.vars)
@@ -72,21 +75,28 @@ Read `src/types.ts`, then `graph.ts`, then `solver.ts`.
 
 ## Item resolution (`packages/core/src/resolve`, `apps/web/src/lib/useResolution.ts`)
 
-A typed list line becomes a `Stop` through five layers, in order; the first hit with confidence ≥ 0.6 wins,
+A typed list line becomes a `Stop` through these layers, in order; the first hit with confidence ≥ 0.6 wins,
 a weaker hit falls through to the next layer, and the llm layer is last so its guess stands even when weak:
 
 | Layer | Source | How | Confidence |
 | --- | --- | --- | --- |
-| a | `exact` | ids, names and `aliases` (brands too), case / punctuation / quantity ("12 pack", "1 gallon") / plural-insensitive | 1 |
-| b | `fuzzy` | trigram Dice and Damerau–Levenshtein over the same labels, threshold .72; token containment only when the query is the shorter side ("yogurt" ⊂ "greek yogurt", never "oat milk" → "milk") | .6–.95 |
-| c | `memory` | the shopper's own per-store table (name → location, confirms, confidence), match ≥ .9 | the record's, decayed |
-| d | `llm` | a cached department guess → up to 6 of that department's locations (`departmentLocations` from stores) | .30–.49 (the guess band; the wire's .5–.7 mapped down) |
-| e | `unknown` | no location; the row offers "Tell me where" | 0 |
+| a | `exact` | ids, names and `aliases` (brands too), case / punctuation / quantity ("12 pack", "1 gallon") / plural-insensitive. The shopper's memory overrides it only when it is about that very item (same name or slot): a seeded catalog can be wrong about a shelf | 1 |
+| b | `memory` | the shopper's own per-store table (name → location, confirms, confidence), match ≥ .9 | the record's, decayed |
+| c | `category` (exact) | a category's name, alias or id names the query outright ("tp", "atta", "strawberries"): that sign's one slot | .79 |
+| d | `fuzzy` | trigram Dice and Damerau–Levenshtein over the item labels, threshold .72; token containment only when the query is the shorter side ("yogurt" ⊂ "greek yogurt", never "oat milk" → "milk") | .6–.95 |
+| e | `category` (fuzzy) | a near-identical spelling of a category label, threshold .9 ("birthday card" must not become cakes) | .6–.79 |
+| f | `llm` | the model picked a category id from the store's list → that category's slot (a department-id fallback keeps the old mocks working) | .30–.49 (the guess band; the wire's .5–.7 mapped down) |
+| g | `unknown` | no location; the row offers "Tell me where" | 0 |
 
-`text.ts` holds normalisation and similarity; `index.ts` the layers, `pendingEntry()` (an llm result as a
-catalog entry with `source: "llm"` so it resolves offline next time) and the memory rules; `llmPrompt.ts`
-the prompt, the JSON schema (department enum per store) and `parseLlmResults()` shared by every provider.
-Pure and synchronous: the app owns I/O.
+The item labels live in a `CandidateIndex` built once per catalog array (exact forms by text, trigram
+postings for the fuzzy shortlist, word postings for token containment): 4,000 items are ~40,000 forms,
+indexed in ~150 ms and queried in ~10 ms an item; the list screen builds it on mount. Categories have the
+same index.
+
+`text.ts` holds normalisation and similarity; `index.ts` the layers, the index, `pendingEntry()` (an llm
+result as a catalog entry with `source: "llm"` so it resolves offline next time) and the memory rules;
+`llmPrompt.ts` the prompt, the JSON schema (category-id enum per store) and `parseLlmResults()` shared by
+every provider. Pure and synchronous: the app owns I/O.
 
 **In the app** (`useResolution`): learning state per store lives in IndexedDB (`lib/db.ts`, in-memory
 fallback): pending catalog entries, the llm answer cache (including "not placeable"), item memory. The list
@@ -143,11 +153,17 @@ gear on the list screen opens `SettingsSheet`; `{provider, ollamaUrl, model, wor
 under `grosher.resolver`, defaults from `VITE_RESOLVER_PROVIDER` (`ollama` | `worker`), `VITE_OLLAMA_URL`,
 `VITE_OLLAMA_MODEL`, `VITE_RESOLVER_URL` at build time). `providerFor(settings)` builds the provider:
 
+The model picks from the store's ~300 shelf categories, not its departments: the category list (`id: name`,
+one per line) rides in the **system message** so it is a constant prefix Ollama caches after the first
+call (~3,400 prompt tokens), and the user message is only the items. The schema is `{name, cat, sub, conf,
+tags}`; the department comes from the category.
+
 - `ollama` (dev): `POST {ollamaUrl}/api/chat` (default `http://localhost:11434`), model `VITE_OLLAMA_MODEL`
-  (default `qwen3:8b`), `think: false`, `format` = the terse JSON schema `{name, dept, sub, conf, tags}` so
-  output is strict and short (`num_predict` = 32 + 45 per item; measured 26.6 output tokens per item), temperature 0, one
-  call for the whole list after a 1.5 s idle debounce, never per keystroke, 20 s timeout. On mount the list
-  screen sends an empty-messages chat with `keep_alive: 24h` so the model loads before the user types; before
+  (default `qwen3:8b`), `think: false`, `format` = that terse schema with the category-id enum, so output
+  is strict and short (`num_predict` = 32 + 45 per item; measured 26.6 output tokens per item), temperature 0,
+  one call for the whole list after a 1.5 s idle debounce, never per keystroke, 20 s timeout. On mount the
+  list screen sends a one-token chat with the system prompt and `keep_alive: 24h`, so the model loads and the
+  category prefix is cached before the user types; before
   each call `/api/ps` is checked, and if the model is not resident that one call gets a 60 s timeout and the
   header says "warming up the local model…". In dev every call logs `[resolve] …` with load, prompt-eval and
   generation timings to the console. Measured on an M-series Mac with qwen3:8b: ~2.7 s generation for 5
@@ -159,7 +175,8 @@ under `grosher.resolver`, defaults from `VITE_RESOLVER_PROVIDER` (`ollama` | `wo
   and only from a page served over plain http: the installed app (https) cannot fetch an http Ollama (mixed
   content; the sheet says so), which is what the worker path is for.
 - `worker` (production): the worker in `apps/resolver` at `workerUrl` (dev: `/api`, proxied to `wrangler
-  dev` on :8787). The worker's `PROVIDER` var picks its upstream: `ollama` forwards the same batch to the
+  dev` on :8787); the request is `{items, categories: {id, name}[]}` (caps: 48 KB body, 40 items, 400
+  categories). The worker's `PROVIDER` var picks its upstream: `ollama` forwards the same batch to the
   Mac's model through a Cloudflare Tunnel (`OLLAMA_UPSTREAM` + `OLLAMA_TOKEN` secrets, 25 s timeout), or
   `anthropic` makes one Claude call (`claude-haiku-5-5`, effort low, strict tool output in the same terse
   schema). Both return the parsed rows; when the upstream is unreachable, misconfigured or rate-limited the
@@ -211,8 +228,16 @@ ANTHROPIC_API_KEY` (`cp .dev.vars.example .dev.vars` for `wrangler dev`). Payloa
 12 fuzzy, 8 memory, 12 llm mocked, 8 unknown); the fuzzy threshold was tuned on it and the test asserts
 zero misses. `resolution-heldout.json` is 30 items written blind after it (Indian grocery items, brands,
 different typos, multi-word); the test prints its table but never asserts, and nothing is ever tuned
-against it. Both print per-layer hit rates: at the time of writing both are 100%. If the held-out fuzzy
-rate drops below 85%, say so and leave it.
+against it. These two run over the world they were tuned in: the 30 hand-kept base catalog rows, no
+categories, llm mocks keyed by department. Both are 100%. If the held-out fuzzy rate drops below 85%, say
+so and leave it. `resolution-everyday.json` is the third: 150 everyday items written blind before the
+seeded catalog existed (60 food, 24 brands, 17 household, 19 pharmacy, 18 Indian staples, 12
+misspellings), each with the aisle it should land in; `resolution-everyday.test.ts` scores aisle-level
+accuracy per source and kind over the full catalog and categories and only reports;
+`npm run eval:everyday -w @grosher/stores` repeats it with the local model answering the unknowns. On
+17 Oct 2026: **94% without the model, 95% with it** (targets 85 / 95), household, pharmacy and typos 100%,
+Indian staples 94%, food 93%. The misses are honest ones ("salmon fillet" to canned salmon, "strawberry jam"
+to strawberries). Never tune against it.
 
 ## Lists, history and personal data (`apps/web/src/lib/lists.ts`, `history.ts`, `useLists.ts`, `useHistory.ts`)
 
@@ -253,22 +278,56 @@ scripts do).
 
 ## Store data (`packages/stores`)
 
-- `demo/store.json` (StoreGraph with 33 fixtures and the department table), `demo/catalog.json` (30
-  `Stop`s), `demo/textures/<dept>.jpg` + `textures.json` (`{dept: {file, w, h, shotAt, repeatMeters}}`).
-- `src/index.ts` exports `StoreBundle` = `{store, catalog, textures, textureUrl(file)}`. `textureUrl` is a
+**The demo Supercenter** (`scripts/gen-demo.ts`, 100 nodes, 151 edges, 65 fixtures, 298 locations) mirrors
+a Walmart grocery side plus the near general-merchandise aisles: produce wall by the entrance (right), deli
+and bakery on the left wall, meat & seafood and dairy on the back wall, 30 aisles numbered from the produce
+side (A1 bread … A7 Asian · Indian · Mediterranean … A12–A15 snacks, A16–A17 drinks, A18–A21 frozen in cold
+cases, A22 cheese and lunch meat, A23–A25 paper, cleaning, laundry, A26 pet, A27 baby, A28–A30 health &
+beauty), a pharmacy counter front-left and ten lanes. Departments: the nine plus deli, pet, baby and
+pharmacy (tinted placeholder textures).
+
+**Taxonomy** (`scripts/taxonomy.ts` → `demo/categories.json`): 298 `Category` rows under 36 aisle signs
+the way the signs read ("Cereal · Breakfast"), each `{id, name, group (the sign), aisle, side, bays [from,
+to] counted from the entrance-facing end, locationId, department, tags, aliases}`. gen-demo lays each sign's
+categories along its aisle side in equal bay runs (25 bays a side) and makes one shelf location per category
+at the centre of its run (`A7-L11` = aisle A7, left side, bay 11). Indian staples are named individually
+(atta, basmati, dal, ghee, the spices by their Hindi names). A real store replaces this file; see "How to
+map a new store".
+
+**Seeded catalog** (`scripts/seed-catalog.ts` → `demo/catalog.json`, a `{generatedAt, model, seeded,
+items}` file): the local model, category by category, up to 25 products each with 2–5 aliases and tags
+under a strict JSON schema; retries on bad JSON; the file is rewritten after every category so a run
+resumes (`--only a,b`, `--redo`). The 8b model fills to the schema's maximum whatever the prompt says and
+pads narrow categories with flavours, hence the cap and the "X with Y" fold; 298 categories took 85 min and
+gave 4,064 items. The run ends with **reconcile** (`--reconcile` runs it alone): an item's name votes for its
+shelves, so when signs name it, their slots are its locations and shelves that merely generated it are
+dropped; a multi-word name inside a sign's name counts, a lone word does not; aliases that are another
+sign's name or another item's name elsewhere go; frozen / chilled tags stay only where a kept shelf has
+them; duplicates by the resolver's key merge. The 30 hand-kept base rows (`BASE_ITEMS` in gen-demo, the ids
+the tests use) are never touched; a seeded duplicate of one is dropped. Items carry `category` (the
+category that generated them); 326 sit in two or more.
+
+- `demo/store.json` (StoreGraph with 65 fixtures and the department table), `demo/categories.json`,
+  `demo/catalog.json` (4,064 items, 1.24 MB), `demo/textures/<dept>.jpg` + `textures.json`
+  (`{dept: {file, w, h, shotAt, repeatMeters}}`).
+- `src/index.ts` exports `StoreBundle` = `{store, catalog, categories, catalogMeta, textures,
+  textureUrl(file)}`; `parseStoreBundle` accepts a bare catalog array or the seeded file and checks every
+  category points at a real location. `textureUrl` is a
   `new URL(..., import.meta.url)` so Vite emits the JPEGs as hashed assets (precached by the PWA) and Node
   resolves the same files.
 - `src/departments.ts` is the canonical table from DESIGN.md §2; each store carries a copy.
 - `src/geometry.ts`: simple-polygon and segment-overlap checks; `fixtureProblems(store)` is used by the
   tests and the editor's Validate.
-- `src/resolveContext.ts`: `departmentLocations(store)`, department id → location ids via the fixtures; the
-  resolver's llm layer uses it and core stays free of fixture geometry.
+- `src/resolveContext.ts`: `categoryLocations(categories)`, `llmOptions(categories)` (the `{id, name}` list
+  the providers send) and `departmentLocations(store)` (department id → location ids via the fixtures, the
+  llm layer's fallback); core stays free of fixture geometry.
 - `src/slots.ts`: `fixtureParams` (bays, shelves, depth, height defaults by kind), `slotFor(store, location)`
   → fixture, bay (counted from the entrance-facing end), face, shelf, flat-map rect, shelf height;
   `offsetForBay` moves a location to a bay's centre. Shared by the editor picker, the lit slot, the stop
   cards and the product layout.
 - `scripts/gen-demo.ts` derives the demo fixtures from the aisle edges (1.4 m blocks each side, merged where
-  they meet and share a department; 1.0 m counters). Real stores are not generated; they are surveyed.
+  they meet and share a department; 1.0 m counters); a counter stays a counter whatever department staffs
+  it. Real stores are not generated; they are surveyed.
 
 ## Web app (`apps/web/src`)
 
@@ -323,9 +382,9 @@ gzipped). The store stays 2D; the scene maps `(x, y) → (x, 0, y)`.
 
 **Perf gate** (DESIGN.md §3: ≤ 70 draw calls, ≤ 12,000 product instances): open the trip with `?perf=1`;
 `Perf.tsx` writes `window.__grosherPerf = {calls, triangles, programs, frameMs, instances, productFixtures,
-distance, tilt, lit}` with `gl.info` accumulated across all passes. Last measured on the demo store at
-390×844 in headless Chromium: default framing 62 calls / 4,404 instances; 13 m down an aisle 63 calls /
-12,000 instances; flattened at 90 m 64 calls. Frame time from headless Chromium is SwiftShader (software)
+distance, tilt, lit}` with `gl.info` accumulated across all passes. Hull outlines of every fixture are one line batch (one call for the store, not one per department).
+Last measured on the 30-aisle demo store at 390×844 in headless Chromium: default framing 44 calls /
+11,985 instances; down an aisle after two items 53 calls / 12,000; flattened 53 calls / 12,000. Frame time from headless Chromium is SwiftShader (software)
 and is not a device number; measure that on a phone.
 The Playwright scripts that drove these checks live outside the repo; the pattern is: `vite dev`, fill the
 list, Route, `waitForFunction(() => window.__grosherPerf.frames > 100)`, read the object, screenshot.
@@ -347,10 +406,16 @@ Budget: 9 × ~30 KB today; keep the set under ~1.2 MB. Everything in `textures/`
 
 `model.ts` is pure: hit-testing (`pick` prefers node → location → edge → fixture), operations that return a
 new draft (nodes snap within 0.8 m, corridors chain and dedupe, doors, fixture rectangles, locations with the
-corridor's aisle as default, items on shelves, department textures) and `validateDraft` (doors, fixture
+corridor's aisle as default, items on shelves, department textures, `assignCategory`: a category's slot
+becomes a location and its aisle, side, bay and department follow) and `validateDraft` (doors, fixture
 geometry and departments, catalog references, reachability of every location and lane from the entrance to
-the exit). `io.ts` builds the export (`store.json` with `version + 1`, `catalog.json`,
-`textures/textures.json`, new images) and writes it.
+the exit, and the category report: categories without a slot, slots without a category, the counts).
+The draft is `{store, catalog, categories}`. `io.ts` builds the export (`store.json` with `version + 1`,
+`catalog.json`, `categories.json`, `textures/textures.json`, new images) and writes it; Import JSON
+recognises `categories.json` by its `locationId` + `group` rows. Layers: graph, fixtures, locations,
+**Categories** (each sign's name beside its slot), Confidence, Stale, textures, underlay. Tools: select,
+corridor, fixture, shelf location, doors, **Category** (search the signs, pick one, tap the slot), texture,
+measure. The location inspector lists the categories at the slot with their sign and bay run.
 
 **Write-to-package flow.** Drafts autosave per store in `localStorage` (`grosher.editor.<storeId>`). "Write
 to package" (Chrome / Edge only: File System Access API) opens a directory picker; choose
@@ -437,6 +502,20 @@ the precache filled, manifest with name / icons 192 + 512 + maskable / `standalo
 5. **Textures.** Texture tool: one straight-on photo per department.
 6. **Validate.** Fix every error (unreachable locations, missing departments, broken references); warnings
    are floating nodes and unlabelled locations.
-7. **Write.** "Write to package" into `packages/stores/<storeId>` (create the folder first; give the store a
+7. **Categories.** Photograph every aisle sign. Each sign becomes a group and each line on it a category:
+   write them into the store's `categories.json` (or a `taxonomy.ts` like the demo's and generate), one
+   category per bay run on one side of one aisle. In the editor the Category tool assigns a category to a
+   slot by tapping it, Validate lists categories without a slot and slots without one, and the Categories
+   layer shows the signs on the map. ~300 categories is a Supercenter; a neighbourhood market is fewer.
+8. **Write.** "Write to package" into `packages/stores/<storeId>` (create the folder first; give the store a
    new `storeId`, `name`, `address`), register the bundle in `packages/stores/src/index.ts`, run
    `npm test` (the stores tests validate every registered store), commit. Preview in 3D along the way.
+
+**What the survey replaces, piece by piece.** The corridors, fixtures and locations (steps 1–4) replace the
+generated layout. The aisle-sign photos (step 7) replace `taxonomy.ts` → `categories.json`: that is the
+whole mapping from products to shelves, and it is the part that differs store to store. The **catalog
+carries over**: product names and aliases are the same at every Walmart, so `demo/catalog.json` is copied
+into the new store as is, and because its items point at categories through their locations, re-running
+`seed-catalog.ts --reconcile` against the new `categories.json` (or re-seeding only the categories the new
+store has and the demo lacks) re-homes every item onto the new slots. Textures (step 5) replace the
+placeholders file for file. Memory, lists and history are per store and start empty.

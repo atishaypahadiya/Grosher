@@ -6,8 +6,9 @@ Grosher turns a shopping list into the shortest walk through the store. Type, pa
 line is matched to a shelf (the store's catalog first, then your own memory of where things were, then a local
 language model for the rest); the route is solved exactly for up to 13 stops with the shopping constraints a
 person would apply anyway (frozen last, heavy late, eggs and chips after the cans), and it re-plans from where
-you stand every time you check something off. One synthetic Supercenter ships as the demo; real stores are
-surveyed with the built-in map editor. It is a web app that installs to the home screen and works offline.
+you stand every time you check something off. One synthetic 30-aisle Supercenter ships as the demo, with 298
+shelf categories the way the aisle signs read and a 4,000-item catalog, so most everyday items resolve to the
+right aisle without a survey; real stores are surveyed with the built-in map editor. It is a web app that installs to the home screen and works offline.
 The visual contract is [DESIGN.md](DESIGN.md).
 
 <p>
@@ -25,13 +26,13 @@ lists, walking distance only:
 
 | stops | solver | list order | Grosher | saved | solve p50 |
 | ---: | --- | ---: | ---: | ---: | ---: |
-| 5 | Held–Karp | 324 m | 274 m | 16% | 0.0 ms |
-| 8 | Held–Karp | 451 m | 341 m | 24% | 0.1 ms |
-| 10 | Held–Karp | 550 m | 377 m | 31% | 0.5 ms |
-| 13 | Held–Karp | 655 m | 425 m | 35% | 5.6 ms |
-| 18 | heuristic | 928 m | 546 m | 41% | 7.1 ms |
-| 25 | heuristic | 1,195 m | 673 m | 44% | 26.1 ms |
-| 30 | heuristic | 1,404 m | 751 m | 46% | 73.0 ms |
+| 5 | Held–Karp | 391 m | 314 m | 20% | 0.0 ms |
+| 8 | Held–Karp | 594 m | 388 m | 35% | 0.1 ms |
+| 10 | Held–Karp | 666 m | 431 m | 35% | 0.4 ms |
+| 13 | Held–Karp | 868 m | 485 m | 44% | 4.6 ms |
+| 18 | heuristic | 1,171 m | 584 m | 50% | 32 ms |
+| 25 | heuristic | 1,540 m | 715 m | 54% | 134 ms |
+| 30 | heuristic | 1,834 m | 777 m | 58% | 318 ms |
 
 ## Item resolution
 
@@ -50,6 +51,9 @@ afterwards that is only ever reported.
 | llm | 12 / 12 | 6 / 6 |
 | unknown | 8 / 8 | 2 / 2 |
 | all | 100% | 100% |
+
+A third fixture, 150 everyday items written blind (food, household, pharmacy, Indian staples, brands,
+misspellings), scores **94% at aisle level without the model and 95% with it** on the demo store.
 
 What you confirm on a trip is remembered: "Got it" raises confidence, "Not here" lowers it, a tap on the map
 places it, and the exact words you typed come back as a suggestion next time ("yogurt" → "Chobani greek
