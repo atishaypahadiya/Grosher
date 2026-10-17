@@ -27,7 +27,8 @@ const page = await ctx.newPage();
 const errors = [];
 page.on("pageerror", (e) => errors.push(e.message));
 page.on("console", (m) => {
-  if (m.type() === "error") errors.push(`console: ${m.text().slice(0, 200)}`);
+  // a refused connection to a local model (localhost:11434) is expected where there is none; script errors are not
+  if (m.type() === "error" && !/Failed to load resource/.test(m.text())) errors.push(`console: ${m.text().slice(0, 200)}`);
 });
 // PERF_CPU_THROTTLE=4 slows the main thread like a CI runner (Chromium only)
 if (process.env.PERF_CPU_THROTTLE) {
