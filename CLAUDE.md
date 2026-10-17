@@ -155,6 +155,14 @@ npx wrangler secret put OLLAMA_TOKEN        # paste the token
 npm run deploy -w @grosher/resolver         # prints https://grosher-resolver.<account>.workers.dev → VITE_RESOLVER_URL on Pages
 ```
 
+**Resolver uptime.** The deployed resolver answers only while three processes are running on the Mac:
+Ollama (`ollama serve` or the menu-bar app, with `qwen3:8b` pulled; the app's warm-up keeps it loaded for
+24 h), the gate (`OLLAMA_TOKEN=… npm run gate -w @grosher/resolver`), and the tunnel (`cloudflared tunnel
+--url http://localhost:11435`, or the named tunnel). If any of the three is down, or the Mac sleeps, the
+worker answers `degraded: true`, the installed app shows "Resolver offline · unknown items need a tap", and
+everything the catalog and memory can place still works. Lid closed = no resolver: keep the Mac awake
+(`caffeinate -s`) or run the three under launchd.
+
 A quick tunnel gets a new URL every start; for a stable hostname make a named tunnel (`cloudflared tunnel
 create grosher`, route a DNS name to it, `ingress` → `http://localhost:11435`) and put that hostname in
 `OLLAMA_UPSTREAM` once. The gate only passes `POST /api/chat` and `GET /api/ps` with the exact bearer token
@@ -335,7 +343,10 @@ on soil). Check with `npm run build && npx vite preview`, load once, go offline,
 | Build command | `npm run build -w @grosher/web` |
 | Build output directory | `apps/web/dist` |
 | Node version | `.nvmrc` pins 22 (or set the `NODE_VERSION=22` environment variable) |
-| Environment variables | `VITE_RESOLVER_PROVIDER=worker`, `VITE_RESOLVER_URL=https://grosher-resolver.<account>.workers.dev` |
+| Environment variables | `VITE_RESOLVER_PROVIDER=worker`, `VITE_RESOLVER_URL=https://grosher-resolver.atishaypahadiya3.workers.dev` |
+
+Live: the app at `https://grosher.pages.dev`, the worker at `https://grosher-resolver.atishaypahadiya3.workers.dev`
+(ollama upstream through the tunnel and gate), installed on an iPhone and verified offline on 17 Oct 2026.
 
 Pages runs `npm clean-install` itself before the build command. `apps/web/public/_headers` ships with the
 build: `sw.js`, `registerSW.js`, the manifest and the HTML are `no-cache` so a deploy reaches installed apps
