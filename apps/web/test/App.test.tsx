@@ -152,7 +152,7 @@ describe("editor", () => {
     expect(screen.getByText(/nodes · .* edges · .* locations · 13 textures · 0 unreachable/i)).toBeTruthy();
     expect(screen.getByRole("button", { name: /shelf location/i })).toBeTruthy();
     expect(screen.getByRole("button", { name: /preview in 3d/i })).toBeTruthy();
-    expect(screen.getByRole("group", { name: /layers/i }).querySelectorAll("button")).toHaveLength(7);
+    expect(screen.getByRole("group", { name: /layers/i }).querySelectorAll("button")).toHaveLength(8);
     fireEvent.click(screen.getByRole("button", { name: /^validate$/i }));
     expect(screen.getByText(/map is valid/i)).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /^done$/i }));
@@ -379,5 +379,29 @@ describe("picker on the guess", () => {
     // confirmed: the row now resolves from memory at .8 → confirmed band
     await waitFor(() => expect(within(screen.getByRole("list")).getAllByRole("listitem")[0].getAttribute("data-source")).toBe("memory"), { timeout: 3000 });
     expect(within(screen.getByRole("list")).getAllByRole("listitem")[0].getAttribute("data-band")).toBe("confirmed");
+  });
+});
+
+describe("editor categories", () => {
+  test("the Categories layer labels every slot, the tool picks a category, Validate reports the counts", async () => {
+    location.hash = "#/edit";
+    try {
+      render(<App />);
+      await screen.findByText(/map v/i);
+      expect(screen.getByText(/298 categories/)).toBeTruthy();
+      fireEvent.click(screen.getByRole("button", { name: /^categories$/i }));
+      expect(document.querySelectorAll("[data-category]").length).toBe(298);
+      fireEvent.click(screen.getByRole("button", { name: /^category$/i }));
+      const picker = screen.getByTestId("category-picker");
+      fireEvent.change(within(picker).getByLabelText(/search categories/i), { target: { value: "ghee" } });
+      const ghee = within(picker).getByRole("button", { name: /ghee & indian cooking oils/i });
+      fireEvent.click(ghee);
+      expect(ghee.getAttribute("aria-pressed")).toBe("true");
+      expect(picker.textContent).toMatch(/now at A7-L11 · tap the slot/);
+      fireEvent.click(screen.getByRole("button", { name: /^validate$/i }));
+      expect(screen.getByText(/298 categories · 298 with a slot · 0 slots without a category/)).toBeTruthy();
+    } finally {
+      location.hash = "";
+    }
   });
 });

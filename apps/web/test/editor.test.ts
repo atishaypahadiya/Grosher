@@ -110,3 +110,36 @@ describe("bay + shelf picker", () => {
     expect(after.heightM).toBeGreaterThan(before.heightM);
   });
 });
+
+import { assignCategory, categoriesAt, categoryIssues } from "../src/editor/model.ts";
+
+describe("categories in the editor", () => {
+  const withCats: Draft = { ...base, categories: demoSupercenter.categories };
+
+  test("the category tool moves a category to a slot: aisle, side and bay follow the location", () => {
+    const cat = withCats.categories!.find((c) => c.id === "ghee-oils-indian")!;
+    const target = withCats.store.locations.find((l) => l.id === "A22-L14")!; // the paneer slot
+    const d = assignCategory(withCats, cat.id, target.id);
+    const moved = d.categories!.find((c) => c.id === cat.id)!;
+    expect(moved.locationId).toBe("A22-L14");
+    expect(moved.aisle).toBe("A22");
+    expect(moved.side).toBe("L");
+    expect(moved.bays[0]).toBe(moved.bays[1]);
+    expect(moved.department).toBe("dairy");
+    expect(categoriesAt(d.categories, "A22-L14").map((c) => c.id).sort()).toEqual(["ghee-oils-indian", "paneer-indian-dairy"]);
+    expect(categoriesAt(d.categories, cat.locationId)).toEqual([]); // its old slot is empty now
+    expect(assignCategory(withCats, cat.id, "nope")).toBe(withCats); // unknown slot: no change
+  });
+
+  test("Validate reports categories without a slot and slots without a category, with counts", () => {
+    expect(categoryIssues(base)).toEqual([]); // no taxonomy, nothing to say
+    const clean = categoryIssues(withCats);
+    expect(clean.filter((i) => i.level === "warning")).toEqual([]);
+    expect(clean.find((i) => i.level === "info")?.text).toMatch(/298 categories · 298 with a slot · 0 slots without a category/);
+    const broken: Draft = { ...withCats, categories: withCats.categories!.map((c) => (c.id === "milk" ? { ...c, locationId: "GONE" } : c)) };
+    const issues = categoryIssues(broken);
+    expect(issues.some((i) => i.level === "warning" && /"Milk" \(milk\) has no slot: GONE/.test(i.text))).toBe(true);
+    expect(issues.some((i) => i.level === "warning" && /1 slot has no category: DAIRY-L1\./.test(i.text))).toBe(true);
+    expect(validateDraft(broken).filter((i) => i.level === "warning").length).toBeGreaterThanOrEqual(2);
+  });
+});

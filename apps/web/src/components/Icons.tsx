@@ -34,6 +34,9 @@ export const IconUpload = (p: SVGProps<SVGSVGElement>) => (
 export const IconWalk = (p: SVGProps<SVGSVGElement>) => (
   <svg {...base(p)}><path d="M4 18l4-10 4 6 2-3 6 7" /></svg>
 );
+export const IconTag = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><path d="M4 4h7l9 9-7 7-9-9z" /><circle cx="8" cy="8" r="1.2" fill="currentColor" /></svg>
+);
 export const IconGear = (p: SVGProps<SVGSVGElement>) => (
   <svg {...base(p)}><circle cx="12" cy="12" r="3" /><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" /></svg>
 );

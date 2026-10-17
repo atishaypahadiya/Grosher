@@ -1,8 +1,8 @@
 // Editor model: a draft store + catalog, pure operations on it, hit-testing,
 // and validation. No React here, so every tool is unit-testable.
 
-import { WalkGraph, Router, type Fixture, type GraphEdge, type GraphNode, type NodeType, type ShelfLocation, type Stop, type StoreGraph } from "@grosher/core";
-import { fixtureProblems, pointInPolygon, type Pt as GeoPt } from "@grosher/stores";
+import { WalkGraph, Router, type Category, type Fixture, type GraphEdge, type GraphNode, type NodeType, type ShelfLocation, type Stop, type StoreGraph } from "@grosher/core";
+import { fixtureForLocation, fixtureProblems, pointInPolygon, slotFor, type Pt as GeoPt } from "@grosher/stores";
 
 export interface Pt {
   x: number;
@@ -12,6 +12,8 @@ export interface Pt {
 export interface Draft {
   store: StoreGraph;
   catalog: Stop[];
+  /** the shelf categories (aisle signs → bay runs); absent for a store not surveyed at that level */
+  categories?: Category[];
 }
 
 export type Selection =
@@ -293,7 +295,7 @@ export function setDepartmentTexture(d: Draft, deptId: string, file: string): Dr
 // ---------------------------------------------------------------- validation
 
 export interface Issue {
-  level: "error" | "warning";
+  level: "error" | "warning" | "info";
   text: string;
 }
 
@@ -328,12 +330,45 @@ export function validateDraft(d: Draft): Issue[] {
   } catch (e) {
     issues.push({ level: "error", text: `Graph error: ${(e as Error).message}` });
   }
+  issues.push(...categoryIssues(d));
+  return issues;
+}
+
+// ---------------------------------------------------------------- categories
+
+/** the categories whose slot is this location */
+export const categoriesAt = (categories: Category[] | undefined, locationId: string): Category[] => (categories ?? []).filter((c) => c.locationId === locationId);
+
+/** the category tool: this category's slot becomes that location (aisle, side and bay follow the location) */
+export function assignCategory(d: Draft, categoryId: string, locationId: string): Draft {
+  const loc = d.store.locations.find((l) => l.id === locationId);
+  if (!loc) return d;
+  const slot = slotFor(d.store, loc);
+  const dept = fixtureForLocation(d.store, loc)?.department;
+  const bay = slot?.bay ?? 1;
+  const categories = (d.categories ?? []).map((c) => (c.id === categoryId ? { ...c, locationId, aisle: loc.aisle, side: loc.side ?? "L", bays: [bay, bay] as [number, number], department: dept ?? c.department } : c));
+  return { ...d, categories };
+}
+
+/** Validate's category report: categories pointing at no slot, slots no category points at */
+export function categoryIssues(d: Draft): Issue[] {
+  const cats = d.categories ?? [];
+  if (!cats.length) return [];
+  const locIds = new Set(d.store.locations.map((l) => l.id));
+  const issues: Issue[] = [];
+  const orphans = cats.filter((c) => !locIds.has(c.locationId));
+  for (const c of orphans) issues.push({ level: "warning", text: `Category "${c.name}" (${c.id}) has no slot: ${c.locationId} is not a location.` });
+  const used = new Set(cats.map((c) => c.locationId));
+  const empty = d.store.locations.filter((l) => !used.has(l.id));
+  if (empty.length) issues.push({ level: "warning", text: `${empty.length} ${empty.length === 1 ? "slot has" : "slots have"} no category: ${empty.slice(0, 6).map((l) => l.id).join(", ")}${empty.length > 6 ? "…" : ""}.` });
+  issues.push({ level: "info", text: `${cats.length} categories · ${cats.length - orphans.length} with a slot · ${empty.length} ${empty.length === 1 ? "slot" : "slots"} without a category.` });
   return issues;
 }
 
 export function stats(d: Draft) {
   const unreachable = validateDraft(d).filter((i) => /cannot be reached|No way out/.test(i.text)).length;
   return {
+    categories: (d.categories ?? []).length,
     nodes: d.store.nodes.length,
     edges: d.store.edges.length,
     locations: d.store.locations.length,

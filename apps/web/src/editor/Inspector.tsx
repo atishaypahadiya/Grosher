@@ -3,7 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import type { Department, Fixture, GraphEdge, GraphNode, ItemTag, ShelfLocation, StoreZone } from "@grosher/core";
 import { offsetForBay, slotFor, type TextureManifest } from "@grosher/stores";
-import { itemsAt, type Draft, type Issue, type Selection } from "./model.ts";
+import { categoriesAt, itemsAt, type Draft, type Issue, type Selection } from "./model.ts";
 import type { TextureFile } from "./io.ts";
 import { IconCheck } from "../components/Icons.tsx";
 
@@ -202,6 +202,22 @@ function LocationPanel({ loc, draft, manifest, textures, textureUrl, onUpdateLoc
         )}
       </div>
 
+      {(draft.categories ?? []).length > 0 && (
+        <>
+          <span className="eyebrow soil ed-section">Categories here</span>
+          <ul className="ed-items" data-testid="categories-here">
+            {categoriesAt(draft.categories, loc.id).length === 0 && <li className="muted">None · the category tool assigns one to this slot</li>}
+            {categoriesAt(draft.categories, loc.id).map((c) => (
+              <li key={c.id}>
+                <span>{c.name}</span>
+                <span className="conf">
+                  {c.group} · bays {c.bays[0]}–{c.bays[1]}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
       <span className="eyebrow soil ed-section">Items here</span>
       <ul className="ed-items">
         {items.map((s) => (
@@ -390,5 +406,34 @@ function ValidationPanel({ issues, bands, onDone }: { issues: Issue[]; bands?: B
         </button>
       </div>
     </aside>
+  );
+}
+
+
+/** The category tool's panel: find a sign, pick it, then tap the slot on the map. */
+export function CategoryPicker({ draft, pick, onPick }: { draft: Draft; pick: string | null; onPick: (id: string | null) => void }) {
+  const [q, setQ] = useState("");
+  const cats = draft.categories ?? [];
+  const needle = q.trim().toLowerCase();
+  const shown = (needle ? cats.filter((c) => `${c.name} ${c.group} ${c.id} ${(c.aliases ?? []).join(" ")}`.toLowerCase().includes(needle)) : cats).slice(0, 40);
+  const picked = cats.find((c) => c.id === pick);
+  return (
+    <div className="ed-catpick" data-testid="category-picker">
+      <p className="ed-sub">{picked ? `${picked.name} · now at ${picked.locationId} · tap the slot it belongs to` : "Pick a category, then tap its slot on the map."}</p>
+      <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search signs and categories" aria-label="Search categories" />
+      <ul className="ed-items">
+        {shown.map((c) => (
+          <li key={c.id}>
+            <button type="button" className={`ed-cat${c.id === pick ? " on" : ""}`} aria-pressed={c.id === pick} onClick={() => onPick(c.id === pick ? null : c.id)}>
+              <span>{c.name}</span>
+              <span className="conf">
+                {c.aisle} · bays {c.bays[0]}–{c.bays[1]}
+              </span>
+            </button>
+          </li>
+        ))}
+        {!shown.length && <li className="muted">No category matches.</li>}
+      </ul>
+    </div>
   );
 }

@@ -21,6 +21,7 @@ export interface TextureFile {
 export interface ExportFiles {
   "store.json": Blob;
   "catalog.json": Blob;
+  "categories.json": Blob;
   "textures/textures.json": Blob;
   "memory.json": Blob;
   "lists.json": Blob;
@@ -44,6 +45,7 @@ export function buildExport(draft: Draft, manifest: TextureManifest, textures: T
   return {
     "store.json": json({ ...draft.store, version: (draft.store.version ?? 0) + 1 }),
     "catalog.json": json(draft.catalog),
+    "categories.json": json(draft.categories ?? []),
     "textures/textures.json": json(merged),
     "memory.json": json(personal.memory),
     "lists.json": json({ lists: personal.lists, history: personal.history }),
@@ -62,6 +64,7 @@ export function download(blob: Blob, filename: string) {
 export function downloadAll(files: ExportFiles) {
   download(files["store.json"], "store.json");
   download(files["catalog.json"], "catalog.json");
+  download(files["categories.json"], "categories.json");
   download(files["textures/textures.json"], "textures.json");
   download(files["memory.json"], "memory.json");
   download(files["lists.json"], "lists.json");
@@ -103,6 +106,7 @@ export async function writePackage(dir: DirHandle, files: ExportFiles): Promise<
   for (const [path, blob] of [
     ["store.json", files["store.json"]],
     ["catalog.json", files["catalog.json"]],
+    ["categories.json", files["categories.json"]],
     ["textures/textures.json", files["textures/textures.json"]],
     ["memory.json", files["memory.json"]],
     ["lists.json", files["lists.json"]],
@@ -148,6 +152,10 @@ export async function importFiles(files: File[], current: Draft): Promise<Import
     } else if (Array.isArray(data) && data.every((x) => x && typeof x === "object" && "locationId" in (x as object) && "confirms" in (x as object))) {
       personal.memory = data;
       notes.push(`${f.name}: ${data.length} remembered items`);
+    } else if (Array.isArray(data) && data.length && data.every((x) => x && typeof x === "object" && "locationId" in (x as object) && "group" in (x as object))) {
+      const { categories } = parseStoreBundle({ store: draft.store, catalog: draft.catalog, categories: data });
+      draft = { ...draft, categories };
+      notes.push(`${f.name}: ${categories.length} categories`);
     } else if (Array.isArray(data)) {
       const { catalog } = parseStoreBundle({ store: draft.store, catalog: data });
       draft = { ...draft, catalog };
@@ -157,8 +165,8 @@ export async function importFiles(files: File[], current: Draft): Promise<Import
       draft = { ...draft, store };
       notes.push(`${f.name}: store ${store.storeId} with ${store.nodes.length} nodes`);
     } else if (data && typeof data === "object" && "store" in (data as object)) {
-      const b = parseStoreBundle(data as { store: unknown; catalog: unknown });
-      draft = { store: b.store, catalog: b.catalog };
+      const b = parseStoreBundle(data as { store: unknown; catalog: unknown; categories?: unknown });
+      draft = { store: b.store, catalog: b.catalog, categories: b.categories.length ? b.categories : draft.categories };
       notes.push(`${f.name}: bundle`);
     } else {
       notes.push(`${f.name}: not a store, catalog or bundle`);

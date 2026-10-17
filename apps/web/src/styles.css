@@ -495,6 +495,11 @@ button { cursor: pointer; touch-action: manipulation; }
 .ed-issues { list-style: none; margin: 0; padding: 0; }
 .ed-issues li { padding: 8px 0; border-top: 1px solid var(--ed-line); font-size: 14px; }
 .ed-issues li.error { color: var(--ed-rose); }
+.ed-issues li.info { color: var(--moss); }
+.ed-catpick { display: flex; flex-direction: column; gap: 8px; }
+.ed-catpick input { width: 100%; border: 1px solid var(--ed-line); border-radius: 10px; padding: 8px 10px; font: inherit; }
+.ed-cat { width: 100%; display: flex; justify-content: space-between; gap: 10px; background: none; border: 0; padding: 0; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.ed-cat.on { color: var(--soil); font-weight: 600; }
 
 .preview3d { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; }
 .preview-frame { position: relative; width: min(430px, 100vw); height: min(844px, 100dvh); border-radius: 28px; overflow: hidden; background: var(--deep); }

@@ -8,7 +8,7 @@ import type { EditorFocus } from "../lib/reset.ts";
 import { bandCounts, locationMarks } from "./confidence.ts";
 import { StoreMap, type MapSelection, type ViewBox } from "../components/StoreMap.tsx";
 import { load, save } from "../lib/storage.ts";
-import { Inspector } from "./Inspector.tsx";
+import { CategoryPicker, Inspector } from "./Inspector.tsx";
 import { Preview3D } from "./Preview3D.tsx";
 import { buildExport, canWritePackage, downloadAll, importFiles, pickPackageDir, toTextureJpeg, writePackage, type TextureFile } from "./io.ts";
 import {
@@ -37,23 +37,25 @@ import {
   type Draft,
   type Pt,
   type Selection,
-} from "./model.ts";
-import { IconCorridor, IconCube, IconCursor, IconDoor, IconFixture, IconImage, IconPin, IconRuler, IconClose } from "../components/Icons.tsx";
+  assignCategory,
+  nearestLocation,} from "./model.ts";
+import { IconCorridor, IconCube, IconCursor, IconDoor, IconFixture, IconImage, IconPin, IconRuler, IconClose, IconTag } from "../components/Icons.tsx";
 import { moveBy, scaleAbout, withWidth, type Underlay } from "./underlay.ts";
-import { slotFor } from "@grosher/stores";
+import { slotFor, locationPoint } from "@grosher/stores";
 import { loadLearning, saveLearning } from "../lib/learning.ts";
 import { loadLists, mergeImported as mergeLists, saveLists, type List } from "../lib/lists.ts";
 import { loadHistory, mergeImported as mergeHistory, saveHistory, type TripRecord } from "../lib/history.ts";
 import type { ItemMemory } from "@grosher/core";
 import type { Personal } from "./io.ts";
 
-type Tool = "select" | "corridor" | "fixture" | "location" | "doors" | "texture" | "measure";
+type Tool = "select" | "corridor" | "fixture" | "location" | "doors" | "category" | "texture" | "measure";
 const TOOLS: { id: Tool; label: string; icon: ReactNode }[] = [
   { id: "select", label: "Select", icon: <IconCursor /> },
   { id: "corridor", label: "Corridor", icon: <IconCorridor /> },
   { id: "fixture", label: "Fixture", icon: <IconFixture /> },
   { id: "location", label: "Shelf location", icon: <IconPin /> },
   { id: "doors", label: "Entrance, exit, checkout", icon: <IconDoor /> },
+  { id: "category", label: "Category", icon: <IconTag /> },
   { id: "texture", label: "Texture", icon: <IconImage /> },
   { id: "measure", label: "Measure", icon: <IconRuler /> },
 ];
@@ -61,6 +63,8 @@ const TOOLS: { id: Tool; label: string; icon: ReactNode }[] = [
 interface Layers {
   graph: boolean;
   fixtures: boolean;
+  /** the sign names beside their slots */
+  categories: boolean;
   /** dot fill by band, misses as a count */
   confidence: boolean;
   /** only locations not confirmed in 90 days or in the guess band */
@@ -76,14 +80,19 @@ export function EditorScreen({ bundle, onExit, focus = null }: { bundle: StoreBu
   // a "possibly reset" review: the aisle in question is highlighted and its items listed until closed
   const [focusOpen, setFocusOpen] = useState(!!focus);
   const focusFixtures = useMemo(() => (focus?.aisle ? (bundle.store.fixtures ?? []).filter((f) => f.aisle === focus.aisle) : []), [bundle.store.fixtures, focus?.aisle]);
-  const packaged = useMemo<Draft>(() => ({ store: bundle.store, catalog: bundle.catalog }), [bundle]);
-  const [draft, setDraftState] = useState<Draft>(() => load<Draft | null>(draftKey(bundle.store.storeId), null) ?? packaged);
+  const packaged = useMemo<Draft>(() => ({ store: bundle.store, catalog: bundle.catalog, categories: bundle.categories }), [bundle]);
+  const [draft, setDraftState] = useState<Draft>(() => {
+    const saved = load<Draft | null>(draftKey(bundle.store.storeId), null);
+    // a draft saved before categories existed takes the package's
+    return saved ? { ...saved, categories: saved.categories ?? bundle.categories } : packaged;
+  });
+  const [catPick, setCatPick] = useState<string | null>(null);
   const setDraft = useCallback((d: Draft) => setDraftState(d), []);
   useEffect(() => save(draftKey(bundle.store.storeId), draft), [draft, bundle.store.storeId]);
 
   const [tool, setTool] = useState<Tool>("select");
   const [selection, setSelection] = useState<Selection>(null);
-  const [layers, setLayers] = useState<Layers>({ graph: true, fixtures: true, locations: true, confidence: false, stale: false, textures: false, underlay: true });
+  const [layers, setLayers] = useState<Layers>({ graph: true, fixtures: true, locations: true, categories: false, confidence: false, stale: false, textures: false, underlay: true });
   const [issues, setIssues] = useState<ReturnType<typeof validateDraft> | null>(null);
   const [hover, setHover] = useState<Pt | null>(null);
   const [viewInfo, setViewInfo] = useState<{ view: ViewBox; upp: number }>({ view: { x: 0, y: 0, w: 1, h: 1 }, upp: 0.1 });
@@ -173,6 +182,22 @@ export function EditorScreen({ bundle, onExit, focus = null }: { bundle: StoreBu
       }
       setDraft(setDoor(draft, n.id, door));
       setSelection({ kind: "node", id: n.id });
+      return;
+    }
+    if (tool === "category") {
+      if (!catPick) {
+        setNotice("Pick a category in the panel, then tap the shelf location it belongs to.");
+        return;
+      }
+      const loc = nearestLocation(draft.store, pt, Math.max(2, pickRadius * 2));
+      if (!loc) {
+        setNotice("Tap a shelf location.");
+        return;
+      }
+      setDraft(assignCategory(draft, catPick, loc.id));
+      setSelection({ kind: "location", id: loc.id });
+      const cat = draft.categories?.find((c) => c.id === catPick);
+      setNotice(`${cat?.name ?? catPick} → ${loc.id}`);
       return;
     }
     if (tool === "measure") {
@@ -286,7 +311,7 @@ export function EditorScreen({ bundle, onExit, focus = null }: { bundle: StoreBu
           </strong>
         </div>
         <div className="ed-stats">
-          {s.nodes} nodes · {s.edges} edges · {s.locations} locations · {s.textures} textures · {s.unreachable} unreachable
+          {s.nodes} nodes · {s.edges} edges · {s.locations} locations · {s.textures} textures · {s.unreachable} unreachable · {s.categories} categories
         </div>
         <button type="button" className="pill-s" onClick={() => importRef.current?.click()}>
           Import JSON
@@ -335,6 +360,18 @@ export function EditorScreen({ bundle, onExit, focus = null }: { bundle: StoreBu
           gestureOverride={underlayGestures}
           className={`ed-canvas${underlayLive ? " underlay-live" : ""}`}
         >
+          {layers.categories &&
+            (draft.categories ?? []).map((c) => {
+              const loc = store.locations.find((l) => l.id === c.locationId);
+              const p = loc && locationPoint(store, loc);
+              if (!p) return null;
+              const dx = loc.side === "R" ? viewInfo.upp * 6 : -viewInfo.upp * 6;
+              return (
+                <text key={`cat-${c.id}`} x={p.x + dx} y={p.y + viewInfo.upp * 3} fontSize={viewInfo.upp * 9} fill="#0F2A1A" textAnchor={loc.side === "R" ? "start" : "end"} pointerEvents="none" data-category={c.id}>
+                  {c.name}
+                </text>
+              );
+            })}
           {focusOpen &&
             focusFixtures.map((f) => (
               <polygon key={`focus-${f.id}`} points={f.polygon.map((p) => p.join(",")).join(" ")} fill="rgba(212,255,74,0.35)" stroke="#0F2A1A" strokeWidth={viewInfo.upp * 1.5} strokeDasharray={`${viewInfo.upp * 4} ${viewInfo.upp * 4}`} pointerEvents="none" data-testid="focus-aisle" />
@@ -388,6 +425,7 @@ export function EditorScreen({ bundle, onExit, focus = null }: { bundle: StoreBu
               ["graph", "Graph"],
               ["fixtures", "Fixtures"],
               ["locations", "Locations"],
+              ["categories", "Categories"],
               ["confidence", "Confidence"],
               ["stale", "Stale"],
               ["textures", "Textures"],
@@ -449,6 +487,8 @@ export function EditorScreen({ bundle, onExit, focus = null }: { bundle: StoreBu
         <ToolOptions
           tool={tool}
           draft={draft}
+          catPick={catPick}
+          setCatPick={setCatPick}
           chainFrom={chainFrom}
           newOneWay={newOneWay}
           setNewOneWay={setNewOneWay}
@@ -494,6 +534,8 @@ interface ToolOptionsProps {
   textures: TextureFile[];
   textureUrls: Map<string, string>;
   onReplaceTexture: (deptId: string, file: File) => void;
+  catPick: string | null;
+  setCatPick: (id: string | null) => void;
   underlay: Underlay | null;
   setUnderlay: (u: Underlay | null) => void;
   onReset: () => void;
@@ -510,6 +552,7 @@ function ToolOptions(p: ToolOptionsProps) {
     fixture: "Fixture",
     location: "Shelf location",
     doors: "Doors and lanes",
+    category: "Category",
     texture: "Textures",
     measure: "Measure",
   };
@@ -519,6 +562,7 @@ function ToolOptions(p: ToolOptionsProps) {
     fixture: "Tap two opposite corners to draw a shelf block, then set its department, height and aisle sign.",
     location: "Tap on a corridor to pin a shelf location there, then fill in the Walmart aisle, section and modular.",
     doors: "Pick what to mark, then tap a node.",
+    category: "Pick a sign's category, then tap the shelf location it belongs to; the aisle, side and bay follow the slot.",
     texture: "One photo per department, tiled on every shelf of that department in 3D. 512×512 JPEG; any image is resized.",
     measure: "Tap two points.",
   };
@@ -576,6 +620,7 @@ function ToolOptions(p: ToolOptionsProps) {
           ))}
         </div>
       )}
+      {p.tool === "category" && <CategoryPicker draft={p.draft} pick={p.catPick} onPick={p.setCatPick} />}
       {p.tool === "measure" && p.measureM !== null && (
         <p className="ed-title">{p.measureM.toFixed(2)} m</p>
       )}
