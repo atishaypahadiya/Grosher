@@ -53,7 +53,11 @@ export interface Stop {
   name: string;
   locationIds: string[]; // >1 => item lives in several places (endcaps, seasonal)
   tags?: ItemTag[];
-  confidence?: number; // 0..1, from item resolution
+  confidence?: number; // 0..1; absent = 1 (a surveyed entry). See confidence.ts for the rules.
+  confirms?: number;
+  misses?: number;
+  lastConfirmed?: number; // ms epoch
+  lastMissed?: number;
   /** other names and brands that mean this item ("toilet paper", "tide") */
   aliases?: string[];
   /** pending entries written by the resolver carry their origin */

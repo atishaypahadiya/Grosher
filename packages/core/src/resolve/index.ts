@@ -14,6 +14,7 @@
 
 import type { Department, ItemTag, Stop } from "../types.ts";
 import { forms, normalize, similarity, singularize } from "./text.ts";
+import { confirmed, decayed, missed } from "../confidence.ts";
 
 export { normalize, stripQuantity, singularize, similarity, forms } from "./text.ts";
 export * from "./llmPrompt.ts";
@@ -43,8 +44,10 @@ export interface ItemMemory {
   locationId: string;
   brand?: string;
   lastConfirmed: number; // ms epoch
+  lastMissed?: number;
   confirms: number;
-  /** 0..1; "Got it" raises it toward 1, "Not here" lowers it by 0.3 */
+  misses?: number;
+  /** 0..1 under the rules in confidence.ts: "Got it" 30% of the gap toward 1, "Not here" −0.3 (floor 0.05), time decay on read */
   confidence: number;
   tags?: ItemTag[];
   /** every exact string the shopper typed for it ("Chobani greek yogurt"), most recent last */
@@ -116,6 +119,8 @@ export interface ResolveContext {
   llm?: Map<string, LlmGuess | null>;
   /** tuned on the fixture; default .72 */
   fuzzyThreshold?: number;
+  /** ms epoch for time decay (confidence.ts); default Date.now() */
+  now?: number;
 }
 
 export const FALLTHROUGH = 0.6;
@@ -142,12 +147,12 @@ function candidates(catalog: Stop[]): Candidate[] {
 
 const result = (query: string, partial: Omit<ResolveResult, "query">): ResolveResult => ({ query, ...partial });
 
-function fromStop(query: string, stop: Stop, source: ResolveSource, confidence: number, matched?: string): ResolveResult {
+function fromStop(query: string, stop: Stop, source: ResolveSource, confidence: number, matched?: string, now = Date.now()): ResolveResult {
   // a pending entry keeps its origin so the UI can show it as a guess
   const src: ResolveSource = stop.source === "llm" ? "llm" : stop.source === "memory" ? "memory" : source;
   return result(query, {
     locationIds: stop.locationIds,
-    confidence: Math.min(confidence, stop.confidence ?? 1),
+    confidence: Math.min(confidence, decayed(stop, now)),
     source: src,
     canonicalName: stop.name,
     tags: stop.tags ?? [],
@@ -160,16 +165,16 @@ function fromStop(query: string, stop: Stop, source: ResolveSource, confidence: 
 
 // ---------------------------------------------------------------- layers
 
-export function exactLayer(query: string, cands: Candidate[]): ResolveResult | null {
+export function exactLayer(query: string, cands: Candidate[], now = Date.now()): ResolveResult | null {
   const qs = forms(query);
   for (const q of qs) {
     const hit = cands.find((c) => c.text === q);
-    if (hit) return fromStop(query, hit.stop, "exact", 1, hit.label);
+    if (hit) return fromStop(query, hit.stop, "exact", 1, hit.label, now);
   }
   return null;
 }
 
-export function fuzzyLayer(query: string, cands: Candidate[], threshold: number): ResolveResult | null {
+export function fuzzyLayer(query: string, cands: Candidate[], threshold: number, now = Date.now()): ResolveResult | null {
   const qs = forms(query);
   let best: { c: Candidate; sim: number } | null = null;
   for (const q of qs) {
@@ -181,7 +186,7 @@ export function fuzzyLayer(query: string, cands: Candidate[], threshold: number)
   }
   if (!best || best.sim < threshold) return null;
   const confidence = 0.6 + ((best.sim - threshold) / (1 - threshold)) * 0.35;
-  return fromStop(query, best.c.stop, "fuzzy", Math.min(0.95, confidence), best.c.label);
+  return fromStop(query, best.c.stop, "fuzzy", Math.min(0.95, confidence), best.c.label, now);
 }
 
 /**
@@ -203,7 +208,7 @@ function tokenSimilarity(query: string, cand: string): number {
   return 0.6 + 0.4 * (tc.length / tq.length);
 }
 
-export function memoryLayer(query: string, memory: ItemMemory[] | undefined): ResolveResult | null {
+export function memoryLayer(query: string, memory: ItemMemory[] | undefined, now = Date.now()): ResolveResult | null {
   if (!memory?.length) return null;
   const qs = forms(query);
   let best: { m: ItemMemory; sim: number } | null = null;
@@ -220,7 +225,7 @@ export function memoryLayer(query: string, memory: ItemMemory[] | undefined): Re
   if (!best || best.sim < MEMORY_MATCH) return null;
   return result(query, {
     locationIds: [best.m.locationId],
-    confidence: Math.max(0, Math.min(1, best.m.confidence)),
+    confidence: decayed(best.m, now),
     source: "memory",
     canonicalName: best.m.name,
     tags: best.m.tags ?? [],
@@ -235,7 +240,7 @@ export function llmLayer(query: string, ctx: ResolveContext): ResolveResult | nu
   if (!locs.length) return null;
   return result(query, {
     locationIds: locs,
-    confidence: Math.max(0.5, Math.min(0.7, guess.confidence)),
+    confidence: llmConfidence(guess.confidence),
     source: "llm",
     canonicalName: guess.canonicalName ?? titleCase(query),
     tags: guess.tags ?? [],
@@ -246,14 +251,18 @@ export function llmLayer(query: string, ctx: ResolveContext): ResolveResult | nu
 
 const titleCase = (s: string) => normalize(s).replace(/\b\p{L}/gu, (c) => c.toUpperCase());
 
+/** A fresh llm answer is a guess by nature: the wire's .5–.7 maps onto the guess band, .30–.49, until a "Got it" lifts it. */
+export const llmConfidence = (wire: number) => Math.round((0.3 + (Math.max(0.5, Math.min(0.7, wire)) - 0.5) * 0.95) * 1000) / 1000;
+
 // ---------------------------------------------------------------- pipeline
 
 export function resolveItem(query: string, ctx: ResolveContext, cands = candidates(ctx.catalog)): ResolveResult {
   const threshold = ctx.fuzzyThreshold ?? 0.72;
+  const now = ctx.now ?? Date.now();
   const layers: (() => ResolveResult | null)[] = [
-    () => exactLayer(query, cands),
-    () => fuzzyLayer(query, cands, threshold),
-    () => memoryLayer(query, ctx.memory),
+    () => exactLayer(query, cands, now),
+    () => fuzzyLayer(query, cands, threshold, now),
+    () => memoryLayer(query, ctx.memory, now),
     () => llmLayer(query, ctx),
   ];
   let weak: ResolveResult | null = null;
@@ -305,7 +314,7 @@ export function pendingEntry(r: ResolveResult): Stop | null {
     aliases: [r.query],
     locationIds: r.locationIds,
     tags: r.tags.length ? r.tags : undefined,
-    confidence: 0.6,
+    confidence: r.confidence, // the guess band; "Got it" lifts it from here
     source: "llm",
     department: r.department,
     subcategory: r.subcategory,
@@ -320,14 +329,14 @@ export function confirmMemory(memory: ItemMemory[], name: string, locationId: st
   const i = memory.findIndex((m) => normalize(m.name) === key);
   if (i < 0) return [...memory, { name, locationId, lastConfirmed: now, confirms: 1, confidence: 0.8, tags, typedForms: addTyped(undefined, typed), lastUsed: now }];
   const m = memory[i];
-  const next: ItemMemory = { ...m, locationId, lastConfirmed: now, lastUsed: now, confirms: m.confirms + 1, confidence: Math.min(1, m.confidence + (1 - m.confidence) * 0.5), tags: tags ?? m.tags, typedForms: addTyped(m.typedForms, typed) };
+  const next: ItemMemory = { ...confirmed(m, now), locationId, lastUsed: now, tags: tags ?? m.tags, typedForms: addTyped(m.typedForms, typed) };
   return memory.map((x, k) => (k === i ? next : x));
 }
 
-/** "Not here": confidence −0.3; below the fall-through the next trip re-asks. */
-export function demoteMemory(memory: ItemMemory[], name: string): ItemMemory[] {
+/** "Not here": confidence −0.3 (floor 0.05), misses+1; below the fall-through the next trip re-asks. */
+export function demoteMemory(memory: ItemMemory[], name: string, now = Date.now()): ItemMemory[] {
   const key = normalize(name);
-  return memory.map((m) => (normalize(m.name) === key ? { ...m, confidence: Math.max(0, m.confidence - 0.3) } : m));
+  return memory.map((m) => (normalize(m.name) === key ? missed(m, now) : m));
 }
 
 /** "Pick aisle" / "Tell me where": a confirmed placement by the shopper. */

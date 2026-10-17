@@ -5,7 +5,7 @@
 // time; and the learning updates the trip and checkout screens call.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { confirmMemory, demoteMemory, normalize, pendingEntry, placeMemory, resolveList, type ItemMemory, type ItemTag, type LlmGuess, type ResolveResult, type Stop } from "@grosher/core";
+import { confirmMemory, confirmed, demoteMemory, missed, normalize, pendingEntry, placeMemory, resolveList, type ItemMemory, type ItemTag, type LlmGuess, type ResolveResult, type Stop } from "@grosher/core";
 import { departmentLocations, type StoreBundle } from "@grosher/stores";
 import { defaultProvider, fetchGuesses, type LlmProvider } from "./resolver.ts";
 import { EMPTY_LEARNING, loadLearning, mergedCatalog, saveLearning, type Learning } from "./learning.ts";
@@ -113,8 +113,19 @@ export function useResolution(bundle: StoreBundle, items: string[], provider?: L
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [results, loaded]);
 
-  const gotIt = useCallback((name: string, locationId: string, tags?: ItemTag[], typed?: string) => setLearning((l) => ({ ...l, memory: confirmMemory(l.memory, name, locationId, Date.now(), tags, typed) })), []);
-  const notHere = useCallback((name: string) => setLearning((l) => ({ ...l, memory: demoteMemory(l.memory, name) })), []);
+  // pending catalog entries (llm guesses, promoted placements) follow the same confidence rules as memory
+  const touchPending = (pending: Stop[], name: string, fn: (p: Stop) => Stop) => {
+    const key = normalize(name);
+    return pending.map((p) => (normalize(p.name) === key ? fn(p) : p));
+  };
+  const gotIt = useCallback((name: string, locationId: string, tags?: ItemTag[], typed?: string) => {
+    const now = Date.now();
+    setLearning((l) => ({ ...l, memory: confirmMemory(l.memory, name, locationId, now, tags, typed), pending: touchPending(l.pending, name, (p) => confirmed(p, now)) }));
+  }, []);
+  const notHere = useCallback((name: string) => {
+    const now = Date.now();
+    setLearning((l) => ({ ...l, memory: demoteMemory(l.memory, name, now), pending: touchPending(l.pending, name, (p) => missed(p, now)) }));
+  }, []);
   const place = useCallback(
     (name: string, locationId: string, tags?: ItemTag[], promote = false, typed?: string) =>
       setLearning((l) => {

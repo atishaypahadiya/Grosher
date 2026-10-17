@@ -23,11 +23,25 @@ describe("learning loop", () => {
     try {
       const again = renderHook(() => useResolution(demoSupercenter, ["Oat Milk"]));
       await waitFor(() => expect(again.result.current.results[0]?.source).toBe("llm"), { timeout: 3000 });
-      expect(again.result.current.results[0].confidence).toBe(0.6);
+      expect(again.result.current.results[0].confidence).toBeCloseTo(0.452, 3); // the guess band: wire .66 → .452
       again.unmount();
     } finally {
       globalThis.fetch = realFetch;
     }
+  });
+
+  test("Got it on an llm guess lifts the pending entry out of the guess band; Not here lowers it", async () => {
+    const { result } = renderHook(() => useResolution(demoSupercenter, ["oat milk"]));
+    await waitFor(() => expect(result.current.results[0]?.source).toBe("llm"), { timeout: 3000 });
+    await waitFor(() => expect(result.current.learning.pending).toHaveLength(1));
+    const before = result.current.learning.pending[0].confidence!;
+    expect(before).toBeLessThan(0.5);
+    act(() => result.current.gotIt("Oat milk", result.current.results[0].locationIds[0]));
+    await waitFor(() => expect(result.current.learning.pending[0].confirms).toBe(1));
+    expect(result.current.learning.pending[0].confidence).toBeCloseTo(before + (1 - before) * 0.3, 5);
+    act(() => result.current.notHere("oat milk"));
+    await waitFor(() => expect(result.current.learning.pending[0].misses).toBe(1));
+    expect(result.current.learning.pending[0].confidence).toBeCloseTo(before + (1 - before) * 0.3 - 0.3, 5);
   });
 
   test("Got it confirms, Not here demotes until the item is re-asked, Pick aisle promotes to the catalog", async () => {
@@ -39,12 +53,13 @@ describe("learning loop", () => {
     expect(result.current.results[0].confidence).toBe(0.9);
     act(() => result.current.gotIt("ghee", "A1-20"));
     await waitFor(() => expect(result.current.memory[0].confirms).toBe(2));
-    expect(result.current.memory[0].confidence).toBeCloseTo(0.95, 5);
+    expect(result.current.memory[0].confidence).toBeCloseTo(0.93, 5); // 30% of the gap
     act(() => {
       result.current.notHere("ghee");
       result.current.notHere("ghee");
     });
-    await waitFor(() => expect(result.current.results[0]?.source).toBe("unknown"), { timeout: 3000 }); // .35 < .6: re-asks
+    await waitFor(() => expect(result.current.results[0]?.source).toBe("unknown"), { timeout: 3000 }); // .93 → .63 → .33 < .6: re-asks
+    expect(result.current.memory[0].misses).toBe(2);
     act(() => result.current.place("ghee", "A2-8", undefined, true));
     await waitFor(() => expect(result.current.catalog.some((s) => s.id === "mem:ghee" && s.source === "memory")).toBe(true));
     await waitFor(() => expect(result.current.results[0]?.locationIds).toEqual(["A2-8"]), { timeout: 3000 });

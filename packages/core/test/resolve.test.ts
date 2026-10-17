@@ -16,6 +16,8 @@ const ctx = {
   catalog,
   departmentLocations: { dairy: ["DAIRY-8", "DAIRY-10", "DAIRY-11"], dry: ["A1-8", "A2-8"] },
   memory: [{ name: "ghee", locationId: "A1-20", lastConfirmed: 1, confirms: 2, confidence: 0.9 }],
+  // the clock is frozen just after the memory was confirmed, so no time decay applies
+  now: 10,
   llm: new Map([
     ["oat milk", { department: "dairy", subcategory: "plant milk", tags: ["chilled" as const], confidence: 0.65 }],
     ["birthday card", null],
@@ -67,7 +69,8 @@ test("a demoted memory falls through; a pending llm entry resolves exactly but k
   assert.equal(pending.source, "llm");
   const r = resolveItem("oat milk", { catalog: [...catalog, pending] });
   assert.equal(r.source, "llm");
-  assert.equal(r.confidence, 0.6);
+  assert.equal(r.confidence, pending.confidence); // the guess band carries over until a Got it lifts it
+  assert.ok(r.confidence < 0.5 && r.confidence >= 0.3);
   assert.equal(toStop(r)!.source, "llm");
   assert.equal(toStop(resolveItem("nope", ctx)), null);
 });
@@ -77,14 +80,27 @@ test("memory updates: confirm raises toward 1, demote lowers, place replaces", (
   assert.equal(m[0].confidence, 0.8);
   m = confirmMemory(m, "Ghee", "A1-20", 6);
   assert.equal(m[0].confirms, 2);
-  assert.equal(m[0].confidence, 0.9);
-  m = demoteMemory(m, "ghee");
-  assert.ok(Math.abs(m[0].confidence - 0.6) < 1e-9);
+  assert.ok(Math.abs(m[0].confidence - 0.86) < 1e-9); // 30% of the gap
+  assert.equal(m[0].lastConfirmed, 6);
+  m = demoteMemory(m, "ghee", 7);
+  assert.ok(Math.abs(m[0].confidence - 0.56) < 1e-9);
+  assert.equal(m[0].misses, 1);
+  assert.equal(m[0].lastMissed, 7);
   m = placeMemory(m, "ghee", "A2-8", 7);
   assert.equal(m.length, 1);
   assert.equal(m[0].locationId, "A2-8");
   assert.equal(m[0].confidence, 0.9);
   assert.equal(resolveList(["milk", "ghee"], { ...ctx, memory: m })[1].locationIds[0], "A2-8");
+});
+
+test("decay applies on read: a memory confirmed 150 days ago resolves at .7, a catalog entry confirmed long ago at the floor", () => {
+  const DAY = 86_400_000;
+  const memory = [{ name: "ghee", locationId: "A1-20", lastConfirmed: 0, confirms: 3, confidence: 0.9 }];
+  assert.ok(Math.abs(resolveItem("ghee", { catalog: [], memory, now: 150 * DAY }).confidence - 0.7) < 1e-9);
+  assert.equal(resolveItem("ghee", { catalog: [], memory, now: 10 * DAY }).confidence, 0.9);
+  const stale = [{ id: "s", name: "Saffron", locationIds: ["A1-20"], confidence: 0.95, lastConfirmed: 0 }];
+  assert.ok(Math.abs(resolveItem("saffron", { catalog: stale, now: 400 * DAY }).confidence - 0.4) < 1e-9);
+  assert.equal(resolveItem("saffron", { catalog: stale, now: 1 }).confidence, 0.95);
 });
 
 import { parseLlmResults } from "../src/resolve/llmPrompt.ts";
@@ -118,6 +134,6 @@ test("brand memory: typed forms are remembered and offered for shorter or varian
   assert.equal(suggestFromMemory("chobani", m)?.text, "Chobani yoghurt 4 pack"); // both exact and equally recent: the fuller form
   assert.equal(suggestFromMemory("milk", m), null);
   // a typed form also resolves through the memory layer
-  assert.equal(resolveItem("Chobani yoghurt 4 pack", { catalog: [], memory: m }).source, "memory");
+  assert.equal(resolveItem("Chobani yoghurt 4 pack", { catalog: [], memory: m, now: 13 }).source, "memory");
   assert.equal(toStop({ ...resolveItem("x", { catalog: [], memory: m }), locationIds: ["A1-8"], query: "x" })!.query, "x");
 });
