@@ -44,7 +44,8 @@ h1, h2, h3 { margin: 0; font-weight: 300; }
 .wrap { position: relative; z-index: 1; max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter); }
 
 /* The ground: DESIGN.md's gradient, cut into section slices that meet seamlessly, so the ink of every
-   region is known (soil on haze, white from leaf down). Blooms are radial gradients, not blurred divs. */
+   region is known (soil on haze, white from leaf down). Blooms are radial gradients, not blurred divs,
+   and each stays inside its section vertically: a bloom clipped while still tinted draws a seam. */
 section, header, footer { position: relative; overflow: hidden; }
 .g-hero { background: linear-gradient(180deg, var(--haze) 0%, var(--apricot) 48%, var(--lime-green) 100%); color: var(--soil); }
 .g-visual { background: linear-gradient(180deg, var(--lime-green) 0%, var(--moss) 42%, var(--leaf) 100%); }
@@ -53,10 +54,10 @@ section, header, footer { position: relative; overflow: hidden; }
 .g-deep { background: var(--deep); }
 .bloom::before, .bloom::after { content: ""; position: absolute; border-radius: 50%; pointer-events: none; z-index: 0; }
 .g-hero.bloom::before { width: 900px; height: 900px; left: -320px; top: -360px; background: radial-gradient(closest-side, rgba(255,240,210,.9), rgba(255,240,210,0)); }
-.g-hero.bloom::after { width: 760px; height: 760px; right: -260px; bottom: -420px; background: radial-gradient(closest-side, rgba(212,255,74,.42), rgba(212,255,74,0)); }
-.g-visual.bloom::before { width: 820px; height: 820px; left: 50%; top: 10%; transform: translateX(-50%); background: radial-gradient(closest-side, rgba(212,255,74,.38), rgba(212,255,74,0)); }
-.g-visual.bloom::after { width: 900px; height: 900px; right: -340px; bottom: -380px; background: radial-gradient(closest-side, rgba(10,50,28,.8), rgba(10,50,28,0)); }
-.g-deep.bloom::before { width: 900px; height: 900px; left: -380px; top: -200px; background: radial-gradient(closest-side, rgba(212,255,74,.08), rgba(212,255,74,0)); }
+.g-hero.bloom::after { width: 640px; height: 640px; right: -220px; top: 40px; background: radial-gradient(closest-side, rgba(212,255,74,.42), rgba(212,255,74,0)); }
+.g-visual.bloom::before { width: 640px; height: 640px; left: 50%; top: 0; transform: translateX(-50%); background: radial-gradient(closest-side, rgba(212,255,74,.38), rgba(212,255,74,0)); }
+.g-visual.bloom::after { width: 700px; height: 700px; right: -300px; bottom: 0; background: radial-gradient(closest-side, rgba(10,50,28,.8), rgba(10,50,28,0)); }
+.g-deep.bloom::before { width: 900px; height: 900px; left: -380px; top: 0; background: radial-gradient(closest-side, rgba(212,255,74,.08), rgba(212,255,74,0)); }
 
 /* Type: DESIGN.md §2 */
 .eyebrow { display: block; font-weight: 500; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink); }
