@@ -46,5 +46,11 @@ export function chipForResult(store: StoreGraph, r: ResolveResult): Chip | null 
     return { text: `probably ${where}${r.subcategory ? ` · ${r.subcategory}` : ""}`, color: base.color };
   }
   if (r.source === "memory") return { text: `${base.text} · yours`, color: base.color };
+  // a category hit: the aisle and what the sign says there ("A7 · Dal & pulses")
+  if (r.source === "category" && r.subcategory) {
+    const first = store.locations.find((l) => l.id === r.locationIds[0]);
+    const where = first ? (AISLE.test(first.aisle) ? first.aisle.toUpperCase() : titleCase(locationDepartment(store, first)?.name ?? first.aisle)) : "";
+    return { text: `${where}${where ? " · " : ""}${r.subcategory}`, color: base.color };
+  }
   return base;
 }

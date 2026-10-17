@@ -1,0 +1,761 @@
+{
+  "_note": "150 everyday items written blind, before the seeded catalog existed: food, household, pharmacy, Indian staples, brand names, misspellings. Each names the aisle (or aisles, when a store honestly shelves it in two) the item should resolve to on the demo Supercenter. Scored at aisle level per source; nothing is tuned against it.",
+  "cases": [
+    {
+      "q": "whole milk",
+      "aisle": "DAIRY",
+      "kind": "food"
+    },
+    {
+      "q": "dozen eggs",
+      "aisle": "DAIRY",
+      "kind": "food"
+    },
+    {
+      "q": "greek yogurt",
+      "aisle": "DAIRY",
+      "kind": "food"
+    },
+    {
+      "q": "butter",
+      "aisle": "DAIRY",
+      "kind": "food"
+    },
+    {
+      "q": "orange juice",
+      "aisle": "DAIRY",
+      "kind": "food"
+    },
+    {
+      "q": "oat milk",
+      "aisle": "DAIRY",
+      "kind": "food"
+    },
+    {
+      "q": "sour cream",
+      "aisle": "DAIRY",
+      "kind": "food"
+    },
+    {
+      "q": "cheddar cheese",
+      "aisle": "A22",
+      "kind": "food"
+    },
+    {
+      "q": "cream cheese",
+      "aisle": "A22",
+      "kind": "food"
+    },
+    {
+      "q": "string cheese",
+      "aisle": "A22",
+      "kind": "food"
+    },
+    {
+      "q": "hummus",
+      "aisle": "A22",
+      "kind": "food"
+    },
+    {
+      "q": "bananas",
+      "aisle": "PRODUCE",
+      "kind": "food"
+    },
+    {
+      "q": "avocados",
+      "aisle": "PRODUCE",
+      "kind": "food"
+    },
+    {
+      "q": "baby spinach",
+      "aisle": "PRODUCE",
+      "kind": "food"
+    },
+    {
+      "q": "roma tomatoes",
+      "aisle": "PRODUCE",
+      "kind": "food"
+    },
+    {
+      "q": "yellow onions",
+      "aisle": "PRODUCE",
+      "kind": "food"
+    },
+    {
+      "q": "garlic",
+      "aisle": "PRODUCE",
+      "kind": "food"
+    },
+    {
+      "q": "lemons",
+      "aisle": "PRODUCE",
+      "kind": "food"
+    },
+    {
+      "q": "strawberries",
+      "aisle": "PRODUCE",
+      "kind": "food"
+    },
+    {
+      "q": "cilantro",
+      "aisle": "PRODUCE",
+      "kind": "food"
+    },
+    {
+      "q": "chicken breast",
+      "aisle": "MEAT",
+      "kind": "food"
+    },
+    {
+      "q": "ground beef",
+      "aisle": "MEAT",
+      "kind": "food"
+    },
+    {
+      "q": "salmon fillet",
+      "aisle": "MEAT",
+      "kind": "food"
+    },
+    {
+      "q": "bacon",
+      "aisle": "MEAT",
+      "kind": "food"
+    },
+    {
+      "q": "tofu",
+      "aisle": "MEAT",
+      "kind": "food"
+    },
+    {
+      "q": "rotisserie chicken",
+      "aisle": "DELI",
+      "kind": "food"
+    },
+    {
+      "q": "sourdough bread",
+      "aisle": "BAKERY",
+      "kind": "food"
+    },
+    {
+      "q": "white bread",
+      "aisle": "A1",
+      "kind": "food"
+    },
+    {
+      "q": "hamburger buns",
+      "aisle": "A1",
+      "kind": "food"
+    },
+    {
+      "q": "flour tortillas",
+      "aisle": "A1",
+      "kind": "food"
+    },
+    {
+      "q": "bagels",
+      "aisle": "A1",
+      "kind": "food"
+    },
+    {
+      "q": "peanut butter",
+      "aisle": "A2",
+      "kind": "food"
+    },
+    {
+      "q": "strawberry jam",
+      "aisle": "A2",
+      "kind": "food"
+    },
+    {
+      "q": "honey",
+      "aisle": "A2",
+      "kind": "food"
+    },
+    {
+      "q": "maple syrup",
+      "aisle": "A2",
+      "kind": "food"
+    },
+    {
+      "q": "oatmeal",
+      "aisle": "A2",
+      "kind": "food"
+    },
+    {
+      "q": "granola bars",
+      "aisle": "A2",
+      "kind": "food"
+    },
+    {
+      "q": "ketchup",
+      "aisle": "A3",
+      "kind": "food"
+    },
+    {
+      "q": "ranch dressing",
+      "aisle": "A3",
+      "kind": "food"
+    },
+    {
+      "q": "soy sauce",
+      "aisle": "A3",
+      "kind": "food"
+    },
+    {
+      "q": "chicken noodle soup",
+      "aisle": "A4",
+      "kind": "food"
+    },
+    {
+      "q": "diced tomatoes",
+      "aisle": "A4",
+      "kind": "food"
+    },
+    {
+      "q": "spaghetti",
+      "aisle": "A5",
+      "kind": "food"
+    },
+    {
+      "q": "mac and cheese",
+      "aisle": "A5",
+      "kind": "food"
+    },
+    {
+      "q": "quinoa",
+      "aisle": "A5",
+      "kind": "food"
+    },
+    {
+      "q": "all purpose flour",
+      "aisle": "A8",
+      "kind": "food"
+    },
+    {
+      "q": "olive oil",
+      "aisle": "A8",
+      "kind": "food"
+    },
+    {
+      "q": "baking soda",
+      "aisle": "A8",
+      "kind": "food"
+    },
+    {
+      "q": "cumin",
+      "aisle": [
+        "A9",
+        "A7"
+      ],
+      "kind": "food"
+    },
+    {
+      "q": "kosher salt",
+      "aisle": "A9",
+      "kind": "food"
+    },
+    {
+      "q": "cheerios",
+      "aisle": "A10",
+      "kind": "brand"
+    },
+    {
+      "q": "pop tarts",
+      "aisle": "A10",
+      "kind": "brand"
+    },
+    {
+      "q": "k cups",
+      "aisle": "A11",
+      "kind": "food"
+    },
+    {
+      "q": "hot chocolate",
+      "aisle": "A11",
+      "kind": "food"
+    },
+    {
+      "q": "lays chips",
+      "aisle": "A12",
+      "kind": "brand"
+    },
+    {
+      "q": "doritos",
+      "aisle": "A12",
+      "kind": "brand"
+    },
+    {
+      "q": "microwave popcorn",
+      "aisle": "A12",
+      "kind": "food"
+    },
+    {
+      "q": "oreos",
+      "aisle": "A13",
+      "kind": "brand"
+    },
+    {
+      "q": "ritz crackers",
+      "aisle": "A13",
+      "kind": "brand"
+    },
+    {
+      "q": "goldfish",
+      "aisle": "A13",
+      "kind": "brand"
+    },
+    {
+      "q": "snickers",
+      "aisle": "A14",
+      "kind": "brand"
+    },
+    {
+      "q": "skittles",
+      "aisle": "A14",
+      "kind": "brand"
+    },
+    {
+      "q": "almonds",
+      "aisle": "A15",
+      "kind": "food"
+    },
+    {
+      "q": "protein bars",
+      "aisle": "A15",
+      "kind": "food"
+    },
+    {
+      "q": "coke 12 pack",
+      "aisle": "A16",
+      "kind": "brand"
+    },
+    {
+      "q": "diet pepsi",
+      "aisle": "A16",
+      "kind": "brand"
+    },
+    {
+      "q": "gatorade",
+      "aisle": "A16",
+      "kind": "brand"
+    },
+    {
+      "q": "red bull",
+      "aisle": "A16",
+      "kind": "brand"
+    },
+    {
+      "q": "la croix",
+      "aisle": "A17",
+      "kind": "brand"
+    },
+    {
+      "q": "apple juice",
+      "aisle": "A17",
+      "kind": "food"
+    },
+    {
+      "q": "hot pockets",
+      "aisle": "A18",
+      "kind": "brand"
+    },
+    {
+      "q": "chicken nuggets",
+      "aisle": "A18",
+      "kind": "food"
+    },
+    {
+      "q": "eggo waffles",
+      "aisle": "A19",
+      "kind": "brand"
+    },
+    {
+      "q": "tater tots",
+      "aisle": "A19",
+      "kind": "food"
+    },
+    {
+      "q": "popsicles",
+      "aisle": "A20",
+      "kind": "food"
+    },
+    {
+      "q": "veggie burgers",
+      "aisle": "A21",
+      "kind": "food"
+    },
+    {
+      "q": "toilet paper",
+      "aisle": "A23",
+      "kind": "household"
+    },
+    {
+      "q": "paper towels",
+      "aisle": "A23",
+      "kind": "household"
+    },
+    {
+      "q": "kleenex",
+      "aisle": "A23",
+      "kind": "brand"
+    },
+    {
+      "q": "trash bags",
+      "aisle": "A23",
+      "kind": "household"
+    },
+    {
+      "q": "ziploc bags",
+      "aisle": "A23",
+      "kind": "brand"
+    },
+    {
+      "q": "aluminum foil",
+      "aisle": "A23",
+      "kind": "household"
+    },
+    {
+      "q": "paper plates",
+      "aisle": "A23",
+      "kind": "household"
+    },
+    {
+      "q": "dish soap",
+      "aisle": "A24",
+      "kind": "household"
+    },
+    {
+      "q": "dishwasher pods",
+      "aisle": "A24",
+      "kind": "household"
+    },
+    {
+      "q": "clorox wipes",
+      "aisle": "A24",
+      "kind": "brand"
+    },
+    {
+      "q": "windex",
+      "aisle": "A24",
+      "kind": "brand"
+    },
+    {
+      "q": "toilet bowl cleaner",
+      "aisle": "A24",
+      "kind": "household"
+    },
+    {
+      "q": "sponges",
+      "aisle": "A24",
+      "kind": "household"
+    },
+    {
+      "q": "febreze",
+      "aisle": "A24",
+      "kind": "brand"
+    },
+    {
+      "q": "laundry detergent",
+      "aisle": "A25",
+      "kind": "household"
+    },
+    {
+      "q": "tide pods",
+      "aisle": "A25",
+      "kind": "brand"
+    },
+    {
+      "q": "dryer sheets",
+      "aisle": "A25",
+      "kind": "household"
+    },
+    {
+      "q": "oxiclean",
+      "aisle": "A25",
+      "kind": "brand"
+    },
+    {
+      "q": "aa batteries",
+      "aisle": "A25",
+      "kind": "household"
+    },
+    {
+      "q": "light bulbs",
+      "aisle": "A25",
+      "kind": "household"
+    },
+    {
+      "q": "dog food",
+      "aisle": "A26",
+      "kind": "household"
+    },
+    {
+      "q": "cat litter",
+      "aisle": "A26",
+      "kind": "household"
+    },
+    {
+      "q": "diapers",
+      "aisle": "A27",
+      "kind": "household"
+    },
+    {
+      "q": "baby wipes",
+      "aisle": "A27",
+      "kind": "household"
+    },
+    {
+      "q": "similac",
+      "aisle": "A27",
+      "kind": "brand"
+    },
+    {
+      "q": "tylenol",
+      "aisle": "A28",
+      "kind": "pharmacy"
+    },
+    {
+      "q": "ibuprofen",
+      "aisle": "A28",
+      "kind": "pharmacy"
+    },
+    {
+      "q": "band aids",
+      "aisle": "A28",
+      "kind": "pharmacy"
+    },
+    {
+      "q": "vitamin d",
+      "aisle": "A28",
+      "kind": "pharmacy"
+    },
+    {
+      "q": "melatonin",
+      "aisle": "A28",
+      "kind": "pharmacy"
+    },
+    {
+      "q": "zyrtec",
+      "aisle": "PHARMACY",
+      "kind": "pharmacy"
+    },
+    {
+      "q": "nyquil",
+      "aisle": "PHARMACY",
+      "kind": "pharmacy"
+    },
+    {
+      "q": "tums",
+      "aisle": "PHARMACY",
+      "kind": "pharmacy"
+    },
+    {
+      "q": "cough drops",
+      "aisle": "PHARMACY",
+      "kind": "pharmacy"
+    },
+    {
+      "q": "eye drops",
+      "aisle": "PHARMACY",
+      "kind": "pharmacy"
+    },
+    {
+      "q": "shampoo",
+      "aisle": "A29",
+      "kind": "pharmacy"
+    },
+    {
+      "q": "toothpaste",
+      "aisle": "A29",
+      "kind": "pharmacy"
+    },
+    {
+      "q": "deodorant",
+      "aisle": "A29",
+      "kind": "pharmacy"
+    },
+    {
+      "q": "body wash",
+      "aisle": "A29",
+      "kind": "pharmacy"
+    },
+    {
+      "q": "sunscreen",
+      "aisle": "A29",
+      "kind": "pharmacy"
+    },
+    {
+      "q": "mouthwash",
+      "aisle": "A29",
+      "kind": "pharmacy"
+    },
+    {
+      "q": "razors",
+      "aisle": "A30",
+      "kind": "pharmacy"
+    },
+    {
+      "q": "tampons",
+      "aisle": "A30",
+      "kind": "pharmacy"
+    },
+    {
+      "q": "hand sanitizer",
+      "aisle": "A30",
+      "kind": "pharmacy"
+    },
+    {
+      "q": "atta",
+      "aisle": "A7",
+      "kind": "indian"
+    },
+    {
+      "q": "basmati rice",
+      "aisle": "A7",
+      "kind": "indian"
+    },
+    {
+      "q": "toor dal",
+      "aisle": "A7",
+      "kind": "indian"
+    },
+    {
+      "q": "ghee",
+      "aisle": "A7",
+      "kind": "indian"
+    },
+    {
+      "q": "paneer",
+      "aisle": "A22",
+      "kind": "indian"
+    },
+    {
+      "q": "garam masala",
+      "aisle": "A7",
+      "kind": "indian"
+    },
+    {
+      "q": "turmeric",
+      "aisle": [
+        "A7",
+        "A9"
+      ],
+      "kind": "indian"
+    },
+    {
+      "q": "jeera",
+      "aisle": "A7",
+      "kind": "indian"
+    },
+    {
+      "q": "haldirams bhujia",
+      "aisle": "A7",
+      "kind": "indian"
+    },
+    {
+      "q": "maggi noodles",
+      "aisle": "A4",
+      "kind": "indian"
+    },
+    {
+      "q": "chai",
+      "aisle": "A7",
+      "kind": "indian"
+    },
+    {
+      "q": "besan",
+      "aisle": "A7",
+      "kind": "indian"
+    },
+    {
+      "q": "poha",
+      "aisle": "A7",
+      "kind": "indian"
+    },
+    {
+      "q": "mango pickle",
+      "aisle": "A7",
+      "kind": "indian"
+    },
+    {
+      "q": "frozen paratha",
+      "aisle": "A19",
+      "kind": "indian"
+    },
+    {
+      "q": "curry leaves",
+      "aisle": "PRODUCE",
+      "kind": "indian"
+    },
+    {
+      "q": "rooh afza",
+      "aisle": "A7",
+      "kind": "indian"
+    },
+    {
+      "q": "moong dal",
+      "aisle": "A7",
+      "kind": "indian"
+    },
+    {
+      "q": "tomatos",
+      "aisle": "PRODUCE",
+      "kind": "typo"
+    },
+    {
+      "q": "yougurt",
+      "aisle": "DAIRY",
+      "kind": "typo"
+    },
+    {
+      "q": "brocoli",
+      "aisle": "PRODUCE",
+      "kind": "typo"
+    },
+    {
+      "q": "spagetti",
+      "aisle": "A5",
+      "kind": "typo"
+    },
+    {
+      "q": "mayonaise",
+      "aisle": "A3",
+      "kind": "typo"
+    },
+    {
+      "q": "tooth paste",
+      "aisle": "A29",
+      "kind": "typo"
+    },
+    {
+      "q": "detergant",
+      "aisle": "A25",
+      "kind": "typo"
+    },
+    {
+      "q": "dorritos",
+      "aisle": "A12",
+      "kind": "typo"
+    },
+    {
+      "q": "chiken thighs",
+      "aisle": "MEAT",
+      "kind": "typo"
+    },
+    {
+      "q": "paper towles",
+      "aisle": "A23",
+      "kind": "typo"
+    },
+    {
+      "q": "ice creem",
+      "aisle": "A20",
+      "kind": "typo"
+    },
+    {
+      "q": "shampo",
+      "aisle": "A29",
+      "kind": "typo"
+    }
+  ]
+}

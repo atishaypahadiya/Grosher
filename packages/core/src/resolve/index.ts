@@ -13,7 +13,7 @@
 // I/O, no async. The app owns fetching and caching.
 
 import type { Category, Department, ItemTag, Stop } from "../types.ts";
-import { forms, normalize, similarity, singularize } from "./text.ts";
+import { damerauLevenshtein, forms, normalize, similarity, singularize, trigramCounts } from "./text.ts";
 import { confirmed, decayed, missed } from "../confidence.ts";
 
 export { normalize, stripQuantity, singularize, similarity, forms } from "./text.ts";
@@ -131,21 +131,121 @@ export const MAX_LLM_LOCATIONS = 6;
 
 const MEMORY_MATCH = 0.9;
 
-interface Candidate {
+export interface Candidate {
   stop: Stop;
   text: string; // normalised singular form
   label: string; // what it was (name or alias)
 }
 
-function candidates(catalog: Stop[]): Candidate[] {
-  const out: Candidate[] = [];
-  for (const stop of catalog) {
-    const labels = [stop.name, stop.id.replace(/[-_]+/g, " "), ...(stop.aliases ?? [])];
-    for (const label of labels) {
-      for (const f of forms(label)) out.push({ stop, text: f, label });
+/**
+ * Every comparable form of every catalog label, indexed once: exact forms by
+ * text, trigram postings for the fuzzy shortlist, word postings for token
+ * containment. A catalog of 8,000 items has ~80,000 forms; scoring each one
+ * against each query was fine at 30 items and is not now. Cached per catalog
+ * array, so the app rebuilds it only when the catalog changes.
+ */
+export class CandidateIndex {
+  readonly list: Candidate[] = [];
+  private readonly byText = new Map<string, Candidate>();
+  private readonly tri = new Map<string, number[]>();
+  private readonly word = new Map<string, number[]>();
+  private readonly grams: Map<string, number>[] = [];
+  private readonly gramTotal: number[] = [];
+  private readonly tokens: string[][] = [];
+
+  constructor(catalog: Stop[]) {
+    for (const stop of catalog) {
+      const labels = [stop.name, stop.id.replace(/[-_]+/g, " "), ...(stop.aliases ?? [])];
+      for (const label of labels) for (const f of forms(label)) this.add({ stop, text: f, label });
     }
   }
-  return out;
+
+  private add(c: Candidate) {
+    const i = this.list.length;
+    this.list.push(c);
+    if (!this.byText.has(c.text)) this.byText.set(c.text, c); // the first (the package catalog comes before pending entries) wins a tie
+    const g = trigramCounts(c.text);
+    this.grams.push(g);
+    let total = 0;
+    for (const [gram, n] of g) {
+      total += n;
+      const post = this.tri.get(gram);
+      if (post) post.push(i);
+      else this.tri.set(gram, [i]);
+    }
+    this.gramTotal.push(total);
+    const toks = singularize(c.text).split(" ").filter(Boolean);
+    this.tokens.push(toks);
+    for (const t of new Set(toks)) {
+      const post = this.word.get(t);
+      if (post) post.push(i);
+      else this.word.set(t, [i]);
+    }
+  }
+
+  get size() {
+    return this.list.length;
+  }
+
+  exact(text: string): Candidate | undefined {
+    return this.byText.get(text);
+  }
+
+  /** the best candidate for one query form by max(trigram Dice, edit similarity, token containment); null below `threshold` */
+  best(q: string, threshold: number): { c: Candidate; sim: number } | null {
+    if (!q) return null;
+    const qg = trigramCounts(q);
+    let qTotal = 0;
+    for (const n of qg.values()) qTotal += n;
+    // shared trigram counts over the postings: the fuzzy shortlist
+    const shared = new Map<number, number>();
+    for (const [gram, n] of qg) {
+      const post = this.tri.get(gram);
+      if (!post) continue;
+      for (const i of post) shared.set(i, Math.min(n, this.grams[i].get(gram) ?? 0) + (shared.get(i) ?? 0));
+    }
+    let best: { c: Candidate; sim: number } | null = null;
+    const consider = (i: number, sim: number) => {
+      if (sim >= threshold && (!best || sim > best.sim)) best = { c: this.list[i], sim };
+    };
+    for (const [i, sh] of shared) {
+      const text = this.list[i].text;
+      if (text === q) {
+        consider(i, 1);
+        continue;
+      }
+      const dice = (2 * sh) / (qTotal + this.gramTotal[i]);
+      let sim = dice;
+      // edit similarity rescues short typos ("egs" → "eggs") that trigrams undersell; only worth computing near the length
+      if (sim < threshold + 0.05 && Math.abs(text.length - q.length) <= 4) sim = Math.max(sim, 1 - damerauLevenshtein(q, text) / Math.max(q.length, text.length));
+      consider(i, sim);
+    }
+    // token containment: the query's words inside a candidate, or a multi-word candidate inside the query
+    const qt = singularize(q).split(" ").filter(Boolean);
+    if (qt.length) {
+      const seen = new Set<number>();
+      for (const t of new Set(qt)) {
+        for (const i of this.word.get(t) ?? []) {
+          if (seen.has(i)) continue;
+          seen.add(i);
+          consider(i, tokenSimilarityTokens(qt, this.tokens[i]));
+        }
+      }
+    }
+    return best;
+  }
+}
+
+const INDEX_CACHE = new WeakMap<Stop[], CandidateIndex>();
+
+/** the index for a catalog array, built once per array */
+export function candidates(catalog: Stop[]): CandidateIndex {
+  let idx = INDEX_CACHE.get(catalog);
+  if (!idx) {
+    idx = new CandidateIndex(catalog);
+    INDEX_CACHE.set(catalog, idx);
+  }
+  return idx;
 }
 
 const result = (query: string, partial: Omit<ResolveResult, "query">): ResolveResult => ({ query, ...partial });
@@ -168,26 +268,21 @@ function fromStop(query: string, stop: Stop, source: ResolveSource, confidence: 
 
 // ---------------------------------------------------------------- layers
 
-export function exactLayer(query: string, cands: Candidate[], now = Date.now()): ResolveResult | null {
-  const qs = forms(query);
-  for (const q of qs) {
-    const hit = cands.find((c) => c.text === q);
+export function exactLayer(query: string, cands: CandidateIndex, now = Date.now()): ResolveResult | null {
+  for (const q of forms(query)) {
+    const hit = cands.exact(q);
     if (hit) return fromStop(query, hit.stop, "exact", 1, hit.label, now);
   }
   return null;
 }
 
-export function fuzzyLayer(query: string, cands: Candidate[], threshold: number, now = Date.now()): ResolveResult | null {
-  const qs = forms(query);
+export function fuzzyLayer(query: string, cands: CandidateIndex, threshold: number, now = Date.now()): ResolveResult | null {
   let best: { c: Candidate; sim: number } | null = null;
-  for (const q of qs) {
-    for (const c of cands) {
-      // token containment: "greek yogurt" ⊇ "yogurt"; the shorter must be most of the longer
-      const sim = Math.max(similarity(q, c.text), tokenSimilarity(q, c.text));
-      if (!best || sim > best.sim) best = { c, sim };
-    }
+  for (const q of forms(query)) {
+    const b = cands.best(q, threshold);
+    if (b && (!best || b.sim > best.sim)) best = b;
   }
-  if (!best || best.sim < threshold) return null;
+  if (!best) return null;
   const confidence = 0.6 + ((best.sim - threshold) / (1 - threshold)) * 0.35;
   return fromStop(query, best.c.stop, "fuzzy", Math.min(0.95, confidence), best.c.label, now);
 }
@@ -199,9 +294,7 @@ export function fuzzyLayer(query: string, cands: Candidate[], threshold: number,
  * yogurt"): a single word with a modifier in front of it ("oat milk" vs
  * "milk") is a different product, and the modifier is the whole point.
  */
-function tokenSimilarity(query: string, cand: string): number {
-  const tq = singularize(query).split(" ").filter(Boolean);
-  const tc = singularize(cand).split(" ").filter(Boolean);
+function tokenSimilarityTokens(tq: string[], tc: string[]): number {
   if (!tq.length || !tc.length) return 0;
   if (tq.length <= tc.length) {
     if (!tq.every((t) => tc.includes(t))) return 0;
@@ -237,11 +330,16 @@ export function memoryLayer(query: string, memory: ItemMemory[] | undefined, now
 }
 
 /** Categories as match candidates: the name, the id's words and the aliases, like a catalog entry. */
-export function categoryCandidates(categories: Category[] | undefined): Candidate[] {
-  if (!categories?.length) return [];
-  return candidates(
-    categories.map((c) => ({ id: c.id, name: c.name, locationIds: [c.locationId], aliases: c.aliases, tags: c.tags, department: c.department, subcategory: c.name })),
-  );
+const CATEGORY_INDEX_CACHE = new WeakMap<Category[], CandidateIndex>();
+
+export function categoryCandidates(categories: Category[] | undefined): CandidateIndex {
+  if (!categories?.length) return new CandidateIndex([]);
+  let idx = CATEGORY_INDEX_CACHE.get(categories);
+  if (!idx) {
+    idx = new CandidateIndex(categories.map((c) => ({ id: c.id, name: c.name, locationIds: [c.locationId], aliases: c.aliases, tags: c.tags, department: c.department, subcategory: c.name })));
+    CATEGORY_INDEX_CACHE.set(categories, idx);
+  }
+  return idx;
 }
 
 /** likely band: an exact category name or alias is .79, a near-identical spelling scales from .6 */
@@ -258,9 +356,9 @@ export const CATEGORY_FUZZY = 0.9;
  * ("cereal", "tp", "atta"). Its one slot, at likely confidence: the aisle is
  * right, the exact product is not known.
  */
-export function categoryLayer(query: string, cands: Candidate[], now = Date.now()): ResolveResult | null {
-  if (!cands.length) return null;
-  const hit = exactLayer(query, cands, now) ?? fuzzyLayer(query, cands, CATEGORY_FUZZY, now);
+export function categoryLayer(query: string, cands: CandidateIndex, now = Date.now(), mode: "exact" | "fuzzy" | "both" = "both"): ResolveResult | null {
+  if (!cands.size) return null;
+  const hit = (mode !== "fuzzy" ? exactLayer(query, cands, now) : null) ?? (mode !== "exact" ? fuzzyLayer(query, cands, CATEGORY_FUZZY, now) : null);
   if (!hit) return null;
   const confidence = hit.source === "exact" ? CATEGORY_EXACT : 0.6 + ((hit.confidence - 0.6) / 0.35) * (CATEGORY_EXACT - 0.6);
   return { ...hit, source: "category", confidence: Math.min(CATEGORY_EXACT, Math.max(0.6, confidence)), stopId: undefined, subcategory: hit.canonicalName, canonicalName: titleCase(query) };
@@ -293,11 +391,15 @@ export const llmConfidence = (wire: number) => Math.round((0.3 + (Math.max(0.5, 
 export function resolveItem(query: string, ctx: ResolveContext, cands = candidates(ctx.catalog), catCands = categoryCandidates(ctx.categories)): ResolveResult {
   const threshold = ctx.fuzzyThreshold ?? 0.72;
   const now = ctx.now ?? Date.now();
+  // An exact item wins; then what the shopper confirmed; then a sign that names the query outright
+  // ("strawberries" is the berries sign before it is a fuzzy "strawberry bagel"); then fuzzy items,
+  // then a near-identical category spelling, and the model last.
   const layers: (() => ResolveResult | null)[] = [
     () => exactLayer(query, cands, now),
-    () => fuzzyLayer(query, cands, threshold, now),
     () => memoryLayer(query, ctx.memory, now),
-    () => categoryLayer(query, catCands, now),
+    () => categoryLayer(query, catCands, now, "exact"),
+    () => fuzzyLayer(query, cands, threshold, now),
+    () => categoryLayer(query, catCands, now, "fuzzy"),
     () => llmLayer(query, ctx),
   ];
   let weak: ResolveResult | null = null;

@@ -41,6 +41,11 @@ export function forms(s: string): string[] {
   return [...out].filter(Boolean);
 }
 
+/** padded trigram multiset; exported for the candidate index */
+export function trigramCounts(s: string): Map<string, number> {
+  return trigrams(s);
+}
+
 function trigrams(s: string): Map<string, number> {
   const t = new Map<string, number>();
   const padded = `  ${s} `;

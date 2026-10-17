@@ -30,9 +30,12 @@ function run(label: string, fixture: Fixture): string[] {
   const { store, catalog } = demoSupercenter;
   const deptLocs = departmentLocations(store);
   // the fixture's clock is frozen: its memory rows were confirmed at t = 1, so "now" is t = 2 and no decay applies
-  // these two fixtures exercise the item, memory and llm layers as first tuned: no categories in the context,
-  // and their llm mocks name a department, which the llm layer's department fallback places
-  const ctx = { catalog, departments: store.departments, departmentLocations: deptLocs, memory: fixture.memory, llm: new Map(Object.entries(fixture.llm)), now: 2 };
+  // these two fixtures exercise the item, memory and llm layers over the world they were tuned in: the
+  // hand-kept base catalog (the seeded rows carry a `category`), no shelf categories in the context, and
+  // llm mocks that name a department, which the llm layer's department fallback places. The everyday
+  // fixture (resolution-everyday.test.ts) is the one that sees the full catalog and the categories.
+  const base = catalog.filter((s) => !(s as { category?: string }).category);
+  const ctx = { catalog: base, departments: store.departments, departmentLocations: deptLocs, memory: fixture.memory, llm: new Map(Object.entries(fixture.llm)), now: 2 };
   const results = resolveList(fixture.cases.map((c) => c.q), ctx);
   const layers: ResolveSource[] = ["exact", "fuzzy", "memory", "llm", "unknown"];
   const stats = Object.fromEntries(layers.map((l) => [l, { expected: 0, hit: 0, got: 0 }])) as Record<ResolveSource, { expected: number; hit: number; got: number }>;
