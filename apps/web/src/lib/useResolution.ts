@@ -7,7 +7,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { confirmMemory, demoteMemory, normalize, pendingEntry, placeMemory, resolveList, type ItemMemory, type ItemTag, type LlmGuess, type ResolveResult, type Stop } from "@grosher/core";
 import { departmentLocations, type StoreBundle } from "@grosher/stores";
-import { fetchGuesses } from "./resolver.ts";
+import { defaultProvider, fetchGuesses, type LlmProvider } from "./resolver.ts";
 import { EMPTY_LEARNING, loadLearning, mergedCatalog, saveLearning, type Learning } from "./learning.ts";
 
 export const RESOLVE_DEBOUNCE_MS = 150;
@@ -20,14 +20,17 @@ export interface ResolutionState {
   loaded: boolean;
   asking: boolean; // an llm request is in flight
   offline: boolean; // the last llm request failed
+  /** the provider's one-line note for the header when offline */
+  offlineNote: string;
   gotIt: (name: string, locationId: string, tags?: ItemTag[]) => void;
   notHere: (name: string) => void;
   place: (name: string, locationId: string, tags?: ItemTag[], promote?: boolean) => void;
   learning: Learning;
 }
 
-export function useResolution(bundle: StoreBundle, items: string[]): ResolutionState {
+export function useResolution(bundle: StoreBundle, items: string[], provider?: LlmProvider): ResolutionState {
   const { store, catalog } = bundle;
+  const llmProvider = useMemo(() => provider ?? defaultProvider(), [provider]);
   const storeId = store.storeId;
   const [learning, setLearning] = useState<Learning>(EMPTY_LEARNING);
   const [loaded, setLoaded] = useState(false);
@@ -75,7 +78,7 @@ export function useResolution(bundle: StoreBundle, items: string[]): ResolutionS
       keys.forEach((k) => inFlight.current.add(k));
       setAsking(true);
       try {
-        const guesses = await fetchGuesses(unknown, (store.departments ?? []).map((d) => d.id));
+        const guesses = await fetchGuesses(unknown, (store.departments ?? []).map((d) => d.id), llmProvider);
         setOffline(false);
         setLearning((l) => {
           const llm = new Map(l.llm);
@@ -114,5 +117,5 @@ export function useResolution(bundle: StoreBundle, items: string[]): ResolutionS
     [],
   );
 
-  return { results, catalog: merged, memory: learning.memory, loaded, asking, offline, gotIt, notHere, place, learning };
+  return { results, catalog: merged, memory: learning.memory, loaded, asking, offline, offlineNote: llmProvider.offlineNote, gotIt, notHere, place, learning };
 }

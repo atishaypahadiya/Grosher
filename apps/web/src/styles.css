@@ -193,6 +193,7 @@ button { cursor: pointer; touch-action: manipulation; }
 .chip .dot { width: 9px; height: 9px; border-radius: 50%; background: rgba(255, 255, 255, 0.7); flex: none; }
 .chip.ghost { background: transparent; border: 1px solid var(--glass-border); }
 .chip.pending { opacity: 0.5; min-width: 36px; justify-content: center; }
+.offline-note { margin: 6px 0 2px; font-size: 13px; color: var(--status-guess); }
 .chip.guess { color: var(--status-guess); }
 .chip.guess .dot { background: var(--status-guess); }
 .row-item .name { display: inline-flex; align-items: center; gap: 8px; }

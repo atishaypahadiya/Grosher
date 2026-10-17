@@ -16,6 +16,7 @@ export interface ListScreenProps {
   usual: string[] | null;
   asking: boolean;
   offline: boolean;
+  offlineNote?: string;
   onAdd: (names: string[]) => void;
   onRemove: (name: string) => void;
   onLoadUsual: () => void;
@@ -32,7 +33,7 @@ export const splitItems = (text: string) =>
     .map((s) => s.trim())
     .filter(Boolean);
 
-export function ListScreen({ store, items, results, plan, baselineM, usual, asking, offline, onAdd, onRemove, onLoadUsual, onTellWhere, onRoute, resume }: ListScreenProps) {
+export function ListScreen({ store, items, results, plan, baselineM, usual, asking, offline, offlineNote, onAdd, onRemove, onLoadUsual, onTellWhere, onRoute, resume }: ListScreenProps) {
   const [draft, setDraft] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
@@ -117,13 +118,14 @@ export function ListScreen({ store, items, results, plan, baselineM, usual, aski
         <div className="sheet-head">
           <span className="eyebrow">
             {items.length} {items.length === 1 ? "item" : "items"} · {placed} placed
-            {asking ? " · asking" : offline ? " · offline" : ""}
+            {asking ? " · asking" : ""}
           </span>
           <button type="button" className="eyebrow" onClick={() => (usual ? onLoadUsual() : setHint("Save a usual trip from the trip-done screen."))}>
             {usual ? "Usual trip" : "No usual trip yet"}
             {usual && <IconChevronDown />}
           </button>
         </div>
+        {offline && !asking && <p className="offline-note">{offlineNote ?? "Resolver offline · unknown items need a tap"}</p>}
         {items.length === 0 ? (
           <p className="row-item muted">Nothing yet. Add the first item above.</p>
         ) : (

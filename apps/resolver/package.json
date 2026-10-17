@@ -12,7 +12,8 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.80.0",
-    "hono": "^4.7.0"
+    "hono": "^4.7.0",
+    "@grosher/core": "*"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250101.0",

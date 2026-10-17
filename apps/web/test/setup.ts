@@ -44,11 +44,23 @@ const MOCK_DEPTS: Record<string, { department: string; subcategory: string; tags
 };
 globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
   const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
-  if (!/\/resolve$/.test(url)) throw new TypeError(`fetch blocked in tests: ${url}`);
-  const body = JSON.parse(String(init?.body ?? "{}")) as { items: string[] };
-  const results = body.items.map((item) => {
-    const g = MOCK_DEPTS[item.trim().toLowerCase()];
-    return g ? { item, ...g, canonicalName: item.replace(/\b\w/g, (c) => c.toUpperCase()), confidence: 0.66 } : { item, department: null, confidence: 0 };
-  });
-  return new Response(JSON.stringify({ results }), { status: 200, headers: { "content-type": "application/json" } });
+  const guess = (items: string[]) =>
+    items.map((item) => {
+      const g = MOCK_DEPTS[item.trim().toLowerCase()];
+      return g ? { item, ...g, canonicalName: item.replace(/\b\w/g, (c) => c.toUpperCase()), confidence: 0.8 } : { item, department: null, subcategory: "", canonicalName: "", tags: [], confidence: 0 };
+    });
+  // the Anthropic worker
+  if (/\/resolve$/.test(url)) {
+    const body = JSON.parse(String(init?.body ?? "{}")) as { items: string[] };
+    const results = guess(body.items).map((g) => ({ ...g, confidence: g.department ? 0.66 : 0 }));
+    return new Response(JSON.stringify({ results }), { status: 200, headers: { "content-type": "application/json" } });
+  }
+  // a local Ollama: the answer is a JSON string inside message.content
+  if (/\/api\/chat$/.test(url)) {
+    const body = JSON.parse(String(init?.body ?? "{}")) as { messages: { role: string; content: string }[] };
+    const user = body.messages.find((m) => m.role === "user")?.content ?? "";
+    const items = [...user.matchAll(/^- (.+)$/gm)].map((m) => m[1]);
+    return new Response(JSON.stringify({ message: { role: "assistant", content: JSON.stringify({ results: guess(items) }) } }), { status: 200, headers: { "content-type": "application/json" } });
+  }
+  throw new TypeError(`fetch blocked in tests: ${url}`);
 }) as typeof fetch;

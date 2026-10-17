@@ -153,6 +153,7 @@ export function App() {
         usual={usual}
         asking={res.asking}
         offline={res.offline}
+        offlineNote={res.offlineNote}
         onAdd={addItems}
         onRemove={(name) => setItems((cur) => cur.filter((n) => n !== name))}
         onLoadUsual={() => usual && setItems(usual)}

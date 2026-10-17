@@ -50,3 +50,14 @@ describe("learning loop", () => {
     await waitFor(() => expect(result.current.results[0]?.locationIds).toEqual(["A2-8"]), { timeout: 3000 });
   });
 });
+
+describe("provider failures", () => {
+  test("a dead local model degrades to unknown with the one-line note, never an error", async () => {
+    const dead = { name: "ollama" as const, offlineNote: "Local model offline · unknown items need a tap", classify: async () => { throw new TypeError("Failed to fetch"); } };
+    const { result } = renderHook(() => useResolution(demoSupercenter, ["milk", "oat milk"], dead));
+    await waitFor(() => expect(result.current.offline).toBe(true), { timeout: 3000 });
+    expect(result.current.results.map((r) => r.source)).toEqual(["exact", "unknown"]);
+    expect(result.current.offlineNote).toMatch(/local model offline/i);
+    expect(result.current.asking).toBe(false);
+  });
+});

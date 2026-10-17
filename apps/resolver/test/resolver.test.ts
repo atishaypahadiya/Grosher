@@ -70,7 +70,8 @@ describe("resolver worker", () => {
     } as unknown as import("@anthropic-ai/sdk").default;
     const out = await classify(fake, { items: ["oat milk", "ghee", "birthday card", "oat milk"], departments: ["dairy", "dry"] });
     expect(out).toHaveLength(3);
-    expect(out[0]).toMatchObject({ department: "dairy", subcategory: "plant milk", canonicalName: "Oat milk", tags: ["chilled"], confidence: 0.7 });
+    expect(out[0]).toMatchObject({ department: "dairy", subcategory: "plant milk", canonicalName: "Oat milk", tags: ["chilled"] });
+    expect(out[0].confidence).toBeCloseTo(0.7, 5);
     expect(out[1].department).toBeNull(); // not one of this store's departments
     expect(out[2].department).toBeNull();
     const tool = buildTool(["dairy", "dry"]);

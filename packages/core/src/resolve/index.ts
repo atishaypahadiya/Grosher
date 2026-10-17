@@ -16,6 +16,7 @@ import type { Department, ItemTag, Stop } from "../types.ts";
 import { forms, normalize, similarity, singularize } from "./text.ts";
 
 export { normalize, stripQuantity, singularize, similarity, forms } from "./text.ts";
+export * from "./llmPrompt.ts";
 
 export type ResolveSource = "exact" | "fuzzy" | "memory" | "llm" | "unknown";
 
