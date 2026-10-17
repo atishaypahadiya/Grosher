@@ -27,7 +27,7 @@ if (typeof document === "undefined") {
 }
 
 import { afterEach } from "vitest";
-import { cleanup } from "@testing-library/react";
+import { cleanup, configure } from "@testing-library/react";
 afterEach(cleanup);
 
 // jsdom has no canvas: make the WebGL check return "unavailable" quietly so the flat map is used.
@@ -87,3 +87,7 @@ if (typeof window !== "undefined" && typeof (window as { PointerEvent?: unknown 
   }
   (window as unknown as { PointerEvent: unknown }).PointerEvent = PointerEventPolyfill;
 }
+
+// jsdom has no Worker, so the 47,000-row index builds synchronously on first use (~1 s here, 2–3 s on a CI
+// runner): every waitFor / findBy gets room for it
+configure({ asyncUtilTimeout: 10_000 });
