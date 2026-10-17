@@ -5,7 +5,7 @@
 
 import { useEffect, useMemo, type ReactNode } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { collapseColliding, mayShowCard, type Box, type CardCandidate } from "./cardPlan.ts";
+import { mayShowCard, planCards, type Box, type FixedLabel, type Size, type StopInput } from "./cardPlan.ts";
 import { Vector3 } from "three";
 import type { GraphNode } from "@grosher/core";
 import { IconArrowRight, IconCheck } from "../components/Icons.tsx";
@@ -25,6 +25,8 @@ export interface StopCard {
   name: string;
   color?: string;
   n: number;
+  /** walking distance from you along the route, for the edge chip ("64 m") */
+  distance?: string;
 }
 
 
@@ -56,8 +58,9 @@ export interface OverlayItem {
   className?: string;
   /** keep this item inside the padded map area (labels), never under the strip or the sheet */
   clamp?: "bottom" | "top";
-  /** takes part in the card collision pass: "next" and "checkout" are placed first, "stop" cards may collapse */
-  card?: "next" | "checkout" | "stop";
+  /** takes part in the card pass: "next" and "checkout" are placed first, "stop" cards are planned around
+   * them, and a "marker" (the next stop's lime dot and leader line) is kept clear */
+  card?: "next" | "checkout" | "stop" | "marker";
 }
 
 /** px between a stop's point and the bottom of its card */
@@ -97,13 +100,21 @@ export function useOverlayItems(p: OverlayProps): OverlayItem[] {
         pos: c.pos,
         className: "m-stop m-stop--card",
         card: "stop",
+        // each part is placed in screen space by the projector (cardPlan.ts decides which one shows)
         node: (
           <>
             {dot}
+            <i className="m-leader-line" />
             <span className="m-card">
               <i className="dot" style={c.color ? { background: c.color } : undefined} />
               <span className="name">{c.name}</span>
               <b className="n">{c.n}</b>
+            </span>
+            <span className="m-card m-chip">
+              <b className="n">{c.n}</b>
+              <span className="name">{c.name}</span>
+              {c.distance && <span className="dist">{c.distance}</span>}
+              <IconArrowRight className="arrow" />
             </span>
           </>
         ),
@@ -129,7 +140,7 @@ export function useOverlayItems(p: OverlayProps): OverlayItem[] {
     }
     const next = p.nextPos ?? at(p.nextNodeId, h);
     if (next) {
-      out.push({ key: "next", pos: next, node: <span className="m-next"><i className="m-leader" /></span> });
+      out.push({ key: "next", pos: next, card: "marker", node: <span className="m-next"><i className="m-leader" /></span> });
       if (p.nextLabel)
         out.push({
           key: "next-label",
@@ -186,26 +197,48 @@ export function OverlayDom({ items, registry }: { items: OverlayItem[]; registry
 /**
  * Inside the Canvas: projects every item each rendered frame. Labels are clamped into the map area. Then
  * the card pass (cardPlan.ts): the next-stop card and the checkout callout are placed, and each of the two
- * stop cards after them stays a card only if it fits the map area without touching anything placed;
- * otherwise it collapses to its numbered dot. The same at every distance and in the flattened view.
+ * stops after them becomes a card above its point, a card stacked under the label it hit (with a leader to
+ * its dot), an edge chip pointing at it when it is off the map, or its numbered dot. The same at every
+ * distance and in the flattened view.
  */
 export function OverlayProjector({ items, registry, safe }: { items: OverlayItem[]; registry: OverlayRegistry; safe?: { top: number; bottom: number } }) {
   const { camera, size, invalidate } = useThree();
   const v = useMemo(() => new Vector3(), []);
-  // a stop card's size does not change while it exists: measure it once (collapsed cards keep their box)
-  const cardSize = useMemo(() => new Map<string, { w: number; h: number; el: HTMLElement }>(), [items]);
+  // a stop's card and chip do not change size while the items stand: measure them once
+  const parts = useMemo(() => new Map<string, { dot: HTMLElement; card: HTMLElement; chip: HTMLElement; leader: HTMLElement; cardSize: Size; chipSize: Size }>(), [items]);
   const PAD = 12;
   const project = () => {
     const top = (safe?.top ?? 0.16) * size.height + PAD;
     const bottom = size.height - (safe?.bottom ?? 0.36) * size.height - PAD;
     const area: Box = { x0: PAD, x1: size.width - PAD, y0: top, y1: bottom };
-    const candidates: CardCandidate[] = [];
+    const fixed: FixedLabel[] = [];
+    const stops: StopInput[] = [];
+    const obstacles: Box[] = [];
     for (const it of items) {
       const el = registry.get(it.key);
       if (!el) continue;
       v.set(it.pos[0], it.pos[1], it.pos[2]).project(camera);
       let x = ((v.x + 1) / 2) * size.width;
       let y = ((1 - v.y) / 2) * size.height;
+      const onScreen = v.z < 1;
+      if (it.card === "stop") {
+        let p = parts.get(it.key);
+        if (!p) {
+          const q = (sel: string) => el.querySelector<HTMLElement>(sel)!;
+          const card = q(".m-card:not(.m-chip)");
+          const chip = q(".m-chip");
+          if (!card?.offsetWidth || !chip?.offsetWidth) continue;
+          p = { dot: q(".m-ahead"), card, chip, leader: q(".m-leader-line"), cardSize: { w: card.offsetWidth, h: card.offsetHeight }, chipSize: { w: chip.offsetWidth, h: chip.offsetHeight } };
+          parts.set(it.key, p);
+        }
+        // the item sits at the screen origin; its parts are placed in screen pixels below
+        el.style.transform = "translate(0px, 0px)";
+        el.style.visibility = "visible";
+        p.dot.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) translate(-50%, -50%)`;
+        p.dot.style.visibility = onScreen ? "" : "hidden"; // behind the camera the projection is mirrored
+        stops.push({ key: it.key, point: { x, y }, behind: !onScreen, card: p.cardSize, chip: p.chipSize });
+        continue;
+      }
       if (it.clamp) {
         const w = el.offsetWidth || 160;
         const h = el.offsetHeight || 48;
@@ -213,37 +246,33 @@ export function OverlayProjector({ items, registry, safe }: { items: OverlayItem
         y = it.clamp === "bottom" ? Math.max(top + h, Math.min(bottom, y)) : Math.max(top, Math.min(bottom - h, y));
       }
       el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
-      const onScreen = v.z < 1;
       el.style.visibility = onScreen ? "visible" : "hidden";
       if (!it.card) continue;
-      let box: Box | null = null;
-      if (onScreen) {
-        if (it.card === "stop") {
-          let s = cardSize.get(it.key);
-          if (!s) {
-            const c = el.querySelector<HTMLElement>(".m-card");
-            if (c && c.offsetWidth) cardSize.set(it.key, (s = { w: c.offsetWidth, h: c.offsetHeight, el: c }));
-          }
-          if (s) {
-            // a stop inside the map area keeps its card inside it too: the card slides sideways off the
-            // edge, still above its point; a stop outside the area keeps its card unmoved, so it collapses
-            const inX = x >= area.x0 && x <= area.x1;
-            const cx = inX ? Math.max(area.x0 + s.w / 2, Math.min(area.x1 - s.w / 2, x)) : x;
-            s.el.style.setProperty("--dx", `${(cx - x).toFixed(1)}px`);
-            box = { x0: cx - s.w / 2, x1: cx + s.w / 2, y0: y - CARD_LIFT - s.h, y1: y - CARD_LIFT };
-          }
-        } else {
-          const w = el.offsetWidth || 160;
-          const h = el.offsetHeight || 48;
-          box = it.card === "next" ? { x0: x - w / 2, x1: x + w / 2, y0: y - h, y1: y } : { x0: x - w / 2, x1: x + w / 2, y0: y, y1: y + h };
-        }
+      if (it.card === "marker") {
+        // the 8 px lime dot and the 46 px leader above it (styles.css .m-next, .m-leader)
+        if (onScreen) obstacles.push({ x0: x - 5, x1: x + 5, y0: y - 58, y1: y + 5 });
+        continue;
       }
-      candidates.push({ key: it.key, box, fixed: it.card !== "stop" });
+      const w = el.offsetWidth || 160;
+      const h = el.offsetHeight || 48;
+      const box = !onScreen ? null : it.card === "next" ? { x0: x - w / 2, x1: x + w / 2, y0: y - h, y1: y } : { x0: x - w / 2, x1: x + w / 2, y0: y, y1: y + h };
+      fixed.push({ key: it.key, box });
     }
-    const collapsed = collapseColliding(candidates, area);
-    for (const c of candidates) {
-      if (c.fixed) continue;
-      registry.get(c.key)?.classList.toggle("m-collapsed", collapsed.has(c.key));
+    for (const pl of planCards({ area, fixed, stops, obstacles, lift: CARD_LIFT })) {
+      const el = registry.get(pl.key);
+      const p = parts.get(pl.key);
+      if (!el || !p) continue;
+      el.dataset.mode = pl.mode;
+      if (pl.mode === "card" || pl.mode === "stacked" || pl.mode === "chip") {
+        const target = pl.mode === "chip" ? p.chip : p.card;
+        target.style.transform = `translate(${pl.box.x0.toFixed(1)}px, ${pl.box.y0.toFixed(1)}px)`;
+      }
+      if (pl.mode === "chip") p.chip.style.setProperty("--angle", `${pl.angle.toFixed(3)}rad`);
+      if (pl.mode === "stacked") {
+        const { x0, y0, x1, y1 } = pl.leader;
+        p.leader.style.width = `${Math.hypot(x1 - x0, y1 - y0).toFixed(1)}px`;
+        p.leader.style.transform = `translate(${x0.toFixed(1)}px, ${y0.toFixed(1)}px) rotate(${Math.atan2(y1 - y0, x1 - x0).toFixed(3)}rad)`;
+      }
     }
   };
   useFrame(project);

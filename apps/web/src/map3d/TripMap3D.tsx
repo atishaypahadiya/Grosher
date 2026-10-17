@@ -3,7 +3,7 @@
 
 import { useMemo, useRef, type PointerEvent as ReactPointerEvent } from "react";
 import { Canvas } from "@react-three/fiber";
-import { WalkGraph, type StoreGraph } from "@grosher/core";
+import { WalkGraph, type RouteLeg, type StoreGraph } from "@grosher/core";
 import type { StoreBundle } from "@grosher/stores";
 import type { TripState } from "../lib/trip.ts";
 import { Scene } from "./Scene.tsx";
@@ -122,6 +122,9 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
     const loc = locationId ? store.locations.find((l) => l.id === locationId) : undefined;
     return locationDepartment(store, loc)?.color;
   };
+  // walking distance from you to each leg's end, along the route
+  const walkTo = new Map<RouteLeg, number>();
+  legs.reduce((sum, l) => (walkTo.set(l, sum + l.distanceM), sum + l.distanceM), 0);
   const stopLegs = legs.filter((l) => l.stopId !== null);
   const cards: StopCard[] = stopLegs.slice(1).map((l, i) => ({
     key: l.stopId!,
@@ -129,6 +132,7 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
     name: l.label,
     color: colorOf(l.locationId),
     n: i + 2,
+    distance: `${Math.round(walkTo.get(l) ?? 0)} m`,
   }));
   const donePositions = trip.doneNodeIds.map((id) => slotPos(id.startsWith("loc:") ? id.slice(4) : undefined) ?? [nodes.get(id)?.x ?? 0, 1.2, nodes.get(id)?.y ?? 0]) as [number, number, number][];
   const items = useOverlayItems({

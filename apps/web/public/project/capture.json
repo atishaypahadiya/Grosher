@@ -25,12 +25,14 @@
     "zoomSteps": 0,
     "zoom": 1,
     "cameraDistanceM": 39.1,
-    "cards": 1,
+    "cards": 3,
     "cardsInside": true,
     "cardsOverlap": false,
-    "dots": 7,
+    "dots": 5,
     "nextInMap": true,
     "names": [
+      "2Paper Towel77 m",
+      "3Dog Food111 m",
       "Snacks · A12 · 7 of 14Chips13 mLeft · bay 3 · shelf 2"
     ],
     "target": 6,
@@ -38,25 +40,25 @@
       {
         "step": 5,
         "distanceM": 39.1,
-        "cards": 1,
-        "dots": 8
+        "cards": 3,
+        "dots": 7
       },
       {
         "step": 6,
         "distanceM": 39.1,
-        "cards": 1,
-        "dots": 7
+        "cards": 3,
+        "dots": 5
       },
       {
         "step": 7,
-        "distanceM": 49.8,
-        "cards": 1,
-        "dots": 6
+        "distanceM": 50,
+        "cards": 3,
+        "dots": 4
       },
       {
         "step": 8,
         "distanceM": 39.1,
-        "cards": 1,
+        "cards": 3,
         "dots": 5
       },
       {
