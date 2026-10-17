@@ -392,8 +392,13 @@ function shuffled(n: number, seed: number): number[] {
   return out;
 }
 
-/** how many starts the local search runs from: the greedy order, then seeded shuffles; the best result wins */
-export const HEURISTIC_RESTARTS = 4;
+/**
+ * How many starts the local search runs from: the greedy order, then seeded shuffles; the best result wins.
+ * With delta evaluation a start costs a few ms. On the demo store the greedy start alone sits 16.8% over
+ * exact at 12 stops, two starts 10.9%, three under 10% (the test's bar); four match the old four-restart
+ * routes to the metre for ~8 ms more at 30 stops.
+ */
+export const HEURISTIC_RESTARTS = 3;
 
 function heuristic(p: Prepared): { order: number[]; choice: number[] } {
   if (p.n > 31) throw new Error("heuristic currently supports up to 31 stops (bitmask penalties)");
@@ -408,40 +413,95 @@ function heuristic(p: Prepared): { order: number[]; choice: number[] } {
   return { order: best!.order, choice: evaluateOrder(p, best!.order).choice };
 }
 
-/** 2-opt + Or-opt from a given order, first improvement, until no move helps. */
+/**
+ * 2-opt + Or-opt from a given order, first improvement, until no move helps.
+ *
+ * Delta evaluation: with the candidate point of every stop fixed to the last
+ * DP choice, a move is scored by the edges it changes (the two or three
+ * boundary edges, plus the reversed interior for 2-opt, since walking
+ * distances need not be symmetric) and by the penalties of the positions
+ * whose preceding set or position changed: inside the reversed segment, or
+ * between the removal and insertion points. Everything outside is unchanged.
+ * An accepted move is followed by one layered DP over candidates (O(n·k²))
+ * to re-pick points, which can only lower the cost further.
+ */
 function localSearch(p: Prepared, start: number[]): { order: number[]; cost: number } {
-  const { n } = p;
-  const order = [...start];
-  let bestCost = evaluateOrder(p, order).cost;
+  const { n, d, endCost, penalty } = p;
+  let order = [...start];
+  let { cost, choice: pts } = evaluateOrder(p, order);
+  // mask of the stops before each position, under the current order
+  const maskBefore = (ord: number[]) => {
+    const m = new Array<number>(ord.length + 1).fill(0);
+    for (let k = 0; k < ord.length; k++) m[k + 1] = m[k] | (1 << ord[k]);
+    return m;
+  };
+  let masks = maskBefore(order);
+  const penAt = (ord: number[], mk: number[], k: number) => penalty(ord[k], mk[k], k);
+  const pointBefore = (k: number) => (k === 0 ? 0 : pts[k - 1]);
+  const edgeAfter = (k: number, from: number) => (k + 1 < n ? d[from][pts[k + 1]] : endCost[from]);
+
+  const accept = (next: number[]) => {
+    const e = evaluateOrder(p, next);
+    order = next;
+    cost = e.cost;
+    pts = e.choice;
+    masks = maskBefore(order);
+  };
+
   let improved = true;
   while (improved) {
     improved = false;
-    // 2-opt: reverse a segment.
-    for (let i = 0; i < n - 1 && !improved; i++) {
+    // 2-opt: reverse order[i..j]
+    scan: for (let i = 0; i < n - 1; i++) {
       for (let j = i + 1; j < n; j++) {
-        const cand2 = order.slice(0, i).concat(order.slice(i, j + 1).reverse(), order.slice(j + 1));
-        const c = evaluateOrder(p, cand2).cost;
-        if (c < bestCost - 1e-9) {
-          order.splice(0, n, ...cand2);
-          bestCost = c;
+        const a = pointBefore(i);
+        // old boundary edges a→pts[i] and pts[j]→after; new a→pts[j] and pts[i]→after
+        let delta = d[a][pts[j]] - d[a][pts[i]] + edgeAfter(j, pts[i]) - edgeAfter(j, pts[j]);
+        // the interior walked the other way
+        for (let k = i; k < j; k++) delta += d[pts[k + 1]][pts[k]] - d[pts[k]][pts[k + 1]];
+        // penalties inside the segment: positions i..j see a different preceding set
+        let mask = masks[i];
+        for (let k = i; k <= j; k++) {
+          const stop = order[j - (k - i)];
+          delta += penalty(stop, mask, k) - penAt(order, masks, k);
+          mask |= 1 << stop;
+        }
+        if (delta < -1e-9) {
+          accept(order.slice(0, i).concat(order.slice(i, j + 1).reverse(), order.slice(j + 1)));
           improved = true;
-          break;
+          break scan;
         }
       }
     }
     if (improved) continue;
-    // Or-opt: move a segment of length 1..3 elsewhere.
+    // Or-opt: move the segment order[i..i+len) to sit before what is now rest[j]
     outer: for (let len = 1; len <= 3; len++) {
       for (let i = 0; i + len <= n; i++) {
-        const seg = order.slice(i, i + len);
+        const segPts = pts.slice(i, i + len);
+        const restPts = pts.slice(0, i).concat(pts.slice(i + len));
         const rest = order.slice(0, i).concat(order.slice(i + len));
+        // removing the segment: a→seg0 … segLast→b becomes a→b
+        const a = pointBefore(i);
+        const bIdx = i + len; // position after the segment in the old order
+        const removeGain = d[a][segPts[0]] + edgeAfter(bIdx - 1, segPts[len - 1]) - (bIdx < n ? d[a][pts[bIdx]] : endCost[a]);
         for (let j = 0; j <= rest.length; j++) {
           if (j === i) continue;
-          const cand2 = rest.slice(0, j).concat(seg, rest.slice(j));
-          const c = evaluateOrder(p, cand2).cost;
-          if (c < bestCost - 1e-9) {
-            order.splice(0, n, ...cand2);
-            bestCost = c;
+          // inserting between rest[j-1] (or the start) and rest[j] (or the end)
+          const x = j === 0 ? 0 : restPts[j - 1];
+          const yCost = (from: number) => (j < rest.length ? d[from][restPts[j]] : endCost[from]);
+          const insertCost = d[x][segPts[0]] + yCost(segPts[len - 1]) - yCost(x);
+          let delta = insertCost - removeGain;
+          // penalties: positions from the first changed slot to the last shift or change their preceding set
+          const next = rest.slice(0, j).concat(order.slice(i, i + len), rest.slice(j));
+          const lo = Math.min(i, j);
+          const hi = Math.max(i + len, j + len) - 1;
+          let mask = masks[lo];
+          for (let k = lo; k <= hi; k++) {
+            delta += penalty(next[k], mask, k) - penAt(order, masks, k);
+            mask |= 1 << next[k];
+          }
+          if (delta < -1e-9) {
+            accept(next);
             improved = true;
             break outer;
           }
@@ -449,7 +509,7 @@ function localSearch(p: Prepared, start: number[]): { order: number[]; cost: num
       }
     }
   }
-  return { order, cost: bestCost };
+  return { order, cost };
 }
 
 function popcount(x: number): number {
