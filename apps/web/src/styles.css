@@ -192,6 +192,22 @@ button { cursor: pointer; touch-action: manipulation; }
 .chip { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 999px; background: rgba(255, 255, 255, 0.16); font-size: 13px; white-space: nowrap; }
 .chip .dot { width: 9px; height: 9px; border-radius: 50%; background: rgba(255, 255, 255, 0.7); flex: none; }
 .chip.ghost { background: transparent; border: 1px solid var(--glass-border); }
+.chip.guess { color: var(--status-guess); }
+.chip.guess .dot { background: var(--status-guess); }
+.row-item .name { display: inline-flex; align-items: center; gap: 8px; }
+.src-glyph { width: 14px; height: 14px; color: rgba(255, 255, 255, 0.75); flex: none; }
+.src-glyph[data-source="llm"] { color: var(--status-guess); }
+.src-glyph[data-source="memory"] { color: var(--lime); }
+.src-glyph[data-source="unknown"] { color: var(--status-nothere); }
+
+/* ---- picker sheet (Tell me where / Pick aisle) */
+.picker { position: fixed; inset: 0; z-index: 30; display: flex; align-items: flex-end; justify-content: center; background: rgba(15, 42, 26, 0.35); }
+.picker-sheet { width: 100%; max-width: var(--column); margin: 0 12px calc(12px + var(--safe-bottom)); padding: 18px; display: flex; flex-direction: column; gap: 12px; max-height: 86dvh; }
+.picker-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.picker-head .muted { margin: 2px 0 0; font-size: 14px; }
+.picker-map { position: relative; height: 46dvh; border-radius: 18px; overflow: hidden; }
+.picker-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.picker-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .chip.action { min-height: 36px; }
 
 .cta-wrap { position: fixed; left: 50%; transform: translateX(-50%); width: 100%; max-width: var(--column); bottom: 0; z-index: 5; padding: 12px var(--gutter) calc(10px + var(--safe-bottom)); display: grid; gap: 8px; justify-items: center; }

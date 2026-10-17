@@ -1,6 +1,6 @@
 // Row chips on the List screen: where an item lives, in the store's words.
 
-import type { Department, ShelfLocation, Stop, StoreGraph } from "@grosher/core";
+import type { Department, ResolveResult, ShelfLocation, Stop, StoreGraph } from "@grosher/core";
 
 const AISLE = /^A\d+$/i;
 
@@ -30,4 +30,18 @@ export function chipFor(store: StoreGraph, stop: Stop): Chip {
   else if (AISLE.test(first.aisle) && dept) text = `${text} · ${dept.name.toLowerCase()}`;
   if ((stop.tags ?? []).some((t) => t === "frozen" || t === "chilled")) text += " · last";
   return { text, color: dept?.color };
+}
+
+/** The List row chip for a resolution: llm guesses read "probably A4 · cereal"; memory hits say "yours". */
+export function chipForResult(store: StoreGraph, r: ResolveResult): Chip | null {
+  if (!r.locationIds.length) return null;
+  const stop: Stop = { id: r.stopId ?? r.query, name: r.canonicalName, locationIds: r.locationIds, tags: r.tags };
+  const base = chipFor(store, stop);
+  if (r.source === "llm") {
+    const first = store.locations.find((l) => l.id === r.locationIds[0]);
+    const where = first ? (AISLE.test(first.aisle) ? first.aisle.toUpperCase() : titleCase(locationDepartment(store, first)?.name ?? first.aisle)) : r.department ?? "";
+    return { text: `probably ${where}${r.subcategory ? ` · ${r.subcategory}` : ""}`, color: base.color };
+  }
+  if (r.source === "memory") return { text: `${base.text} · yours`, color: base.color };
+  return base;
 }

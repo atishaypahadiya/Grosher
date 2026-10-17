@@ -6,7 +6,9 @@ import { ListScreen } from "./components/ListScreen.tsx";
 import { TripScreen } from "./components/TripScreen.tsx";
 import { CheckoutScreen } from "./components/CheckoutScreen.tsx";
 import { EditorScreen } from "./editor/EditorScreen.tsx";
-import { resolveItems } from "./lib/resolve.ts";
+import { useResolution } from "./lib/useResolution.ts";
+import { toStop } from "@grosher/core";
+import { PickerSheet } from "./components/PickerSheet.tsx";
 import { addItem, fromSnapshot, gotIt, isDone, skipStop, startTrip, toSnapshot, type TripSnapshot, type TripState } from "./lib/trip.ts";
 import { load, save } from "./lib/storage.ts";
 
@@ -47,9 +49,25 @@ export function App() {
   useEffect(() => save(FLAT_KEY, flat), [flat]);
   const [paused, setPaused] = useState(false);
 
-  const resolution = useMemo(() => resolveItems(items, catalog), [items, catalog]);
-  const plan = useMemo(() => (resolution.stops.length ? router.solve({ stops: resolution.stops }) : null), [resolution, router]);
-  const baselineM = useMemo(() => (resolution.stops.length ? router.routeForOrder(resolution.stops).distanceM : 0), [resolution, router]);
+  const res = useResolution(bundle, items);
+  const stops = useMemo(() => res.results.map(toStop).filter((s): s is Stop => !!s), [res.results]);
+  const notFound = useMemo(() => res.results.filter((r) => !r.locationIds.length).map((r) => r.query), [res.results]);
+  const plan = useMemo(() => (stops.length ? router.solve({ stops }) : null), [stops, router]);
+  const baselineM = useMemo(() => (stops.length ? router.routeForOrder(stops).distanceM : 0), [stops, router]);
+  const [picking, setPicking] = useState<{ name: string; promote: boolean } | null>(null);
+  const tagsFor = (name: string) => res.results.find((r) => r.query === name)?.tags;
+  const picker = picking && (
+    <PickerSheet
+      store={store}
+      itemName={picking.name}
+      onPick={(locationId) => {
+        res.place(picking.name, locationId, tagsFor(picking.name), picking.promote);
+        note(picking.name);
+        setPicking(null);
+      }}
+      onClose={() => setPicking(null)}
+    />
+  );
 
   const addItems = (names: string[]) =>
     setItems((cur) => {
@@ -81,13 +99,22 @@ export function App() {
       <>
         <Ground />
         <TripScreen
-          bundle={bundle}
+          bundle={{ ...bundle, catalog: res.catalog }}
           router={router}
           trip={trip}
           flat={flat}
           onFlatChange={setFlat}
-          onGotIt={() => setTrip(gotIt(router, trip))}
-          onSkip={() => setTrip(skipStop(router, trip))}
+          onGotIt={() => {
+            const leg = trip.route.legs[0];
+            const stop = trip.remaining.find((s) => s.id === leg?.stopId);
+            if (stop && leg?.locationId) res.gotIt(stop.name, leg.locationId, stop.tags);
+            setTrip(gotIt(router, trip));
+          }}
+          onSkip={() => {
+            const stop = trip.remaining.find((s) => s.id === trip.route.legs[0]?.stopId);
+            if (stop) res.notHere(stop.name);
+            setTrip(skipStop(router, trip));
+          }}
           onAdd={(stop: Stop) => setTrip(addItem(router, trip, stop))}
           onBack={() => setPaused(true)}
         />
@@ -105,10 +132,11 @@ export function App() {
           trip={trip}
           usualSaved={!!usual && usual.join("\n") === trip.original.map((s) => s.name).join("\n")}
           noted={noted}
-          onNote={note}
+          onNote={(name) => setPicking({ name, promote: true })}
           onSaveUsual={() => setUsual(trip.original.map((s) => s.name))}
           onClose={() => setTrip(null)}
         />
+        {picker}
       </>
     );
   }
@@ -119,21 +147,23 @@ export function App() {
       <ListScreen
         store={store}
         items={items}
-        resolution={resolution}
+        results={res.results}
         plan={plan}
         baselineM={baselineM}
         usual={usual}
-        noted={noted}
+        asking={res.asking}
+        offline={res.offline}
         onAdd={addItems}
         onRemove={(name) => setItems((cur) => cur.filter((n) => n !== name))}
         onLoadUsual={() => usual && setItems(usual)}
-        onNote={note}
+        onTellWhere={(name) => setPicking({ name, promote: false })}
         resume={trip && paused ? { remaining: trip.remaining.length, distanceM: trip.route.legs.reduce((s, l) => s + l.distanceM, 0) } : null}
         onRoute={() => {
           if (trip && paused) setPaused(false);
-          else if (resolution.stops.length) setTrip(startTrip(router, resolution.stops, resolution.notFound));
+          else if (stops.length) setTrip(startTrip(router, stops, notFound));
         }}
       />
+      {picker}
     </>
   );
 }

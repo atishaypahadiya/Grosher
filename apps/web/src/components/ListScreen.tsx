@@ -1,24 +1,25 @@
 import { useEffect, useRef, useState, type ClipboardEvent, type FormEvent } from "react";
-import type { Route, Stop, StoreGraph } from "@grosher/core";
-import type { Resolution } from "../lib/resolve.ts";
-import { chipFor } from "../lib/chips.ts";
+import type { ResolveResult, Route, StoreGraph } from "@grosher/core";
+import { chipForResult } from "../lib/chips.ts";
 import { minutesNum } from "../lib/format.ts";
 import { listen, speechSupported } from "../lib/speech.ts";
 import { Num } from "./Num.tsx";
+import { SourceGlyph } from "./SourceGlyph.tsx";
 import { IconArrowRight, IconChevronDown, IconMic, IconPlus } from "./Icons.tsx";
 
 export interface ListScreenProps {
   store: StoreGraph;
   items: string[];
-  resolution: Resolution;
+  results: ResolveResult[];
   plan: Route | null;
   baselineM: number;
   usual: string[] | null;
-  noted: Set<string>;
+  asking: boolean;
+  offline: boolean;
   onAdd: (names: string[]) => void;
   onRemove: (name: string) => void;
   onLoadUsual: () => void;
-  onNote: (name: string) => void;
+  onTellWhere: (name: string) => void;
   onRoute: () => void;
   /** a paused trip: the CTA resumes it instead of routing the list */
   resume?: { remaining: number; distanceM: number } | null;
@@ -31,7 +32,7 @@ export const splitItems = (text: string) =>
     .map((s) => s.trim())
     .filter(Boolean);
 
-export function ListScreen({ store, items, resolution, plan, baselineM, usual, noted, onAdd, onRemove, onLoadUsual, onNote, onRoute, resume }: ListScreenProps) {
+export function ListScreen({ store, items, results, plan, baselineM, usual, asking, offline, onAdd, onRemove, onLoadUsual, onTellWhere, onRoute, resume }: ListScreenProps) {
   const [draft, setDraft] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
@@ -39,12 +40,8 @@ export function ListScreen({ store, items, resolution, plan, baselineM, usual, n
   const stopRef = useRef<() => void>(() => {});
   useEffect(() => () => stopRef.current(), []);
 
-  const byName = new Map<string, Stop>();
-  for (const name of items) {
-    const stop = resolution.stops.find((s) => s.id.toLowerCase() === name.toLowerCase() || s.name.toLowerCase() === name.toLowerCase());
-    if (stop) byName.set(name, stop);
-  }
-  const placed = resolution.stops.length;
+  const byQuery = new Map(results.map((r) => [r.query, r]));
+  const placed = results.filter((r) => r.locationIds.length > 0).length;
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -120,6 +117,7 @@ export function ListScreen({ store, items, resolution, plan, baselineM, usual, n
         <div className="sheet-head">
           <span className="eyebrow">
             {items.length} {items.length === 1 ? "item" : "items"} · {placed} placed
+            {asking ? " · asking" : offline ? " · offline" : ""}
           </span>
           <button type="button" className="eyebrow" onClick={() => (usual ? onLoadUsual() : setHint("Save a usual trip from the trip-done screen."))}>
             {usual ? "Usual trip" : "No usual trip yet"}
@@ -131,28 +129,30 @@ export function ListScreen({ store, items, resolution, plan, baselineM, usual, n
         ) : (
           <ul className="rows">
             {items.map((name) => {
-              const stop = byName.get(name);
-              const chip = stop ? chipFor(store, stop) : null;
+              const r = byQuery.get(name);
+              const chip = r ? chipForResult(store, r) : null;
               const isSel = selected === name;
+              const unknown = !r || r.source === "unknown";
               return (
-                <li key={name} className="row-item">
+                <li key={name} className="row-item" data-source={r?.source ?? "pending"}>
                   <button type="button" className="row-main" onClick={() => setSelected(isSel ? null : name)} aria-expanded={isSel}>
-                    <span className="name">{stop?.name ?? name}</span>
-                    {!stop && <span className="sub">Not placed yet</span>}
+                    <span className="name">
+                      {r && <SourceGlyph source={r.source} />}
+                      {r?.canonicalName ?? name}
+                    </span>
+                    {unknown && <span className="sub">{r?.department ? `Not placed yet · probably ${r.department}` : "Not placed yet"}</span>}
                   </button>
                   {isSel ? (
                     <button type="button" className="chip ghost action" onClick={() => onRemove(name)}>
                       Remove
                     </button>
-                  ) : chip ? (
-                    <span className="chip">
+                  ) : !unknown && chip ? (
+                    <span className={`chip${r.source === "llm" ? " guess" : ""}`} style={{ opacity: 0.5 + 0.5 * Math.min(1, r.confidence) }} title={`${Math.round(r.confidence * 100)}%`}>
                       <i className="dot" style={chip.color ? { background: chip.color } : undefined} />
                       {chip.text}
                     </span>
-                  ) : noted.has(name.toLowerCase()) ? (
-                    <span className="chip ghost">Noted</span>
                   ) : (
-                    <button type="button" className="chip ghost action" onClick={() => onNote(name)}>
+                    <button type="button" className="chip ghost action" onClick={() => onTellWhere(name)}>
                       Tell me where
                     </button>
                   )}
@@ -190,7 +190,7 @@ export function ListScreen({ store, items, resolution, plan, baselineM, usual, n
           </span>
         </button>
         <span className="cta-caption">
-          {plan && placed > 0 ? (savedPct > 0 ? `${savedPct}% shorter than walking your list in order` : "Same as walking your list in order") : "\u00a0"}
+          {plan && placed > 0 ? (savedPct > 0 ? `${savedPct}% shorter than walking your list in order` : "Same as walking your list in order") : " "}
         </span>
       </div>
     </main>

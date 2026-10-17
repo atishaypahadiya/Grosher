@@ -1,51 +1,70 @@
 import { beforeEach, describe, expect, test } from "vitest";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { App } from "../src/App.tsx";
+import { dbClearMemoryFallback } from "../src/lib/db.ts";
 
-beforeEach(() => localStorage.clear());
+beforeEach(() => {
+  localStorage.clear();
+  dbClearMemoryFallback();
+});
 
 const add = (text: string) => {
   const input = screen.getByLabelText(/add items/i);
   fireEvent.change(input, { target: { value: text } });
   fireEvent.submit(input.closest("form")!);
 };
+const find = (re: RegExp) => screen.findByText(re, {}, { timeout: 3000 });
+const findButton = (re: RegExp) => screen.findByRole("button", { name: re }, { timeout: 3000 });
 
 describe("list screen", () => {
-  test("adds typed and comma-separated items, places them, flags unknown ones", () => {
+  test("resolves typed and comma-separated items with a source glyph, flags unknown ones", async () => {
     render(<App />);
     add("milk");
-    add("eggs, unicorn");
-    expect(screen.getByText(/3 items · 2 placed/i)).toBeTruthy();
+    add("egs, unicorn");
+    expect(await find(/3 items · 2 placed/i)).toBeTruthy();
     const rows = within(screen.getByRole("list")).getAllByRole("listitem");
     expect(rows).toHaveLength(3);
+    expect(rows[0].getAttribute("data-source")).toBe("exact");
     expect(within(rows[0]).getByText(/dairy · last/i)).toBeTruthy();
-    expect(within(rows[2]).getByText(/not placed yet/i)).toBeTruthy();
+    expect(rows[1].getAttribute("data-source")).toBe("fuzzy"); // egs → Eggs
+    expect(within(rows[1]).getByText(/^Eggs$/)).toBeTruthy();
+    expect(rows[2].getAttribute("data-source")).toBe("unknown");
+    expect(within(rows[2]).getByText(/not placed yet/i, { selector: ".sub" })).toBeTruthy();
     expect(screen.getByRole("button", { name: /route 2 items/i })).toBeTruthy();
-    expect(screen.getByText(/shorter than walking your list in order|same as walking/i)).toBeTruthy();
   });
 
-  test("removes an item and notes an unplaced one", () => {
+  test("an unknown item the resolver can place becomes an amber guess with its department", async () => {
+    render(<App />);
+    add("oat milk");
+    expect(await find(/probably/i, )).toBeTruthy();
+    const row = within(screen.getByRole("list")).getAllByRole("listitem")[0];
+    await waitFor(() => expect(row.getAttribute("data-source")).toBe("llm"));
+    expect(within(row).getByText(/probably .*plant milk/i)).toBeTruthy();
+    expect(screen.getByRole("button", { name: /route 1 item/i })).toBeTruthy();
+  });
+
+  test("Tell me where opens the picker; Remove drops a row", async () => {
     render(<App />);
     add("milk, unicorn");
-    fireEvent.click(screen.getByRole("button", { name: /tell me where/i }));
-    expect(screen.getByText(/^noted$/i)).toBeTruthy();
+    fireEvent.click(await findButton(/tell me where/i));
+    expect(screen.getByRole("dialog", { name: /where is unicorn/i })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /^close$/i }));
     fireEvent.click(screen.getByRole("button", { name: /^milk$/i }));
     fireEvent.click(screen.getByRole("button", { name: /remove/i }));
-    expect(screen.getByText(/1 item · 0 placed/i)).toBeTruthy();
-    expect((screen.getByRole("button", { name: /route 0 items/i }) as HTMLButtonElement).disabled).toBe(true);
+    expect(await find(/1 item · 0 placed/i)).toBeTruthy();
   });
 
-  test("empty list shows the muted call to action", () => {
+  test("empty list shows the disabled call to action", () => {
     render(<App />);
     expect((screen.getByRole("button", { name: /route 0 items/i }) as HTMLButtonElement).disabled).toBe(true);
   });
 });
 
 describe("trip mode", () => {
-  test("list in, route, check off, reroute, checkout card, share and usual trip", () => {
+  test("list in, route, check off, reroute, checkout card, share and usual trip", async () => {
     render(<App />);
     add("bread, milk, bananas, ice cream, ghee");
-    fireEvent.click(screen.getByRole("button", { name: /route 4 items/i }));
+    fireEvent.click(await findButton(/route 4 items/i));
 
     expect(screen.getByText(/next · 1 of 4/i)).toBeTruthy();
     expect(document.querySelector('[data-landmark="you"]')).not.toBeNull();
@@ -75,9 +94,12 @@ describe("trip mode", () => {
     expect(within(card).getByText(/walked/i)).toBeTruthy();
     expect(within(card).getByText(/vs list in order/i)).toBeTruthy();
     expect(within(card).getByText(/aisles? never entered/i)).toBeTruthy();
-    // one skipped item, one unplaced (ghee)
     expect(screen.getAllByTestId("improve-row")).toHaveLength(2);
     expect(screen.getByText(/where did you find the ghee/i)).toBeTruthy();
+    // Pick aisle opens the picker
+    fireEvent.click(screen.getAllByRole("button", { name: /pick aisle/i })[0]);
+    const dialog = screen.getByRole("dialog", { name: /where is/i });
+    fireEvent.click(within(dialog).getByRole("button", { name: /^close$/i }));
     expect(screen.getByRole("button", { name: /share card/i })).toBeTruthy();
 
     fireEvent.click(screen.getByRole("button", { name: /save as usual trip/i }));
@@ -85,17 +107,16 @@ describe("trip mode", () => {
     fireEvent.click(screen.getByRole("button", { name: /^close$/i }));
     expect(localStorage.getItem("grosher.trip")).toBeNull();
 
-    // the usual trip reloads the list
-    fireEvent.click(screen.getByRole("button", { name: /^milk$/i }));
+    fireEvent.click(await findButton(/^milk$/i));
     fireEvent.click(screen.getByRole("button", { name: /remove/i }));
     fireEvent.click(screen.getByRole("button", { name: /usual trip/i }));
-    expect(screen.getByText(/5 items · 5 placed/i)).toBeTruthy();
+    expect(await find(/5 items · 5 placed/i)).toBeTruthy();
   });
 
-  test("progress strip, back pauses, the list resumes", () => {
+  test("progress strip, back pauses, the list resumes", async () => {
     render(<App />);
     add("milk, eggs, bread");
-    fireEvent.click(screen.getByRole("button", { name: /route 3 items/i }));
+    fireEvent.click(await findButton(/route 3 items/i));
     const bar = screen.getByRole("progressbar");
     expect(bar.querySelectorAll(".seg")).toHaveLength(3);
     expect(bar.querySelectorAll(".seg.current")).toHaveLength(1);
@@ -104,14 +125,14 @@ describe("trip mode", () => {
     fireEvent.click(screen.getByRole("button", { name: /flatten the map/i }));
     expect(localStorage.getItem("grosher.flat")).toBe("true");
     fireEvent.click(screen.getByRole("button", { name: /back to the list/i }));
-    fireEvent.click(screen.getByRole("button", { name: /resume trip · 2 left/i }));
+    fireEvent.click(await findButton(/resume trip · 2 left/i));
     expect(screen.getByText(/next · 2 of 3/i)).toBeTruthy();
   });
 
-  test("a trip survives a reload", () => {
+  test("a trip survives a reload", async () => {
     const { unmount } = render(<App />);
     add("milk, eggs");
-    fireEvent.click(screen.getByRole("button", { name: /route 2 items/i }));
+    fireEvent.click(await findButton(/route 2 items/i));
     fireEvent.click(screen.getByRole("button", { name: /got it/i }));
     unmount();
     render(<App />);

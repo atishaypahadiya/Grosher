@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Stop } from "@grosher/core";
 import type { TripState } from "../lib/trip.ts";
-import { resolveOne } from "../lib/resolve.ts";
+import { resolveItem, toStop } from "@grosher/core";
 
 export function AddItem({ catalog, trip, onAdd }: { catalog: Stop[]; trip: TripState; onAdd: (s: Stop) => void }) {
   const [text, setText] = useState("");
@@ -9,7 +9,7 @@ export function AddItem({ catalog, trip, onAdd }: { catalog: Stop[]; trip: TripS
   const submit = () => {
     const name = text.trim();
     if (!name) return;
-    const stop = resolveOne(name, catalog);
+    const stop = toStop(resolveItem(name, { catalog }));
     if (!stop) {
       setError(`${name} is not in this store's catalog.`);
       return;
