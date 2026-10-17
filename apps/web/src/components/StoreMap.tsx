@@ -53,6 +53,10 @@ export interface StoreMapProps {
   /** editor layers */
   showFixtures?: boolean;
   showLocations?: boolean;
+  /** editor confidence view: dot fill by band, misses as a small count */
+  locationMarks?: Map<string, { band: "confirmed" | "likely" | "guess"; misses: number; stale: boolean }> | null;
+  /** editor stale filter: only locations whose mark is stale */
+  staleOnly?: boolean;
   /** fill fixtures with their department texture instead of the flat color */
   textureUrls?: Map<string, string>;
   repeatMeters?: number;
@@ -77,6 +81,7 @@ const LIME = "#D4FF4A";
 const SOIL = "#0F2A1A";
 const SOIL_35 = "rgba(15,42,26,0.35)";
 const SOIL_55 = "rgba(15,42,26,0.55)";
+const GUESS = "#F6D28C";
 const AISLE = /^A\d+$/i;
 
 export function boundsOf(nodes: Iterable<GraphNode>, pad = PAD): ViewBox {
@@ -153,6 +158,8 @@ export function StoreMap({
   showGraph,
   showFixtures = true,
   showLocations = true,
+  locationMarks = null,
+  staleOnly = false,
   textureUrls,
   repeatMeters = 2,
   underlay,
@@ -486,9 +493,23 @@ export function StoreMap({
 
       {/* shelf locations */}
       <g data-layer="locations" fill={SOIL_55} style={showLocations ? undefined : { display: "none" }}>
-        {locs.map((l) => (
-          <circle key={l.loc.id} cx={l.x} cy={l.y} r={px(2)} data-location={l.loc.id} />
-        ))}
+        {locs.map((l) => {
+          const mark = locationMarks?.get(l.loc.id);
+          if (staleOnly && !mark?.stale) return null;
+          if (!locationMarks) return <circle key={l.loc.id} cx={l.x} cy={l.y} r={px(2)} data-location={l.loc.id} />;
+          // confirmed: solid soil · likely: soil at 55% · guess: amber with a soil rim · unknown to the map: hollow
+          const fill = mark?.band === "confirmed" ? SOIL : mark?.band === "likely" ? SOIL_55 : mark ? GUESS : "none";
+          return (
+            <g key={l.loc.id} data-location={l.loc.id} data-band={mark?.band ?? "none"} data-stale={mark?.stale ? "1" : undefined}>
+              <circle cx={l.x} cy={l.y} r={px(mark ? 3 : 2)} fill={fill} stroke={mark?.band === "guess" || !mark ? SOIL_55 : "none"} strokeWidth={hair} />
+              {mark && mark.misses > 0 && (
+                <text x={l.x + px(4)} y={l.y - px(3)} fontSize={px(8)} fill={SOIL} fontWeight={600} data-misses={mark.misses}>
+                  {mark.misses}
+                </text>
+              )}
+            </g>
+          );
+        })}
       </g>
 
       {/* labels */}

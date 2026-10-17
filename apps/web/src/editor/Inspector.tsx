@@ -17,10 +17,14 @@ const ZONES: { id: StoreZone; label: string }[] = [
 ];
 const KINDS: Fixture["kind"][] = ["shelf", "wall", "counter", "selfcheckout", "service", "other"];
 
+import type { BandCounts } from "./confidence.ts";
+
 export interface InspectorProps {
   draft: Draft;
   selection: Selection;
   issues: Issue[] | null;
+  /** entries per confidence band, shown with the validation */
+  bands?: BandCounts;
   manifest: TextureManifest;
   textures: TextureFile[];
   textureUrl: (file: string) => string;
@@ -43,7 +47,7 @@ export interface InspectorProps {
 
 export function Inspector(p: InspectorProps) {
   const { draft, selection } = p;
-  if (p.issues) return <ValidationPanel issues={p.issues} onDone={p.onDone} />;
+  if (p.issues) return <ValidationPanel issues={p.issues} bands={p.bands} onDone={p.onDone} />;
   if (!selection) return <aside className="inspector">{p.children}</aside>;
   if (selection.kind === "location") {
     const loc = draft.store.locations.find((l) => l.id === selection.id);
@@ -351,7 +355,7 @@ function NodePanel({ node: n, draft, onSetDoor, onDeleteNode }: InspectorProps &
   );
 }
 
-function ValidationPanel({ issues, onDone }: { issues: Issue[]; onDone: () => void }) {
+function ValidationPanel({ issues, bands, onDone }: { issues: Issue[]; bands?: BandCounts; onDone: () => void }) {
   const errors = issues.filter((i) => i.level === "error");
   return (
     <aside className="inspector" aria-label="Validation">
@@ -368,6 +372,11 @@ function ValidationPanel({ issues, onDone }: { issues: Issue[]; onDone: () => vo
       <p className="ed-sub">
         {issues.length - errors.length} {issues.length - errors.length === 1 ? "warning" : "warnings"}
       </p>
+      {bands && (
+        <p className="ed-sub ed-bands" data-testid="band-counts">
+          {bands.total} {bands.total === 1 ? "entry" : "entries"} · {bands.confirmed} confirmed · {bands.likely} likely · {bands.guess} {bands.guess === 1 ? "guess" : "guesses"} · {bands.stale} stale
+        </p>
+      )}
       <ul className="ed-issues">
         {issues.map((i, k) => (
           <li key={k} className={i.level}>

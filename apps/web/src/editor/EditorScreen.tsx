@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import type { Fixture, StoreGraph } from "@grosher/core";
 import type { StoreBundle } from "@grosher/stores";
 import type { EditorFocus } from "../lib/reset.ts";
+import { bandCounts, locationMarks } from "./confidence.ts";
 import { StoreMap, type MapSelection, type ViewBox } from "../components/StoreMap.tsx";
 import { load, save } from "../lib/storage.ts";
 import { Inspector } from "./Inspector.tsx";
@@ -60,6 +61,10 @@ const TOOLS: { id: Tool; label: string; icon: ReactNode }[] = [
 interface Layers {
   graph: boolean;
   fixtures: boolean;
+  /** dot fill by band, misses as a count */
+  confidence: boolean;
+  /** only locations not confirmed in 90 days or in the guess band */
+  stale: boolean;
   locations: boolean;
   textures: boolean;
   underlay: boolean;
@@ -78,7 +83,7 @@ export function EditorScreen({ bundle, onExit, focus = null }: { bundle: StoreBu
 
   const [tool, setTool] = useState<Tool>("select");
   const [selection, setSelection] = useState<Selection>(null);
-  const [layers, setLayers] = useState<Layers>({ graph: true, fixtures: true, locations: true, textures: false, underlay: true });
+  const [layers, setLayers] = useState<Layers>({ graph: true, fixtures: true, locations: true, confidence: false, stale: false, textures: false, underlay: true });
   const [issues, setIssues] = useState<ReturnType<typeof validateDraft> | null>(null);
   const [hover, setHover] = useState<Pt | null>(null);
   const [viewInfo, setViewInfo] = useState<{ view: ViewBox; upp: number }>({ view: { x: 0, y: 0, w: 1, h: 1 }, upp: 0.1 });
@@ -115,6 +120,8 @@ export function EditorScreen({ bundle, onExit, focus = null }: { bundle: StoreBu
   }, [draft, textures, bundle]);
 
   const s = useMemo(() => stats(draft), [draft]);
+  const marks = useMemo(() => locationMarks(draft.store, draft.catalog, memory), [draft, memory]);
+  const bands = useMemo(() => bandCounts(draft.catalog, memory), [draft.catalog, memory]);
   const pickRadius = viewInfo.upp * 10; // 10 px
 
   const onTap = (pt: Pt) => {
@@ -316,7 +323,9 @@ export function EditorScreen({ bundle, onExit, focus = null }: { bundle: StoreBu
           selection={mapSelection}
           showGraph={layers.graph}
           showFixtures={layers.fixtures}
-          showLocations={layers.locations}
+          showLocations={layers.locations || layers.confidence || layers.stale}
+          locationMarks={layers.confidence || layers.stale ? marks : null}
+          staleOnly={layers.stale}
           textureUrls={layers.textures ? textureUrls : undefined}
           repeatMeters={Object.values(bundle.textures)[0]?.repeatMeters ?? 2}
           underlay={layers.underlay && underlay ? underlay : null}
@@ -379,6 +388,8 @@ export function EditorScreen({ bundle, onExit, focus = null }: { bundle: StoreBu
               ["graph", "Graph"],
               ["fixtures", "Fixtures"],
               ["locations", "Locations"],
+              ["confidence", "Confidence"],
+              ["stale", "Stale"],
               ["textures", "Textures"],
               ["underlay", "Underlay"],
             ] as const
@@ -401,6 +412,7 @@ export function EditorScreen({ bundle, onExit, focus = null }: { bundle: StoreBu
         draft={draft}
         selection={selection}
         issues={issues}
+        bands={bands}
         manifest={bundle.textures}
         textures={textures}
         textureUrl={bundle.textureUrl}
