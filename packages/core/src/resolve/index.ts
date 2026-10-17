@@ -38,7 +38,8 @@ export interface ResolveResult {
 
 /** Per-store, per-shopper history of where an item was found. */
 export interface ItemMemory {
-  name: string; // as typed, normalised on compare
+  /** the canonical name the item mapped to ("Greek yogurt") */
+  name: string;
   locationId: string;
   brand?: string;
   lastConfirmed: number; // ms epoch
@@ -46,6 +47,54 @@ export interface ItemMemory {
   /** 0..1; "Got it" raises it toward 1, "Not here" lowers it by 0.3 */
   confidence: number;
   tags?: ItemTag[];
+  /** every exact string the shopper typed for it ("Chobani greek yogurt"), most recent last */
+  typedForms?: string[];
+  lastUsed?: number;
+}
+
+const TYPED_CAP = 8;
+function addTyped(forms: string[] | undefined, typed: string | undefined): string[] | undefined {
+  const t = typed?.trim();
+  if (!t) return forms;
+  // the same form keeps its first spelling and moves to the end
+  const same = (forms ?? []).find((f) => normalize(f) === normalize(t));
+  const rest = (forms ?? []).filter((f) => normalize(f) !== normalize(t));
+  return [...rest, same ?? t].slice(-TYPED_CAP);
+}
+
+export interface Suggestion {
+  /** the remembered full form to offer ("Chobani greek yogurt") */
+  text: string;
+  memory: ItemMemory;
+}
+
+/**
+ * Brand memory: when a shorter or variant form is typed, offer the fullest
+ * remembered typed form whose words contain the query ("yogurt" →
+ * "Chobani greek yogurt"). Memory only, never the LLM. Nothing is offered
+ * when the query already is that form.
+ */
+export function suggestFromMemory(query: string, memory: ItemMemory[] | undefined): Suggestion | null {
+  const q = normalize(query);
+  if (!q || !memory?.length) return null;
+  const qTokens = singularize(q).split(" ").filter(Boolean);
+  // rank: exact word matches before spelling variants, then most recently used, then the fuller form
+  let best: { text: string; m: ItemMemory; key: [number, number, number] } | null = null;
+  const better = (a: [number, number, number], b: [number, number, number]) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
+  for (const m of memory) {
+    for (const form of [...(m.typedForms ?? []), m.name]) {
+      const f = normalize(form);
+      if (f === q) continue;
+      const fTokens = singularize(f).split(" ").filter(Boolean);
+      if (fTokens.length <= qTokens.length) continue;
+      const exact = qTokens.every((t) => fTokens.includes(t));
+      const contained = exact || qTokens.every((t) => fTokens.some((ft) => similarity(ft, t) >= 0.85));
+      if (!contained) continue;
+      const key: [number, number, number] = [exact ? 1 : 0, m.lastUsed ?? m.lastConfirmed, fTokens.length];
+      if (!best || better(key, best.key) > 0) best = { text: form, m, key };
+    }
+  }
+  return best ? { text: best.text, memory: best.m } : null;
 }
 
 /** What the LLM layer knows: one guess per normalised query, or null when it could not place it. */
@@ -136,16 +185,22 @@ export function fuzzyLayer(query: string, cands: Candidate[], threshold: number)
 }
 
 /**
- * Token containment, one way only: every token of the *query* appears in the
- * candidate ("yogurt" ⊂ "greek yogurt"). A query with extra words ("oat milk"
- * vs "milk") gets nothing here: the modifier is the whole point.
+ * Token containment. The query inside the candidate ("yogurt" ⊂ "greek
+ * yogurt") always counts. The candidate inside the query counts only when
+ * the candidate has at least two words ("greek yogurt" ⊂ "chobani greek
+ * yogurt"): a single word with a modifier in front of it ("oat milk" vs
+ * "milk") is a different product, and the modifier is the whole point.
  */
 function tokenSimilarity(query: string, cand: string): number {
   const tq = singularize(query).split(" ").filter(Boolean);
   const tc = singularize(cand).split(" ").filter(Boolean);
-  if (!tq.length || !tc.length || tq.length > tc.length) return 0;
-  if (!tq.every((t) => tc.includes(t))) return 0;
-  return 0.6 + 0.4 * (tq.length / tc.length);
+  if (!tq.length || !tc.length) return 0;
+  if (tq.length <= tc.length) {
+    if (!tq.every((t) => tc.includes(t))) return 0;
+    return 0.6 + 0.4 * (tq.length / tc.length);
+  }
+  if (tc.length < 2 || !tc.every((t) => tq.includes(t))) return 0;
+  return 0.6 + 0.4 * (tc.length / tq.length);
 }
 
 export function memoryLayer(query: string, memory: ItemMemory[] | undefined): ResolveResult | null {
@@ -153,10 +208,12 @@ export function memoryLayer(query: string, memory: ItemMemory[] | undefined): Re
   const qs = forms(query);
   let best: { m: ItemMemory; sim: number } | null = null;
   for (const m of memory) {
-    for (const mf of forms(m.name)) {
-      for (const q of qs) {
-        const sim = similarity(q, mf);
-        if (!best || sim > best.sim) best = { m, sim };
+    for (const label of [m.name, ...(m.typedForms ?? [])]) {
+      for (const mf of forms(label)) {
+        for (const q of qs) {
+          const sim = similarity(q, mf);
+          if (!best || sim > best.sim) best = { m, sim };
+        }
       }
     }
   }
@@ -235,6 +292,7 @@ export function toStop(r: ResolveResult): Stop | null {
     tags: r.tags.length ? r.tags : undefined,
     confidence: r.confidence,
     source: r.source === "llm" ? "llm" : r.source === "memory" ? "memory" : undefined,
+    query: r.query,
   };
 }
 
@@ -256,13 +314,13 @@ export function pendingEntry(r: ResolveResult): Stop | null {
 
 // ---------------------------------------------------------------- memory updates
 
-/** "Got it": confirm count +1, confidence moves half-way to 1. */
-export function confirmMemory(memory: ItemMemory[], name: string, locationId: string, now = Date.now(), tags?: ItemTag[]): ItemMemory[] {
+/** "Got it": confirm count +1, confidence moves half-way to 1; the typed string joins the row's forms. */
+export function confirmMemory(memory: ItemMemory[], name: string, locationId: string, now = Date.now(), tags?: ItemTag[], typed?: string): ItemMemory[] {
   const key = normalize(name);
   const i = memory.findIndex((m) => normalize(m.name) === key);
-  if (i < 0) return [...memory, { name, locationId, lastConfirmed: now, confirms: 1, confidence: 0.8, tags }];
+  if (i < 0) return [...memory, { name, locationId, lastConfirmed: now, confirms: 1, confidence: 0.8, tags, typedForms: addTyped(undefined, typed), lastUsed: now }];
   const m = memory[i];
-  const next: ItemMemory = { ...m, locationId, lastConfirmed: now, confirms: m.confirms + 1, confidence: Math.min(1, m.confidence + (1 - m.confidence) * 0.5), tags: tags ?? m.tags };
+  const next: ItemMemory = { ...m, locationId, lastConfirmed: now, lastUsed: now, confirms: m.confirms + 1, confidence: Math.min(1, m.confidence + (1 - m.confidence) * 0.5), tags: tags ?? m.tags, typedForms: addTyped(m.typedForms, typed) };
   return memory.map((x, k) => (k === i ? next : x));
 }
 
@@ -273,8 +331,9 @@ export function demoteMemory(memory: ItemMemory[], name: string): ItemMemory[] {
 }
 
 /** "Pick aisle" / "Tell me where": a confirmed placement by the shopper. */
-export function placeMemory(memory: ItemMemory[], name: string, locationId: string, now = Date.now(), tags?: ItemTag[]): ItemMemory[] {
+export function placeMemory(memory: ItemMemory[], name: string, locationId: string, now = Date.now(), tags?: ItemTag[], typed?: string): ItemMemory[] {
   const key = normalize(name);
+  const old = memory.find((m) => normalize(m.name) === key);
   const rest = memory.filter((m) => normalize(m.name) !== key);
-  return [...rest, { name, locationId, lastConfirmed: now, confirms: 1, confidence: 0.9, tags }];
+  return [...rest, { name, locationId, lastConfirmed: now, lastUsed: now, confirms: 1, confidence: 0.9, tags, typedForms: addTyped(old?.typedForms, typed) }];
 }

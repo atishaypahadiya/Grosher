@@ -195,6 +195,8 @@ button { cursor: pointer; touch-action: manipulation; }
 .chip.pending { opacity: 0.5; min-width: 36px; justify-content: center; }
 .offline-note { margin: 6px 0 2px; font-size: 13px; color: var(--status-guess); }
 .chip.guess { color: var(--status-guess); }
+.row-item.has-suggest { flex-wrap: wrap; }
+.chip.suggest { flex-basis: 100%; justify-content: flex-start; margin-top: -4px; background: transparent; border: 1px dashed var(--glass-border); color: var(--lime); cursor: pointer; font: inherit; font-size: 13px; }
 .chip.guess .dot { background: var(--status-guess); }
 .row-item .name { display: inline-flex; align-items: center; gap: 8px; }
 .src-glyph { width: 14px; height: 14px; color: rgba(255, 255, 255, 0.75); flex: none; }

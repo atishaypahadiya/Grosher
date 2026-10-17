@@ -191,3 +191,23 @@ describe("history", () => {
     expect(await screen.findAllByRole("button", { name: /^lists$/i })).toBeTruthy();
   });
 });
+
+describe("brand memory", () => {
+  test("a confirmed full form is offered when a shorter form is typed; tapping accepts it", async () => {
+    render(<App />);
+    add("Chobani greek yogurt");
+    fireEvent.click(await findButton(/route 1 item/i));
+    fireEvent.click(screen.getByRole("button", { name: /got it/i }));
+    await find(/trip done/i);
+    fireEvent.click(screen.getByRole("button", { name: /^close$/i }));
+    fireEvent.click(await findButton(/greek yogurt/i));
+    fireEvent.click(screen.getByRole("button", { name: /remove/i }));
+    add("yogurt");
+    const chip = await screen.findByTestId("suggest", {}, { timeout: 3000 });
+    expect(chip.textContent).toBe("Chobani greek yogurt?");
+    fireEvent.click(chip);
+    expect(await find(/1 item · 1 placed/i)).toBeTruthy();
+    await waitFor(() => expect(screen.queryByTestId("suggest")).toBeNull());
+    expect(within(screen.getByRole("list")).getAllByRole("listitem")[0].textContent).toMatch(/greek yogurt/i);
+  });
+});

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import type { Stop } from "../src/index.ts";
-import { confirmMemory, demoteMemory, placeMemory, resolveItem, resolveList, toStop, pendingEntry } from "../src/resolve/index.ts";
+import { confirmMemory, demoteMemory, placeMemory, resolveItem, resolveList, suggestFromMemory, toStop, pendingEntry } from "../src/resolve/index.ts";
 import { damerauLevenshtein, forms, similarity, singularize, stripQuantity } from "../src/resolve/text.ts";
 
 const catalog: Stop[] = [
@@ -40,6 +40,10 @@ test("layers: exact, fuzzy, memory, llm, unknown, and fall-through order", () =>
   const yog = resolveItem("yoghurts", ctx);
   assert.equal(yog.source, "exact");
   assert.equal(yog.stopId, "yogurt");
+  const branded = resolveItem("Chobani greek yogurt", ctx); // a multi-word catalog name inside the query
+  assert.equal(branded.source, "fuzzy");
+  assert.equal(branded.stopId, "yogurt");
+  assert.equal(resolveItem("oat milk", { catalog }).source, "unknown"); // a single word with a modifier is not
   const fuzzy = resolveItem("tortila", ctx);
   assert.equal(fuzzy.source, "fuzzy");
   assert.equal(fuzzy.stopId, "tortillas");
@@ -98,4 +102,21 @@ test("parseLlmResults: maps by item, drops foreign departments, bands confidence
   assert.ok(Math.abs(rows[0].confidence - 0.68) < 1e-9);
   assert.equal(rows[1].department, null);
   assert.equal(rows[3].department, null);
+});
+
+test("brand memory: typed forms are remembered and offered for shorter or variant queries", () => {
+  let m = confirmMemory([], "Greek yogurt", "DAIRY-11", 10, ["chilled"], "Chobani greek yogurt");
+  assert.deepEqual(m[0].typedForms, ["Chobani greek yogurt"]);
+  m = confirmMemory(m, "greek yogurt", "DAIRY-11", 11, undefined, "chobani greek yogurt"); // same form, normalised: no duplicate
+  assert.equal(m[0].typedForms!.length, 1);
+  m = placeMemory(m, "Greek yogurt", "DAIRY-8", 12, undefined, "Chobani yoghurt 4 pack");
+  assert.deepEqual(m[0].typedForms, ["Chobani greek yogurt", "Chobani yoghurt 4 pack"]);
+  assert.equal(suggestFromMemory("yogurt", m)?.text, "Chobani greek yogurt"); // fullest containing form
+  assert.equal(suggestFromMemory("greek yoghurt", m)?.text, "Chobani greek yogurt"); // variant spelling
+  assert.equal(suggestFromMemory("Chobani greek yogurt", m), null); // already the full form
+  assert.equal(suggestFromMemory("chobani", m)?.text, "Chobani yoghurt 4 pack"); // both exact and equally recent: the fuller form
+  assert.equal(suggestFromMemory("milk", m), null);
+  // a typed form also resolves through the memory layer
+  assert.equal(resolveItem("Chobani yoghurt 4 pack", { catalog: [], memory: m }).source, "memory");
+  assert.equal(toStop({ ...resolveItem("x", { catalog: [], memory: m }), locationIds: ["A1-8"], query: "x" })!.query, "x");
 });

@@ -24,9 +24,10 @@ export interface ResolutionState {
   offline: boolean; // the last llm request failed
   /** the provider's one-line note for the header when offline */
   offlineNote: string;
-  gotIt: (name: string, locationId: string, tags?: ItemTag[]) => void;
+  gotIt: (name: string, locationId: string, tags?: ItemTag[], typed?: string) => void;
   notHere: (name: string) => void;
-  place: (name: string, locationId: string, tags?: ItemTag[], promote?: boolean) => void;
+  /** `name` is the canonical name, `typed` what the shopper wrote */
+  place: (name: string, locationId: string, tags?: ItemTag[], promote?: boolean, typed?: string) => void;
   learning: Learning;
 }
 
@@ -112,15 +113,15 @@ export function useResolution(bundle: StoreBundle, items: string[], provider?: L
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [results, loaded]);
 
-  const gotIt = useCallback((name: string, locationId: string, tags?: ItemTag[]) => setLearning((l) => ({ ...l, memory: confirmMemory(l.memory, name, locationId, Date.now(), tags) })), []);
+  const gotIt = useCallback((name: string, locationId: string, tags?: ItemTag[], typed?: string) => setLearning((l) => ({ ...l, memory: confirmMemory(l.memory, name, locationId, Date.now(), tags, typed) })), []);
   const notHere = useCallback((name: string) => setLearning((l) => ({ ...l, memory: demoteMemory(l.memory, name) })), []);
   const place = useCallback(
-    (name: string, locationId: string, tags?: ItemTag[], promote = false) =>
+    (name: string, locationId: string, tags?: ItemTag[], promote = false, typed?: string) =>
       setLearning((l) => {
-        const memory = placeMemory(l.memory, name, locationId, Date.now(), tags);
+        const memory = placeMemory(l.memory, name, locationId, Date.now(), tags, typed);
         if (!promote) return { ...l, memory };
         const id = `mem:${normalize(name).replace(/\s+/g, "-")}`;
-        const entry: Stop = { id, name, aliases: [name], locationIds: [locationId], tags, confidence: 0.9, source: "memory" };
+        const entry: Stop = { id, name, aliases: [...new Set([name, ...(typed ? [typed] : [])])], locationIds: [locationId], tags, confidence: 0.9, source: "memory" };
         const pending = [...l.pending.filter((p) => p.id !== id && normalize(p.name) !== normalize(name)), entry];
         return { ...l, memory, pending };
       }),

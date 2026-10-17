@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ClipboardEvent, type FormEvent } from "react";
-import type { ResolveResult, Route, StoreGraph } from "@grosher/core";
+import { suggestFromMemory, type ItemMemory, type ResolveResult, type Route, type StoreGraph } from "@grosher/core";
 import { chipForResult } from "../lib/chips.ts";
 import { minutesNum } from "../lib/format.ts";
 import { listen, speechSupported } from "../lib/speech.ts";
@@ -21,6 +21,9 @@ export interface ListScreenProps {
   offlineNote?: string;
   onAdd: (names: string[]) => void;
   onRemove: (name: string) => void;
+  /** accept a brand suggestion: the row's text becomes the remembered full form */
+  onReplace?: (from: string, to: string) => void;
+  memory?: ItemMemory[];
   onLoadUsual: () => void;
   onOpenLists: () => void;
   onTellWhere: (name: string) => void;
@@ -36,7 +39,7 @@ export const splitItems = (text: string) =>
     .map((s) => s.trim())
     .filter(Boolean);
 
-export function ListScreen({ store, items, results, plan, baselineM, usual, asking, warming, offline, offlineNote, onAdd, onRemove, onLoadUsual, onOpenLists, onTellWhere, onRoute, resume }: ListScreenProps) {
+export function ListScreen({ store, items, results, plan, baselineM, usual, asking, warming, offline, offlineNote, onAdd, onRemove, onReplace, memory, onLoadUsual, onOpenLists, onTellWhere, onRoute, resume }: ListScreenProps) {
   const [draft, setDraft] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
@@ -153,8 +156,9 @@ export function ListScreen({ store, items, results, plan, baselineM, usual, aski
               const chip = r ? chipForResult(store, r) : null;
               const isSel = selected === name;
               const unknown = !r || r.source === "unknown";
+              const suggestion = suggestFromMemory(name, memory);
               return (
-                <li key={name} className="row-item" data-source={r?.source ?? "pending"}>
+                <li key={name} className={`row-item${suggestion ? " has-suggest" : ""}`} data-source={r?.source ?? "pending"}>
                   <button type="button" className="row-main" onClick={() => setSelected(isSel ? null : name)} aria-expanded={isSel}>
                     <span className="name">
                       {r && <SourceGlyph source={r.source} />}
@@ -162,6 +166,11 @@ export function ListScreen({ store, items, results, plan, baselineM, usual, aski
                     </span>
                     {r && unknown && <span className="sub">{r.department ? `Not placed yet · probably ${r.department}` : "Not placed yet"}</span>}
                   </button>
+                  {suggestion && (
+                    <button type="button" className="chip suggest" data-testid="suggest" onClick={() => onReplace?.(name, suggestion.text)}>
+                      {suggestion.text}?
+                    </button>
+                  )}
                   {isSel ? (
                     <button type="button" className="chip ghost action" onClick={() => onRemove(name)}>
                       Remove

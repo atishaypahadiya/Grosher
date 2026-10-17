@@ -61,6 +61,8 @@ export interface Stop {
   /** for llm-sourced pending entries: the department and sub-category guessed */
   department?: string;
   subcategory?: string;
+  /** the list line as the shopper typed it, when this stop came from a list */
+  query?: string;
 }
 
 /** How a department's fixtures are built in 3D. */

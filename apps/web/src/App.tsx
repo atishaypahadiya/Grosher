@@ -66,13 +66,14 @@ export function App() {
   const plan = useMemo(() => (stops.length ? router.solve({ stops }) : null), [stops, router]);
   const baselineM = useMemo(() => (stops.length ? router.routeForOrder(stops).distanceM : 0), [stops, router]);
   const [picking, setPicking] = useState<{ name: string; promote: boolean } | null>(null);
-  const tagsFor = (name: string) => res.results.find((r) => r.query === name)?.tags;
+  const resultFor = (name: string) => res.results.find((r) => r.query === name);
   const picker = picking && (
     <PickerSheet
       store={store}
       itemName={picking.name}
       onPick={(locationId) => {
-        res.place(picking.name, locationId, tagsFor(picking.name), picking.promote);
+        const r = resultFor(picking.name);
+        res.place(r?.canonicalName ?? picking.name, locationId, r?.tags, picking.promote, picking.name);
         note(picking.name);
         setPicking(null);
       }}
@@ -118,7 +119,7 @@ export function App() {
           onGotIt={() => {
             const leg = trip.route.legs[0];
             const stop = trip.remaining.find((s) => s.id === leg?.stopId);
-            if (stop && leg?.locationId) res.gotIt(stop.name, leg.locationId, stop.tags);
+            if (stop && leg?.locationId) res.gotIt(stop.name, leg.locationId, stop.tags, stop.query);
             setTrip(gotIt(router, trip));
           }}
           onSkip={() => {
@@ -188,6 +189,8 @@ export function App() {
         offlineNote={res.offlineNote}
         onAdd={addItems}
         onRemove={(name) => setItems((cur) => cur.filter((n) => n !== name))}
+        onReplace={(from, to) => setItems((cur) => (cur.some((n) => n.toLowerCase() === to.toLowerCase()) ? cur.filter((n) => n !== from) : cur.map((n) => (n === from ? to : n))))}
+        memory={res.memory}
         onLoadUsual={() => usualToday && listsState.loadList(usualToday.id)}
         onOpenLists={() => setListsOpen(true)}
         onTellWhere={(name) => setPicking({ name, promote: false })}
