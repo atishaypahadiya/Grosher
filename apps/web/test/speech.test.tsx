@@ -63,7 +63,7 @@ describe("voice entry", () => {
     r.say("milk and", false);
     await waitFor(() => expect((screen.getByLabelText(/add items/i) as HTMLInputElement).value).toBe("milk and"));
     r.say("milk and eggs", true, 0);
-    await waitFor(() => expect(screen.getByText(/2 items/)).toBeTruthy());
+    await waitFor(() => expect(screen.getByText(/2 items/)).toBeTruthy(), { timeout: 10_000 });
     r.say("bread", true, 1);
     await waitFor(() => expect(screen.getByText(/3 items/)).toBeTruthy());
     fireEvent.pointerUp(mic);

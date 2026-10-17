@@ -4,7 +4,7 @@
 
 import type { Category, StoreGraph, Stop } from "@grosher/core";
 import demoStore from "../demo/store.json" with { type: "json" };
-import demoCatalog from "../demo/catalog.json" with { type: "json" };
+import demoBaseCatalog from "../demo/catalog.base.json" with { type: "json" };
 import demoCategories from "../demo/categories.json" with { type: "json" };
 import demoTextures from "../demo/textures/textures.json" with { type: "json" };
 
@@ -12,21 +12,31 @@ export { DEPARTMENTS, departmentById } from "./departments.ts";
 export * from "./geometry.ts";
 export * from "./slots.ts";
 export * from "./resolveContext.ts";
+export { reconcile, catalogKey, isBaseRow, type CatalogRow } from "./reconcile.ts";
 
 /** textures.json: one entry per department that has a photo (or placeholder). */
 export type TextureManifest = Record<string, { file: string; w: number; h: number; shotAt: string | null; repeatMeters: number }>;
 
-/** catalog.json: either a bare array (surveyed by hand) or the seeded file with its header */
+/** catalog.json: a bare array (surveyed by hand), the seed's file, or the merged file with its sources */
 export interface CatalogFile {
-  generatedAt: string | null;
-  model: string | null;
-  seeded: string[];
+  generatedAt?: string | null;
+  model?: string | null;
+  seeded?: string[];
+  sources?: { origin: string; name: string; items: number; terms?: string; importedAt?: string; generatedAt?: string | null }[];
+  mergedAt?: string;
   items: Stop[];
 }
 
 export interface StoreBundle {
   store: StoreGraph;
+  /**
+   * The rows available synchronously. For the demo this is the 30 hand-kept base rows; the full 47,000-item
+   * catalog is a 7 MB file that loads on demand through `loadCatalog`, in its own chunk, so the app shell
+   * stays small.
+   */
   catalog: Stop[];
+  /** the full catalog, fetched and cached on first call; resolves to `catalog` for a store with no larger file */
+  loadCatalog: () => Promise<Stop[]>;
   /** the shelf categories (aisle signs → bay runs); empty for a store not yet surveyed at that level */
   categories: Category[];
   /** when the catalog was seeded by a model: date and model */
@@ -62,12 +72,29 @@ export function parseStoreBundle(raw: { store?: unknown; catalog?: unknown; cate
     }
   }
   const textures = (raw.textures ?? {}) as TextureManifest;
-  return { store: store as StoreGraph, catalog: catalog as Stop[], categories, catalogMeta, textures, textureUrl };
+  const rows = catalog as Stop[];
+  return { store: store as StoreGraph, catalog: rows, loadCatalog: async () => rows, categories, catalogMeta, textures, textureUrl };
 }
 
-export const demoSupercenter: StoreBundle = parseStoreBundle(
-  { store: demoStore, catalog: demoCatalog, categories: demoCategories, textures: demoTextures },
-  (file) => new URL(`../demo/textures/${file}`, import.meta.url).href,
+/** `bundle` with a lazily loaded full catalog (base rows first, then the file's rows that are not base rows) */
+export function withLazyCatalog(bundle: StoreBundle, load: () => Promise<CatalogFile | Stop[]>): StoreBundle {
+  let promise: Promise<Stop[]> | null = null;
+  const meta: { current?: StoreBundle["catalogMeta"] } = {};
+  const loadCatalog = () =>
+    (promise ??= load().then((file) => {
+      const items = Array.isArray(file) ? file : file.items;
+      if (!Array.isArray(file)) meta.current = { generatedAt: file.generatedAt ?? file.mergedAt ?? null, model: file.model ?? null };
+      const baseIds = new Set(bundle.catalog.map((s) => s.id));
+      const locIds = new Set(bundle.store.locations.map((l) => l.id));
+      return [...bundle.catalog, ...items.filter((s) => !baseIds.has(s.id) && s.locationIds.every((l) => locIds.has(l)))];
+    }));
+  return { ...bundle, loadCatalog };
+}
+
+export const demoSupercenter: StoreBundle = withLazyCatalog(
+  parseStoreBundle({ store: demoStore, catalog: demoBaseCatalog, categories: demoCategories, textures: demoTextures }, (file) => new URL(`../demo/textures/${file}`, import.meta.url).href),
+  // a dynamic import, so Vite emits the 7 MB catalog as its own precached chunk
+  () => import("../demo/catalog.json", { with: { type: "json" } }).then((m) => m.default as unknown as CatalogFile),
 );
 
 export const STORES: StoreBundle[] = [demoSupercenter];

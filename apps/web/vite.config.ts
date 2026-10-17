@@ -32,7 +32,7 @@ export default defineConfig({
       workbox: {
         // Everything the build emits, textures included, is precached on first load.
         globPatterns: ["**/*.{js,css,html,svg,png,jpg,webp,woff2}"],
-        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+        maximumFileSizeToCacheInBytes: 12 * 1024 * 1024, // the full catalog chunk is ~7 MB
         navigateFallback: "index.html",
         cleanupOutdatedCaches: true,
       },
@@ -46,6 +46,8 @@ export default defineConfig({
   },
   test: {
     environment: "jsdom",
+    // the full catalog is a 7 MB chunk and its index takes a second to build: give the app tests room
+    testTimeout: 20_000,
     include: ["test/**/*.test.{ts,tsx}"],
     setupFiles: ["test/setup.ts"],
   },

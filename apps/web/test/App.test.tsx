@@ -14,8 +14,9 @@ const add = (text: string) => {
   fireEvent.change(input, { target: { value: text } });
   fireEvent.submit(input.closest("form")!);
 };
-const find = (re: RegExp) => screen.findByText(re, {}, { timeout: 3000 });
-const findButton = (re: RegExp) => screen.findByRole("button", { name: re }, { timeout: 3000 });
+// the first render in a file loads the 7 MB catalog chunk and builds its index: allow for it
+const find = (re: RegExp) => screen.findByText(re, {}, { timeout: 10_000 });
+const findButton = (re: RegExp) => screen.findByRole("button", { name: re }, { timeout: 10_000 });
 
 describe("list screen", () => {
   test("resolves typed and comma-separated items with a source glyph, flags unknown ones", async () => {
@@ -141,7 +142,7 @@ describe("trip mode", () => {
     fireEvent.click(screen.getByRole("button", { name: /got it/i }));
     unmount();
     render(<App />);
-    expect(screen.getByText(/next · 2 of 2/i)).toBeTruthy();
+    expect(await find(/next · 2 of 2/i)).toBeTruthy();
   });
 });
 
@@ -204,7 +205,7 @@ describe("brand memory", () => {
     fireEvent.click(await findButton(/greek yogurt/i));
     fireEvent.click(screen.getByRole("button", { name: /remove/i }));
     add("yogurt");
-    const chip = await screen.findByTestId("suggest", {}, { timeout: 3000 });
+    const chip = await screen.findByTestId("suggest", {}, { timeout: 10_000 });
     expect(chip.textContent).toBe("Chobani greek yogurt?");
     fireEvent.click(chip);
     expect(await find(/1 item · 1 placed/i)).toBeTruthy();
@@ -264,7 +265,7 @@ describe("confidence bands", () => {
     render(<App />);
     add("milk, ghee, zorbo milk");
     const list = screen.getByRole("list");
-    await waitFor(() => expect(within(list).getAllByRole("listitem").map((li) => li.getAttribute("data-band"))).toEqual(["confirmed", "likely", "guess"]), { timeout: 3000 });
+    await waitFor(() => expect(within(list).getAllByRole("listitem").map((li) => li.getAttribute("data-band"))).toEqual(["confirmed", "likely", "guess"]), { timeout: 10_000 });
     const rows = within(list).getAllByRole("listitem");
     expect(within(rows[0]).getByTitle(/confirmed · 100%/i).style.opacity).toBe("1");
     expect(within(rows[1]).getByTitle(/likely · 65%/i).style.opacity).toBe("0.8");
@@ -334,7 +335,7 @@ describe("picker on the guess", () => {
     render(<App />);
     add("zorbo milk, unicorn");
     const list = screen.getByRole("list");
-    await waitFor(() => expect(within(list).getAllByRole("listitem")[0].getAttribute("data-band")).toBe("guess"), { timeout: 3000 });
+    await waitFor(() => expect(within(list).getAllByRole("listitem")[0].getAttribute("data-band")).toBe("guess"), { timeout: 10_000 });
     const rows = within(list).getAllByRole("listitem");
     // the guess row: select it, Tell me where is behind the chip? the row's chip is the guess; use the unknown first
     fireEvent.click(within(rows[1]).getByRole("button", { name: /tell me where/i }));
@@ -363,7 +364,7 @@ describe("picker on the guess", () => {
   test("Pick aisle at checkout opens on the guess and It's here confirms the memory", async () => {
     render(<App />);
     add("zorbo milk, milk");
-    await waitFor(() => expect(within(screen.getByRole("list")).getAllByRole("listitem")[0].getAttribute("data-band")).toBe("guess"), { timeout: 3000 });
+    await waitFor(() => expect(within(screen.getByRole("list")).getAllByRole("listitem")[0].getAttribute("data-band")).toBe("guess"), { timeout: 10_000 });
     fireEvent.click(await findButton(/route 2 items/i));
     // skip the guess when it comes up, collect the rest
     while (!screen.queryByText(/trip done/i)) {
@@ -377,7 +378,7 @@ describe("picker on the guess", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: /^close$/i }));
     // confirmed: the row now resolves from memory at .8 → confirmed band
-    await waitFor(() => expect(within(screen.getByRole("list")).getAllByRole("listitem")[0].getAttribute("data-source")).toBe("memory"), { timeout: 3000 });
+    await waitFor(() => expect(within(screen.getByRole("list")).getAllByRole("listitem")[0].getAttribute("data-source")).toBe("memory"), { timeout: 10_000 });
     expect(within(screen.getByRole("list")).getAllByRole("listitem")[0].getAttribute("data-band")).toBe("confirmed");
   });
 });

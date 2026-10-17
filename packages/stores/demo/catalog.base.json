@@ -1,0 +1,358 @@
+[
+  {
+    "id": "bananas",
+    "name": "Bananas",
+    "tags": [
+      "produce"
+    ],
+    "locationIds": [
+      "PRODUCE-R1"
+    ]
+  },
+  {
+    "id": "spinach",
+    "name": "Spinach",
+    "tags": [
+      "produce"
+    ],
+    "locationIds": [
+      "PRODUCE-R11"
+    ]
+  },
+  {
+    "id": "onions",
+    "name": "Onions",
+    "tags": [
+      "produce"
+    ],
+    "locationIds": [
+      "PRODUCE-R14"
+    ]
+  },
+  {
+    "id": "bread",
+    "name": "Bread",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "sandwich bread",
+      "loaf of bread"
+    ],
+    "locationIds": [
+      "A1-L1"
+    ]
+  },
+  {
+    "id": "tortillas",
+    "name": "Tortillas",
+    "aliases": [
+      "wraps",
+      "flour tortillas"
+    ],
+    "locationIds": [
+      "A1-L16"
+    ]
+  },
+  {
+    "id": "eggs",
+    "name": "Eggs",
+    "tags": [
+      "fragile",
+      "chilled"
+    ],
+    "locationIds": [
+      "DAIRY-L10"
+    ]
+  },
+  {
+    "id": "milk",
+    "name": "Milk",
+    "tags": [
+      "chilled",
+      "heavy"
+    ],
+    "aliases": [
+      "whole milk",
+      "2 percent milk",
+      "skim milk"
+    ],
+    "locationIds": [
+      "DAIRY-L1"
+    ]
+  },
+  {
+    "id": "yogurt",
+    "name": "Greek yogurt",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "yogurt",
+      "yoghurt",
+      "chobani"
+    ],
+    "locationIds": [
+      "DAIRY-L14"
+    ]
+  },
+  {
+    "id": "chicken",
+    "name": "Chicken thighs",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "chicken",
+      "chicken breast"
+    ],
+    "locationIds": [
+      "MEAT-L1"
+    ]
+  },
+  {
+    "id": "paneer",
+    "name": "Paneer",
+    "tags": [
+      "chilled"
+    ],
+    "locationIds": [
+      "A22-L14"
+    ]
+  },
+  {
+    "id": "rice",
+    "name": "Basmati rice 10 lb",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "rice",
+      "basmati",
+      "jasmine rice"
+    ],
+    "locationIds": [
+      "A7-L4"
+    ]
+  },
+  {
+    "id": "lentils",
+    "name": "Lentils",
+    "locationIds": [
+      "A5-R7"
+    ]
+  },
+  {
+    "id": "pasta",
+    "name": "Pasta",
+    "locationIds": [
+      "A5-L1"
+    ]
+  },
+  {
+    "id": "sauce",
+    "name": "Pasta sauce",
+    "tags": [
+      "fragile"
+    ],
+    "locationIds": [
+      "A5-L7"
+    ]
+  },
+  {
+    "id": "cereal",
+    "name": "Cereal",
+    "aliases": [
+      "cheerios",
+      "corn flakes"
+    ],
+    "locationIds": [
+      "A10-L1"
+    ]
+  },
+  {
+    "id": "coffee",
+    "name": "Coffee",
+    "locationIds": [
+      "A11-L1"
+    ]
+  },
+  {
+    "id": "oats",
+    "name": "Oats",
+    "aliases": [
+      "oatmeal",
+      "quaker oats",
+      "rolled oats"
+    ],
+    "locationIds": [
+      "A2-R6"
+    ]
+  },
+  {
+    "id": "spices",
+    "name": "Cumin",
+    "aliases": [
+      "cumin seeds",
+      "jeera"
+    ],
+    "locationIds": [
+      "A9-L1"
+    ]
+  },
+  {
+    "id": "oil",
+    "name": "Olive oil",
+    "tags": [
+      "heavy",
+      "fragile"
+    ],
+    "aliases": [
+      "evoo",
+      "cooking oil"
+    ],
+    "locationIds": [
+      "A8-R1"
+    ]
+  },
+  {
+    "id": "chips",
+    "name": "Chips",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "crisps",
+      "potato chips",
+      "lays",
+      "doritos"
+    ],
+    "locationIds": [
+      "A12-L1"
+    ]
+  },
+  {
+    "id": "water",
+    "name": "Water 24-pack",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "water",
+      "bottled water",
+      "water bottles"
+    ],
+    "locationIds": [
+      "A17-L1"
+    ]
+  },
+  {
+    "id": "soda",
+    "name": "Soda",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "coke",
+      "pepsi",
+      "pop",
+      "cola",
+      "sprite"
+    ],
+    "locationIds": [
+      "A16-L1"
+    ]
+  },
+  {
+    "id": "tp",
+    "name": "Toilet paper",
+    "aliases": [
+      "toilet roll",
+      "bath tissue",
+      "charmin",
+      "loo roll"
+    ],
+    "locationIds": [
+      "A23-L1"
+    ]
+  },
+  {
+    "id": "detergent",
+    "name": "Detergent",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "laundry detergent",
+      "tide",
+      "tide pods"
+    ],
+    "locationIds": [
+      "A25-L1"
+    ]
+  },
+  {
+    "id": "batteries",
+    "name": "Batteries",
+    "locationIds": [
+      "A25-R7"
+    ]
+  },
+  {
+    "id": "icecream",
+    "name": "Ice cream",
+    "tags": [
+      "frozen"
+    ],
+    "aliases": [
+      "icecream",
+      "ben and jerrys",
+      "gelato"
+    ],
+    "locationIds": [
+      "A20-L1"
+    ]
+  },
+  {
+    "id": "peas",
+    "name": "Frozen peas",
+    "tags": [
+      "frozen"
+    ],
+    "locationIds": [
+      "A19-L1"
+    ]
+  },
+  {
+    "id": "pizza",
+    "name": "Frozen pizza",
+    "tags": [
+      "frozen"
+    ],
+    "locationIds": [
+      "A18-L1"
+    ]
+  },
+  {
+    "id": "berries",
+    "name": "Frozen berries",
+    "tags": [
+      "frozen"
+    ],
+    "locationIds": [
+      "A19-L9"
+    ]
+  },
+  {
+    "id": "snacks",
+    "name": "Granola bars",
+    "aliases": [
+      "granola",
+      "cereal bars",
+      "nature valley"
+    ],
+    "locationIds": [
+      "A2-R16"
+    ]
+  }
+]

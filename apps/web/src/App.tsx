@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Router, WalkGraph, type Stop } from "@grosher/core";
 import { demoSupercenter } from "@grosher/stores";
 import { Ground } from "./components/Ground.tsx";
@@ -39,7 +39,7 @@ function useHash() {
 export function App() {
   const hash = useHash();
   const bundle = demoSupercenter;
-  const { store, catalog } = bundle;
+  const { store } = bundle;
   const router = useMemo(() => new Router(new WalkGraph(store)), [store]);
 
   const listsState = useLists(store.storeId);
@@ -53,8 +53,9 @@ export function App() {
   const noted = useMemo(() => new Set(notes.map((n) => n.toLowerCase())), [notes]);
   const note = (name: string) => setNotes((n) => (n.includes(name) ? n : [...n, name]));
 
-  const [trip, setTrip] = useState<TripState | null>(() => fromSnapshot(router, catalog, load<TripSnapshot | null>(TRIP_KEY, null)));
-  useEffect(() => save(TRIP_KEY, trip ? toSnapshot(trip) : null), [trip]);
+  // a paused trip restores once the full catalog is in (its stops may be seeded or imported rows)
+  const [trip, setTrip] = useState<TripState | null>(null);
+  const restored = useRef(false);
   // a finished trip is recorded once (the record id is the trip's start time)
   const doneRecord = useMemo(() => (trip && isDone(trip) ? recordFrom(store, router, trip) : null), [trip, store, router]);
   const reset = useResetFlag(store.storeId);
@@ -75,6 +76,14 @@ export function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const provider = useMemo(() => providerFor(settings), [settings]);
   const res = useResolution(bundle, items, provider);
+  useEffect(() => {
+    if (restored.current || !res.catalogReady) return;
+    restored.current = true;
+    setTrip(fromSnapshot(router, res.catalog, load<TripSnapshot | null>(TRIP_KEY, null)));
+  }, [res.catalogReady, res.catalog, router]);
+  useEffect(() => {
+    if (restored.current) save(TRIP_KEY, trip ? toSnapshot(trip) : null);
+  }, [trip]);
   const stops = useMemo(() => res.results.map(toStop).filter((s): s is Stop => !!s), [res.results]);
   const notFound = useMemo(() => res.results.filter((r) => !r.locationIds.length).map((r) => r.query), [res.results]);
   const plan = useMemo(() => (stops.length ? router.solve({ stops }) : null), [stops, router]);

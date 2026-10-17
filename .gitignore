@@ -10,3 +10,5 @@ __pycache__/
 
 # Instacart 2017 dataset: fetched by hand, non-commercial terms, never committed
 packages/stores/data/instacart/*.csv
+packages/stores/demo/catalog.instacart.json
+packages/stores/demo/catalog.merged.json

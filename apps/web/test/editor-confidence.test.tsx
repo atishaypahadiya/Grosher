@@ -67,7 +67,8 @@ describe("editor confidence view", () => {
       expect([...dots()].map((d) => d.getAttribute("data-location")).sort()).toEqual(["A5-L1", "A7-L11"]);
       fireEvent.click(screen.getByRole("button", { name: /^validate$/i }));
       const counts = screen.getByTestId("band-counts").textContent!;
-      expect(counts).toMatch(new RegExp(`${catalog.length + 2} entries · ${catalog.length + 1} confirmed · 0 likely · 1 guess · 2 stale`));
+      const full = await demoSupercenter.loadCatalog(); // the editor counts the full catalog under the draft
+      expect(counts).toMatch(new RegExp(`${full.length + 2} entries · ${full.length + 1} confirmed · 0 likely · 1 guess · 2 stale`));
     } finally {
       location.hash = "";
     }

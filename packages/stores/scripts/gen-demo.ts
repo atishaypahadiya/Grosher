@@ -350,16 +350,10 @@ const base: Stop[] = BASE_ITEMS.map(({ categories: cats, ...s }) => ({
 writeFileSync(join(out, "store.json"), JSON.stringify(store, null, 2) + "\n");
 writeFileSync(join(out, "categories.json"), JSON.stringify(categories, null, 2) + "\n");
 
-// the catalog keeps whatever the seed already generated; only the base rows are rewritten
+// the base rows are their own file; the shipped catalog.json is the merge (scripts/merge-catalogs.ts) and is
+// left alone here unless it does not exist yet
+writeFileSync(join(out, "catalog.base.json"), JSON.stringify(base, null, 2) + "\n");
 const catalogPath = join(out, "catalog.json");
-let file: CatalogFile = { generatedAt: null, model: null, seeded: [], items: [] };
-if (existsSync(catalogPath)) {
-  const raw = JSON.parse(readFileSync(catalogPath, "utf8")) as CatalogFile | Stop[];
-  if (!Array.isArray(raw)) file = raw;
-}
-const baseIds = new Set(base.map((s) => s.id));
-const validLoc = new Set(store.locations.map((l) => l.id));
-const kept = file.items.filter((s) => !baseIds.has(s.id) && s.locationIds.every((l) => validLoc.has(l)));
-file = { ...file, items: [...base, ...kept] };
-writeFileSync(catalogPath, JSON.stringify(file, null, 2) + "\n");
+if (!existsSync(catalogPath)) writeFileSync(catalogPath, JSON.stringify({ sources: [], items: base }, null, 1) + "\n");
+const file = { items: JSON.parse(readFileSync(catalogPath, "utf8")).items as Stop[] };
 console.log(`wrote ${out}: ${store.nodes.length} nodes, ${store.edges.length} edges, ${store.locations.length} locations, ${store.fixtures?.length} fixtures, ${categories.length} categories, ${file.items.length} catalog items (${base.length} base)`);

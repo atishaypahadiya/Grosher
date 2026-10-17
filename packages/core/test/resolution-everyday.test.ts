@@ -70,8 +70,9 @@ export function printEveryday(label: string, rep: EverydayReport): void {
 
 export const everydayCases = (): Case[] => (JSON.parse(readFileSync(join(import.meta.dirname, "fixtures", "resolution-everyday.json"), "utf8")) as { cases: Case[] }).cases;
 
-test("everyday fixture: 150 items at aisle level without the model, report only", () => {
-  const { store, catalog, categories } = demoSupercenter;
+test("everyday fixture: 150 items at aisle level without the model, report only", async () => {
+  const { store, categories } = demoSupercenter;
+  const catalog = await demoSupercenter.loadCatalog(); // the full file, not the base rows
   const cases = everydayCases();
   const results = resolveList(
     cases.map((c) => c.q),

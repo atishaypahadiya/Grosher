@@ -199,6 +199,7 @@ if (import.meta.main ?? process.argv[1]?.endsWith("import-instacart.ts")) {
 
   const items: (Stop & { origin: "instacart"; category: string })[] = [];
   const byKey = new Map<string, Stop & { origin: "instacart"; category: string }>();
+  const usedIds = new Set<string>();
   let dropped = 0;
   let merged = 0;
   let branded = 0;
@@ -230,7 +231,9 @@ if (import.meta.main ?? process.argv[1]?.endsWith("import-instacart.ts")) {
       if (!existing.locationIds.includes(cat.locationId) && existing.locationIds.length < 2) existing.locationIds.push(cat.locationId);
       continue;
     }
-    const id = `ic-${k.replace(/\s+/g, "-").replace(/[^\p{L}\p{N}-]/gu, "")}`.slice(0, 64);
+    let id = `ic-${k.replace(/\s+/g, "-").replace(/[^\p{L}\p{N}-]/gu, "")}`.slice(0, 64);
+    for (let n = 2; usedIds.has(id); n++) id = `${id.slice(0, 60)}-${n}`; // long names can collide once truncated
+    usedIds.add(id);
     const tags = cat.tags?.length ? ([...cat.tags] as ItemTag[]) : undefined;
     const item: Stop & { origin: "instacart"; category: string } = { id, name: cleaned.name.charAt(0).toUpperCase() + cleaned.name.slice(1), locationIds: [cat.locationId], origin: "instacart", category: cat.id };
     if (cleaned.aliases.length) item.aliases = cleaned.aliases.slice(0, 8);

@@ -19,6 +19,8 @@ export interface ResolutionState {
   catalog: Stop[]; // merged
   memory: ItemMemory[];
   loaded: boolean;
+  /** the store's full catalog has arrived (until then only the base rows and the signs resolve) */
+  catalogReady: boolean;
   asking: boolean; // an llm request is in flight
   warming: boolean; // the local model was not loaded when the request started
   offline: boolean; // the last llm request failed
@@ -32,7 +34,26 @@ export interface ResolutionState {
 }
 
 export function useResolution(bundle: StoreBundle, items: string[], provider?: LlmProvider): ResolutionState {
-  const { store, catalog, categories } = bundle;
+  const { store, categories } = bundle;
+  // the full catalog is a separate chunk: start with the base rows, swap in the rest when it lands
+  const [catalog, setCatalog] = useState<Stop[]>(bundle.catalog);
+  const [catalogReady, setCatalogReady] = useState(false);
+  useEffect(() => {
+    let live = true;
+    bundle
+      .loadCatalog()
+      .then((rows) => {
+        if (!live) return;
+        setCatalog(rows);
+        setCatalogReady(true);
+      })
+      .catch(() => {
+        if (live) setCatalogReady(true); // offline before the chunk was cached: the base rows and the signs still work
+      });
+    return () => {
+      live = false;
+    };
+  }, [bundle]);
   const options = useMemo(() => llmOptions(categories), [categories]);
   const llmProvider = useMemo(() => provider ?? defaultProvider(), [provider]);
   // warm the local model once per mount (and prime its cache with this store's category list) so the first real call fits the timeout
@@ -84,7 +105,7 @@ export function useResolution(bundle: StoreBundle, items: string[], provider?: L
   // debounced llm fetch for unknowns that were never asked
   const inFlight = useRef(new Set<string>());
   useEffect(() => {
-    if (!loaded) return;
+    if (!loaded || !catalogReady) return;
     const unknown = results.filter((r) => r.source === "unknown" && !llmMap.has(normalize(r.query)) && !inFlight.current.has(normalize(r.query))).map((r) => r.query);
     if (!unknown.length) return;
     const id = setTimeout(async () => {
@@ -117,7 +138,7 @@ export function useResolution(bundle: StoreBundle, items: string[], provider?: L
     }, LLM_DEBOUNCE_MS);
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [results, loaded]);
+  }, [results, loaded, catalogReady]);
 
   // pending catalog entries (llm guesses, promoted placements) follow the same confidence rules as memory
   const touchPending = (pending: Stop[], name: string, fn: (p: Stop) => Stop) => {
@@ -145,5 +166,5 @@ export function useResolution(bundle: StoreBundle, items: string[], provider?: L
     [],
   );
 
-  return { results, catalog: merged, memory: learning.memory, loaded, asking, warming, offline, offlineNote: llmProvider.offlineNote, gotIt, notHere, place, learning };
+  return { results, catalog: merged, memory: learning.memory, loaded, catalogReady, asking, warming, offline, offlineNote: llmProvider.offlineNote, gotIt, notHere, place, learning };
 }

@@ -10,7 +10,7 @@ beforeEach(() => dbClearMemoryFallback());
 describe("learning loop", () => {
   test("an llm answer becomes a pending catalog entry that resolves offline next time", async () => {
     const { result, unmount } = renderHook(() => useResolution(demoSupercenter, ["zorbo milk", "lawn chair"]));
-    await waitFor(() => expect(result.current.results.map((r) => r.source)).toEqual(["llm", "unknown"]), { timeout: 3000 });
+    await waitFor(() => expect(result.current.results.map((r) => r.source)).toEqual(["llm", "unknown"]), { timeout: 10_000 });
     expect(result.current.results[0].locationIds.length).toBeGreaterThan(0);
     expect(result.current.results[0].tags).toEqual(["chilled"]);
     await waitFor(async () => expect((await loadLearning("demo-supercenter")).pending).toHaveLength(1));
@@ -22,7 +22,7 @@ describe("learning loop", () => {
     }) as typeof fetch;
     try {
       const again = renderHook(() => useResolution(demoSupercenter, ["Zorbo Milk"]));
-      await waitFor(() => expect(again.result.current.results[0]?.source).toBe("llm"), { timeout: 3000 });
+      await waitFor(() => expect(again.result.current.results[0]?.source).toBe("llm"), { timeout: 10_000 });
       expect(again.result.current.results[0].confidence).toBeCloseTo(0.452, 3); // the guess band: wire .66 → .452
       again.unmount();
     } finally {
@@ -32,7 +32,7 @@ describe("learning loop", () => {
 
   test("Got it on an llm guess lifts the pending entry out of the guess band; Not here lowers it", async () => {
     const { result } = renderHook(() => useResolution(demoSupercenter, ["zorbo milk"]));
-    await waitFor(() => expect(result.current.results[0]?.source).toBe("llm"), { timeout: 3000 });
+    await waitFor(() => expect(result.current.results[0]?.source).toBe("llm"), { timeout: 10_000 });
     await waitFor(() => expect(result.current.learning.pending).toHaveLength(1));
     const before = result.current.learning.pending[0].confidence!;
     expect(before).toBeLessThan(0.5);
@@ -48,9 +48,9 @@ describe("learning loop", () => {
     const { result } = renderHook(() => useResolution(demoSupercenter, ["ghee"]));
     await waitFor(() => expect(result.current.loaded).toBe(true));
     // "ghee" is in the seeded catalog: an exact item before anyone asks
-    await waitFor(() => expect(result.current.results[0]?.source).toBe("exact"), { timeout: 3000 });
+    await waitFor(() => expect(result.current.results[0]?.source).toBe("exact"), { timeout: 10_000 });
     act(() => result.current.place("ghee", "A7-L11"));
-    await waitFor(() => expect(result.current.results[0]?.source).toBe("memory"), { timeout: 3000 });
+    await waitFor(() => expect(result.current.results[0]?.source).toBe("memory"), { timeout: 10_000 });
     expect(result.current.results[0].confidence).toBe(0.9);
     act(() => result.current.gotIt("ghee", "A7-L11"));
     await waitFor(() => expect(result.current.memory[0].confirms).toBe(2));
@@ -59,11 +59,11 @@ describe("learning loop", () => {
       result.current.notHere("ghee");
       result.current.notHere("ghee");
     });
-    await waitFor(() => expect(result.current.results[0]?.source).toBe("exact"), { timeout: 3000 }); // .93 → .63 → .33 < .6: the memory is distrusted, the catalog stands
+    await waitFor(() => expect(result.current.results[0]?.source).toBe("exact"), { timeout: 10_000 }); // .93 → .63 → .33 < .6: the memory is distrusted, the catalog stands
     expect(result.current.memory[0].misses).toBe(2);
     act(() => result.current.place("ghee", "A5-L1", undefined, true));
     await waitFor(() => expect(result.current.catalog.some((s) => s.id === "mem:ghee" && s.source === "memory")).toBe(true));
-    await waitFor(() => expect(result.current.results[0]?.locationIds).toEqual(["A5-L1"]), { timeout: 3000 });
+    await waitFor(() => expect(result.current.results[0]?.locationIds).toEqual(["A5-L1"]), { timeout: 10_000 });
   });
 });
 
@@ -71,7 +71,7 @@ describe("provider failures", () => {
   test("a dead local model degrades to unknown with the one-line note, never an error", async () => {
     const dead = { name: "ollama" as const, offlineNote: "Local model offline · unknown items need a tap", classify: async () => { throw new TypeError("Failed to fetch"); } };
     const { result } = renderHook(() => useResolution(demoSupercenter, ["milk", "zorbo milk"], dead));
-    await waitFor(() => expect(result.current.offline).toBe(true), { timeout: 3000 });
+    await waitFor(() => expect(result.current.offline).toBe(true), { timeout: 10_000 });
     expect(result.current.results.map((r) => r.source)).toEqual(["exact", "unknown"]);
     expect(result.current.offlineNote).toMatch(/local model offline/i);
     expect(result.current.asking).toBe(false);

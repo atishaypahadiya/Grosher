@@ -145,77 +145,112 @@ export interface Candidate {
  * array, so the app rebuilds it only when the catalog changes.
  */
 export class CandidateIndex {
-  readonly list: Candidate[] = [];
-  private readonly byText = new Map<string, Candidate>();
-  private readonly tri = new Map<string, number[]>();
-  private readonly word = new Map<string, number[]>();
-  private readonly grams: Map<string, number>[] = [];
-  private readonly gramTotal: number[] = [];
-  private readonly tokens: string[][] = [];
+  /** form texts, parallel to `stops` / `labels`; a candidate is reconstructed on demand */
+  private readonly texts: string[] = [];
+  private readonly stops: Stop[] = [];
+  private readonly labels: string[] = [];
+  private readonly byText = new Map<string, number>();
+  private readonly gramId = new Map<string, number>();
+  /** per gram: the forms containing it (built as arrays, frozen into typed arrays) */
+  private gramPost: (number[] | Int32Array)[] = [];
+  private readonly wordId = new Map<string, number>();
+  private wordPost: (number[] | Int32Array)[] = [];
+  /** per form: how many distinct trigrams it has (its padded length + 1 minus repeats) */
+  private gramCount: Uint8Array;
+  private frozen = false;
 
   constructor(catalog: Stop[]) {
+    const counts: number[] = [];
     for (const stop of catalog) {
+      const seen = new Set<string>();
       const labels = [stop.name, stop.id.replace(/[-_]+/g, " "), ...(stop.aliases ?? [])];
-      for (const label of labels) for (const f of forms(label)) this.add({ stop, text: f, label });
+      for (const label of labels) {
+        for (const f of forms(label)) {
+          if (seen.has(f)) continue; // one item's own repeat forms ("Eggs" and its alias "eggs") count once
+          seen.add(f);
+          counts.push(this.add(stop, f, label));
+        }
+      }
     }
+    this.gramCount = Uint8Array.from(counts);
+    this.freeze();
   }
 
-  private add(c: Candidate) {
-    const i = this.list.length;
-    this.list.push(c);
-    if (!this.byText.has(c.text)) this.byText.set(c.text, c); // the first (the package catalog comes before pending entries) wins a tie
-    const g = trigramCounts(c.text);
-    this.grams.push(g);
-    let total = 0;
-    for (const [gram, n] of g) {
-      total += n;
-      const post = this.tri.get(gram);
-      if (post) post.push(i);
-      else this.tri.set(gram, [i]);
+  private add(stop: Stop, text: string, label: string): number {
+    const i = this.texts.length;
+    this.texts.push(text);
+    this.stops.push(stop);
+    this.labels.push(label);
+    if (!this.byText.has(text)) this.byText.set(text, i); // the first (the package catalog comes before pending entries) wins a tie
+    let n = 0;
+    for (const gram of trigramCounts(text).keys()) {
+      n++;
+      let g = this.gramId.get(gram);
+      if (g === undefined) {
+        g = this.gramPost.length;
+        this.gramId.set(gram, g);
+        this.gramPost.push([]);
+      }
+      (this.gramPost[g] as number[]).push(i);
     }
-    this.gramTotal.push(total);
-    const toks = singularize(c.text).split(" ").filter(Boolean);
-    this.tokens.push(toks);
-    for (const t of new Set(toks)) {
-      const post = this.word.get(t);
-      if (post) post.push(i);
-      else this.word.set(t, [i]);
+    for (const t of new Set(singularize(text).split(" ").filter(Boolean))) {
+      let w = this.wordId.get(t);
+      if (w === undefined) {
+        w = this.wordPost.length;
+        this.wordId.set(t, w);
+        this.wordPost.push([]);
+      }
+      (this.wordPost[w] as number[]).push(i);
     }
+    return Math.min(255, n);
+  }
+
+  /** arrays → typed arrays: a tenth of the memory, and the build is done */
+  private freeze() {
+    this.gramPost = this.gramPost.map((p) => Int32Array.from(p));
+    this.wordPost = this.wordPost.map((p) => Int32Array.from(p));
+    this.frozen = true;
   }
 
   get size() {
-    return this.list.length;
+    return this.texts.length;
+  }
+
+  private candidate(i: number): Candidate {
+    return { stop: this.stops[i], text: this.texts[i], label: this.labels[i] };
   }
 
   exact(text: string): Candidate | undefined {
-    return this.byText.get(text);
+    const i = this.byText.get(text);
+    return i === undefined ? undefined : this.candidate(i);
   }
 
   /** the best candidate for one query form by max(trigram Dice, edit similarity, token containment); null below `threshold` */
   best(q: string, threshold: number): { c: Candidate; sim: number } | null {
-    if (!q) return null;
-    const qg = trigramCounts(q);
-    let qTotal = 0;
-    for (const n of qg.values()) qTotal += n;
-    // shared trigram counts over the postings: the fuzzy shortlist
+    if (!q || !this.frozen) return null;
+    // trigrams as a set (repeats are rare in product names): Dice = 2·shared / (|q| + |form|)
+    const qGrams = [...trigramCounts(q).keys()];
     const shared = new Map<number, number>();
-    for (const [gram, n] of qg) {
-      const post = this.tri.get(gram);
-      if (!post) continue;
-      for (const i of post) shared.set(i, Math.min(n, this.grams[i].get(gram) ?? 0) + (shared.get(i) ?? 0));
+    for (const gram of qGrams) {
+      const g = this.gramId.get(gram);
+      if (g === undefined) continue;
+      const post = this.gramPost[g];
+      for (let k = 0; k < post.length; k++) {
+        const i = post[k];
+        shared.set(i, (shared.get(i) ?? 0) + 1);
+      }
     }
-    let best: { c: Candidate; sim: number } | null = null;
+    let best: { i: number; sim: number } | null = null;
     const consider = (i: number, sim: number) => {
-      if (sim >= threshold && (!best || sim > best.sim)) best = { c: this.list[i], sim };
+      if (sim >= threshold && (!best || sim > best.sim)) best = { i, sim };
     };
     for (const [i, sh] of shared) {
-      const text = this.list[i].text;
+      const text = this.texts[i];
       if (text === q) {
         consider(i, 1);
         continue;
       }
-      const dice = (2 * sh) / (qTotal + this.gramTotal[i]);
-      let sim = dice;
+      let sim = (2 * sh) / (qGrams.length + this.gramCount[i]);
       // edit similarity rescues short typos ("egs" → "eggs") that trigrams undersell; only worth computing near the length
       if (sim < threshold + 0.05 && Math.abs(text.length - q.length) <= 4) sim = Math.max(sim, 1 - damerauLevenshtein(q, text) / Math.max(q.length, text.length));
       consider(i, sim);
@@ -225,14 +260,18 @@ export class CandidateIndex {
     if (qt.length) {
       const seen = new Set<number>();
       for (const t of new Set(qt)) {
-        for (const i of this.word.get(t) ?? []) {
+        const w = this.wordId.get(t);
+        if (w === undefined) continue;
+        const post = this.wordPost[w];
+        for (let k = 0; k < post.length; k++) {
+          const i = post[k];
           if (seen.has(i)) continue;
           seen.add(i);
-          consider(i, tokenSimilarityTokens(qt, this.tokens[i]));
+          consider(i, tokenSimilarityTokens(qt, singularize(this.texts[i]).split(" ").filter(Boolean)));
         }
       }
     }
-    return best;
+    return best ? { c: this.candidate((best as { i: number }).i), sim: (best as { sim: number }).sim } : null;
   }
 }
 

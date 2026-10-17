@@ -3,6 +3,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Fixture, StoreGraph } from "@grosher/core";
+import type { Stop } from "@grosher/core";
 import type { StoreBundle } from "@grosher/stores";
 import type { EditorFocus } from "../lib/reset.ts";
 import { bandCounts, locationMarks } from "./confidence.ts";
@@ -87,6 +88,21 @@ export function EditorScreen({ bundle, onExit, focus = null }: { bundle: StoreBu
     return saved ? { ...saved, categories: saved.categories ?? bundle.categories } : packaged;
   });
   const [catPick, setCatPick] = useState<string | null>(null);
+  // the full catalog is a separate 7 MB chunk and never goes into the autosaved draft (localStorage would not
+  // hold it): the draft keeps the editable layer (base rows and what the editor adds), the view and the
+  // export see the full catalog underneath it
+  const [fullCatalog, setFullCatalog] = useState<Stop[]>(bundle.catalog);
+  useEffect(() => {
+    let live = true;
+    bundle.loadCatalog().then((rows) => live && setFullCatalog(rows));
+    return () => {
+      live = false;
+    };
+  }, [bundle]);
+  const shown = useMemo<Draft>(() => {
+    const ids = new Set(draft.catalog.map((s) => s.id));
+    return { ...draft, catalog: [...draft.catalog, ...fullCatalog.filter((s) => !ids.has(s.id))] };
+  }, [draft, fullCatalog]);
   const setDraft = useCallback((d: Draft) => setDraftState(d), []);
   useEffect(() => save(draftKey(bundle.store.storeId), draft), [draft, bundle.store.storeId]);
 
@@ -128,9 +144,9 @@ export function EditorScreen({ bundle, onExit, focus = null }: { bundle: StoreBu
     return m;
   }, [draft, textures, bundle]);
 
-  const s = useMemo(() => stats(draft), [draft]);
-  const marks = useMemo(() => locationMarks(draft.store, draft.catalog, memory), [draft, memory]);
-  const bands = useMemo(() => bandCounts(draft.catalog, memory), [draft.catalog, memory]);
+  const s = useMemo(() => stats(shown), [shown]);
+  const marks = useMemo(() => locationMarks(shown.store, shown.catalog, memory), [shown, memory]);
+  const bands = useMemo(() => bandCounts(shown.catalog, memory), [shown.catalog, memory]);
   const pickRadius = viewInfo.upp * 10; // 10 px
 
   const onTap = (pt: Pt) => {
@@ -237,7 +253,7 @@ export function EditorScreen({ bundle, onExit, focus = null }: { bundle: StoreBu
     setLayers((l) => ({ ...l, textures: true }));
   };
 
-  const exportFiles = () => buildExport(draft, bundle.textures, textures, includeMemory ? personal : undefined);
+  const exportFiles = () => buildExport(shown, bundle.textures, textures, includeMemory ? personal : undefined);
   const onExport = () => {
     downloadAll(exportFiles());
     setNotice(includeMemory ? `Downloaded store.json, catalog.json, textures, memory.json (${memory.length} items) and lists.json (${personal.lists.length} lists, ${personal.history.length} trips).` : "Downloaded store.json, catalog.json and textures.");
@@ -317,7 +333,7 @@ export function EditorScreen({ bundle, onExit, focus = null }: { bundle: StoreBu
           Import JSON
         </button>
         <input ref={importRef} type="file" accept="application/json,.json" multiple hidden onChange={(e) => onImport(e.target.files)} />
-        <button type="button" className="pill-s" onClick={() => setIssues(validateDraft(draft))}>
+        <button type="button" className="pill-s" onClick={() => setIssues(validateDraft(shown))}>
           Validate
         </button>
         {canWritePackage() && (
@@ -447,7 +463,7 @@ export function EditorScreen({ bundle, onExit, focus = null }: { bundle: StoreBu
       </main>
 
       <Inspector
-        draft={draft}
+        draft={shown}
         selection={selection}
         issues={issues}
         bands={bands}

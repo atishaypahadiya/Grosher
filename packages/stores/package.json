@@ -17,7 +17,8 @@
     "gen:textures": "node scripts/make-placeholder-textures.ts",
     "seed:catalog": "node scripts/seed-catalog.ts",
     "eval:everyday": "node scripts/eval-everyday.ts",
-    "import:instacart": "node scripts/import-instacart.ts"
+    "import:instacart": "node scripts/import-instacart.ts",
+    "merge:catalog": "node scripts/merge-catalogs.ts"
   },
   "dependencies": {
     "@grosher/core": "*"

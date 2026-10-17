@@ -29,7 +29,7 @@ const { store, categories } = demoSupercenter;
 const args = process.argv.slice(2);
 const catalogPaths = args.flatMap((a, i) => (a === "--catalog" ? [args[i + 1]] : []));
 const offline = args.includes("--offline");
-const base = demoSupercenter.catalog.filter((s) => !(s as { category?: string }).category && !(s as { origin?: string }).origin);
+const base = demoSupercenter.catalog; // the hand-kept rows are the synchronous catalog
 /** several catalogs merge in order: the first to claim a normalised name wins; the hand-kept base rows always come first */
 function loadCatalogs(paths: string[]): Stop[] {
   const out: Stop[] = [...base];
@@ -45,7 +45,7 @@ function loadCatalogs(paths: string[]): Stop[] {
   }
   return out;
 }
-const catalog = catalogPaths.length ? loadCatalogs(catalogPaths) : demoSupercenter.catalog;
+const catalog = catalogPaths.length ? loadCatalogs(catalogPaths) : await demoSupercenter.loadCatalog();
 const cases = (JSON.parse(readFileSync(join(import.meta.dirname, "..", "..", "core", "test", "fixtures", "resolution-everyday.json"), "utf8")) as { cases: Case[] }).cases;
 const aisleOf = (id: string) => store.locations.find((l) => l.id === id)?.aisle;
 const ctx = { catalog, categories, departments: store.departments, departmentLocations: departmentLocations(store), now: 2 };

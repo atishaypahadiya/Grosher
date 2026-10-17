@@ -30,6 +30,29 @@ for (const { store, catalog } of STORES) {
   });
 }
 
+for (const bundle of STORES) {
+  test(`${bundle.store.storeId}: the full catalog loads, references only known locations, ids unique, origins tagged`, async () => {
+    const full = await bundle.loadCatalog();
+    assert.ok(full.length > bundle.catalog.length, "the full catalog is larger than the base rows");
+    assert.deepEqual(full.slice(0, bundle.catalog.length), bundle.catalog, "base rows come first");
+    const locIds = new Set(bundle.store.locations.map((l) => l.id));
+    const seen = new Set<string>();
+    const origins = new Map<string, number>();
+    for (const item of full) {
+      assert.ok(!seen.has(item.id), `duplicate catalog id ${item.id}`);
+      seen.add(item.id);
+      assert.ok(item.locationIds.length > 0, `${item.id} has no locations`);
+      for (const id of item.locationIds) assert.ok(locIds.has(id), `${item.id}: unknown location ${id}`);
+      const o = (item as { origin?: string }).origin ?? "base";
+      origins.set(o, (origins.get(o) ?? 0) + 1);
+    }
+    assert.equal(origins.get("base"), bundle.catalog.length);
+    assert.ok((origins.get("instacart") ?? 0) > 40_000, `instacart rows: ${origins.get("instacart")}`);
+    assert.ok((origins.get("seeded") ?? 0) > 2_000, `seeded rows: ${origins.get("seeded")}`);
+    assert.equal(await bundle.loadCatalog(), full, "cached");
+  });
+}
+
 import { fixtureProblems, isSimplePolygon, segmentOverlapsPolygon } from "../src/geometry.ts";
 
 test("geometry helpers", () => {
