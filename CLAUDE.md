@@ -104,9 +104,12 @@ trip). `suggestFromMemory(query, memory)` offers the fullest remembered form who
 then length); never the LLM. The list row shows it as a dashed lime chip ending in "?"; tapping replaces
 the row's text. Typed forms also resolve through the memory layer.
 
-**LLM providers** (`lib/resolver.ts`, chosen by `VITE_RESOLVER_PROVIDER`, default `ollama`):
+**LLM providers** (`lib/resolver.ts`). Chosen at runtime by the resolver settings (`lib/settings.ts`: the
+gear on the list screen opens `SettingsSheet`; `{provider, ollamaUrl, model, workerUrl}` in localStorage
+under `grosher.resolver`, defaults from `VITE_RESOLVER_PROVIDER` (`ollama` | `worker`), `VITE_OLLAMA_URL`,
+`VITE_OLLAMA_MODEL`, `VITE_RESOLVER_URL` at build time). `providerFor(settings)` builds the provider:
 
-- `ollama`: `POST {VITE_OLLAMA_URL}/api/chat` (default `http://localhost:11434`), model `VITE_OLLAMA_MODEL`
+- `ollama` (dev): `POST {ollamaUrl}/api/chat` (default `http://localhost:11434`), model `VITE_OLLAMA_MODEL`
   (default `qwen3:8b`), `think: false`, `format` = the terse JSON schema `{name, dept, sub, conf, tags}` so
   output is strict and short (`num_predict` = 32 + 45 per item; measured 26.6 output tokens per item), temperature 0, one
   call for the whole list after a 1.5 s idle debounce, never per keystroke, 20 s timeout. On mount the list
@@ -118,23 +121,49 @@ the row's text. Typed forms also resolve through the memory layer.
   `OLLAMA_ORIGINS` allowing the app's origin (`OLLAMA_ORIGINS="http://localhost:5173,http://192.168.1.20:5173"
   ollama serve`, or `launchctl setenv OLLAMA_ORIGINS "*"` for the menu-bar app), or the browser's preflight
   is refused. For the phone, put the Mac's LAN address in `apps/web/.env.local`
-  (`VITE_OLLAMA_URL=http://192.168.1.20:11434`); the phone resolves only while on the same Wi-Fi as the Mac.
-- `anthropic`: the worker in `apps/resolver` at `VITE_RESOLVER_URL` (dev: `/api`, proxied to `wrangler dev`
-  on :8787). One Claude call (`claude-haiku-5-5`, effort low, strict tool output in the same terse schema)
-  per list. `tags[]` in the schema comes from the fixed set; when the model gives none, tags are derived from
-  the department (dairy / meat → chilled, frozen → frozen, produce → produce, bakery → fragile).
+  (`VITE_OLLAMA_URL=http://192.168.1.20:11434`); the phone resolves only while on the same Wi-Fi as the Mac,
+  and only from a page served over plain http: the installed app (https) cannot fetch an http Ollama (mixed
+  content; the sheet says so), which is what the worker path is for.
+- `worker` (production): the worker in `apps/resolver` at `workerUrl` (dev: `/api`, proxied to `wrangler
+  dev` on :8787). The worker's `PROVIDER` var picks its upstream: `ollama` forwards the same batch to the
+  Mac's model through a Cloudflare Tunnel (`OLLAMA_UPSTREAM` + `OLLAMA_TOKEN` secrets, 25 s timeout), or
+  `anthropic` makes one Claude call (`claude-haiku-5-5`, effort low, strict tool output in the same terse
+  schema). Both return the parsed rows; when the upstream is unreachable, misconfigured or rate-limited the
+  worker still answers 200 with every item unknown and `degraded: true`, and the client treats that like an
+  outage (note in the header, nothing cached). `tags[]` in the schema comes from the fixed set; when the
+  model gives none, tags are derived from the department (dairy / meat → chilled, frozen → frozen,
+  produce → produce, bakery → fragile).
 
 Any provider failure (unreachable, timeout, bad JSON) leaves the items unknown and shows the provider's
 one-line note in the list header ("Local model offline · unknown items need a tap"). Never an error state.
 No key ever ships in the client: `apps/web/test/bundle.test.ts` builds the app and fails on any `sk-ant`.
 
-**Worker deploy** (`apps/resolver`): `cp .dev.vars.example .dev.vars` with a real key for local dev;
-`npx wrangler login`; `npx wrangler secret put ANTHROPIC_API_KEY`; set `ALLOWED_ORIGIN` in `wrangler.toml`
-to the web app's exact origin (the `*` is for local dev only, the worker returns 403 to any other origin
-once it is set); keep the `[[unsafe.bindings]]` rate limiter (30 calls per IP per minute, each call is one
-Claude request); `npm run deploy -w @grosher/resolver` prints the workers.dev URL for
-`VITE_RESOLVER_URL`. Payload caps: 8 KB body, 40 items × 60 chars, 24 departments. Upstream error text
-never reaches the client.
+**Worker deploy** (`apps/resolver`, `wrangler.toml` is committed: `PROVIDER = "ollama"`, `OLLAMA_MODEL`,
+`ALLOWED_ORIGIN`, the `[[unsafe.bindings]]` rate limiter at 30 calls per IP per minute; secrets stay in the
+CLI). Ollama has no auth, so the tunnel points at the gate, not at :11434:
+
+```bash
+# on the Mac, two long-running processes
+OLLAMA_TOKEN=$(openssl rand -hex 24); echo $OLLAMA_TOKEN      # keep it: the worker gets the same value
+OLLAMA_TOKEN=$OLLAMA_TOKEN npm run gate -w @grosher/resolver   # scripts/ollama-gate.mjs on 127.0.0.1:11435 → localhost:11434
+cloudflared tunnel --url http://localhost:11435                # quick tunnel: prints https://<words>.trycloudflare.com
+
+# once, from apps/resolver
+npx wrangler login
+npx wrangler secret put OLLAMA_UPSTREAM     # paste the tunnel URL
+npx wrangler secret put OLLAMA_TOKEN        # paste the token
+npm run deploy -w @grosher/resolver         # prints https://grosher-resolver.<account>.workers.dev → VITE_RESOLVER_URL on Pages
+```
+
+A quick tunnel gets a new URL every start; for a stable hostname make a named tunnel (`cloudflared tunnel
+create grosher`, route a DNS name to it, `ingress` → `http://localhost:11435`) and put that hostname in
+`OLLAMA_UPSTREAM` once. The gate only passes `POST /api/chat` and `GET /api/ps` with the exact bearer token
+(constant-time compare, 64 KB bodies); everything else is 404 / 401. Set `ALLOWED_ORIGIN` in `wrangler.toml`
+to the Pages origin before deploying for real (the `*` is for local dev only; the worker returns 403 to any
+other origin once it is set). For Claude instead: `PROVIDER = "anthropic"` and `npx wrangler secret put
+ANTHROPIC_API_KEY` (`cp .dev.vars.example .dev.vars` for `wrangler dev`). Payload caps: 8 KB body, 40 items ×
+60 chars, 24 departments. Upstream error text never reaches the client; `/health` reports the provider.
+`npx wrangler deploy --dry-run --outdir /tmp/w` validates the bundle without logging in.
 
 **Fixtures** (`packages/core/test/fixtures/`): `resolution.json` is the tuned set, 60 items (20 exact,
 12 fuzzy, 8 memory, 12 llm mocked, 8 unknown); the fuzzy threshold was tuned on it and the test asserts
@@ -208,8 +237,8 @@ centred 430px column.
 - `components/ListScreen` shows the resolved rows (`useResolution`): a source glyph per row (exact check,
   fuzzy wave, memory clock, llm star, unknown mark), chip opacity = confidence, llm guesses in the amber
   guess colour ("probably A4 · cereal"), brand suggestion chips, "Tell me where" opening `PickerSheet` (the
-  flat map, tap a shelf), the Lists pill and sheet, the usual-trip row, hold-to-speak (`lib/speech.ts`) and
-  the lime Route CTA.
+  flat map, tap a shelf), the Lists pill and sheet, the gear opening `SettingsSheet` (resolver provider,
+  URL, model), the usual-trip row, hold-to-speak (`lib/speech.ts`) and the lime Route CTA.
 - `lib/trip.ts` is the pure trip state: `gotIt` / `skipStop` / `addItem` reroute from the last checked-off
   node; `summarize` compares walked + to-go against `routeForOrder` of the collected items; snapshots (ids
   only) persist across reloads.

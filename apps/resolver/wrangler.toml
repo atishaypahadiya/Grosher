@@ -3,9 +3,14 @@ main = "src/index.ts"
 compatibility_date = "2025-09-01"
 compatibility_flags = ["nodejs_compat"]
 
-# The API key is a secret, never a var:  npx wrangler secret put ANTHROPIC_API_KEY
-# In production set ALLOWED_ORIGIN to the web app's exact origin; "*" is for local dev only.
+# Secrets are never vars; set them with the CLI after `npx wrangler login`:
+#   npx wrangler secret put OLLAMA_UPSTREAM     the tunnel URL to the Mac's gate (https://….trycloudflare.com or a named tunnel hostname)
+#   npx wrangler secret put OLLAMA_TOKEN        the same value the gate runs with (OLLAMA_TOKEN=… npm run gate)
+#   npx wrangler secret put ANTHROPIC_API_KEY   only when PROVIDER = "anthropic"
+# In production set ALLOWED_ORIGIN to the web app's exact origin (the Pages URL); "*" is for local dev only.
 [vars]
+PROVIDER = "ollama"
+OLLAMA_MODEL = "qwen3:8b"
 ALLOWED_ORIGIN = "*"
 
 # Per-IP rate limit: 30 resolve calls per minute. Each call is one Claude request.
