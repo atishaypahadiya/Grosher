@@ -6,8 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Grocery navigation: a shopping list in, the shortest walk through the store out, with live reroute as
 items are checked off. One store map exists, a synthetic Walmart-style Supercenter in `packages/stores/demo`
-(30 aisles, 298 shelf categories, a 4,000-item seeded catalog) that resolves most everyday items at aisle
-precision without a survey. Real stores get surveyed with the built-in map editor. `DESIGN.md` is the visual contract; its boards are in
+(30 aisles, 298 shelf categories, a 47,000-item catalog from the Instacart 2017 product list plus a seeded
+remainder) that resolves most everyday items at aisle precision without a survey. Real stores get surveyed with the built-in map editor. `DESIGN.md` is the visual contract; its boards are in
 `design/boards/`. The boards win on feel, `DESIGN.md` wins on numbers.
 
 ## Layout
@@ -39,8 +39,10 @@ cd packages/core && node --test --test-name-pattern="reroute" test/solver.test.t
 cd apps/web && npx vitest run test/trip.test.ts                                      # one web file
 cd apps/web && npm run build && npx vite preview                                     # production build + SW
 npm run gen:demo -w @grosher/stores      # regenerate demo/store.json, categories.json and the base catalog rows from scripts/taxonomy.ts
-npm run seed:catalog -w @grosher/stores  # fill catalog.json from the local model, resumable (--only a,b · --redo · --reconcile)
-npm run eval:everyday -w @grosher/stores # the blind 150-item fixture, offline and with the local model
+npm run import:instacart -w @grosher/stores  # products.csv → catalog.instacart.json through aisle-map.json (needs the CSVs)
+npm run seed:catalog -w @grosher/stores      # fill catalog.seeded.json from the local model, resumable (--only a,b · --redo · --reconcile [--file])
+npm run merge:catalog -w @grosher/stores     # base + import + seeded → catalog.json, reconciled, sources in the header
+npm run eval:everyday -w @grosher/stores     # the blind 150-item fixture, offline and with the model (--catalog f [--catalog g] · --offline)
 npm run gen:textures -w @grosher/stores  # regenerate the placeholder textures + textures.json
 cd packages/core && node --test test/resolution-fixture.test.ts   # prints the per-layer hit-rate tables
 npm run dev -w @grosher/resolver         # wrangler dev on :8787 (anthropic provider only; needs .dev.vars)
@@ -65,7 +67,13 @@ Read `src/types.ts`, then `graph.ts`, then `solver.ts`.
   `Router` caches one single-source run per node.
 - `Router.solve({stops, fromNodeId?, weights?, mode?})`: up to `EXACT_LIMIT` (13) stops → Held–Karp over
   (visited mask, last stop, candidate point), exact with penalties and multi-location items; above that →
-  greedy + 2-opt + Or-opt with candidates chosen by a layered shortest path. The end cost picks the best
+  2-opt + Or-opt from three starts (greedy, then two seeded shuffles; `HEURISTIC_RESTARTS`) with candidates
+  chosen by a layered shortest path. The local search uses **delta evaluation**: with each stop's point fixed
+  to the last DP choice, a move is scored by the edges it changes (plus the reversed interior for 2-opt,
+  since walking distances need not be symmetric) and by the penalties of the positions whose preceding set
+  or position changed; an accepted move is followed by one DP to re-pick points. Median solve on the demo
+  store: 18 stops 3.6 ms, 25 stops 8 ms, 30 stops 18 ms (was 30 / 131 / 306 ms with full re-evaluation);
+  three starts keep the 12-stop gap to exact under 10% (one start sat at 16.8%). The end cost picks the best
   checkout lane. `routeForOrder` scores a fixed order (the "vs. your list in order" baseline); `reroute`
   re-solves the remaining stops from the current node.
 - Constraints are penalty metres (`DEFAULT_WEIGHTS`): ambient-after-cold 60/stop, heavy-late 4/position,
@@ -88,10 +96,18 @@ a weaker hit falls through to the next layer, and the llm layer is last so its g
 | f | `llm` | the model picked a category id from the store's list → that category's slot (a department-id fallback keeps the old mocks working) | .30–.49 (the guess band; the wire's .5–.7 mapped down) |
 | g | `unknown` | no location; the row offers "Tell me where" | 0 |
 
-The item labels live in a `CandidateIndex` built once per catalog array (exact forms by text, trigram
-postings for the fuzzy shortlist, word postings for token containment): 4,000 items are ~40,000 forms,
-indexed in ~150 ms and queried in ~10 ms an item; the list screen builds it on mount. Categories have the
-same index.
+The item labels live in a `CandidateIndex` (exact forms by text, trigram postings for the fuzzy shortlist,
+word postings for token containment), stored as flat typed-array postings (CSR) plus the form strings: the
+47,000-item catalog is ~146,000 forms, 27 MB of heap, ~1 s to build, ~6 ms a query. It serialises to
+`IndexParts` (structured-clonable, transferable) and `CandidateIndex.fromParts` rebuilds it in tens of ms.
+**In the app** the full catalog's index is built in a Web Worker (`apps/web/src/lib/indexWorker.ts`, driven
+by `lib/indexer.ts`) and cached in IndexedDB under `index:<storeId>` keyed by `catalogHash` (cyrb53 over
+ids, names, aliases and slots), so a new catalog version pays one build and every later visit a lookup.
+Measured on the production build: the list screen is interactive at ~100 ms; the index is ready at 990 ms
+cold (924 in the worker) and 141 ms warm (59 in the worker). Until it lands the resolver works from the
+base rows, the pending rows and the signs (`ResolveContext.index` is the prebuilt index, searched before
+`catalog`'s own small one), and the model's batch waits. Where there is no Worker (jsdom) the build is
+synchronous. Categories have the same index, built on the main thread (298 rows).
 
 `text.ts` holds normalisation and similarity; `index.ts` the layers, the index, `pendingEntry()` (an llm
 result as a catalog entry with `source: "llm"` so it resolves offline next time) and the memory rules;
@@ -294,25 +310,53 @@ at the centre of its run (`A7-L11` = aisle A7, left side, bay 11). Indian staple
 (atta, basmati, dal, ghee, the spices by their Hindi names). A real store replaces this file; see "How to
 map a new store".
 
-**Seeded catalog** (`scripts/seed-catalog.ts` → `demo/catalog.json`, a `{generatedAt, model, seeded,
+**Where the catalog's data comes from, and its terms.** `demo/catalog.json` (47,612 items, 7.3 MB,
+1.5 MB gzipped, its own precached chunk) is the merge of three sources, each row tagged `origin`:
+
+| Origin | Rows | Source | Terms |
+| --- | ---: | --- | --- |
+| `instacart` | 44,531 | The Instacart Online Grocery Shopping Dataset 2017 (`products.csv`, `aisles.csv`, `departments.csv`), via the Kaggle *Instacart Market Basket Analysis* competition. Imported by `scripts/import-instacart.ts` through the hand-written `data/instacart/aisle-map.json` (134 aisles → our categories, 21 departments → ours). No model. | **Non-commercial use with attribution** under Instacart's dataset terms; see `data/instacart/README.md`. The CSVs are git-ignored and fetched by hand; only product names and their aisle / department labels are used. Anything commercial must replace this. |
+| `seeded` | 3,051 | Generated by the local model `qwen3:8b` on 17 Oct 2026 from the taxonomy (`scripts/seed-catalog.ts` → `demo/catalog.seeded.json`, kept in git because it cannot be regenerated identically). | Model output; no third-party terms. Only the names the import did not already cover. |
+| base | 30 | Hand-kept rows in `scripts/gen-demo.ts` (`demo/catalog.base.json`), the ids the tests use. | Ours. |
+
+The layout (`store.json`), the taxonomy (`categories.json`) and the placeholder textures are ours. Memory,
+lists and history are the shopper's own, in their browser. `scripts/merge-catalogs.ts` builds the merge
+(base, then import, then seeded; the first to claim a normalised name wins), runs the reconcile pass and
+writes the header that lists these sources; `demo/catalog.instacart.json` and `demo/catalog.merged.json`
+are ignored intermediates. On the blind everyday fixture: import alone 96%, seeded alone 94%, merged 98%
+at aisle level without the model.
+
+**Instacart import** (`scripts/import-instacart.ts`): each product's canonical name is the product name
+cleaned of pack sizes, counts and marketing words ("Organic", "Family Size" become aliases) and of a leading
+brand where one is detectable (a known list or a possessive first word; the full name stays an alias); the
+product lands in the mapped category whose labels its words match, else the first; near-identical names merge
+on the resolver's key; products in Instacart's "other" / "missing" aisles fall back to their department's
+default, and the 1,806 with neither are dropped. Wine, beer and spirits map to the bar mixers (no alcohol
+aisle in this store).
+
+**Seeded catalog** (`scripts/seed-catalog.ts` → `demo/catalog.seeded.json`, a `{generatedAt, model, seeded,
 items}` file): the local model, category by category, up to 25 products each with 2–5 aliases and tags
 under a strict JSON schema; retries on bad JSON; the file is rewritten after every category so a run
 resumes (`--only a,b`, `--redo`). The 8b model fills to the schema's maximum whatever the prompt says and
 pads narrow categories with flavours, hence the cap and the "X with Y" fold; 298 categories took 85 min and
-gave 4,064 items. The run ends with **reconcile** (`--reconcile` runs it alone): an item's name votes for its
-shelves, so when signs name it, their slots are its locations and shelves that merely generated it are
-dropped; a multi-word name inside a sign's name counts, a lone word does not; aliases that are another
-sign's name or another item's name elsewhere go; frozen / chilled tags stay only where a kept shelf has
-them; duplicates by the resolver's key merge. The 30 hand-kept base rows (`BASE_ITEMS` in gen-demo, the ids
-the tests use) are never touched; a seeded duplicate of one is dropped. Items carry `category` (the
-category that generated them); 326 sit in two or more.
+gave 4,064 items. **Reconcile** (`src/reconcile.ts`; `seed-catalog.ts --reconcile [--file path]` runs it
+alone, and the merge runs it last): an item's name votes for its shelves, so when signs name it, their
+slots are its locations and shelves that merely generated it are dropped; a multi-word name inside a
+sign's name counts, a lone word does not; aliases that are another sign's name or another item's name
+elsewhere go; frozen / chilled tags stay only where a kept shelf has them; duplicates by the resolver's key
+merge. The 30 hand-kept base rows are never touched; a duplicate of one is dropped. On the import this took
+the everyday fixture from 87% to 96%.
 
 - `demo/store.json` (StoreGraph with 65 fixtures and the department table), `demo/categories.json`,
-  `demo/catalog.json` (4,064 items, 1.24 MB), `demo/textures/<dept>.jpg` + `textures.json`
+  `demo/catalog.base.json` (30 rows, the synchronous `bundle.catalog`), `demo/catalog.json` (the merge,
+  behind `bundle.loadCatalog()`), `demo/catalog.seeded.json`, `demo/textures/<dept>.jpg` + `textures.json`
   (`{dept: {file, w, h, shotAt, repeatMeters}}`).
-- `src/index.ts` exports `StoreBundle` = `{store, catalog, categories, catalogMeta, textures,
-  textureUrl(file)}`; `parseStoreBundle` accepts a bare catalog array or the seeded file and checks every
-  category points at a real location. `textureUrl` is a
+- `src/index.ts` exports `StoreBundle` = `{store, catalog, loadCatalog(), categories, catalogMeta, textures,
+  textureUrl(file)}`: `catalog` is the synchronous base rows, `loadCatalog()` the full file through a dynamic
+  import (its own Vite chunk, precached; `maximumFileSizeToCacheInBytes` is 12 MB for it), base rows first.
+  `parseStoreBundle` accepts a bare array or a file with a header and checks every category points at a
+  real location. The app and the editor load the full catalog on mount; the editor keeps it as a read layer
+  under the editable draft (the autosave never holds it). `textureUrl` is a
   `new URL(..., import.meta.url)` so Vite emits the JPEGs as hashed assets (precached by the PWA) and Node
   resolves the same files.
 - `src/departments.ts` is the canonical table from DESIGN.md §2; each store carries a copy.

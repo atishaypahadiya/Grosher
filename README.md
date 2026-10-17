@@ -7,8 +7,9 @@ line is matched to a shelf (the store's catalog first, then your own memory of w
 language model for the rest); the route is solved exactly for up to 13 stops with the shopping constraints a
 person would apply anyway (frozen last, heavy late, eggs and chips after the cans), and it re-plans from where
 you stand every time you check something off. One synthetic 30-aisle Supercenter ships as the demo, with 298
-shelf categories the way the aisle signs read and a 4,000-item catalog, so most everyday items resolve to the
-right aisle without a survey; real stores are surveyed with the built-in map editor. It is a web app that installs to the home screen and works offline.
+shelf categories the way the aisle signs read and a 47,000-item catalog built from the Instacart 2017 product
+list (non-commercial terms, see `packages/stores/data/instacart/README.md`), so most everyday items resolve
+to the right aisle without a survey; real stores are surveyed with the built-in map editor. It is a web app that installs to the home screen and works offline.
 The visual contract is [DESIGN.md](DESIGN.md).
 
 <p>
@@ -30,9 +31,9 @@ lists, walking distance only:
 | 8 | Held–Karp | 594 m | 388 m | 35% | 0.1 ms |
 | 10 | Held–Karp | 666 m | 431 m | 35% | 0.4 ms |
 | 13 | Held–Karp | 868 m | 485 m | 44% | 4.6 ms |
-| 18 | heuristic | 1,171 m | 584 m | 50% | 32 ms |
-| 25 | heuristic | 1,540 m | 715 m | 54% | 134 ms |
-| 30 | heuristic | 1,834 m | 777 m | 58% | 318 ms |
+| 18 | heuristic | 1,171 m | 584 m | 50% | 3.6 ms |
+| 25 | heuristic | 1,540 m | 722 m | 53% | 8.0 ms |
+| 30 | heuristic | 1,834 m | 786 m | 57% | 17.7 ms |
 
 ## Item resolution
 
@@ -53,7 +54,7 @@ afterwards that is only ever reported.
 | all | 100% | 100% |
 
 A third fixture, 150 everyday items written blind (food, household, pharmacy, Indian staples, brands,
-misspellings), scores **94% at aisle level without the model and 95% with it** on the demo store.
+misspellings), scores **98% at aisle level without the model** on the demo store.
 
 What you confirm on a trip is remembered: "Got it" raises confidence, "Not here" lowers it, a tap on the map
 places it, and the exact words you typed come back as a suggestion next time ("yogurt" → "Chobani greek
