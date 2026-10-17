@@ -1,7 +1,7 @@
 # @grosher/resolver
 
 Cloudflare Worker (Hono) with one endpoint, `POST /resolve`, that takes `{items: string[], departments: string[]}`
-and asks Claude (`claude-haiku-4-5`, one call for the whole list, strict tool output) which department each item is
+and asks Claude (`claude-haiku-5-5`, one call for the whole list, strict tool output) which department each item is
 shelved in. The web app calls it through `VITE_RESOLVER_URL`; nothing in the client bundle ever holds the key.
 
 ```bash

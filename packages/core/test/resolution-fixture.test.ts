@@ -21,15 +21,16 @@ interface Fixture {
   cases: Case[];
 }
 
-const fixture = JSON.parse(readFileSync(new URL("./fixtures/resolution.json", import.meta.url), "utf8")) as Fixture;
+function load(name: string): Fixture {
+  return JSON.parse(readFileSync(new URL(`./fixtures/${name}`, import.meta.url), "utf8")) as Fixture;
+}
 
-test("resolution fixture: 60 items, every layer, hit rate per layer", () => {
+/** Runs a fixture, prints the per-layer table, returns the misses. */
+function run(label: string, fixture: Fixture): string[] {
   const { store, catalog } = demoSupercenter;
   const deptLocs = departmentLocations(store);
   const ctx = { catalog, departments: store.departments, departmentLocations: deptLocs, memory: fixture.memory, llm: new Map(Object.entries(fixture.llm)) };
-  assert.equal(fixture.cases.length, 60);
   const results = resolveList(fixture.cases.map((c) => c.q), ctx);
-
   const layers: ResolveSource[] = ["exact", "fuzzy", "memory", "llm", "unknown"];
   const stats = Object.fromEntries(layers.map((l) => [l, { expected: 0, hit: 0, got: 0 }])) as Record<ResolveSource, { expected: number; hit: number; got: number }>;
   const misses: string[] = [];
@@ -47,9 +48,22 @@ test("resolution fixture: 60 items, every layer, hit rate per layer", () => {
     if (ok) stats[c.source].hit++;
     else misses.push(`${JSON.stringify(c.q)}: expected ${c.source}${c.stop ? `/${c.stop}` : ""} got ${r.source}${r.stopId ? `/${r.stopId}` : ""} (${r.confidence.toFixed(2)})`);
   });
-
+  const n = fixture.cases.length;
   const rows = layers.map((l) => `${l.padEnd(8)} ${String(stats[l].hit).padStart(3)}/${String(stats[l].expected).padEnd(3)} ${((100 * stats[l].hit) / Math.max(1, stats[l].expected)).toFixed(0).padStart(4)}%   routed as ${l}: ${stats[l].got}`);
   const total = layers.reduce((s, l) => s + stats[l].hit, 0);
-  console.log(["", "layer     hit/exp   rate", ...rows, `${"all".padEnd(8)} ${String(total).padStart(3)}/60   ${((100 * total) / 60).toFixed(0).padStart(4)}%`, ""].join("\n"));
-  assert.deepEqual(misses, []);
+  console.log(["", `${label}`, "layer     hit/exp   rate", ...rows, `${"all".padEnd(8)} ${String(total).padStart(3)}/${n}   ${((100 * total) / n).toFixed(0).padStart(4)}%`, ...misses.map((m) => `  miss  ${m}`), ""].join("\n"));
+  return misses;
+}
+
+test("tuned fixture: 60 items, every layer, no misses", () => {
+  const fixture = load("resolution.json");
+  assert.equal(fixture.cases.length, 60);
+  assert.deepEqual(run("tuned set (resolution.json)", fixture), []);
+});
+
+// The held-out set reports; it never gates the build and the thresholds are never tuned on it.
+test("held-out fixture: 30 items, report only", () => {
+  const fixture = load("resolution-heldout.json");
+  assert.equal(fixture.cases.length, 30);
+  run("held-out set (resolution-heldout.json)", fixture);
 });

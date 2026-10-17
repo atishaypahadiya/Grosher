@@ -4,7 +4,7 @@
 
 import type Anthropic from "@anthropic-ai/sdk";
 
-export const MODEL = "claude-haiku-4-5";
+export const MODEL = "claude-haiku-5-5";
 export const TAGS = ["frozen", "chilled", "heavy", "fragile", "produce"] as const;
 export type Tag = (typeof TAGS)[number];
 
@@ -66,13 +66,16 @@ export async function classify(client: Anthropic, req: ClassifyRequest): Promise
   if (!items.length) return [];
   const departments = req.departments.filter(Boolean);
   const tool = buildTool(departments);
+  // Haiku 5.5: adaptive thinking is on by default; classification needs little, so effort low.
+  // tool_choice stays "auto" with the instruction naming the tool (the 5.5 family rejects forced tool choice).
   const response = await client.messages.create({
     model: MODEL,
-    max_tokens: 4096,
+    max_tokens: 8192,
     system: SYSTEM,
+    output_config: { effort: "low" },
     tools: [tool],
-    tool_choice: { type: "tool", name: TOOL_NAME },
-    messages: [{ role: "user", content: `Departments: ${departments.join(", ")}\nItems:\n${items.map((i) => `- ${i}`).join("\n")}` }],
+    tool_choice: { type: "auto", disable_parallel_tool_use: true },
+    messages: [{ role: "user", content: `Call ${TOOL_NAME} once with every item below.\nDepartments: ${departments.join(", ")}\nItems:\n${items.map((i) => `- ${i}`).join("\n")}` }],
   });
   const use = response.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use" && b.name === TOOL_NAME);
   if (!use) return items.map((item) => ({ item, department: null, confidence: 0 }));
