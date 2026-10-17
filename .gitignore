@@ -5,3 +5,5 @@ node_modules/
 .expo/
 __pycache__/
 *.pyc
+.env.local
+.env.*.local

@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: typecheck · test · build · perf gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Cache node_modules
+        id: modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: modules-${{ runner.os }}-node22-${{ hashFiles('package-lock.json') }}
+
+      - name: Install
+        if: steps.modules.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Build apps/web
+        run: npm run build -w @grosher/web
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Chromium
+        run: npx --workspace @grosher/web playwright install --with-deps chromium
+
+      - name: Perf gate (≤ 70 draw calls, ≤ 12,000 instances)
+        working-directory: apps/web
+        run: |
+          npx vite preview --port 4173 --strictPort &
+          for i in $(seq 1 40); do curl -sf http://localhost:4173/ > /dev/null && break; sleep 0.5; done
+          node scripts/perf-gate.mjs http://localhost:4173
