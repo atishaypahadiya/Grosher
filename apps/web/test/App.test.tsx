@@ -211,3 +211,25 @@ describe("brand memory", () => {
     expect(within(screen.getByRole("list")).getAllByRole("listitem")[0].textContent).toMatch(/greek yogurt/i);
   });
 });
+
+describe("usual-trip prediction", () => {
+  test("with an empty draft and a usual trip, the list offers today's usual trip; Load fills the draft", async () => {
+    render(<App />);
+    add("milk, eggs, bread");
+    fireEvent.click(await findButton(/route 3 items/i));
+    while (screen.queryByRole("button", { name: /got it/i })) fireEvent.click(screen.getByRole("button", { name: /got it/i }));
+    await find(/trip done/i);
+    fireEvent.click(screen.getByRole("button", { name: /save as usual trip/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^close$/i }));
+    for (const name of ["milk", "eggs", "bread"]) {
+      fireEvent.click(await findButton(new RegExp(`^${name}$`, "i")));
+      fireEvent.click(screen.getByRole("button", { name: /remove/i }));
+    }
+    const row = await screen.findByTestId("usual-row");
+    const weekday = new Date().toLocaleDateString("en-US", { weekday: "long" });
+    expect(row.textContent).toMatch(new RegExp(`Your usual ${weekday} trip · 3 items`));
+    fireEvent.click(within(row).getByRole("button", { name: /load/i }));
+    expect(await find(/3 items · 3 placed/i)).toBeTruthy();
+    expect(screen.queryByTestId("usual-row")).toBeNull();
+  });
+});
