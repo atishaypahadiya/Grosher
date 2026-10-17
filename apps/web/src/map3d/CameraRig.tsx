@@ -44,6 +44,9 @@ function placeCamera(cam: PerspectiveCamera, p: { tx: number; tz: number; distan
   cam.updateMatrixWorld(true);
 }
 
+/** read by Perf.tsx */
+export const cameraStats = { distance: 0, tilt: 0 };
+
 /** Minimum visible store width across the frame, metres. The camera is never closer than this needs. */
 export const MIN_SPAN_M = 30;
 /** Camera distance at which the 42° horizontal field shows MIN_SPAN_M metres. */
@@ -213,22 +216,34 @@ export interface CameraRigProps {
   safe?: SafeArea;
   /** written every frame with the current camera distance (metres) */
   distanceRef?: { current: number };
+  /** fires when a tween ends or 200 ms after the last gesture, with the camera's ground position */
+  onSettle?: (cam: { x: number; y: number; z: number; distance: number }) => void;
   flat: boolean;
   reducedMotion?: boolean;
   /** fires when pinching out past max zoom (caller may flatten) */
   onOverZoomOut?: () => void;
 }
 
-export const CameraRig = forwardRef<CameraRigHandle, CameraRigProps>(function CameraRig({ focus, safe = DEFAULT_SAFE, distanceRef, flat, reducedMotion, onOverZoomOut }, ref) {
+export const CameraRig = forwardRef<CameraRigHandle, CameraRigProps>(function CameraRig({ focus, safe = DEFAULT_SAFE, distanceRef, onSettle, flat, reducedMotion, onOverZoomOut }, ref) {
   const { camera, invalidate, size } = useThree();
   const initial = solveFraming(focus, flat, size.width / size.height, undefined, safe);
   const pose = useRef<Pose>({ ...initial, tilt: flat ? 2 : DEFAULT_TILT, yaw: flat ? 0 : DEFAULT_YAW });
   const from = useRef<Pose>({ ...pose.current });
   const to = useRef<Pose>({ ...pose.current });
   const t0 = useRef<number | null>(null);
+  const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const settle = () => {
+    onSettle?.({ x: camera.position.x, y: camera.position.y, z: camera.position.z, distance: pose.current.distance });
+  };
+  const settleSoon = () => {
+    if (settleTimer.current) clearTimeout(settleTimer.current);
+    settleTimer.current = setTimeout(settle, 200);
+  };
 
   const apply = (p: Pose) => {
     if (distanceRef) distanceRef.current = p.distance;
+    cameraStats.distance = p.distance;
+    cameraStats.tilt = p.tilt;
     if ("fov" in camera) {
       const fov = verticalFov(size.width / size.height);
       if (Math.abs(camera.fov - fov) > 0.01) camera.fov = fov;
@@ -273,6 +288,7 @@ export const CameraRig = forwardRef<CameraRigHandle, CameraRigProps>(function Ca
       t0.current = null;
       apply(pose.current);
       invalidate();
+      settleSoon();
     },
     zoom: (factor) => {
       const p = to.current;
@@ -283,6 +299,7 @@ export const CameraRig = forwardRef<CameraRigHandle, CameraRigProps>(function Ca
       t0.current = null;
       apply(pose.current);
       invalidate();
+      settleSoon();
     },
     rotate: (deg) => {
       if (flat) return;
@@ -293,6 +310,7 @@ export const CameraRig = forwardRef<CameraRigHandle, CameraRigProps>(function Ca
       t0.current = null;
       apply(pose.current);
       invalidate();
+      settleSoon();
     },
     flatten: (f) => animateTo({ tilt: f ? 2 : DEFAULT_TILT, yaw: f ? 0 : DEFAULT_YAW }),
   }));
@@ -311,8 +329,10 @@ export const CameraRig = forwardRef<CameraRigHandle, CameraRigProps>(function Ca
       yaw: a.yaw + (b.yaw - a.yaw) * e,
     };
     apply(pose.current);
-    if (k >= 1) t0.current = null;
-    else invalidate();
+    if (k >= 1) {
+      t0.current = null;
+      settle();
+    } else invalidate();
   });
 
   useEffect(() => {

@@ -3,10 +3,12 @@
 
 import { useEffect, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
+import { productStats } from "./Products.tsx";
+import { cameraStats } from "./CameraRig.tsx";
 
 declare global {
   interface Window {
-    __grosherPerf?: { calls: number; triangles: number; frameMs: number; frames: number; programs: number };
+    __grosherPerf?: { calls: number; triangles: number; frameMs: number; frames: number; programs: number; instances: number; productFixtures: number; distance: number; tilt: number };
   }
 }
 
@@ -34,6 +36,10 @@ export function Perf() {
       programs: gl.info.programs?.length ?? 0,
       frameMs,
       frames: samples.current.length,
+      instances: productStats.instances,
+      productFixtures: productStats.fixtures,
+      distance: Math.round(cameraStats.distance * 10) / 10,
+      tilt: Math.round(cameraStats.tilt),
     };
     gl.info.reset();
     invalidate(); // keep rendering so the numbers are a steady-state measurement

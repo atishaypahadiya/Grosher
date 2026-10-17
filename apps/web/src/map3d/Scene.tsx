@@ -9,6 +9,7 @@ import { CanvasTexture, SRGBColorSpace, type DirectionalLight, type HemisphereLi
 import type { SelectiveBloomEffect } from "postprocessing";
 import type { GraphNode, StoreGraph } from "@grosher/core";
 import { Fixtures } from "./Fixtures.tsx";
+import { Products } from "./Products.tsx";
 import { Ribbon } from "./Ribbon.tsx";
 import { OverlayProjector, type OverlayItem, type OverlayRegistry } from "./Overlay.tsx";
 import { CameraRig, MIN_DISTANCE_PINCH, type CameraRigHandle } from "./CameraRig.tsx";
@@ -85,6 +86,12 @@ export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, fo
   const [glowLine, setGlowLine] = useState<Object3D | null>(null);
   const bloomRef = useRef<SelectiveBloomEffect | null>(null);
   const distanceRef = useRef(36);
+  const [settled, setSettled] = useState<{ x: number; y: number; z: number } | null>(null);
+  const onSettle = useMemo(
+    () => (cam: { x: number; y: number; z: number }) =>
+      setSettled((s) => (s && Math.hypot(s.x - cam.x, s.y - cam.y, s.z - cam.z) < 0.5 ? s : { x: cam.x, y: cam.y, z: cam.z })),
+    [],
+  );
   const selection = useMemo(() => [litMesh, glowLine].filter((o): o is Object3D => !!o), [litMesh, glowLine]);
   const hemi = useRef<HemisphereLight>(null);
   const sun = useRef<DirectionalLight>(null);
@@ -115,10 +122,11 @@ export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, fo
 
       <Suspense fallback={null}>
         <Fixtures store={store} textureUrl={textureUrl} repeatMeters={repeatMeters} litFixtureId={litFixtureId} nodes={nodes} fromEntrance={fromEntrance} onLitMesh={setLitMesh} />
+        <Products store={store} textureUrl={textureUrl} settled={settled} />
       </Suspense>
       <Ribbon nodes={nodes} walked={ribbon.walked} current={ribbon.current} ahead={ribbon.ahead} onGlowLine={setGlowLine} />
       <OverlayProjector items={overlay.items} registry={overlay.registry} />
-      <CameraRig ref={cameraRef} focus={focus} safe={safe} distanceRef={distanceRef} flat={flat} reducedMotion={reducedMotion} onOverZoomOut={onOverZoomOut} />
+      <CameraRig ref={cameraRef} focus={focus} safe={safe} distanceRef={distanceRef} onSettle={onSettle} flat={flat} reducedMotion={reducedMotion} onOverZoomOut={onOverZoomOut} />
       <BloomDriver effect={bloomRef} distanceRef={distanceRef} full={0.7} />
 
       {/* One bloom pass, selective: the lit fixture and the current leg's wide ribbon copy. The rest of the
