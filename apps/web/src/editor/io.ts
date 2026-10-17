@@ -3,6 +3,7 @@
 // System Access API where the browser has it; downloads otherwise.
 
 import { parseStoreBundle, type TextureManifest } from "@grosher/stores";
+import type { ItemMemory } from "@grosher/core";
 import type { Draft } from "./model.ts";
 
 export interface TextureFile {
@@ -19,18 +20,20 @@ export interface ExportFiles {
   "store.json": Blob;
   "catalog.json": Blob;
   "textures/textures.json": Blob;
+  "memory.json": Blob;
   images: { path: string; blob: Blob }[];
 }
 
 const json = (v: unknown) => new Blob([JSON.stringify(v, null, 2) + "\n"], { type: "application/json" });
 
-export function buildExport(draft: Draft, manifest: TextureManifest, textures: TextureFile[]): ExportFiles {
+export function buildExport(draft: Draft, manifest: TextureManifest, textures: TextureFile[], memory: ItemMemory[] = []): ExportFiles {
   const merged: TextureManifest = { ...manifest };
   for (const t of textures) merged[t.deptId] = { file: t.file, w: t.w, h: t.h, shotAt: t.shotAt, repeatMeters: manifest[t.deptId]?.repeatMeters ?? 2 };
   return {
     "store.json": json({ ...draft.store, version: (draft.store.version ?? 0) + 1 }),
     "catalog.json": json(draft.catalog),
     "textures/textures.json": json(merged),
+    "memory.json": json(memory),
     images: textures.map((t) => ({ path: `textures/${t.file}`, blob: t.blob })),
   };
 }
@@ -47,6 +50,7 @@ export function downloadAll(files: ExportFiles) {
   download(files["store.json"], "store.json");
   download(files["catalog.json"], "catalog.json");
   download(files["textures/textures.json"], "textures.json");
+  download(files["memory.json"], "memory.json");
   for (const img of files.images) download(img.blob, img.path.split("/").pop()!);
 }
 
@@ -86,6 +90,7 @@ export async function writePackage(dir: DirHandle, files: ExportFiles): Promise<
     ["store.json", files["store.json"]],
     ["catalog.json", files["catalog.json"]],
     ["textures/textures.json", files["textures/textures.json"]],
+    ["memory.json", files["memory.json"]],
   ] as const) {
     await writeFile(dir, path, blob);
     written.push(path);

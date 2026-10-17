@@ -39,6 +39,8 @@ import {
 import { IconCorridor, IconCube, IconCursor, IconDoor, IconFixture, IconImage, IconPin, IconRuler } from "../components/Icons.tsx";
 import { moveBy, scaleAbout, withWidth, type Underlay } from "./underlay.ts";
 import { slotFor } from "@grosher/stores";
+import { loadLearning } from "../lib/learning.ts";
+import type { ItemMemory } from "@grosher/core";
 
 type Tool = "select" | "corridor" | "fixture" | "location" | "doors" | "texture" | "measure";
 const TOOLS: { id: Tool; label: string; icon: ReactNode }[] = [
@@ -77,6 +79,10 @@ export function EditorScreen({ bundle, onExit }: { bundle: StoreBundle; onExit: 
   const [underlay, setUnderlay] = useState<Underlay | null>(null);
   const [preview, setPreview] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [memory, setMemory] = useState<ItemMemory[]>([]);
+  useEffect(() => {
+    loadLearning(bundle.store.storeId).then((l) => setMemory(l.memory));
+  }, [bundle.store.storeId]);
   const importRef = useRef<HTMLInputElement>(null);
 
   // tool state
@@ -188,10 +194,10 @@ export function EditorScreen({ bundle, onExit }: { bundle: StoreBundle; onExit: 
     setLayers((l) => ({ ...l, textures: true }));
   };
 
-  const exportFiles = () => buildExport(draft, bundle.textures, textures);
+  const exportFiles = () => buildExport(draft, bundle.textures, textures, memory);
   const onExport = () => {
     downloadAll(exportFiles());
-    setNotice("Downloaded store.json, catalog.json and textures.");
+    setNotice(`Downloaded store.json, catalog.json, textures and memory.json (${memory.length} items).`);
   };
   const onWrite = async () => {
     const dir = await pickPackageDir();
