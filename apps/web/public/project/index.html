@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Grosher · project</title>
 <meta name="description" content="Grosher turns a grocery list into one route through the store, entrance to exit, and reroutes as you shop. A progressive web app with a 3D store map and a local model.">
-<meta name="theme-color" content="#F9D7A8">
+<meta name="theme-color" content="#F2703A">
 <meta property="og:title" content="Grosher · Your list, not their layout.">
 <meta property="og:description" content="One route through the store, entrance to exit, rerouted as you shop. Offline on the phone; items resolved by a model on a laptop.">
 <meta property="og:image" content="https://grosher.pages.dev/project/img/checkout.webp">
@@ -19,9 +19,12 @@
 
 /* Tokens: DESIGN.md §2 */
 :root {
-  --haze: #F9D7A8; --apricot: #F0C27A; --lime-green: #B9D96A; --moss: #6CB26A; --leaf: #2E7D46; --deep: #184D2E; --soil: #0F2A1A;
+  /* "Papaya": the warm half (haze, apricot, the mango hand-off, moss); leaf, deep and soil unchanged */
+  --haze: #FF9E6B; --apricot: #F2703A; --lime-green: #E2A23C; --moss: #86B84A; --leaf: #2E7D46; --deep: #184D2E; --soil: #0F2A1A;
   --lime: #D4FF4A; --guess: #F6D28C;
   --ink: #FFFFFF; --ink-muted: rgba(255,255,255,.85); --soil-muted: rgba(15,42,26,.72);
+  --ink-warm: #2A0F06; --ink-warm-muted: rgba(42,15,6,.72); /* ink on the orange slices */
+  --ring-soil: 0 0 0 1.5px var(--soil); /* lime on a light ground */
   --glass: rgba(255,255,255,.14); --glass-deep: rgba(15,42,26,.22); --glass-border: rgba(255,255,255,.28);
   --hairline: rgba(255,255,255,.18); --rule: rgba(255,255,255,.25);
   --blur: blur(18px) saturate(140%);
@@ -49,15 +52,15 @@ h1, h2, h3 { margin: 0; font-weight: 300; }
 
 /* ---------------------------------------------------------------- light, per section (DESIGN.md §2)
    Each section is its own slice of the gradient, and the slices meet seamlessly: haze → leaf → deep, then
-   back up to a lighter leaf at the footer. Ink follows the region: soil on haze and lime-green, white on
-   green. Each slice carries one or two blooms (soft radial light) kept inside it vertically, because a bloom
+   back up to a lighter leaf at the footer. Ink follows the region: warm brown-black on the orange slices
+   (haze, apricot, the mango hand-off), white on green. Each slice carries one or two blooms (soft radial light) kept inside it vertically, because a bloom
    clipped while still tinted draws a line at the section edge. */
 .sect { position: relative; overflow: hidden; padding-block: var(--half-gap); }
 .sect::before, .sect::after { content: ""; position: absolute; z-index: 0; pointer-events: none; border-radius: 50%; }
-.s-hero { background: linear-gradient(180deg, var(--haze) 0%, var(--apricot) 55%, var(--lime-green) 100%); color: var(--soil); padding-top: 20px; }
-.s-hero::before { width: 70vw; max-width: 980px; height: 86%; left: -22vw; top: 0; background: radial-gradient(closest-side, rgba(255,240,210,.9), rgba(255,240,210,0)); }
+.s-hero { background: linear-gradient(180deg, var(--haze) 0%, var(--apricot) 55%, var(--lime-green) 100%); color: var(--ink-warm); padding-top: 20px; }
+.s-hero::before { width: 70vw; max-width: 980px; height: 86%; left: -22vw; top: 0; background: radial-gradient(closest-side, rgba(255,180,140,.85), rgba(255,180,140,0)); }
 .s-hero::after { width: 56vw; max-width: 820px; height: 70%; right: -14vw; top: 22%; background: radial-gradient(closest-side, rgba(212,255,74,.42), rgba(212,255,74,0)); }
-.s-app { background: linear-gradient(180deg, var(--lime-green) 0%, var(--moss) 46%, var(--leaf) 100%); }
+.s-app { background: linear-gradient(180deg, var(--lime-green) 0%, var(--moss) 40%, var(--leaf) 88%, var(--leaf) 100%); }
 .s-app::before { width: 70vw; max-width: 900px; height: 60%; left: 15%; top: 4%; background: radial-gradient(closest-side, rgba(212,255,74,.34), rgba(212,255,74,0)); }
 .s-app::after { width: 60vw; max-width: 820px; height: 50%; right: -18vw; bottom: 0; background: radial-gradient(closest-side, rgba(10,50,28,.62), rgba(10,50,28,0)); }
 .s-why { background: linear-gradient(180deg, var(--leaf) 0%, #286F3F 100%); }
@@ -68,20 +71,20 @@ h1, h2, h3 { margin: 0; font-weight: 300; }
 .s-decisions { background: linear-gradient(180deg, #215F37 0%, var(--deep) 100%); }
 .s-decisions::before { width: 60vw; max-width: 860px; height: 70%; left: 30%; top: 10%; background: radial-gradient(closest-side, rgba(212,255,74,.07), rgba(212,255,74,0)); }
 .s-arch { background: linear-gradient(180deg, var(--deep) 0%, #143F26 100%); }
-.s-arch::before { width: 56vw; max-width: 800px; height: 70%; right: -10vw; top: 14%; background: radial-gradient(closest-side, rgba(108,178,106,.16), rgba(108,178,106,0)); }
+.s-arch::before { width: 56vw; max-width: 800px; height: 70%; right: -10vw; top: 14%; background: radial-gradient(closest-side, rgba(134,184,74,.16), rgba(134,184,74,0)); }
 .s-results { background: linear-gradient(180deg, #143F26 0%, #17462B 100%); }
 .s-results::before { width: 64vw; max-width: 900px; height: 60%; left: -18vw; top: 6%; background: radial-gradient(closest-side, rgba(212,255,74,.07), rgba(212,255,74,0)); }
-.s-results::after { width: 50vw; max-width: 720px; height: 46%; right: -12vw; bottom: 4%; background: radial-gradient(closest-side, rgba(108,178,106,.14), rgba(108,178,106,0)); }
+.s-results::after { width: 50vw; max-width: 720px; height: 46%; right: -12vw; bottom: 4%; background: radial-gradient(closest-side, rgba(134,184,74,.14), rgba(134,184,74,0)); }
 .s-iface { background: linear-gradient(180deg, #17462B 0%, #1B5131 100%); }
 .s-iface::before { width: 52vw; max-width: 740px; height: 70%; left: 8%; top: 14%; background: radial-gradient(closest-side, rgba(212,255,74,.09), rgba(212,255,74,0)); }
 .s-limits { background: linear-gradient(180deg, #1B5131 0%, #235F39 100%); }
-.s-limits::before { width: 60vw; max-width: 860px; height: 70%; right: -14vw; top: 10%; background: radial-gradient(closest-side, rgba(108,178,106,.18), rgba(108,178,106,0)); }
+.s-limits::before { width: 60vw; max-width: 860px; height: 70%; right: -14vw; top: 10%; background: radial-gradient(closest-side, rgba(134,184,74,.18), rgba(134,184,74,0)); }
 .s-foot { background: linear-gradient(180deg, #235F39 0%, var(--leaf) 100%); }
 .s-foot::before { width: 70vw; max-width: 980px; height: 80%; left: 20%; top: 10%; background: radial-gradient(closest-side, rgba(212,255,74,.14), rgba(212,255,74,0)); }
 
 /* Type: DESIGN.md §2 */
 .eyebrow { display: block; font-weight: 500; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink); }
-.eyebrow.soil { color: var(--soil-muted); }
+.eyebrow.soil, .eyebrow.warm { color: var(--ink-warm-muted); }
 .card .eyebrow { color: var(--ink-muted); }
 .display { font-weight: 200; font-size: clamp(44px, 8.6vw, 80px); line-height: 1.02; letter-spacing: -.02em; }
 .title { font-weight: 300; font-size: clamp(28px, 4.2vw, 40px); line-height: 1.12; letter-spacing: -.01em; margin: 10px 0 0; max-width: var(--prose); }
@@ -97,7 +100,8 @@ h1, h2, h3 { margin: 0; font-weight: 300; }
 .tile { border-radius: 18px; }
 .pill { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; padding: 0 26px; border-radius: 999px; font: inherit; font-weight: 500; font-size: 16px; text-decoration: none; border: 1px solid var(--glass-border); }
 .pill.lime { background: var(--lime); border-color: var(--lime); color: var(--soil); box-shadow: var(--glow-button); font-weight: 600; }
-.pill.glass { background: rgba(255,255,255,.5); border-color: rgba(255,255,255,.7); color: var(--soil); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); }
+.s-hero .pill.lime { box-shadow: var(--ring-soil), var(--glow-button); } /* lime on orange: the soil ring */
+.pill.glass { background: rgba(255,255,255,.5); border-color: rgba(255,255,255,.7); color: var(--ink-warm); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); }
 .wordmark { display: inline-flex; align-items: center; gap: 9px; font-weight: 600; font-size: 20px; letter-spacing: -.01em; text-decoration: none; }
 .wordmark .dot { width: 11px; height: 11px; border-radius: 50%; background: var(--lime); box-shadow: var(--glow-dot); flex: none; }
 .arrow { display: inline-block; width: .7em; height: .7em; vertical-align: .05em; margin: 0 .12em; }
@@ -115,15 +119,15 @@ h1, h2, h3 { margin: 0; font-weight: 300; }
 .lede { margin-top: 22px; font-size: clamp(17px, 2.2vw, 20px); line-height: 1.5; max-width: var(--prose); }
 .facts { margin: 30px 0 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0; max-width: var(--prose); }
 .facts div { border-radius: 18px; padding: 14px 16px; background: rgba(255,255,255,.34); border: 1px solid rgba(255,255,255,.6); }
-.facts dt { font-weight: 500; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--soil-muted); }
+.facts dt { font-weight: 500; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-warm-muted); }
 .facts dd { margin: 4px 0 0; font-weight: 400; font-size: 15px; line-height: 1.35; }
 .cta { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 12px; }
 .hero-phone { margin: 0 auto; width: min(300px, 100%); }
 .hero-phone .badge { background: rgba(15,42,26,.72); }
 
 /* 2. The app */
-.s-app .sect-head { color: var(--soil); }
-.s-app .sect-head .eyebrow { color: var(--soil-muted); }
+.s-app .sect-head { color: var(--ink-warm); }
+.s-app .sect-head .eyebrow { color: var(--ink-warm-muted); }
 .phones { display: grid; grid-template-columns: 1fr; justify-items: center; gap: 40px; margin: 36px 0 0; padding: 0; list-style: none; }
 .phone { width: min(280px, 100%); margin: 0; }
 .app-caption { margin-top: 30px; font-size: 15px; }
@@ -305,7 +309,7 @@ td .num { font-size: 17px; }
     </div>
     <div class="hero-grid">
       <div>
-        <span class="eyebrow soil">progressive web app · local model · v1</span>
+        <span class="eyebrow warm">progressive web app · local model · v1</span>
         <h1 class="display">Your list,<br>not their layout.</h1>
         <p class="lede">Grosher turns a grocery list into one route through the store, entrance to exit, and reroutes as you shop. It runs offline on the phone and resolves items with a model on my own laptop.</p>
         <dl class="facts">

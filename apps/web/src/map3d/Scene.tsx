@@ -18,7 +18,7 @@ import { CameraRig, MIN_DISTANCE_PINCH, type CameraRigHandle } from "./CameraRig
 import { Perf } from "./Perf.tsx";
 import type { Focus, SafeArea } from "./CameraRig.tsx";
 
-const HAZE = "#F9D7A8";
+const HAZE = "#FF9E6B"; // --haze: the fog and the hemisphere light's sky
 const DEEP = "#184D2E";
 
 function gradientTexture() {
@@ -27,10 +27,10 @@ function gradientTexture() {
   c.height = 512;
   const ctx = c.getContext("2d")!;
   const g = ctx.createLinearGradient(0, 0, 0, 512);
-  g.addColorStop(0, "#F9D7A8");
-  g.addColorStop(0.11, "#F0C27A");
-  g.addColorStop(0.32, "#B9D96A");
-  g.addColorStop(0.52, "#6CB26A");
+  g.addColorStop(0, "#FF9E6B");
+  g.addColorStop(0.11, "#F2703A");
+  g.addColorStop(0.32, "#E2A23C");
+  g.addColorStop(0.52, "#86B84A");
   g.addColorStop(0.76, "#2E7D46");
   g.addColorStop(1, "#184D2E");
   ctx.fillStyle = g;

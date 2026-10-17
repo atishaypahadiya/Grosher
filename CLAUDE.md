@@ -284,7 +284,7 @@ the in-memory fallback of `lib/db.ts` where IndexedDB is blocked.
 
 **Voice entry** (`lib/speech.ts`). Hold the mic, release to stop: Web Speech API (`SpeechRecognition` or
 `webkitSpeechRecognition`), `interimResults` and `continuous` on; interim words show in the add pill in
-lime, each final result (a pause) is split on "and", "then", commas and semicolons and added as items.
+warm ink with a lime underline, each final result (a pause) is split on "and", "then", commas and semicolons and added as items.
 Permission denial shows "Microphone not allowed · type instead"; other failures "Voice entry stopped · type
 instead"; never an error state. Caveats: the mic is hidden when the API is missing, and hidden in **iOS
 standalone (home-screen) mode** by default because WebKit's recogniser has been reported not to start
@@ -568,6 +568,12 @@ the precache filled, manifest with name / icons 192 + 512 + maskable / `standalo
   lane, the one primary button. No second accent, no status colours on the map.
 - No flat background colours on phone screens: the gradient ground + blooms, with white glass for controls
   and deep glass (`--glass-deep`) for content cards. Editor chrome is cream.
+- The warm half is "Papaya" (haze `#FF9E6B`, apricot `#F2703A`, the mango hand-off `#E2A23C` under the
+  `--lime-green` name, moss `#86B84A`). Text on it is `--ink-warm` `#2A0F06` (muted `rgba(42,15,6,.72)`),
+  never soil green and never white; white stays on green. Content cards that start on it use
+  `--glass-deep-warm` (.56) so their white ink holds 4.5:1; lime on orange or cream gets `--ring-soil`.
+  Re-measure text against the pixels behind it after any ground change (the lowest on orange was 4.99 in
+  the app, 4.55 on the project page).
 - Outfit for words, Doto for every number that matters. No emoji, no Inter / Roboto, no drop shadows (glows
   and blur only).
 - Only two labels on the map: the next stop and the checkout callout. Markers and labels never scale with zoom.

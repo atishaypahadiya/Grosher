@@ -1,6 +1,6 @@
 # Grosher — DESIGN.md
 
-**The feeling:** the produce aisle at 7 in the morning. Light through lettuce, mist just hit the shelves. Apricot haze up front, deep leaf at the back. Thin white lines for everything measured, and one lime point that means *now*.
+**The feeling:** the produce aisle at 7 in the morning. Light through lettuce, mist just hit the shelves. Papaya haze up front, a mango hand-off, deep leaf at the back. Thin white lines for everything measured, and one lime point that means *now*.
 
 This is the contract for `apps/web`. The canvas with the mockups is exported at `design/boards/*.png` (Mood, List, Trip, Checkout, Editor, Tokens). When this file and a board disagree, the board wins on feel and this file wins on numbers.
 
@@ -19,21 +19,23 @@ This is the contract for `apps/web`. The canvas with the mockups is exported at 
 
 | Token | Hex | Where |
 | --- | --- | --- |
-| `--haze` | `#F9D7A8` | Top / front, 0% |
-| `--apricot` | `#F0C27A` | ~10% |
-| `--lime-green` | `#B9D96A` | ~30% |
-| `--moss` | `#6CB26A` | ~50% |
+| `--haze` | `#FF9E6B` | Top / front, 0% ("Papaya") |
+| `--apricot` | `#F2703A` | ~10% |
+| `--lime-green` | `#E2A23C` | ~30%: the mango hand-off between orange and green (the token keeps its name) |
+| `--moss` | `#86B84A` | ~50% |
 | `--leaf` | `#2E7D46` | ~75% |
 | `--deep` | `#184D2E` | 100% / back wall fog |
 | `--soil` | `#0F2A1A` | Dark text, lime-on-soil buttons (editor) |
 
 Screen background: `linear-gradient(170deg, haze 0%, apricot 10–12%, lime-green 30–34%, moss 48–55%, leaf 72–80%, deep 100%)`.
-Blooms (position absolute, `border-radius:50%`, `filter: blur(24–40px)`): cream `rgba(255,240,210,.9)` top-left, lime `rgba(212,255,74,.45)` center, deep `rgba(10,50,28,.8)` bottom-right.
+Browser chrome: `theme-color` and the manifest's `theme_color` are `--apricot` `#F2703A`; the manifest's `background_color` (the launch splash) is `--haze` `#FF9E6B`.
+Blooms (position absolute, `border-radius:50%`, `filter: blur(24–40px)`): cream `rgba(255,180,140,.85)` top-left, lime `rgba(212,255,74,.45)` center, deep `rgba(10,50,28,.8)` bottom-right.
 
 ### Ink
 
 - On green regions: white `#FFFFFF`; muted `rgba(255,255,255,.85)`; eyebrow `rgba(255,255,255,.8)`.
-- On haze regions (top ~25% of List/Checkout): `--soil`; muted `rgba(15,42,26,.7)`.
+- On the orange regions (haze, apricot, the mango hand-off: the top of List, Checkout and the Trip header, the project page's hero and the top of its app section): `--ink-warm` `#2A0F06`, warm brown-black, never soil green; muted `--ink-warm-muted` `rgba(42,15,6,.72)`. Controls there (the list's ghost pills, the add pill's `+`, text, placeholder and mic glyph, the Trip header pills) take it too; voice-entry interim words are warm ink with a 2px lime underline (lime text cannot be read on orange).
+- Measured on the production build at 390×844 (text colour against the pixels behind it): every text on an orange slice is ≥ 4.5:1; the lowest in the app is the list header's eyebrow at 4.99, on the project page the app section's eyebrow at 4.55 (1440).
 - Rule: pick ink by the region's luminance, never by component. Contrast ≥ 4.5:1 for body, ≥ 3:1 at 24px+.
 
 ### Accent and surfaces
@@ -43,6 +45,8 @@ Blooms (position absolute, `border-radius:50%`, `filter: blur(24–40px)`): crea
 | `--lime` | `#D4FF4A` · glow `0 0 24px rgba(212,255,74,.45)` on buttons, `0 0 18px rgba(212,255,74,.8)` on dots |
 | `--glass` | `rgba(255,255,255,.14)` fill · `1px solid rgba(255,255,255,.28)` · `backdrop-filter: blur(18px) saturate(140%)` |
 | `--glass-strong` | same with fill `.20` (editor pills on cream use `rgba(255,255,255,.7)`) |
+| `--glass-deep-warm` | `rgba(15,42,26,.56)` fill, same border and blur: content cards that start on the warm half (the list sheet, the share card, the reset banner), so their white ink stays ≥ 4.5:1 over mango; `.58` in the share-card export (no blur) |
+| `--ring-soil` | `0 0 0 1.5px --soil`: any lime control on an orange or cream ground (the listening mic, the project page's hero button), as the editor's lime dots have |
 | `--glass-deep` | `rgba(15,42,26,.22)` fill · `1px solid rgba(255,255,255,.28)` · same blur. Every card that holds content: share card, stat tiles, list sheet, "make the map better" rows. Eyebrows inside it are white 85%. White glass stays for pills, inputs, header controls and the Trip bottom sheet. |
 | `--hairline` | `rgba(255,255,255,.18)` row dividers inside glass; `.25` section rules |
 | Editor ground | `#F4F1E6` chrome, `#EDE9DB` canvas with 24px dot grid `rgba(15,42,26,.12)` |
@@ -115,7 +119,7 @@ Stack: `three` + `@react-three/fiber` + `@react-three/drei` + `@react-three/post
    - chosen lane: lime point; other lanes nothing
    - entrance: white ring with arrow-in glyph; exit: lime ring
 7. **Labels** (DOM overlay, screen space, no scaling): next stop = eyebrow in lime (`DAIRY · A10 · 6 OF 8`; a department equal to its aisle appears once) over the item name (Outfit 500, 17px) over distance (Outfit 300, 12px, white 85%) over the slot line in lime (`Left · bay 4 · shelf 3`). Checkout callout = eyebrow `CHECKOUT · LANE 5` over `2 min walk (118 m)`. Both are clamped into the map area between the progress strip and the sheet on manual zoom. Only these two labels exist on the map; stop cards are markers, not labels.
-8. **Post**: `Bloom` (threshold .9, intensity .6, mipmap blur). The vignette is CSS, not a pass: a full-screen overlay on the trip screen above the canvas and below the markers, `linear-gradient(180deg, rgba(249,215,168,.2) 0%, rgba(249,215,168,0) 22%, rgba(24,77,46,0) 65%, rgba(24,77,46,.55) 100%)`, `pointer-events: none`. No DoF on phones by default; enable behind a flag for the launch video.
+8. **Post**: `Bloom` (threshold .9, intensity .6, mipmap blur). The vignette is CSS, not a pass: a full-screen overlay on the trip screen above the canvas and below the markers, `linear-gradient(180deg, rgba(255,158,107,.2) 0%, rgba(255,158,107,0) 22%, rgba(24,77,46,0) 65%, rgba(24,77,46,.55) 100%)`, `pointer-events: none`. No DoF on phones by default; enable behind a flag for the launch video.
 
 **Camera**
 
@@ -140,11 +144,11 @@ Keep the existing SVG component; restyle it:
 
 Phone screens render in a centred column, max-width 430px, full viewport height; the gradient and blooms fill the whole viewport behind it. Verify at 1440×900 and 390×844.
 
-**List** (`/`): gradient ground + cream bloom; header on haze in soil (eyebrow chain, store name, "Change" pill); display "Your list, / not their layout." in Outfit 200 soil; glass pill input (`+`, placeholder "Add items, paste a list, or hold to speak", mic button); glass sheet (radius 26) with rows: name Outfit 400 16 · chip (9px department dot + text, `rgba(255,255,255,.16)`, "Dairy · last", "A6 or endcap"); unresolved row: muted line "Not placed yet · probably A4, international" + "Tell me where" ghost pill; sticky lime CTA pill: "Route 9 items" left, Doto `410 m · 11 min` right, soil circle with arrow; caption "36% shorter than walking your list in order".
+**List** (`/`): gradient ground + cream bloom; header on haze in warm ink (eyebrow chain, store name, "Change" pill); display "Your list, / not their layout." in Outfit 200 warm ink; glass pill input (`+`, placeholder "Add items, paste a list, or hold to speak", mic button); glass sheet (radius 26) with rows: name Outfit 400 16 · chip (9px department dot + text, `rgba(255,255,255,.16)`, "Dairy · last", "A6 or endcap"); unresolved row: muted line "Not placed yet · probably A4, international" + "Tell me where" ghost pill; sticky lime CTA pill: "Route 9 items" left, Doto `410 m · 11 min` right, soil circle with arrow; caption "36% shorter than walking your list in order".
 
 **Trip** (`/trip`): full-screen 3D map; glass header row (back circle · glass pill with store name and Doto timer · flatten circle); 8-segment progress strip (done white, current lime with glow, ahead white 30%); glass bottom sheet (radius 26, inset 12): eyebrow `NEXT · 6 OF 8`, name Outfit 300 26, location line, Doto distance right with "meters" caption, buttons **Got it** (lime pill, check icon, glow) · **Not here** (glass pill) · **+** (glass circle).
 
-**Checkout** (`/done`): gradient ground; "Trip done" / "Close" in soil on the haze; the share card = glass, radius 28: eyebrow row (`IN AND OUT` · `STORY RD · THU`), Doto hero time centered 96px, "9 of 9 items · lane 5", hairline torus art (SVG ellipses at white 55%, .8px, one lime dot at the center) as the card's middle band, two glass tiles (icon circle + label, Doto number + unit, caption): **Walked 408 m / 7 aisles never entered** and **Vs list in order −36 % / about 4 minutes saved** (the −36 in lime), footer strip: lime-dot wordmark "grosher" · "Get in. Get it. Get out." Below: "Make the map better" glass row(s) with a lime "Pick aisle" pill. Bottom: **Share card** (white pill, soil text) · **Save as usual trip** (glass pill). Share exports the card as a 1080×1920 PNG (html-to-image), gradient included.
+**Checkout** (`/done`): gradient ground; "Trip done" / "Close" in warm ink on the haze; the share card = glass, radius 28: eyebrow row (`IN AND OUT` · `STORY RD · THU`), Doto hero time centered 96px, "9 of 9 items · lane 5", hairline torus art (SVG ellipses at white 55%, .8px, one lime dot at the center) as the card's middle band, two glass tiles (icon circle + label, Doto number + unit, caption): **Walked 408 m / 7 aisles never entered** and **Vs list in order −36 % / about 4 minutes saved** (the −36 in lime), footer strip: lime-dot wordmark "grosher" · "Get in. Get it. Get out." Below: "Make the map better" glass row(s) with a lime "Pick aisle" pill. Bottom: **Share card** (white pill, soil text) · **Save as usual trip** (glass pill). Share exports the card as a 1080×1920 PNG (html-to-image), gradient included.
 
 **Editor** (`/edit`, desktop 1280): cream chrome; top bar (lime-dot wordmark / editor, store · #5435 · map v3, stats incl. texture count, Validate pill, lime-on-soil Export JSON); 64px rail (select, corridor, fixture, location, entrance/exit/checkout, **texture**, measure; "Preview in 3D" at the bottom opens the trip renderer on the current map); flat map; layer pills top-right (Graph · Fixtures · Locations · Textures · Underlay); scale bar + cursor meters bottom-left; 320px inspector: location id · wall, Aisle / Section / Modular, Side segmented (Left / Right / Endcap), Walmart zone select (GR/MD/GM/BK/FT), tag pills, **Fixture texture** slot (thumbnail, filename, size, shot date, Replace), Items here with confidence, Save (soil/lime) · Delete (rose text).
 

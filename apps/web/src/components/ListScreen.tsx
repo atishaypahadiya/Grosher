@@ -150,9 +150,9 @@ export function ListScreen({ store, items, results, plan, baselineM, usual, aski
           </button>
         )}
       </form>
-      {hint && <p className="caption-line muted">{hint}</p>}
-      {micNote && <p className="caption-line offline-note">{micNote}</p>}
-      {listening && <p className="caption-line muted" data-testid="listening">Listening… release to add</p>}
+      {hint && <p className="caption-line muted on-haze">{hint}</p>}
+      {micNote && <p className="caption-line offline-note on-haze">{micNote}</p>}
+      {listening && <p className="caption-line muted on-haze" data-testid="listening">Listening… release to add</p>}
 
       {reset && (
         <div className="reset-banner glass-deep" role="status" data-testid="reset-banner">
