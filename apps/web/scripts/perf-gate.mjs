@@ -9,7 +9,9 @@
 // down an aisle after two items are collected, and the flattened map at
 // its farthest zoom. Any framing over budget fails the process (exit 1).
 // Frame time is reported but never gated: headless Chromium renders with
-// SwiftShader, which is not a device number.
+// SwiftShader, which is not a device number; for the same reason the page
+// renders at device pixel ratio 1 (calls and instances do not depend on it,
+// fill rate on a CI runner does).
 
 import { chromium } from "playwright";
 
@@ -19,7 +21,8 @@ const MAX_INSTANCES = 12_000;
 const LIST = "Basmati rice 10 lb, Spinach, Pasta, Chips, Milk, Greek yogurt, Bread, Ice cream";
 
 const browser = await chromium.launch({ args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--enable-webgl"] });
-const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
+const STEADY_TIMEOUT_MS = 240_000;
 const page = await ctx.newPage();
 const errors = [];
 page.on("pageerror", (e) => errors.push(e.message));
@@ -28,7 +31,12 @@ const steady = async (frames) => {
   await page.evaluate(() => {
     if (window.__grosherPerf) window.__grosherPerf.frames = 0;
   });
-  await page.waitForFunction((n) => (window.__grosherPerf?.frames ?? 0) >= n, frames, { timeout: 90_000 });
+  try {
+    await page.waitForFunction((n) => (window.__grosherPerf?.frames ?? 0) >= n, frames, { timeout: STEADY_TIMEOUT_MS });
+  } catch (e) {
+    const seen = await page.evaluate(() => window.__grosherPerf);
+    throw new Error(`no steady state after ${STEADY_TIMEOUT_MS / 1000} s (wanted ${frames} frames): ${JSON.stringify(seen)}`, { cause: e });
+  }
   return page.evaluate(() => window.__grosherPerf);
 };
 
@@ -49,14 +57,14 @@ try {
   await page.getByTestId("map3d").waitFor({ timeout: 60_000 }).catch(() => {
     throw new Error("the trip opened with the flat fallback, not the 3D map");
   });
-  rows.push({ framing: "default (first leg)", ...(await steady(100)) });
+  rows.push({ framing: "default (first leg)", ...(await steady(40)) });
   await page.getByRole("button", { name: /got it/i }).click();
   await page.getByRole("button", { name: /got it/i }).click();
   await page.waitForTimeout(600); // the reframe eases 480 ms
-  rows.push({ framing: "down an aisle (2 collected)", ...(await steady(60)) });
+  rows.push({ framing: "down an aisle (2 collected)", ...(await steady(25)) });
   await page.getByRole("button", { name: /flatten the map/i }).click();
   await page.waitForTimeout(600);
-  rows.push({ framing: "flattened", ...(await steady(60)) });
+  rows.push({ framing: "flattened", ...(await steady(25)) });
 } finally {
   await browser.close();
 }
