@@ -79,8 +79,8 @@ a weaker hit falls through to the next layer, and the llm layer is last so its g
 | --- | --- | --- | --- |
 | a | `exact` | ids, names and `aliases` (brands too), case / punctuation / quantity ("12 pack", "1 gallon") / plural-insensitive | 1 |
 | b | `fuzzy` | trigram Dice and Damerau–Levenshtein over the same labels, threshold .72; token containment only when the query is the shorter side ("yogurt" ⊂ "greek yogurt", never "oat milk" → "milk") | .6–.95 |
-| c | `memory` | the shopper's own per-store table (name → location, confirms, confidence), match ≥ .9 | the record's |
-| d | `llm` | a cached department guess → up to 6 of that department's locations (`departmentLocations` from stores) | .5–.7 |
+| c | `memory` | the shopper's own per-store table (name → location, confirms, confidence), match ≥ .9 | the record's, decayed |
+| d | `llm` | a cached department guess → up to 6 of that department's locations (`departmentLocations` from stores) | .30–.49 (the guess band; the wire's .5–.7 mapped down) |
 | e | `unknown` | no location; the row offers "Tell me where" | 0 |
 
 `text.ts` holds normalisation and similarity; `index.ts` the layers, `pendingEntry()` (an llm result as a
@@ -92,9 +92,43 @@ Pure and synchronous: the app owns I/O.
 fallback): pending catalog entries, the llm answer cache (including "not placeable"), item memory. The list
 re-resolves 150 ms after any change; once the list has been idle 1.5 s, unknowns that were never asked go to
 the LLM provider in one batch.
-Learning loop: "Got it" → `confirmMemory` (confirms +1, confidence half-way to 1); "Not here" →
-`demoteMemory` (−.3, below .6 the next trip re-asks); "Tell me where" / "Pick aisle" → `placeMemory`
-(.9), and from the checkout screen also a confirmed catalog entry (`source: "memory"`).
+Learning loop: "Got it" → `confirmMemory` (the confirm rule below) on the memory row and on a matching
+pending catalog entry; "Not here" → `demoteMemory` (the miss rule; below .6 the next trip re-asks);
+"Tell me where" / "Pick aisle" → `placeMemory` (.9), and from the checkout screen also a confirmed catalog
+entry (`source: "memory"`). The picker opens with the map's current guess pre-highlighted and a one-tap
+"It's here" that confirms it (Got it rules), so confirming is faster than correcting.
+
+**Confidence model** (`packages/core/src/confidence.ts`, pure, `now` passed in). Every catalog entry and
+memory row carries `{confidence, confirms, misses, lastConfirmed, lastMissed}`; a surveyed package entry
+has none of them and reads as 1.
+
+| Rule | Effect |
+| --- | --- |
+| "Got it" (`confirmed`) | confidence moves toward 1 by 30% of the gap; confirms +1; lastConfirmed = now |
+| "Not here" (`missed`) | confidence −0.3, floor 0.05; misses +1; lastMissed = now |
+| time decay (`decayed`, on read, never stored) | not confirmed in 90 days → −0.1 per further 30 days, floor 0.4; a record never confirmed does not decay |
+| bands (`band`) | ≥ .8 confirmed · .5–.8 likely · < .5 guess; the edges belong to the higher band |
+
+A fresh llm answer is a guess by nature: the layer maps the wire's .5–.7 onto .30–.49 and the pending entry
+carries that, so three Got its take it guess → likely → likely → confirmed. `ResolveContext.now` feeds the
+decay (tests freeze it: the fixture rows were confirmed at t = 1). Surfaces: list chips at full opacity
+(confirmed), 80% (likely) or amber "probably A4 · cereal" (guess, `data-band` on the row); the trip sheet
+says "Probably here · tell me if not" under a guess; checkout's Make the map better rows say "A guess that
+was wrong" for a missed guess. In the editor, the Locations layer's **Confidence** toggle fills each dot by
+the weakest band of the entries at that location (solid soil, soil 55%, amber with a rim; hollow when the
+map has nothing there) with the miss count beside it, **Stale** keeps only locations with an entry not
+confirmed in 90 days or in the guess band, and Validate reports entries per band and the stale count
+(`editor/confidence.ts`).
+
+**Reset detection** (`apps/web/src/lib/reset.ts`, pure over a finished trip). A miss is a "Not here", or an
+item found on a different aisle than the map's first choice (another shelf in the same aisle is not one).
+The store is flagged "possibly reset" when ≥ 3 misses land in one aisle, or ≥ 25% of the trip's placed items
+missed. One flag per trip (`id = t_<startedAt>`), stored per store in localStorage
+(`grosher.reset.<storeId>` with `dismissedId`), raised at the once-per-trip moment the record is written.
+The list screen shows a deep-glass banner ("Demo Supercenter may have moved things · 4 misses on Thursday")
+with Review and Dismiss; dismissed stays dismissed until a later trip raises a new flag. Review opens
+`#/edit?aisle=A4&items=…&misses=4&date=…`; the editor highlights that aisle's fixtures in lime and lists the
+items in a closable panel.
 
 **Brand memory.** An `ItemMemory` row is `{name (canonical), locationId, confirms, confidence, tags,
 typedForms[] (every exact string typed for it, first spelling kept, most recent last, max 8), lastUsed,
