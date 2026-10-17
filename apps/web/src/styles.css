@@ -391,11 +391,11 @@ button { cursor: pointer; touch-action: manipulation; }
 .m-card--next .eyebrow { display: inline-flex; align-items: center; gap: 6px; }
 .m-card--next .dot { width: 8px; height: 8px; }
 /* far mode (> 40 m): cards hide, the numbered dots and the plain next label take over */
-.m-overlay .m-far-only { display: none; }
-.m-overlay--far .m-far-only { display: block; }
-.m-overlay--far .m-near-only { display: none; }
-.m-overlay--far .m-card--next { background: transparent; border-color: transparent; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; text-shadow: 0 1px 10px rgba(0, 0, 0, 0.25); }
-.m-overlay--far .m-card--next .dot { display: none; }
+/* stops after the next one (cardPlan.ts): the two right after it carry a card above their point, which
+   collapses to the numbered dot on a collision; the rest are dots only. Same at every distance. */
+.m-item.m-stop > .m-card { position: absolute; left: 0; top: 0; white-space: nowrap; transform: translate(calc(-50% + var(--dx, 0px)), calc(-100% - 6px)); }
+.m-stop--card:not(.m-collapsed) > .m-ahead { visibility: hidden; }
+.m-stop--card.m-collapsed > .m-card { visibility: hidden; }
 .trip-vignette { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(249, 215, 168, 0.2) 0%, rgba(249, 215, 168, 0) 22%, rgba(24, 77, 46, 0) 65%, rgba(24, 77, 46, 0.55) 100%); }
 .m-overlay { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .m-item { position: absolute; left: 0; top: 0; will-change: transform; }

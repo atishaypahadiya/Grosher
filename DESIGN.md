@@ -109,7 +109,7 @@ Stack: `three` + `@react-three/fiber` + `@react-three/drei` + `@react-three/post
 6. **Markers** (always face the camera, constant screen size: one DOM overlay outside the canvas, every marker projected each rendered frame; no per-marker React roots, no draw calls):
    - you: lime dot 11px with a 28px halo (pulsing)
    - next stop: lime point 8px on the shelf face at the slot's shelf height; a 1px lime leader rising to its card
-   - unvisited stops: a deep-glass card at each slot (department dot · item name · number); the next stop's card is lime-bordered. Beyond 40 m of camera distance the cards hide and the numbered white dots take over.
+   - unvisited stops: the next stop's card (lime-bordered) and a deep-glass card (department dot · item name · number) for each of the two stops after it; every later stop is its numbered white dot only. Cards never overlap: a card that would collide on screen with one already placed (the next stop's first, then route order), or would leave the map area, collapses to its dot. Same rule at every distance and in the flattened view.
    - ahead stops: white 12px circle with the number in Outfit 600 soil
    - done stops: 12px white 80% ring with a white check
    - chosen lane: lime point; other lanes nothing

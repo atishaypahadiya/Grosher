@@ -322,7 +322,7 @@ td .num { font-size: 17px; }
       <!-- The reroute loop: apps/web/scripts/capture-project.mjs, production build, demo store, 390×844; the trip step and zoom are in capture.json "tripFrame" -->
       <figure class="hero-phone" style="margin:0 auto">
         <div class="bezel">
-          <video id="trip-video" width="390" height="844" muted loop playsinline preload="none" controls poster="/project/img/trip-poster.webp" aria-label="Six-second loop of the 3D trip view on a 14-item list. At Acetaminophen in aisle A28 the shopper taps Got it; the route re-solves and the camera eases to the next leg, Ice cream in aisle A20, with its shelf lit.">
+          <video id="trip-video" width="390" height="844" muted loop playsinline preload="none" controls poster="/project/img/trip-poster.webp" aria-label="Six-second loop of the 3D trip view on a 14-item list. At Coffee in aisle A11 the shopper taps Got it; the route re-solves and the camera eases to the next leg, Chips in aisle A12, with its shelf lit.">
             <source src="/project/img/trip.webm" type="video/webm">
             <source src="/project/img/trip.mp4" type="video/mp4">
           </video>
@@ -351,7 +351,7 @@ td .num { font-size: 17px; }
       </li>
       <li>
         <figure class="phone" style="margin:0">
-          <div class="bezel"><img src="/project/img/trip.webp" width="390" height="844" loading="lazy" decoding="async" alt="The 3D trip view at step 12 of 14: the next stop, Ice cream in aisle A20, left side, bay 5, shelf 4, 42 metres away, is labelled over the store with its shelf lit; two more stops and the checkout lane are marked ahead. The bottom sheet offers Got it and Not here."></div>
+          <div class="bezel"><img src="/project/img/trip.webp" width="390" height="844" loading="lazy" decoding="async" alt="The 3D trip view with six of 14 items collected: the next stop, Chips in aisle A12, left side, bay 3, shelf 2, 13 metres away, is the one lime card over the store, with its shelf lit. Collected stops show a white ring with a check, later stops are numbered dots, and the checkout lane is marked ahead. The bottom sheet offers Got it and Not here."></div>
           <figcaption class="badge">3D trip</figcaption>
         </figure>
       </li>
@@ -883,6 +883,11 @@ td .num { font-size: 17px; }
           <li>
             <svg viewBox="0 0 64 28" aria-hidden="true"><rect x="18" y="5" width="28" height="18" rx="1.5" fill="rgba(212,255,74,.42)" stroke="#D4FF4A" stroke-width="2"/></svg>
             <div><strong>Lit slot</strong><span>The exact bay and shelf of the next item, seen through the shelving.</span></div>
+          </li>
+          <li>
+            <!-- apps/web/src/map3d/cardPlan.ts -->
+            <svg viewBox="0 0 64 28" aria-hidden="true"><rect x="2" y="6" width="38" height="16" rx="8" fill="rgba(255,255,255,.12)" stroke="#D4FF4A" stroke-width="1.2"/><circle cx="54" cy="14" r="6" fill="#fff"/><text x="54" y="17" font-size="8" font-weight="600" text-anchor="middle" fill="#0F2A1A">3</text></svg>
+            <div><strong>Stops ahead</strong><span>Cards for the next stop, in lime, and the two after it; every later stop is a numbered dot. A card that would cover another folds to its dot.</span></div>
           </li>
           <li>
             <svg viewBox="0 0 64 28" aria-hidden="true"><circle cx="32" cy="14" r="7" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="1.5"/><path d="M28.8 14.2l2.2 2.2 4.4-4.6" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>

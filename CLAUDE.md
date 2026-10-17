@@ -410,8 +410,12 @@ gzipped). The store stays 2D; the scene maps `(x, y) → (x, 0, y)`.
   test off; it is the selective bloom's selection together with the ribbon's glow line.
 - `Ribbon.tsx`: walked / current (with a wide copy for the bloom) / ahead (dashed) as drei `Line`.
 - `Overlay.tsx`: markers, stop cards and the two labels are plain DOM outside the Canvas, projected every
-  rendered frame by `OverlayProjector`, labels clamped into the map area, cards hidden beyond 40 m
-  (`.m-overlay--far`). Never use drei `Html` here: one React root per marker, and React 19 warns on each
+  rendered frame by `OverlayProjector`, labels clamped into the map area. Cards (`cardPlan.ts`, pure and
+  unit-tested): the next stop's lime card and the two stops after it; every later stop is a numbered dot,
+  done stops a ring + check. Each frame the next-stop card and the checkout callout are placed, then each
+  stop card in route order stays only if it fits the map area (sliding sideways off an edge) without
+  touching a placed box by 4 px; otherwise `.m-collapsed` folds it to its dot. No distance switch: the same
+  at every zoom and flattened. Never use drei `Html` here: one React root per marker, and React 19 warns on each
   unmount. Never `createPortal` DOM from inside the Canvas: R3F's reconciler rejects it.
 - `CameraRig.tsx`: 42° **horizontal** field (`verticalFov(aspect)`, clamped 42–80°), tilt 58°, yaw −18°.
   `solveFraming` works in screen space on a scratch camera: fits the leg (padded 15%) into the area the
@@ -494,11 +498,12 @@ Media: `node apps/web/scripts/capture-project.mjs http://localhost:4173` against
 It types a 14-item list over 13 aisles in no store order, walks the trip, and writes the 2× WebP stills (list,
 3D trip, checkout), the 6-second WebM + MP4 loop with its WebP poster, and `capture.json`. The trip clock is
 simulated: the page's `Date.now` is frozen and advanced by each leg at `WALK_MPS` (1 m/s), so the card reads
-walking time only. The 3D frame is the first step with the next stop's marker in the map area, the camera
-within 40 m, and at most three item cards drawn, none touching an edge; it prefers mid-trip (30–70%), but the
-app draws a card for every unvisited stop within 40 m and the tilted view takes in the whole store, so with
-14 stops the first qualifying step is 11 of 14 (steps 5–9 draw 9 to 5 cards). `capture.json` records the step
-and that reason. The loop's one reroute arrives at that step. The trip's "vs list in order" (49%) sits inside
+walking time only. The 3D frame is the mid-trip step (30–70%) nearest 6 of 14 with the next stop's marker in
+the map area, the camera within 40 m, and its cards inside the map area and clear of each other; today that
+is step 6 at the default framing. Only the lime card shows there: the framing fits the current leg, the
+route after it runs off screen to the left, and the stop right after Chips would cover the lime label, so
+it folds to its dot. `capture.json` records the step and the cards counted at each step evaluated. The
+loop's one reroute arrives at that step. The trip's "vs list in order" (49%) sits inside
 the bench's 14-stop range (35–54%, `npm run bench`'s last line).
 
 The service worker never answers `/project/` with the app shell (`navigateFallbackDenylist`) and does not

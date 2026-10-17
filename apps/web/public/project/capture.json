@@ -19,21 +19,53 @@
   ],
   "legsToStopsM": 420,
   "tripFrame": {
-    "step": 11,
+    "step": 6,
     "of": 14,
-    "midTrip": false,
+    "midTrip": true,
     "zoomSteps": 0,
     "zoom": 1,
     "cameraDistanceM": 39.1,
-    "cards": 3,
+    "cards": 1,
     "cardsInside": true,
+    "cardsOverlap": false,
+    "dots": 7,
     "nextInMap": true,
     "names": [
-      "Frozen pizza2",
-      "Greek yogurt3",
-      "Frozen · A20 · 12 of 14Ice cream42 mLeft · bay 5 · shelf 4"
+      "Snacks · A12 · 7 of 14Chips13 mLeft · bay 3 · shelf 2"
     ],
-    "whyNotMidTrip": "every unvisited stop within 40 m of the camera gets a card and the tilted view takes in the whole store; steps 5–9 drew 9, 8, 7, 6, 5 cards"
+    "target": 6,
+    "evaluated": [
+      {
+        "step": 5,
+        "distanceM": 39.1,
+        "cards": 1,
+        "dots": 8
+      },
+      {
+        "step": 6,
+        "distanceM": 39.1,
+        "cards": 1,
+        "dots": 7
+      },
+      {
+        "step": 7,
+        "distanceM": 49.8,
+        "cards": 1,
+        "dots": 6
+      },
+      {
+        "step": 8,
+        "distanceM": 39.1,
+        "cards": 1,
+        "dots": 5
+      },
+      {
+        "step": 9,
+        "distanceM": 39.1,
+        "cards": 2,
+        "dots": 3
+      }
+    ]
   },
   "card": {
     "eyebrows": [

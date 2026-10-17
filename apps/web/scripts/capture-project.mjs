@@ -10,16 +10,14 @@
 // the page's live share card shows them).
 //
 // The list: 14 everyday items over 13 aisles, typed in no store order, as a shopper writes a list.
-// The trip frame: walking the trip, the first mid-trip step (between 30% and 70% of the way, else the
-// earliest later one; see below) whose
-// view has the next stop's marker (the lit slot) inside the map area and at most 3 item cards drawn,
-// none touching the screen edges, the progress strip or the bottom sheet. With 14 stops the automatic
-// framing shows 5–6 cards (they only hide beyond 40 m, and the framing floor is ~39 m), so at each
-// candidate step the capture zooms in with the app's own wheel / pinch zoom, one step at a time,
-// until the frame qualifies; capture.json records the step and the zoom. The camera must also be
-// within 40 m: further out the cards hide on their own, but the store is a thin band and the lit
-// slot a few pixels, which is not the view a shopper walks with. The video: hold, Got it
-// arriving at that step, the camera eases to the new leg, then the same zoom in, hold.
+// The trip frame: a true mid-trip step, the one nearest TARGET_STEP (6 of 14) within 30–70% of the way,
+// whose view has the next stop's marker (the lit slot) inside the map area, the camera within 40 m (the
+// shelves and the lit slot read; further out the store is a thin band), and its drawn cards (at most three
+// since the map caps them: the next stop and the two after it, src/map3d/cardPlan.ts) clear of the
+// edges, the progress strip, the sheet and each other. If none qualifies as framed, the capture zooms in
+// with the app's own wheel / pinch zoom one notch at a time; capture.json records the step and the zoom.
+// The video: hold, Got it arriving at that step, the camera eases to the new leg (then the same zoom, if
+// any), hold.
 //
 // The trip clock: Playwright taps through a trip in seconds, so the page's Date.now is frozen at load
 // and advances only by each leg's distance at the app's own walking pace (WALK_MPS, 1.0 m/s in
@@ -43,7 +41,8 @@ const MAX_CARDS = 3;
 const EDGE = 6; // px a card must keep from every edge
 const WHEEL = -80; // one wheel notch in: the map zooms by exp(80 × 0.0015) ≈ 1.13× (TripMap3D onWheel)
 const MAX_ZOOM_STEPS = 8;
-const NEAR_M = 40; // CARDS_MAX_M in src/map3d/Overlay.tsx: within it the shelves, products and lit slot read; beyond it the view is a thin band
+const NEAR_M = 40; // within it the shelves, products and lit slot read; beyond it the view is a thin band
+const TARGET_STEP = Math.round(14 * 0.43); // 6 of 14: the middle of the trip
 const GL = ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--enable-webgl"];
 
 mkdirSync(IMG, { recursive: true });
@@ -88,12 +87,17 @@ const frameReport = (edge) => {
   const top = (strip?.bottom ?? 0) + edge;
   const bottom = (sheet?.top ?? innerHeight) - edge;
   const inside = (r) => r.left >= edge && r.right <= vw - edge && r.top >= top && r.bottom <= bottom;
-  const cards = [...document.querySelectorAll(".m-overlay .m-card")].filter((el) => el.checkVisibility() && el.getBoundingClientRect().width > 0);
+  const shown = (el) => el.checkVisibility({ visibilityProperty: true, opacityProperty: true }) && el.getBoundingClientRect().width > 0;
+  const cards = [...document.querySelectorAll(".m-overlay .m-card")].filter(shown);
+  const rects = cards.map((el) => el.getBoundingClientRect());
+  const overlap = rects.some((a, i) => rects.some((b, j) => j > i && a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom));
   const next = document.querySelector(".m-overlay .m-next");
-  const nextRect = next && next.checkVisibility() ? next.getBoundingClientRect() : null;
+  const nextRect = next && shown(next) ? next.getBoundingClientRect() : null;
   return {
     cards: cards.length,
-    cardsInside: cards.every((el) => inside(el.getBoundingClientRect())),
+    cardsInside: rects.every(inside),
+    cardsOverlap: overlap,
+    dots: [...document.querySelectorAll(".m-overlay .m-ahead")].filter(shown).length,
     nextInMap: !!nextRect && inside(nextRect),
     names: cards.map((el) => el.textContent?.replace(/\s+/g, " ").trim()),
   };
@@ -121,13 +125,12 @@ let chosenStep = null;
   await page.getByTestId("map3d").waitFor({ timeout: 60_000 });
   await steady(page, 20);
   let legsM = 0;
-  // mid-trip first (30–70% of the way); the app draws a card for every unvisited stop within 40 m of the
-  // camera and the tilted view takes in the whole store, so with 14 stops no mid-trip step has ≤ 3 cards:
-  // the search then continues to the earliest later step that qualifies, and capture.json says so
+  // every step in the mid-trip window (30–70% of the way) is evaluated and, if it qualifies, shot; the trip
+  // only walks forward, so the choice (the qualifying step nearest TARGET_STEP) is made afterwards
   const lo = Math.ceil(ITEMS * 0.3);
-  const hi = ITEMS - 1;
-  const midHi = Math.floor(ITEMS * 0.7);
+  const hi = Math.floor(ITEMS * 0.7);
   const seen = [];
+  const qualifying = [];
   for (let k = 1; k < ITEMS; k++) {
     legsM += await gotIt(page);
     await page.waitForTimeout(700); // the camera eases 480 ms
@@ -135,9 +138,9 @@ let chosenStep = null;
     if (process.env.SCAN) {
       const f = await page.evaluate(frameReport, EDGE);
       const dist = await page.evaluate(() => window.__grosherPerf?.distance ?? Infinity);
-      console.log(`scan step ${k}: ${dist} m, ${f.cards} cards, inside ${f.cardsInside}, next in map ${f.nextInMap} · ${f.names.map((n) => n.slice(0, 18)).join(" | ")}`);
+      console.log(`scan step ${k}: ${dist} m, ${f.cards} cards, ${f.dots} dots, inside ${f.cardsInside}, overlap ${f.cardsOverlap}, next in map ${f.nextInMap} · ${f.names.map((n) => n.slice(0, 18)).join(" | ")}`);
     }
-    if (k < lo || k > hi || chosenStep !== null) continue;
+    if (k < lo || k > hi) continue;
     for (let z = 0; z <= MAX_ZOOM_STEPS; z++) {
       if (z > 0) {
         await zoomIn(page);
@@ -146,20 +149,24 @@ let chosenStep = null;
       }
       const f = await page.evaluate(frameReport, EDGE);
       const dist = await page.evaluate(() => window.__grosherPerf?.distance ?? Infinity);
-      seen.push({ step: k, zoomSteps: z, distanceM: dist, cards: f.cards, cardsInside: f.cardsInside, nextInMap: f.nextInMap });
+      seen.push({ step: k, zoomSteps: z, distanceM: dist, cards: f.cards, dots: f.dots, cardsInside: f.cardsInside, cardsOverlap: f.cardsOverlap, nextInMap: f.nextInMap });
       if (!f.nextInMap) break; // zoomed past the next stop: this step will not do
-      if (dist <= NEAR_M && f.cards <= MAX_CARDS && f.cardsInside) {
-        chosenStep = { step: k, of: ITEMS, midTrip: k <= midHi, zoomSteps: z, zoom: +Math.exp(-WHEEL * 0.0015 * z).toFixed(2), cameraDistanceM: dist, ...f };
-        if (!chosenStep.midTrip) chosenStep.whyNotMidTrip = `every unvisited stop within ${NEAR_M} m of the camera gets a card and the tilted view takes in the whole store; steps ${lo}–${midHi} drew ${seen.filter((x) => x.step <= midHi && x.zoomSteps === 0 && x.distanceM <= NEAR_M).map((x) => x.cards).join(", ")} cards`;
-        await page.screenshot({ path: join(TMP, "trip.png") });
+      if (dist <= NEAR_M && f.cards <= MAX_CARDS && f.cardsInside && !f.cardsOverlap) {
+        const shot = join(TMP, `trip-${k}.png`);
+        await page.screenshot({ path: shot });
+        qualifying.push({ step: k, of: ITEMS, midTrip: true, zoomSteps: z, zoom: +Math.exp(-WHEEL * 0.0015 * z).toFixed(2), cameraDistanceM: dist, ...f, shot });
         break;
       }
     }
   }
-  if (!chosenStep) {
+  qualifying.sort((a, b) => Math.abs(a.step - TARGET_STEP) - Math.abs(b.step - TARGET_STEP) || a.step - b.step);
+  if (!qualifying.length) {
     console.log(JSON.stringify(seen, null, 1));
-    throw new Error(`no mid-trip frame with the next stop in view and ≤ ${MAX_CARDS} cards clear of the edges`);
+    throw new Error(`no mid-trip frame (steps ${lo}–${hi}) with the next stop in view and its cards clear of the edges and each other`);
   }
+  const { shot, ...picked } = qualifying[0];
+  chosenStep = { ...picked, target: TARGET_STEP, evaluated: seen.filter((x) => x.zoomSteps === 0).map((x) => ({ step: x.step, distanceM: x.distanceM, cards: x.cards, dots: x.dots })) };
+  renameSync(shot, join(TMP, "trip.png"));
   legsM += await gotIt(page); // the last item
   await page.getByText(/trip done/i).waitFor();
   await page.evaluate(() => document.fonts.ready);
