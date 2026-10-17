@@ -295,6 +295,44 @@ Outfit and Doto are not loaded from Google, which would miss the cache on the fi
 back to `index.html`. The app works offline after one online load. Icons are in `public/icons/` (lime dot
 on soil). Check with `npm run build && npx vite preview`, load once, go offline, reload.
 
+### Deploy: Cloudflare Pages (web) + Worker (resolver)
+
+**Pages.** Connect the GitHub repo; production branch `main`. Dashboard settings:
+
+| Setting | Value |
+| --- | --- |
+| Framework preset | None |
+| Root directory | `/` (the repo root: the workspaces install from the root lockfile) |
+| Build command | `npm run build -w @grosher/web` |
+| Build output directory | `apps/web/dist` |
+| Node version | `.nvmrc` pins 22 (or set the `NODE_VERSION=22` environment variable) |
+| Environment variables | `VITE_RESOLVER_PROVIDER=worker`, `VITE_RESOLVER_URL=https://grosher-resolver.<account>.workers.dev` |
+
+Pages runs `npm clean-install` itself before the build command. `apps/web/public/_headers` ships with the
+build: `sw.js`, `registerSW.js`, the manifest and the HTML are `no-cache` so a deploy reaches installed apps
+on their next open; `/assets/*`, `/fonts/*` and the Workbox runtime are hashed and `immutable`;
+`Permissions-Policy` allows the microphone for voice entry. No `_redirects`: routes are hash-based and
+navigations fall back to `index.html` through the service worker. The build also fails on any `sk-ant` string
+(`bundle.test.ts`), and CI's perf gate runs on every push (`.github/workflows/ci.yml`,
+`apps/web/scripts/perf-gate.mjs`: three framings of the 3D view within 70 draw calls and 12,000 instances).
+`apps/web/.env.local` is git-ignored (it was tracked once): a LAN Ollama address there would otherwise bake
+into the deployed bundle.
+
+**Checking the production build as an installed PWA over HTTPS** (Chromium only registers a service worker
+on an origin whose certificate it trusts, so plain `ignoreHTTPSErrors` is not enough):
+
+```bash
+brew install mkcert && mkcert -install            # once; the phone needs the root CA from `mkcert -CAROOT` too
+mkcert localhost 192.168.1.20                      # the Mac's LAN address, for the phone
+npm run build -w @grosher/web
+HTTPS_KEY=localhost+1-key.pem HTTPS_CERT=localhost+1.pem npm run preview -w @grosher/web   # https://localhost:4173
+```
+
+Load once, Add to Home Screen, go offline, reopen. Last verified in headless Chromium at 390×844 (certificate
+trusted by `--ignore-certificate-errors-spki-list`): secure context, worker activated and controlling with
+the precache filled, manifest with name / icons 192 + 512 + maskable / `standalone` / `start_url`, and after
+`setOffline` a reload rendered the list screen and a routed trip opened in 3D with all nine textures.
+
 ## Design rules a future session must not break (DESIGN.md §7, plus what the code relies on)
 
 - No blue anywhere. Lime `#D4FF4A` is the only accent and it means *now*: you, the next stop, the chosen

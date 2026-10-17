@@ -1,6 +1,12 @@
+import { readFileSync } from "node:fs";
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
+
+// `vite preview` over HTTPS for a PWA install / offline check from a phone:
+//   mkcert -install && mkcert localhost 192.168.1.20   (once)
+//   HTTPS_KEY=localhost+1-key.pem HTTPS_CERT=localhost+1.pem npm run preview -w @grosher/web
+const https = process.env.HTTPS_KEY && process.env.HTTPS_CERT ? { key: readFileSync(process.env.HTTPS_KEY), cert: readFileSync(process.env.HTTPS_CERT) } : undefined;
 
 export default defineConfig({
   plugins: [
@@ -32,6 +38,7 @@ export default defineConfig({
       },
     }),
   ],
+  preview: { host: true, https },
   server: {
     host: true,
     // dev: the resolver worker runs under `wrangler dev` on 8787; the app calls /api/resolve
