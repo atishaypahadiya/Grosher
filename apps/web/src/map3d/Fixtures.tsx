@@ -1,39 +1,30 @@
-// Fixtures: one merged mesh per department (texture tiled on top and side
-// faces), one merged edge-line set per department, one atlas mesh for the
-// aisle signs, and the lit fixture (next stop) drawn on its own with lime.
+// Fixtures: detailed geometry per department fixture kind (gondola, cold
+// case, produce table, bakery table, counter), merged per department into
+// one opaque mesh (department texture on the visible faces), one glass
+// mesh, one frame mesh and one glow mesh where the kind needs them, plus
+// one hull outline per department and one atlas mesh for the aisle signs.
+// The fixture holding the next stop is drawn alone with lime emissive.
 
 import { useEffect, useMemo } from "react";
-import { BoxGeometry, Color, DoubleSide, EdgesGeometry, LineBasicMaterial, LineSegments, Mesh, MeshStandardMaterial, PlaneGeometry, RepeatWrapping, SRGBColorSpace, Texture, TextureLoader } from "three";
-import { Line } from "@react-three/drei";
+import { BoxGeometry, Color, DoubleSide, EdgesGeometry, LineBasicMaterial, LineSegments, Mesh, MeshStandardMaterial, PlaneGeometry, RepeatWrapping, SRGBColorSpace, Texture, TextureLoader, type BufferGeometry } from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { useLoader } from "@react-three/fiber";
+import { Line } from "@react-three/drei";
 import type { Department, GraphNode, StoreGraph } from "@grosher/core";
+import { fixtureParams, frontSignOf, type FixtureParams } from "@grosher/stores";
 import { type Box, fixtureBox, frontOf } from "./layout.ts";
 import { buildSignAtlas } from "./signs.ts";
+import { generate } from "./fixtures/generators.ts";
+import { emptyParts, type Parts } from "./fixtures/parts.ts";
 
 const LIME = new Color("#D4FF4A");
 const EDGE_WHITE = new LineBasicMaterial({ color: "#FFFFFF", transparent: true, opacity: 0.35 });
+const GLASS = new MeshStandardMaterial({ color: "#E8F4F6", transparent: true, opacity: 0.32, roughness: 0.08, metalness: 0.05, depthWrite: false });
+const FRAME = new MeshStandardMaterial({ color: "#F3F7F7", roughness: 0.6 });
+const GLOW = new MeshStandardMaterial({ color: "#F4FBFC", emissive: new Color("#DDF2F5"), emissiveIntensity: 0.45, roughness: 1 });
 
-/** A box with UVs scaled so the texture repeats every `repeat` metres on every face. */
-function boxGeometry(b: Box, repeat: number) {
+function hullGeometry(b: Box) {
   const g = new BoxGeometry(b.w, b.h, b.d);
-  const uv = g.attributes.uv;
-  // face order: px, nx, py, ny, pz, nz; 4 vertices each
-  const dims: [number, number][] = [
-    [b.d, b.h],
-    [b.d, b.h],
-    [b.w, b.d],
-    [b.w, b.d],
-    [b.w, b.h],
-    [b.w, b.h],
-  ];
-  for (let f = 0; f < 6; f++) {
-    const [du, dv] = dims[f];
-    for (let v = 0; v < 4; v++) {
-      const i = f * 4 + v;
-      uv.setXY(i, (uv.getX(i) * du) / repeat, (uv.getY(i) * dv) / repeat);
-    }
-  }
   g.translate(b.cx, b.h / 2, b.cz);
   return g;
 }
@@ -42,6 +33,8 @@ function tint(hex: string) {
   // department hex at 70% over white, so the photo's own grade shows through
   return new Color("#FFFFFF").lerp(new Color(hex), 0.7);
 }
+
+const merge = (gs: BufferGeometry[]) => (gs.length ? mergeGeometries(gs, false) : null);
 
 export interface FixturesProps {
   store: StoreGraph;
@@ -52,6 +45,13 @@ export interface FixturesProps {
   fromEntrance: Map<string, number>;
   /** the mesh of the lit fixture, for the selective bloom pass */
   onLitMesh?: (mesh: Mesh | null) => void;
+}
+
+interface Built {
+  f: StoreGraph["fixtures"] extends (infer T)[] | undefined ? T : never;
+  p: FixtureParams;
+  hull: Box;
+  parts: Parts;
 }
 
 export function Fixtures({ store, textureUrl, repeatMeters = 2, litFixtureId, nodes, fromEntrance, onLitMesh }: FixturesProps) {
@@ -70,37 +70,69 @@ export function Fixtures({ store, textureUrl, repeatMeters = 2, litFixtureId, no
     return m;
   }, [withTexture, textures]);
 
-  const boxes = useMemo(() => (store.fixtures ?? []).map(fixtureBox), [store]);
+  // Every fixture's detailed parts, once per store.
+  const built = useMemo<Built[]>(() => {
+    const centre = { x: 0, y: 0 };
+    const all = store.fixtures ?? [];
+    if (all.length) {
+      centre.x = all.reduce((s, f) => s + fixtureBox(f).cx, 0) / all.length;
+      centre.y = all.reduce((s, f) => s + fixtureBox(f).cz, 0) / all.length;
+    }
+    return all.map((f) => {
+      const p = fixtureParams(f, departments);
+      const hull = fixtureBox(f);
+      // a wall run opens toward the store centre: local +z is map +z for horizontal runs, map −x for vertical (rotateY(−π/2) maps local z → map −x)
+      const towardCentre: 1 | -1 = p.vertical ? (centre.x < p.cx ? 1 : -1) : centre.y > p.cz ? 1 : -1;
+      const parts = generate(p, repeatMeters, { wall: f.kind === "wall", towardCentre, frontSign: frontSignOf(p, store) });
+      return { f, p, hull, parts };
+    });
+  }, [store, departments, repeatMeters]);
 
-  // Merged geometry per department, lit fixture excluded.
+  const materialFor = (dept: Department | undefined) => {
+    const map = dept ? textureFor.get(dept.id) ?? null : null;
+    return new MeshStandardMaterial({ map, color: dept ? (map ? tint(dept.color) : new Color(dept.color)) : new Color("#DCE3D4"), roughness: 0.85, metalness: 0 });
+  };
+
+  // Merged per department, lit fixture excluded.
   const groups = useMemo(() => {
-    const byDept = new Map<string, Box[]>();
-    for (const b of boxes) {
-      if (b.id === litFixtureId) continue;
-      const key = b.department ?? "_none";
+    const byDept = new Map<string, Built[]>();
+    for (const b of built) {
+      if (b.f.id === litFixtureId) continue;
+      const key = b.f.department ?? "_none";
       byDept.set(key, [...(byDept.get(key) ?? []), b]);
     }
-    const out: { dept: Department | undefined; key: string; mesh: Mesh; edges: LineSegments }[] = [];
+    const out: { key: string; opaque: Mesh | null; glass: Mesh | null; frame: Mesh | null; glow: Mesh | null; edges: LineSegments | null }[] = [];
     for (const [key, list] of byDept) {
-      const geo = mergeGeometries(list.map((b) => boxGeometry(b, repeatMeters)), false)!;
       const dept = departments.find((d) => d.id === key);
-      const map = dept ? textureFor.get(dept.id) ?? null : null;
-      const mat = new MeshStandardMaterial({
-        map,
-        color: dept ? (map ? tint(dept.color) : new Color(dept.color)) : new Color("#DCE3D4"),
-        roughness: 0.85,
-        metalness: 0,
+      const parts = emptyParts();
+      for (const b of list) {
+        parts.opaque.push(...b.parts.opaque);
+        parts.glass.push(...b.parts.glass);
+        parts.frame.push(...b.parts.frame);
+        parts.glow.push(...b.parts.glow);
+      }
+      const opaque = merge(parts.opaque);
+      const glass = merge(parts.glass);
+      const frame = merge(parts.frame);
+      const glow = merge(parts.glow);
+      const hulls = merge(list.map((b) => hullGeometry(b.hull)));
+      out.push({
+        key,
+        opaque: opaque ? new Mesh(opaque, materialFor(dept)) : null,
+        glass: glass ? new Mesh(glass, GLASS) : null,
+        frame: frame ? new Mesh(frame, FRAME) : null,
+        glow: glow ? new Mesh(glow, GLOW) : null,
+        edges: hulls ? new LineSegments(new EdgesGeometry(hulls), EDGE_WHITE) : null,
       });
-      out.push({ dept, key, mesh: new Mesh(geo, mat), edges: new LineSegments(new EdgesGeometry(geo), EDGE_WHITE) });
     }
     return out;
-  }, [boxes, litFixtureId, repeatMeters, departments, textureFor]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [built, litFixtureId, departments, textureFor]);
 
   const lit = useMemo(() => {
-    const b = boxes.find((x) => x.id === litFixtureId);
+    const b = built.find((x) => x.f.id === litFixtureId);
     if (!b) return null;
-    const geo = boxGeometry(b, repeatMeters);
-    const dept = departments.find((d) => d.id === b.department);
+    const dept = departments.find((d) => d.id === b.f.department);
     const map = dept ? textureFor.get(dept.id) ?? null : null;
     const mat = new MeshStandardMaterial({
       map,
@@ -109,52 +141,58 @@ export function Fixtures({ store, textureUrl, repeatMeters = 2, litFixtureId, no
       emissiveIntensity: 0.45,
       roughness: 0.8,
     });
-    // rim: the box's edges as a 2 px screen-space line (WebGL ignores line widths on LineSegments)
-    const pos = new EdgesGeometry(geo).attributes.position;
+    const geo = merge(b.parts.opaque)!;
+    const pos = new EdgesGeometry(hullGeometry(b.hull)).attributes.position;
     const rim: [number, number, number][] = [];
     for (let i = 0; i < pos.count; i++) rim.push([pos.getX(i), pos.getY(i), pos.getZ(i)]);
-    return { mesh: new Mesh(geo, mat), rim };
-  }, [boxes, litFixtureId, repeatMeters, departments, textureFor]);
+    const glass = merge(b.parts.glass);
+    const frame = merge(b.parts.frame);
+    return { mesh: new Mesh(geo, mat), rim, glass: glass ? new Mesh(glass, GLASS) : null, frame: frame ? new Mesh(frame, FRAME) : null };
+  }, [built, litFixtureId, departments, textureFor]);
   useEffect(() => {
     onLitMesh?.(lit?.mesh ?? null);
   }, [lit, onLitMesh]);
 
   // Aisle signs: one plane per labelled fixture on its entrance-facing end, one atlas texture.
   const signs = useMemo(() => {
-    const labelled = boxes.filter((b) => b.aisle);
+    const labelled = built.filter((b) => b.f.aisle);
     if (!labelled.length) return null;
-    const labels = [...new Set(labelled.map((b) => b.aisle!))];
+    const labels = [...new Set(labelled.map((b) => b.f.aisle!))];
     const { texture, cells } = buildSignAtlas(labels);
     const planes = labelled.flatMap((b) => {
-      const cell = cells.get(b.aisle!);
+      const cell = cells.get(b.f.aisle!);
       if (!cell) return [];
-      const front = frontOf(b, nodes, fromEntrance);
+      const front = frontOf(b.hull, nodes, fromEntrance);
       const w = Math.min(Math.max(front.width, 1.2), 3.2);
       const h = w / 4;
       const g = new PlaneGeometry(w, h);
       const uv = g.attributes.uv;
       for (let i = 0; i < uv.count; i++) uv.setXY(i, cell.u0 + uv.getX(i) * (cell.u1 - cell.u0), cell.v0 + uv.getY(i) * (cell.v1 - cell.v0));
-      const yaw = Math.atan2(front.nx, front.nz); // plane normal is +z by default
-      g.rotateY(yaw);
-      g.translate(front.x + front.nx * 0.03, Math.min(b.h - h / 2 - 0.1, 1.35), front.z + front.nz * 0.03);
+      g.rotateY(Math.atan2(front.nx, front.nz));
+      g.translate(front.x + front.nx * 0.05, Math.min(b.hull.h - h / 2 - 0.1, 1.35), front.z + front.nz * 0.05);
       return [g];
     });
-    const geo = mergeGeometries(planes, false)!;
+    const geo = merge(planes)!;
     const mat = new MeshStandardMaterial({ map: texture, transparent: true, side: DoubleSide, roughness: 1, depthWrite: false });
     return new Mesh(geo, mat);
-  }, [boxes, nodes, fromEntrance]);
+  }, [built, nodes, fromEntrance]);
 
   return (
     <group name="fixtures">
       {groups.map((g) => (
         <group key={g.key}>
-          <primitive object={g.mesh} />
-          <primitive object={g.edges} />
+          {g.opaque && <primitive object={g.opaque} />}
+          {g.glow && <primitive object={g.glow} />}
+          {g.frame && <primitive object={g.frame} />}
+          {g.glass && <primitive object={g.glass} />}
+          {g.edges && <primitive object={g.edges} />}
         </group>
       ))}
       {lit && (
         <group name="lit">
           <primitive object={lit.mesh} />
+          {lit.frame && <primitive object={lit.frame} />}
+          {lit.glass && <primitive object={lit.glass} />}
           <Line segments points={lit.rim} color="#D4FF4A" lineWidth={2} toneMapped={false} />
         </group>
       )}
