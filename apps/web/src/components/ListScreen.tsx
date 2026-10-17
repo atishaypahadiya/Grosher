@@ -140,12 +140,16 @@ export function ListScreen({ store, items, results, plan, baselineM, usual, aski
                       {r && <SourceGlyph source={r.source} />}
                       {r?.canonicalName ?? name}
                     </span>
-                    {unknown && <span className="sub">{r?.department ? `Not placed yet · probably ${r.department}` : "Not placed yet"}</span>}
+                    {r && unknown && <span className="sub">{r.department ? `Not placed yet · probably ${r.department}` : "Not placed yet"}</span>}
                   </button>
                   {isSel ? (
                     <button type="button" className="chip ghost action" onClick={() => onRemove(name)}>
                       Remove
                     </button>
+                  ) : !r ? (
+                    <span className="chip ghost pending" aria-label="Resolving">
+                      …
+                    </span>
                   ) : !unknown && chip ? (
                     <span className={`chip${r.source === "llm" ? " guess" : ""}`} style={{ opacity: 0.5 + 0.5 * Math.min(1, r.confidence) }} title={`${Math.round(r.confidence * 100)}%`}>
                       <i className="dot" style={chip.color ? { background: chip.color } : undefined} />
