@@ -50,7 +50,8 @@ export function ListScreen({ store, items, results, plan, baselineM, usual, aski
   useEffect(() => () => stopRef.current(), []);
 
   const byQuery = new Map(results.map((r) => [r.query, r]));
-  const placed = results.filter((r) => r.locationIds.length > 0).length;
+  // results lag the items by a debounce: count only rows that are still on the list
+  const placed = items.filter((name) => (byQuery.get(name)?.locationIds.length ?? 0) > 0).length;
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
