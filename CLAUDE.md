@@ -90,7 +90,8 @@ Pure and synchronous: the app owns I/O.
 
 **In the app** (`useResolution`): learning state per store lives in IndexedDB (`lib/db.ts`, in-memory
 fallback): pending catalog entries, the llm answer cache (including "not placeable"), item memory. The list
-re-resolves 150 ms after any change; 600 ms later unknowns that were never asked go to the LLM provider.
+re-resolves 150 ms after any change; once the list has been idle 1.5 s, unknowns that were never asked go to
+the LLM provider in one batch.
 Learning loop: "Got it" → `confirmMemory` (confirms +1, confidence half-way to 1); "Not here" →
 `demoteMemory` (−.3, below .6 the next trip re-asks); "Tell me where" / "Pick aisle" → `placeMemory`
 (.9), and from the checkout screen also a confirmed catalog entry (`source: "memory"`). The editor exports
