@@ -11,7 +11,8 @@ import type { CameraRigHandle } from "./CameraRig.tsx";
 import { fixtureBox, fixtureForLocation } from "./layout.ts";
 import { slotFor } from "@grosher/stores";
 import type { Focus, SafeArea } from "./CameraRig.tsx";
-import { OverlayDom, useOverlayItems, type NextLabel, type OverlayRegistry } from "./Overlay.tsx";
+import { OverlayDom, useOverlayItems, type NextLabel, type OverlayRegistry, type StopCard } from "./Overlay.tsx";
+import { locationDepartment } from "../lib/chips.ts";
 
 export interface TripMap3DProps {
   bundle: StoreBundle;
@@ -112,14 +113,35 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
   );
 
   const registry = useRef<OverlayRegistry>(new Map()).current;
+  const slotPos = (locationId: string | undefined): [number, number, number] | null => {
+    const loc = locationId ? store.locations.find((l) => l.id === locationId) : undefined;
+    const s = loc ? slotFor(store, loc) : undefined;
+    return s ? [s.center.x, s.heightM + 0.12, s.center.y] : null;
+  };
+  const colorOf = (locationId: string | undefined) => {
+    const loc = locationId ? store.locations.find((l) => l.id === locationId) : undefined;
+    return locationDepartment(store, loc)?.color;
+  };
+  const stopLegs = legs.filter((l) => l.stopId !== null);
+  const cards: StopCard[] = stopLegs.slice(1).map((l, i) => ({
+    key: l.stopId!,
+    pos: slotPos(l.locationId) ?? [nodes.get(l.nodeId)?.x ?? 0, 1.2, nodes.get(l.nodeId)?.y ?? 0],
+    name: l.label,
+    color: colorOf(l.locationId),
+    n: i + 2,
+  }));
+  const donePositions = trip.doneNodeIds.map((id) => slotPos(id.startsWith("loc:") ? id.slice(4) : undefined) ?? [nodes.get(id)?.x ?? 0, 1.2, nodes.get(id)?.y ?? 0]) as [number, number, number][];
   const items = useOverlayItems({
     nodes,
     positionNodeId: trip.positionNodeId,
     nextNodeId: nextIsStop ? current!.nodeId : null,
     nextPos: litSlot ? [litSlot.center.x, litSlot.heightM + 0.12, litSlot.center.y] : null,
     nextLabel,
-    aheadNodeIds: legs.filter((l) => l.stopId !== null).slice(1).map((l) => l.nodeId),
+    aheadNodeIds: stopLegs.slice(1).map((l) => l.nodeId),
     doneNodeIds: trip.doneNodeIds,
+    cards,
+    donePositions,
+    nextColor: colorOf(current?.locationId),
     laneNodeId: legs.find((l) => l.label === "Checkout")?.nodeId ?? null,
     checkoutLabel,
     entranceId: store.entranceId,

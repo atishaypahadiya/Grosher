@@ -4,6 +4,7 @@
 // One React tree, no per-marker roots, nothing scales with zoom.
 
 import { useEffect, useMemo, type ReactNode } from "react";
+import { cameraStats } from "./CameraRig.tsx";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Vector3 } from "three";
 import type { GraphNode } from "@grosher/core";
@@ -17,6 +18,18 @@ export interface NextLabel {
   slot?: string;
 }
 
+/** An unvisited stop's card at its shelf slot. */
+export interface StopCard {
+  key: string;
+  pos: [number, number, number];
+  name: string;
+  color?: string;
+  n: number;
+}
+
+/** Cards and the next-stop card hide beyond this camera distance; the numbered dots take over. */
+export const CARDS_MAX_M = 40;
+
 export interface OverlayProps {
   nodes: Map<string, GraphNode>;
   positionNodeId: string;
@@ -26,6 +39,12 @@ export interface OverlayProps {
   nextLabel?: NextLabel | null;
   aheadNodeIds: string[];
   doneNodeIds: string[];
+  /** cards for the unvisited stops after the next one, at their slots */
+  cards?: StopCard[];
+  /** done stops at their slots (falls back to doneNodeIds at shelf height) */
+  donePositions?: [number, number, number][];
+  /** department colour of the next stop, for its card's dot */
+  nextColor?: string;
   laneNodeId?: string | null;
   checkoutLabel?: { eyebrow: string; line: string } | null;
   entranceId: string;
@@ -57,14 +76,33 @@ export function useOverlayItems(p: OverlayProps): OverlayItem[] {
     const exit = at(p.exitId, 0.1);
     if (entrance) out.push({ key: "entrance", pos: entrance, node: <span className="m-ring m-entrance"><IconArrowRight /></span> });
     if (exit) out.push({ key: "exit", pos: exit, node: <span className="m-ring m-exit" /> });
-    p.doneNodeIds.forEach((id, i) => {
-      const pos = at(id, h);
-      if (pos) out.push({ key: `done-${i}`, pos, node: <span className="m-done"><IconCheck /></span> });
-    });
+    if (p.donePositions) {
+      p.donePositions.forEach((pos, i) => out.push({ key: `done-${i}`, pos, node: <span className="m-done"><IconCheck /></span> }));
+    } else {
+      p.doneNodeIds.forEach((id, i) => {
+        const pos = at(id, h);
+        if (pos) out.push({ key: `done-${i}`, pos, node: <span className="m-done"><IconCheck /></span> });
+      });
+    }
     p.aheadNodeIds.forEach((id, i) => {
       const pos = at(id, h);
-      if (pos) out.push({ key: `ahead-${id}-${i}`, pos, node: <span className="m-ahead">{i + 2}</span> });
+      if (pos) out.push({ key: `ahead-${id}-${i}`, pos, node: <span className="m-ahead m-far-only">{i + 2}</span> });
     });
+    for (const c of p.cards ?? []) {
+      out.push({
+        key: `card-${c.key}`,
+        pos: c.pos,
+        className: "m-anchor-bottom m-near-only",
+        clamp: "bottom",
+        node: (
+          <span className="m-card">
+            <i className="dot" style={c.color ? { background: c.color } : undefined} />
+            <span className="name">{c.name}</span>
+            <b className="n">{c.n}</b>
+          </span>
+        ),
+      });
+    }
     const lane = at(p.laneNodeId, 0.1);
     if (lane) {
       out.push({ key: "lane", pos: lane, node: <span className="m-lane" /> });
@@ -92,8 +130,11 @@ export function useOverlayItems(p: OverlayProps): OverlayItem[] {
           className: "m-anchor-bottom",
           clamp: "bottom",
           node: (
-            <div className="m-label m-label-next">
-              <span className="eyebrow now">{p.nextLabel.eyebrow}</span>
+            <div className="m-label m-label-next m-card m-card--next">
+              <span className="eyebrow now">
+                <i className="dot" style={p.nextColor ? { background: p.nextColor } : undefined} />
+                {p.nextLabel.eyebrow}
+              </span>
               <span className="m-label-name">{p.nextLabel.name}</span>
               <span className="m-label-line">{p.nextLabel.distance}</span>
               {p.nextLabel.slot && <span className="m-label-line m-label-slot">{p.nextLabel.slot}</span>}
@@ -104,13 +145,20 @@ export function useOverlayItems(p: OverlayProps): OverlayItem[] {
     const you = at(p.positionNodeId, 0.1);
     if (you) out.push({ key: "you", pos: you, node: <span className="m-you"><i className="m-halo" /></span> });
     return out;
-  }, [p.nodes, p.positionNodeId, p.nextNodeId, p.nextPos, p.nextLabel, p.aheadNodeIds, p.doneNodeIds, p.laneNodeId, p.checkoutLabel, p.entranceId, p.exitId, h]);
+  }, [p.nodes, p.positionNodeId, p.nextNodeId, p.nextPos, p.nextLabel, p.nextColor, p.aheadNodeIds, p.doneNodeIds, p.donePositions, p.cards, p.laneNodeId, p.checkoutLabel, p.entranceId, p.exitId, h]);
 }
 
 /** Plain DOM, rendered by TripMap3D next to the Canvas. */
 export function OverlayDom({ items, registry }: { items: OverlayItem[]; registry: OverlayRegistry }) {
   return (
-    <div className="m-overlay" aria-hidden>
+    <div
+      className="m-overlay"
+      aria-hidden
+      ref={(el) => {
+        if (el) registry.set("__root", el);
+        else registry.delete("__root");
+      }}
+    >
       {items.map((it) => (
         <div
           key={it.key}
@@ -133,6 +181,8 @@ export function OverlayProjector({ items, registry, safe }: { items: OverlayItem
   const v = useMemo(() => new Vector3(), []);
   const PAD = 12;
   const project = () => {
+    const root = registry.get("__root");
+    if (root) root.classList.toggle("m-overlay--far", cameraStats.distance > CARDS_MAX_M);
     const top = (safe?.top ?? 0.16) * size.height + PAD;
     const bottom = size.height - (safe?.bottom ?? 0.36) * size.height - PAD;
     for (const it of items) {

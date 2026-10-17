@@ -323,6 +323,24 @@ button { cursor: pointer; touch-action: manipulation; }
 .m-label-name { font-weight: 500; font-size: 17px; }
 .m-label-line { font-weight: 300; font-size: 12px; color: rgba(255, 255, 255, 0.85); }
 .m-label-slot { color: var(--lime); }
+
+/* ---- stop cards at their shelf slots (deep glass); the next stop's card is lime */
+.m-card {
+  display: inline-flex; align-items: center; gap: 7px; padding: 6px 11px; border-radius: 999px;
+  background: var(--glass-deep); border: 1px solid var(--glass-border); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
+  color: #FFFFFF; font-size: 13px; font-weight: 400; white-space: nowrap; text-shadow: none;
+}
+.m-card .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255, 255, 255, 0.7); flex: none; }
+.m-card .n { font-weight: 600; font-size: 11px; opacity: 0.8; }
+.m-card--next { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 16px; border-radius: 18px; border-color: var(--lime); box-shadow: var(--glow-button); }
+.m-card--next .eyebrow { display: inline-flex; align-items: center; gap: 6px; }
+.m-card--next .dot { width: 8px; height: 8px; }
+/* far mode (> 40 m): cards hide, the numbered dots and the plain next label take over */
+.m-overlay .m-far-only { display: none; }
+.m-overlay--far .m-far-only { display: block; }
+.m-overlay--far .m-near-only { display: none; }
+.m-overlay--far .m-card--next { background: transparent; border-color: transparent; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; text-shadow: 0 1px 10px rgba(0, 0, 0, 0.25); }
+.m-overlay--far .m-card--next .dot { display: none; }
 .trip-vignette { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(249, 215, 168, 0.2) 0%, rgba(249, 215, 168, 0) 22%, rgba(24, 77, 46, 0) 65%, rgba(24, 77, 46, 0.55) 100%); }
 .m-overlay { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .m-item { position: absolute; left: 0; top: 0; will-change: transform; }
