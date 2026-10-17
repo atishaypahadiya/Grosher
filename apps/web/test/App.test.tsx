@@ -280,3 +280,51 @@ describe("confidence bands", () => {
     expect(within(ask).getByText(/a guess that was wrong/i)).toBeTruthy();
   });
 });
+
+describe("reset banner", () => {
+  const flag = { id: "t_9", storeId: "demo-supercenter", date: new Date("2026-10-15T10:00:00").getTime(), reason: "aisle" as const, aisle: "A4", items: ["Paneer", "Ghee"], misses: 4, placed: 8 };
+
+  test("a flagged store shows the banner; Dismiss hides it until a new flag; Review opens the editor on the aisle", () => {
+    localStorage.setItem("grosher.reset.demo-supercenter", JSON.stringify({ flag, dismissedId: null }));
+    const { unmount } = render(<App />);
+    const banner = screen.getByTestId("reset-banner");
+    expect(banner.textContent).toMatch(/Demo Supercenter may have moved things · 4 misses on Thursday/);
+    fireEvent.click(within(banner).getByRole("button", { name: /review/i }));
+    expect(location.hash).toMatch(/^#\/edit\?aisle=A4&items=Paneer%2CGhee/);
+    unmount();
+    location.hash = "";
+    localStorage.setItem("grosher.reset.demo-supercenter", JSON.stringify({ flag, dismissedId: null }));
+    render(<App />);
+    fireEvent.click(within(screen.getByTestId("reset-banner")).getByRole("button", { name: /dismiss/i }));
+    expect(screen.queryByTestId("reset-banner")).toBeNull();
+    expect(JSON.parse(localStorage.getItem("grosher.reset.demo-supercenter")!).dismissedId).toBe("t_9");
+  });
+
+  test("the editor opened from the banner highlights the aisle and lists the items", () => {
+    location.hash = "#/edit?aisle=A4&items=Paneer%2CGhee&misses=4&date=0";
+    try {
+      render(<App />);
+      const panel = screen.getByTestId("ed-focus");
+      expect(panel.textContent).toMatch(/Possibly reset · A4/);
+      expect(within(panel).getByText("Paneer")).toBeTruthy();
+      expect(within(panel).getByText("Ghee")).toBeTruthy();
+      expect(screen.getAllByTestId("focus-aisle").length).toBeGreaterThan(0);
+      fireEvent.click(within(panel).getByRole("button", { name: /close review/i }));
+      expect(screen.queryByTestId("ed-focus")).toBeNull();
+      expect(screen.queryAllByTestId("focus-aisle")).toHaveLength(0);
+    } finally {
+      location.hash = "";
+    }
+  });
+
+  test("a finished trip with enough misses raises the flag", async () => {
+    render(<App />);
+    add("milk, bananas, rice, ice cream");
+    fireEvent.click(await findButton(/route 4 items/i));
+    fireEvent.click(screen.getByRole("button", { name: /not here/i }));
+    while (!screen.queryByText(/trip done/i)) fireEvent.click(screen.getByRole("button", { name: /got it/i }));
+    await waitFor(() => expect(JSON.parse(localStorage.getItem("grosher.reset.demo-supercenter") ?? "{}").flag).toMatchObject({ reason: "share", misses: 1, placed: 4 }));
+    fireEvent.click(screen.getByRole("button", { name: /^close$/i }));
+    expect(screen.getByTestId("reset-banner").textContent).toMatch(/1 miss on/);
+  });
+});

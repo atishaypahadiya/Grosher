@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Fixture, StoreGraph } from "@grosher/core";
 import type { StoreBundle } from "@grosher/stores";
+import type { EditorFocus } from "../lib/reset.ts";
 import { StoreMap, type MapSelection, type ViewBox } from "../components/StoreMap.tsx";
 import { load, save } from "../lib/storage.ts";
 import { Inspector } from "./Inspector.tsx";
@@ -36,7 +37,7 @@ import {
   type Pt,
   type Selection,
 } from "./model.ts";
-import { IconCorridor, IconCube, IconCursor, IconDoor, IconFixture, IconImage, IconPin, IconRuler } from "../components/Icons.tsx";
+import { IconCorridor, IconCube, IconCursor, IconDoor, IconFixture, IconImage, IconPin, IconRuler, IconClose } from "../components/Icons.tsx";
 import { moveBy, scaleAbout, withWidth, type Underlay } from "./underlay.ts";
 import { slotFor } from "@grosher/stores";
 import { loadLearning, saveLearning } from "../lib/learning.ts";
@@ -66,7 +67,10 @@ interface Layers {
 
 const draftKey = (storeId: string) => `grosher.editor.${storeId}`;
 
-export function EditorScreen({ bundle, onExit }: { bundle: StoreBundle; onExit: () => void }) {
+export function EditorScreen({ bundle, onExit, focus = null }: { bundle: StoreBundle; onExit: () => void; focus?: EditorFocus | null }) {
+  // a "possibly reset" review: the aisle in question is highlighted and its items listed until closed
+  const [focusOpen, setFocusOpen] = useState(!!focus);
+  const focusFixtures = useMemo(() => (focus?.aisle ? (bundle.store.fixtures ?? []).filter((f) => f.aisle === focus.aisle) : []), [bundle.store.fixtures, focus?.aisle]);
   const packaged = useMemo<Draft>(() => ({ store: bundle.store, catalog: bundle.catalog }), [bundle]);
   const [draft, setDraftState] = useState<Draft>(() => load<Draft | null>(draftKey(bundle.store.storeId), null) ?? packaged);
   const setDraft = useCallback((d: Draft) => setDraftState(d), []);
@@ -322,6 +326,10 @@ export function EditorScreen({ bundle, onExit }: { bundle: StoreBundle; onExit: 
           gestureOverride={underlayGestures}
           className={`ed-canvas${underlayLive ? " underlay-live" : ""}`}
         >
+          {focusOpen &&
+            focusFixtures.map((f) => (
+              <polygon key={`focus-${f.id}`} points={f.polygon.map((p) => p.join(",")).join(" ")} fill="rgba(212,255,74,0.35)" stroke="#0F2A1A" strokeWidth={viewInfo.upp * 1.5} strokeDasharray={`${viewInfo.upp * 4} ${viewInfo.upp * 4}`} pointerEvents="none" data-testid="focus-aisle" />
+            ))}
           {underlayLive && underlay && (
             <rect x={underlay.x} y={underlay.y} width={underlay.w} height={underlay.h} fill="none" stroke="#D4FF4A" strokeWidth={viewInfo.upp * 2} strokeDasharray={`${viewInfo.upp * 6} ${viewInfo.upp * 4}`} pointerEvents="none" />
           )}
@@ -347,6 +355,23 @@ export function EditorScreen({ bundle, onExit }: { bundle: StoreBundle; onExit: 
             </g>
           )}
         </StoreMap>
+        {focus && focusOpen && (
+          <aside className="ed-focus" aria-label="Possibly reset" data-testid="ed-focus">
+            <button type="button" className="ed-focus-close" aria-label="Close review" onClick={() => setFocusOpen(false)}>
+              <IconClose />
+            </button>
+            <span className="eyebrow soil">Possibly reset{focus.aisle ? ` · ${focus.aisle}` : ""}</span>
+            <strong>
+              {focus.misses} {focus.misses === 1 ? "miss" : "misses"} on {new Date(focus.date).toLocaleDateString(undefined, { weekday: "long" })}
+            </strong>
+            <span>Not where the map said. Move the locations, or re-survey the aisle.</span>
+            <ul>
+              {focus.items.map((it) => (
+                <li key={it}>{it}</li>
+              ))}
+            </ul>
+          </aside>
+        )}
 
         <div className="layer-pills" role="group" aria-label="Layers">
           {(

@@ -19,6 +19,8 @@ import { previousOf, recordFrom, type TripRecord } from "./lib/history.ts";
 import { draftIsUnsaved, predictUsual } from "./lib/lists.ts";
 import { addItem, fromSnapshot, gotIt, isDone, skipStop, startTrip, toSnapshot, type TripSnapshot, type TripState } from "./lib/trip.ts";
 import { load, save } from "./lib/storage.ts";
+import { useResetFlag } from "./lib/useResetFlag.ts";
+import { bannerText, detectReset, editorHashFor, parseEditorFocus } from "./lib/reset.ts";
 
 const TRIP_KEY = "grosher.trip";
 const NOTES_KEY = "grosher.notes";
@@ -55,8 +57,14 @@ export function App() {
   useEffect(() => save(TRIP_KEY, trip ? toSnapshot(trip) : null), [trip]);
   // a finished trip is recorded once (the record id is the trip's start time)
   const doneRecord = useMemo(() => (trip && isDone(trip) ? recordFrom(store, router, trip) : null), [trip, store, router]);
+  const reset = useResetFlag(store.storeId);
   useEffect(() => {
-    if (doneRecord && historyState.loaded && !historyState.history.some((h) => h.id === doneRecord.id)) historyState.add(doneRecord);
+    if (doneRecord && historyState.loaded && !historyState.history.some((h) => h.id === doneRecord.id)) {
+      historyState.add(doneRecord);
+      // the same once-per-trip moment decides whether the store looks reset
+      const flag = trip ? detectReset(store, trip) : null;
+      if (flag) reset.raise(flag);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [doneRecord?.id, historyState.loaded]);
   const [flat, setFlat] = useState<boolean>(() => load<boolean>(FLAT_KEY, false));
@@ -101,10 +109,11 @@ export function App() {
       return out;
     });
 
-  if (hash === "#/edit") {
+  if (hash.startsWith("#/edit")) {
     return (
       <EditorScreen
         bundle={bundle}
+        focus={parseEditorFocus(hash)}
         onExit={() => {
           location.hash = "";
         }}
@@ -200,6 +209,17 @@ export function App() {
         onLoadUsual={() => usualToday && listsState.loadList(usualToday.id)}
         onOpenLists={() => setListsOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
+        reset={
+          reset.visible && reset.flag
+            ? {
+                text: bannerText(store, reset.flag),
+                onReview: () => {
+                  location.hash = editorHashFor(reset.flag!);
+                },
+                onDismiss: reset.dismiss,
+              }
+            : null
+        }
         onTellWhere={(name) => setPicking({ name, promote: false })}
         resume={trip && paused ? { remaining: trip.remaining.length, distanceM: trip.route.legs.reduce((s, l) => s + l.distanceM, 0) } : null}
         onRoute={() => {

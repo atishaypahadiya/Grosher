@@ -5,7 +5,7 @@ import { minutesNum } from "../lib/format.ts";
 import { listen, speechSupported, type SpeechStop } from "../lib/speech.ts";
 import { Num } from "./Num.tsx";
 import { SourceGlyph } from "./SourceGlyph.tsx";
-import { IconArrowRight, IconChevronDown, IconGear, IconMic, IconPlus } from "./Icons.tsx";
+import { IconArrowRight, IconChevronDown, IconClose, IconGear, IconMic, IconPlus } from "./Icons.tsx";
 
 export interface ListScreenProps {
   store: StoreGraph;
@@ -27,6 +27,8 @@ export interface ListScreenProps {
   onLoadUsual: () => void;
   onOpenLists: () => void;
   onOpenSettings?: () => void;
+  /** the "possibly reset" banner, when a recent trip missed enough */
+  reset?: { text: string; onReview: () => void; onDismiss: () => void } | null;
   onTellWhere: (name: string) => void;
   onRoute: () => void;
   /** a paused trip: the CTA resumes it instead of routing the list */
@@ -40,7 +42,7 @@ export const splitItems = (text: string) =>
     .map((s) => s.trim())
     .filter(Boolean);
 
-export function ListScreen({ store, items, results, plan, baselineM, usual, asking, warming, offline, offlineNote, onAdd, onRemove, onReplace, memory, onLoadUsual, onOpenLists, onOpenSettings, onTellWhere, onRoute, resume }: ListScreenProps) {
+export function ListScreen({ store, items, results, plan, baselineM, usual, asking, warming, offline, offlineNote, onAdd, onRemove, onReplace, memory, onLoadUsual, onOpenLists, onOpenSettings, reset, onTellWhere, onRoute, resume }: ListScreenProps) {
   const [draft, setDraft] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
@@ -151,6 +153,20 @@ export function ListScreen({ store, items, results, plan, baselineM, usual, aski
       {hint && <p className="caption-line muted">{hint}</p>}
       {micNote && <p className="caption-line offline-note">{micNote}</p>}
       {listening && <p className="caption-line muted" data-testid="listening">Listening… release to add</p>}
+
+      {reset && (
+        <div className="reset-banner glass-deep" role="status" data-testid="reset-banner">
+          <span className="reset-text">{reset.text}</span>
+          <div className="row">
+            <button type="button" className="pill lime" onClick={reset.onReview}>
+              Review
+            </button>
+            <button type="button" className="pill circle ghost" aria-label="Dismiss" onClick={reset.onDismiss}>
+              <IconClose />
+            </button>
+          </div>
+        </div>
+      )}
 
       <section className="list-sheet glass-deep sheet" aria-label="Items">
         <div className="sheet-head">

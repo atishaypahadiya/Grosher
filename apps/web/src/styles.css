@@ -242,6 +242,9 @@ button { cursor: pointer; touch-action: manipulation; }
 .st-field { display: flex; flex-direction: column; gap: 6px; }
 .st-field input { width: 100%; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 999px; padding: 10px 16px; font-size: 16px; color: var(--ink); font-family: inherit; }
 .st-field input:focus { outline: 2px solid var(--lime); outline-offset: 1px; }
+.reset-banner { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 14px 14px 18px; margin-top: 14px; border-radius: 22px; background: var(--glass-deep); border: 1px solid var(--glass-border); color: var(--ink); }
+.reset-banner .reset-text { font-size: 15px; line-height: 1.35; }
+.reset-banner .row { flex: none; align-items: center; }
 .usual-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 16px; margin: 8px 0 4px; border-radius: 18px; background: var(--glass-deep); border: 1px solid var(--glass-border); }
 .chip.action { min-height: 36px; }
 
@@ -451,6 +454,11 @@ button { cursor: pointer; touch-action: manipulation; }
 .scale-bar .bar::before { left: 0; }
 .scale-bar .bar::after { right: 0; }
 .scale-bar .cursor { margin-left: 10px; color: var(--soil-muted); font-variant-numeric: tabular-nums; }
+.ed-focus { position: absolute; left: 16px; top: 16px; z-index: 5; max-width: 320px; background: #FFFFFF; border: 1px solid var(--ed-line); border-radius: 16px; padding: 12px 14px; font-size: 13px; display: flex; flex-direction: column; gap: 6px; }
+.ed-focus .eyebrow { display: block; }
+.ed-focus strong { font-size: 15px; font-weight: 500; }
+.ed-focus ul { margin: 0; padding-left: 18px; }
+.ed-focus .ed-focus-close { position: absolute; right: 8px; top: 8px; background: none; border: 0; padding: 4px; color: inherit; }
 .ed-notice { position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--soil); color: #FFFFFF; padding: 10px 16px; border-radius: 999px; font-size: 14px; }
 
 .inspector { padding: 22px 22px 28px; border-left: 1px solid var(--ed-line); overflow-y: auto; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
