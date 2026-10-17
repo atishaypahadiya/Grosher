@@ -16,7 +16,8 @@
     "gen:demo": "node scripts/gen-demo.ts",
     "gen:textures": "node scripts/make-placeholder-textures.ts",
     "seed:catalog": "node scripts/seed-catalog.ts",
-    "eval:everyday": "node scripts/eval-everyday.ts"
+    "eval:everyday": "node scripts/eval-everyday.ts",
+    "import:instacart": "node scripts/import-instacart.ts"
   },
   "dependencies": {
     "@grosher/core": "*"

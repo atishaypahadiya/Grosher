@@ -235,9 +235,14 @@ function reconcile(items: Stop[], cats: Category[]): { relocated: number; locati
   // duplicates by the resolver's key (earlier runs keyed differently): merge into the first, keep its id
   const byKey = new Map<string, Stop>();
   const isBase = (s: Stop) => !(s as Stop & { category?: string }).category;
+  const firstIndex = new Map<string, number>();
+  items.forEach((s, i) => {
+    const k = norm(s.name);
+    if (!firstIndex.has(k)) firstIndex.set(k, i);
+  });
   for (let i = items.length - 1; i >= 0; i--) {
     const k = norm(items[i].name);
-    const first = items.findIndex((s) => norm(s.name) === k);
+    const first = firstIndex.get(k)!;
     if (first < i) {
       const keep = items[first];
       if (isBase(keep)) {
@@ -297,9 +302,12 @@ function reconcile(items: Stop[], cats: Category[]): { relocated: number; locati
 }
 
 if (args.includes("--reconcile")) {
-  const r = reconcile(file.items, categories);
-  writeFileSync(catalogPath, JSON.stringify(file, null, 2) + "\n");
-  console.log(`reconciled ${file.items.length} items: ${r.relocated} relocated, ${r.locationsDropped} locations dropped, ${r.aliasesDropped} aliases dropped`);
+  // --file <path> reconciles another catalog file in place (the import, a merge); default demo/catalog.json
+  const target = args.includes("--file") ? join(process.cwd(), args[args.indexOf("--file") + 1]) : catalogPath;
+  const doc = target === catalogPath ? file : (JSON.parse(readFileSync(target, "utf8")) as { items: Stop[] });
+  const r = reconcile(doc.items, categories);
+  writeFileSync(target, JSON.stringify(doc, null, target === catalogPath ? 2 : 1) + "\n");
+  console.log(`reconciled ${doc.items.length} items in ${target.split("/").slice(-2).join("/")}: ${r.relocated} relocated, ${r.locationsDropped} locations dropped, ${r.aliasesDropped} aliases dropped`);
   process.exit(0);
 }
 

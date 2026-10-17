@@ -3,12 +3,15 @@
 // whatever is left unknown, exactly as the app does. Prints both tables.
 //
 //   npm run eval:everyday -w @grosher/stores
+//   npm run eval:everyday -w @grosher/stores -- --catalog demo/catalog.instacart.json   # another catalog file (array, or {items})
+//   npm run eval:everyday -w @grosher/stores -- --catalog a.json --catalog b.json      # several, merged in order (first wins a name)
+//   npm run eval:everyday -w @grosher/stores -- --offline                             # skip the model
 //
 // Env: OLLAMA_URL (default http://localhost:11434), OLLAMA_MODEL (default qwen3:8b).
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { llmMaxTokens, llmResultSchema, llmSystemPrompt, llmUserMessage, normalize, parseLlmResults, resolveList, type LlmGuess } from "@grosher/core";
+import { llmMaxTokens, llmResultSchema, llmSystemPrompt, llmUserMessage, normalize, parseLlmResults, resolveList, type LlmGuess, type Stop } from "@grosher/core";
 import { demoSupercenter, departmentLocations, llmOptions } from "../src/index.ts";
 import { printEveryday, scoreEveryday } from "../../core/test/resolution-everyday.test.ts";
 
@@ -22,19 +25,40 @@ interface Case {
   kind: string;
 }
 
-const { store, catalog, categories } = demoSupercenter;
+const { store, categories } = demoSupercenter;
+const args = process.argv.slice(2);
+const catalogPaths = args.flatMap((a, i) => (a === "--catalog" ? [args[i + 1]] : []));
+const offline = args.includes("--offline");
+const base = demoSupercenter.catalog.filter((s) => !(s as { category?: string }).category && !(s as { origin?: string }).origin);
+/** several catalogs merge in order: the first to claim a normalised name wins; the hand-kept base rows always come first */
+function loadCatalogs(paths: string[]): Stop[] {
+  const out: Stop[] = [...base];
+  const seen = new Set(out.map((s) => normalize(s.name)));
+  for (const p of paths) {
+    const raw = JSON.parse(readFileSync(p, "utf8")) as Stop[] | { items: Stop[] };
+    for (const s of Array.isArray(raw) ? raw : raw.items) {
+      const k = normalize(s.name);
+      if (seen.has(k)) continue;
+      seen.add(k);
+      out.push(s);
+    }
+  }
+  return out;
+}
+const catalog = catalogPaths.length ? loadCatalogs(catalogPaths) : demoSupercenter.catalog;
 const cases = (JSON.parse(readFileSync(join(import.meta.dirname, "..", "..", "core", "test", "fixtures", "resolution-everyday.json"), "utf8")) as { cases: Case[] }).cases;
 const aisleOf = (id: string) => store.locations.find((l) => l.id === id)?.aisle;
 const ctx = { catalog, categories, departments: store.departments, departmentLocations: departmentLocations(store), now: 2 };
 
-const offline = resolveList(
+const offlineResults = resolveList(
   cases.map((c) => c.q),
   ctx,
 );
-printEveryday(`everyday set, no model · catalog ${catalog.length} items, ${categories.length} categories`, scoreEveryday(cases, offline, aisleOf));
+printEveryday(`everyday set, no model · catalog ${catalog.length} items (${catalogPaths.length ? catalogPaths.join(" + ") : "demo/catalog.json"}), ${categories.length} categories`, scoreEveryday(cases, offlineResults, aisleOf));
+if (offline) process.exit(0);
 
 // the unknowns go to the model in batches, as the app would send them
-const unknown = cases.filter((_, i) => offline[i].source === "unknown").map((c) => c.q);
+const unknown = cases.filter((_, i) => offlineResults[i].source === "unknown").map((c) => c.q);
 console.log(`${unknown.length} unknown → ${MODEL}`);
 const options = llmOptions(categories);
 const ids = options.map((o) => o.id);

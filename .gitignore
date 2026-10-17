@@ -7,3 +7,6 @@ __pycache__/
 *.pyc
 .env.local
 .env.*.local
+
+# Instacart 2017 dataset: fetched by hand, non-commercial terms, never committed
+packages/stores/data/instacart/*.csv
