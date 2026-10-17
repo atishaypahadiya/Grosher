@@ -26,9 +26,9 @@ describe("llm providers", () => {
     expect(sent!.body.think).toBe(false);
     expect(sent!.body.stream).toBe(false);
     expect(sent!.body.keep_alive).toBe("24h");
-    expect((sent!.body.options as { num_predict: number }).num_predict).toBe(32 + 50 * 2);
+    expect((sent!.body.options as { num_predict: number }).num_predict).toBe(32 + 45 * 2);
     const schema = sent!.body.format as { properties: { results: { items: { required: string[] } } } };
-    expect(schema.properties.results.items.required).toEqual(["name", "dept", "sub", "conf"]);
+    expect(schema.properties.results.items.required).toEqual(["name", "dept", "sub", "conf", "tags"]);
     expect(rows[0]).toMatchObject({ item: "oat milk", department: "dairy", subcategory: "plant milk", tags: ["chilled"] });
     expect(rows[0].confidence).toBeCloseTo(0.68, 5);
     expect(rows[1]).toMatchObject({ item: "ghee", department: null, confidence: 0 });

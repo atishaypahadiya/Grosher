@@ -91,14 +91,15 @@ import { parseLlmResults } from "../src/resolve/llmPrompt.ts";
 
 test("parseLlmResults: maps by item, drops foreign departments, bands confidence, capitalises names", () => {
   const rows = parseLlmResults(
-    { results: [{ name: "oat milk", dept: "dairy", sub: "plant milk cartons extra", conf: 0.9 }, { name: "ghee", dept: "international", conf: 0.5 }, { name: "x", dept: null }] },
+    { results: [{ name: "oat milk", dept: "dairy", sub: "plant milk cartons extra", conf: 0.9, tags: ["chilled", "heavy", "bogus"] }, { name: "ghee", dept: "international", conf: 0.5 }, { name: "x", dept: null }] },
     ["oat milk", "ghee", "x", "never answered"],
     ["dairy", "dry"],
   );
   assert.equal(rows.length, 4);
   assert.equal(rows[0].canonicalName, "Oat milk");
   assert.equal(rows[0].subcategory, "plant milk cartons");
-  assert.deepEqual(rows[0].tags, ["chilled"]); // derived from the department
+  assert.deepEqual(rows[0].tags, ["chilled", "heavy"]); // the model's valid tags win
+  assert.deepEqual(parseLlmResults({ results: [{ name: "oat milk", dept: "dairy", sub: "", conf: 0.9, tags: [] }] }, ["oat milk"], ["dairy"])[0].tags, ["chilled"]); // none given: the department's
   assert.ok(Math.abs(rows[0].confidence - 0.68) < 1e-9);
   assert.equal(rows[1].department, null);
   assert.equal(rows[3].department, null);
