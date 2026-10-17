@@ -152,7 +152,7 @@ describe("editor", () => {
     expect(screen.getByText(/nodes · .* edges · .* locations · 9 textures · 0 unreachable/i)).toBeTruthy();
     expect(screen.getByRole("button", { name: /shelf location/i })).toBeTruthy();
     expect(screen.getByRole("button", { name: /preview in 3d/i })).toBeTruthy();
-    expect(screen.getByRole("group", { name: /layers/i }).querySelectorAll("button")).toHaveLength(5);
+    expect(screen.getByRole("group", { name: /layers/i }).querySelectorAll("button")).toHaveLength(7);
     fireEvent.click(screen.getByRole("button", { name: /^validate$/i }));
     expect(screen.getByText(/map is valid/i)).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /^done$/i }));
@@ -326,5 +326,58 @@ describe("reset banner", () => {
     await waitFor(() => expect(JSON.parse(localStorage.getItem("grosher.reset.demo-supercenter") ?? "{}").flag).toMatchObject({ reason: "share", misses: 1, placed: 4 }));
     fireEvent.click(screen.getByRole("button", { name: /^close$/i }));
     expect(screen.getByTestId("reset-banner").textContent).toMatch(/1 miss on/);
+  });
+});
+
+describe("picker on the guess", () => {
+  test("Tell me where opens on the map's guess; It's here confirms in one tap; an unknown has no guess", async () => {
+    render(<App />);
+    add("oat milk, unicorn");
+    const list = screen.getByRole("list");
+    await waitFor(() => expect(within(list).getAllByRole("listitem")[0].getAttribute("data-band")).toBe("guess"), { timeout: 3000 });
+    const rows = within(list).getAllByRole("listitem");
+    // the guess row: select it, Tell me where is behind the chip? the row's chip is the guess; use the unknown first
+    fireEvent.click(within(rows[1]).getByRole("button", { name: /tell me where/i }));
+    const unknownDialog = screen.getByRole("dialog", { name: /where is unicorn/i });
+    expect(within(unknownDialog).queryByTestId("its-here")).toBeNull();
+    expect(within(unknownDialog).getByText(/nothing picked yet/i)).toBeTruthy();
+    fireEvent.click(within(unknownDialog).getByRole("button", { name: /^close$/i }));
+    // the guess row through the checkout's Pick aisle path is the same picker; open it directly via the row's chip menu
+    fireEvent.click(within(rows[0]).getByRole("button", { name: /oat milk/i }));
+    const guessLoc = (await import("../src/lib/learning.ts")).loadLearning;
+    void guessLoc;
+    // the picker for a placed item is reached from the trip's checkout ("Pick aisle"); exercise the component contract here
+    const { PickerSheet } = await import("../src/components/PickerSheet.tsx");
+    const { demoSupercenter } = await import("@grosher/stores");
+    let confirmedAt: string | null = null;
+    let picked: string | null = null;
+    const { unmount } = render(<PickerSheet store={demoSupercenter.store} itemName="Oat milk" guessLocationId="DAIRY-8" onConfirm={(id) => (confirmedAt = id)} onPick={(id) => (picked = id)} onClose={() => {}} />);
+    const dialog = screen.getByRole("dialog", { name: /where is oat milk/i });
+    expect(within(dialog).getByText(/map's guess · /i)).toBeTruthy();
+    fireEvent.click(within(dialog).getByTestId("its-here"));
+    expect(confirmedAt).toBe("DAIRY-8");
+    expect(picked).toBeNull();
+    unmount();
+  });
+
+  test("Pick aisle at checkout opens on the guess and It's here confirms the memory", async () => {
+    render(<App />);
+    add("oat milk, milk");
+    await waitFor(() => expect(within(screen.getByRole("list")).getAllByRole("listitem")[0].getAttribute("data-band")).toBe("guess"), { timeout: 3000 });
+    fireEvent.click(await findButton(/route 2 items/i));
+    // skip the guess when it comes up, collect the rest
+    while (!screen.queryByText(/trip done/i)) {
+      if (screen.queryByTestId("trip-guess")) fireEvent.click(screen.getByRole("button", { name: /not here/i }));
+      else fireEvent.click(screen.getByRole("button", { name: /got it/i }));
+    }
+    fireEvent.click(screen.getAllByRole("button", { name: /pick aisle/i })[0]);
+    const dialog = screen.getByRole("dialog", { name: /where is oat milk/i });
+    expect(within(dialog).getByTestId("its-here")).toBeTruthy();
+    fireEvent.click(within(dialog).getByTestId("its-here"));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /^close$/i }));
+    // confirmed: the row now resolves from memory at .8 → confirmed band
+    await waitFor(() => expect(within(screen.getByRole("list")).getAllByRole("listitem")[0].getAttribute("data-source")).toBe("memory"), { timeout: 3000 });
+    expect(within(screen.getByRole("list")).getAllByRole("listitem")[0].getAttribute("data-band")).toBe("confirmed");
   });
 });

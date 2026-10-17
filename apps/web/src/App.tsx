@@ -85,6 +85,14 @@ export function App() {
     <PickerSheet
       store={store}
       itemName={picking.name}
+      guessLocationId={resultFor(picking.name)?.locationIds[0] ?? null}
+      onConfirm={(locationId) => {
+        // the guess was right: a confirmation, not a correction
+        const r = resultFor(picking.name);
+        res.gotIt(r?.canonicalName ?? picking.name, locationId, r?.tags, picking.name);
+        note(picking.name);
+        setPicking(null);
+      }}
       onPick={(locationId) => {
         const r = resultFor(picking.name);
         res.place(r?.canonicalName ?? picking.name, locationId, r?.tags, picking.promote, picking.name);

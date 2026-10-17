@@ -93,7 +93,7 @@ export function mapQuestions(store: StoreGraph, trip: TripState): Ask[] {
   const out: Ask[] = [];
   for (const name of trip.unplaced) out.push({ key: `unplaced:${name.toLowerCase()}`, question: `Where did you find the ${name.toLowerCase()}?`, hint: "Not on the map yet · tap the aisle, or skip" });
   // every "Not here": a guess that missed is the map's best lead on a reset; a confirmed shelf that missed says the store changed
-  for (const s of trip.skipped) out.push({ key: s.id, question: `Where was the ${s.name.toLowerCase()}?`, hint: band(s.confidence ?? 1) === "guess" ? "A guess that was wrong · tap the aisle, or skip" : "Not where the map said · tap the aisle, or skip" });
+  for (const s of trip.skipped) out.push({ key: `skipped:${s.query ?? s.name}`, question: `Where was the ${s.name.toLowerCase()}?`, hint: band(s.confidence ?? 1) === "guess" ? "A guess that was wrong · tap the aisle, or skip" : "Not where the map said · tap the aisle, or skip" });
   trip.got.forEach((s, i) => {
     const node = trip.doneNodeIds[i];
     const used = node?.startsWith("loc:") ? node.slice(4) : undefined;
@@ -149,10 +149,10 @@ export function CheckoutScreen({ store, router, trip, record, previous, usualSav
                 <span className="confirm" aria-label="Confirmed">
                   <IconCheck />
                 </span>
-              ) : noted.has(a.key.replace(/^unplaced:/, "")) ? (
+              ) : noted.has(a.key.replace(/^(unplaced|skipped):/, "")) ? (
                 <span className="pill ghost">Noted</span>
               ) : (
-                <button type="button" className="pill lime" onClick={() => onNote(a.key.replace(/^unplaced:/, ""))}>
+                <button type="button" className="pill lime" onClick={() => onNote(a.key.replace(/^(unplaced|skipped):/, ""))}>
                   Pick aisle
                 </button>
               )}
