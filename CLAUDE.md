@@ -49,8 +49,10 @@ stubs `canvas.getContext`.
 Read `src/types.ts`, then `graph.ts`, then `solver.ts`.
 
 - `StoreGraph`: nodes in local metres (y down), edges (optionally one-way: turnstiles, checkout lanes),
-  `ShelfLocation`s pinned to an edge at an offset, one entrance, many checkout lanes, one exit. Rendering-only
-  additions: `fixtures` (polygons with height, department, aisle sign) and `departments` (color, texture file).
+  `ShelfLocation`s pinned to an edge at an offset (plus Walmart aisle / section / modular, side L / R / E,
+  `shelf` 0 = bottom, zone, tags), one entrance, many checkout lanes, one exit. Rendering-only additions:
+  `fixtures` (polygons with height, department, aisle sign, and `bays` / `shelves` / `depth`) and
+  `departments` (color, texture file, `fixtureKind`: gondola, coldcase, produce, bakery, counter).
   A `Stop` is a list item resolved to one or more candidate locations plus tags
   (`frozen|chilled|heavy|fragile|produce`).
 - `WalkGraph` splits each edge at its shelf locations into virtual `loc:<id>` nodes and runs heap Dijkstra;
@@ -75,6 +77,10 @@ Read `src/types.ts`, then `graph.ts`, then `solver.ts`.
 - `src/departments.ts` is the canonical table from DESIGN.md §2; each store carries a copy.
 - `src/geometry.ts`: simple-polygon and segment-overlap checks; `fixtureProblems(store)` is used by the
   tests and the editor's Validate.
+- `src/slots.ts`: `fixtureParams` (bays, shelves, depth, height defaults by kind), `slotFor(store, location)`
+  → fixture, bay (counted from the entrance-facing end), face, shelf, flat-map rect, shelf height;
+  `offsetForBay` moves a location to a bay's centre. Shared by the editor picker, the lit slot, the stop
+  cards and the product layout.
 - `scripts/gen-demo.ts` derives the demo fixtures from the aisle edges (1.4 m blocks each side, merged where
   they meet and share a department; 1.0 m counters). Real stores are not generated; they are surveyed.
 
@@ -100,13 +106,19 @@ centred 430px column.
 three + @react-three/fiber + drei + @react-three/postprocessing, loaded lazily (the chunk is ~1 MB, 285 KB
 gzipped). The store stays 2D; the scene maps `(x, y) → (x, 0, y)`.
 
-- `Fixtures.tsx`: one merged mesh per department (texture tiled every `repeatMeters` on top and side faces,
-  department hex at 70% as the grade), one merged `EdgesGeometry` per department, all aisle signs in one
-  canvas atlas on one merged plane mesh, and the lit fixture (next stop) drawn alone with lime emissive and
-  rim. `fixtureForLocation` picks the block on the location's side of the corridor.
+- `fixtures/generators.ts` + `parts.ts`: detailed geometry per department fixture kind (gondola carcass with
+  uprights and shelf planes, cold case with glass doors and glow, produce table, bakery table, counter),
+  built in a fixture-local frame and placed. `Fixtures.tsx` merges per department: one textured opaque mesh
+  plus glass / frame / glow meshes where needed, a hull outline, and the sign atlas mesh.
+- `Products.tsx`: one `InstancedMesh` per primitive; `layoutProducts` is deterministic per fixture; the
+  visible set is rebuilt on camera settle or leg change: leg-adjacent fixtures and the next stop's first,
+  then anything within 25 m, capped at 12,000 instances. `productStats` feeds the perf readout.
+- `LitSlot.tsx`: the next stop's bay × shelf × face as a translucent lime volume with a 2 px rim, depth
+  test off; it is the selective bloom's selection together with the ribbon's glow line.
 - `Ribbon.tsx`: walked / current (with a wide copy for the bloom) / ahead (dashed) as drei `Line`.
-- `Overlay.tsx`: markers and the two labels are plain DOM outside the Canvas, projected every rendered frame
-  by `OverlayProjector`. Never use drei `Html` here: one React root per marker, and React 19 warns on each
+- `Overlay.tsx`: markers, stop cards and the two labels are plain DOM outside the Canvas, projected every
+  rendered frame by `OverlayProjector`, labels clamped into the map area, cards hidden beyond 40 m
+  (`.m-overlay--far`). Never use drei `Html` here: one React root per marker, and React 19 warns on each
   unmount. Never `createPortal` DOM from inside the Canvas: R3F's reconciler rejects it.
 - `CameraRig.tsx`: 42° **horizontal** field (`verticalFov(aspect)`, clamped 42–80°), tilt 58°, yaw −18°.
   `solveFraming` works in screen space on a scratch camera: fits the leg (padded 15%) into the area the
@@ -120,10 +132,12 @@ gzipped). The store stays 2D; the scene maps `(x, y) → (x, 0, y)`.
   with intensity driven by camera distance. The vignette is CSS on the trip screen (`.trip-vignette`).
 - `frameloop="demand"`: anything that should repaint must `invalidate()`.
 
-**Perf gate** (DESIGN.md §3: ≤ 60 draw calls): open the trip with `?perf=1`; `Perf.tsx` writes
-`window.__grosherPerf = {calls, triangles, programs, frameMs}` with `gl.info` accumulated across all passes.
-Last measured on the demo store at 390×844 in headless Chromium: 42–46 calls, ~750–900 triangles. Frame
-time from headless Chromium is SwiftShader (software) and is not a device number; measure that on a phone.
+**Perf gate** (DESIGN.md §3: ≤ 70 draw calls, ≤ 12,000 product instances): open the trip with `?perf=1`;
+`Perf.tsx` writes `window.__grosherPerf = {calls, triangles, programs, frameMs, instances, productFixtures,
+distance, tilt, lit}` with `gl.info` accumulated across all passes. Last measured on the demo store at
+390×844 in headless Chromium: default framing 62 calls / 4,404 instances; 13 m down an aisle 63 calls /
+12,000 instances; flattened at 90 m 64 calls. Frame time from headless Chromium is SwiftShader (software)
+and is not a device number; measure that on a phone.
 The Playwright scripts that drove these checks live outside the repo; the pattern is: `vite dev`, fill the
 list, Route, `waitForFunction(() => window.__grosherPerf.frames > 100)`, read the object, screenshot.
 
