@@ -99,14 +99,22 @@ Learning loop: "Got it" → `confirmMemory` (confirms +1, confidence half-way to
 **LLM providers** (`lib/resolver.ts`, chosen by `VITE_RESOLVER_PROVIDER`, default `ollama`):
 
 - `ollama`: `POST {VITE_OLLAMA_URL}/api/chat` (default `http://localhost:11434`), model `VITE_OLLAMA_MODEL`
-  (default `qwen3:14b`), `think: false`, `format` = the JSON schema so output is strict, temperature 0, one
-  call for the whole list, 20 s timeout. Setup on the Mac: `ollama pull qwen3:14b`, and start Ollama with
+  (default `qwen3:8b`), `think: false`, `format` = the terse JSON schema `{name, dept, sub, conf}` so output is
+  strict and short (`num_predict` = 32 + 50 per item; measured 23 output tokens per item), temperature 0, one
+  call for the whole list after a 1.5 s idle debounce, never per keystroke, 20 s timeout. On mount the list
+  screen sends an empty-messages chat with `keep_alive: 24h` so the model loads before the user types; before
+  each call `/api/ps` is checked, and if the model is not resident that one call gets a 60 s timeout and the
+  header says "warming up the local model…". In dev every call logs `[resolve] …` with load, prompt-eval and
+  generation timings to the console. Measured on an M-series Mac with qwen3:8b: ~2.7 s generation for 5
+  items, ~5 s from typing to placed rows. Setup on the Mac: `ollama pull qwen3:8b`, and start Ollama with
   `OLLAMA_ORIGINS` allowing the app's origin (`OLLAMA_ORIGINS="http://localhost:5173,http://192.168.1.20:5173"
   ollama serve`, or `launchctl setenv OLLAMA_ORIGINS "*"` for the menu-bar app), or the browser's preflight
   is refused. For the phone, put the Mac's LAN address in `apps/web/.env.local`
   (`VITE_OLLAMA_URL=http://192.168.1.20:11434`); the phone resolves only while on the same Wi-Fi as the Mac.
 - `anthropic`: the worker in `apps/resolver` at `VITE_RESOLVER_URL` (dev: `/api`, proxied to `wrangler dev`
-  on :8787). One Claude call (`claude-haiku-5-5`, effort low, strict tool output) per list.
+  on :8787). One Claude call (`claude-haiku-5-5`, effort low, strict tool output in the same terse schema)
+  per list. Tags are derived from the department (dairy / meat → chilled, frozen → frozen, produce → produce,
+  bakery → fragile) because the terse schema carries none.
 
 Any provider failure (unreachable, timeout, bad JSON) leaves the items unknown and shows the provider's
 one-line note in the list header ("Local model offline · unknown items need a tap"). Never an error state.
