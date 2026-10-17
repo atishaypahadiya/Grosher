@@ -26,6 +26,7 @@ export interface ExportFiles {
 
 const json = (v: unknown) => new Blob([JSON.stringify(v, null, 2) + "\n"], { type: "application/json" });
 
+/** `memory` is the shopper's own history; the editor passes it only when they opted in. An empty list still writes an empty memory.json. */
 export function buildExport(draft: Draft, manifest: TextureManifest, textures: TextureFile[], memory: ItemMemory[] = []): ExportFiles {
   const merged: TextureManifest = { ...manifest };
   for (const t of textures) merged[t.deptId] = { file: t.file, w: t.w, h: t.h, shotAt: t.shotAt, repeatMeters: manifest[t.deptId]?.repeatMeters ?? 2 };
