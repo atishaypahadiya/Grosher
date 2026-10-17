@@ -159,3 +159,35 @@ describe("editor", () => {
     location.hash = "";
   });
 });
+
+describe("history", () => {
+  test("a finished trip is recorded, shows vs your last trip on the next one, and reopens read-only from the sheet", async () => {
+    const run = async (items: string) => {
+      add(items);
+      fireEvent.click(await findButton(/route [1-9]\d* items?/i));
+      while (screen.queryByRole("button", { name: /got it/i })) fireEvent.click(screen.getByRole("button", { name: /got it/i }));
+      await find(/trip done/i);
+    };
+    render(<App />);
+    await run("milk, eggs");
+    expect(screen.queryByTestId("vs-last")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /^close$/i }));
+    fireEvent.click(await findButton(/^milk$/i));
+    fireEvent.click(screen.getByRole("button", { name: /remove/i }));
+    fireEvent.click(await findButton(/^eggs$/i));
+    fireEvent.click(screen.getByRole("button", { name: /remove/i }));
+    await run("bread, bananas, rice");
+    expect(screen.getAllByTestId("vs-last")[0].textContent).toMatch(/your last trip/i);
+    fireEvent.click(screen.getByRole("button", { name: /^close$/i }));
+    fireEvent.click((await screen.findAllByRole("button", { name: /^lists$/i }))[0]);
+    const sheet = screen.getByRole("dialog", { name: /^lists$/i });
+    const rows = within(within(sheet).getByRole("region", { name: /history/i })).getAllByRole("listitem");
+    expect(rows).toHaveLength(2);
+    fireEvent.click(within(rows[1]).getByRole("button"));
+    expect(screen.getAllByLabelText(/trip card/i)[0].textContent).toMatch(/2 of 2 items/);
+    expect(screen.getByRole("button", { name: /share card/i })).toBeTruthy();
+    expect(screen.queryByText(/make the map better/i)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /^close$/i }));
+    expect(await screen.findAllByRole("button", { name: /^lists$/i })).toBeTruthy();
+  });
+});

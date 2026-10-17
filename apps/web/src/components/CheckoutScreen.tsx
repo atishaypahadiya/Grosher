@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import type { Router, StoreGraph } from "@grosher/core";
 import { aislesNeverEntered, elapsedMs, summarize, type TripState } from "../lib/trip.ts";
+import type { TripRecord } from "../lib/history.ts";
 import { clock, WALK_MPS } from "../lib/format.ts";
 import { renderCardPng, shareOrDownload } from "../lib/share.ts";
 import { ShareCard, type ShareCardData } from "./ShareCard.tsx";
@@ -10,7 +11,11 @@ import { IconCheck, IconUpload } from "./Icons.tsx";
 export interface CheckoutScreenProps {
   store: StoreGraph;
   router: Router;
-  trip: TripState;
+  /** the live trip just finished, or a past trip from history (read-only) */
+  trip?: TripState;
+  record?: TripRecord;
+  /** the trip before this one at this store, for "vs your last trip" */
+  previous?: TripRecord;
   usualSaved: boolean;
   noted: Set<string>;
   onNote: (name: string) => void;
@@ -18,7 +23,38 @@ export interface CheckoutScreenProps {
   onClose: () => void;
 }
 
-export function cardData(store: StoreGraph, router: Router, trip: TripState): ShareCardData {
+const laneLabel = (lane: string | null) => (lane ? lane.replace(/^L/, "").replace(/^(\d+)$/, (m) => String(Number(m) + 1)) : null);
+
+/** "3 min faster than your last trip · 40 m less" */
+export function vsLastLine(timeMs: number, walkedM: number, previous: TripRecord | undefined): string | undefined {
+  if (!previous) return undefined;
+  const dMin = Math.round((previous.timeMs - timeMs) / 60_000);
+  const dM = Math.round(previous.walkedM - walkedM);
+  const time = dMin === 0 ? "Same time as your last trip" : `${Math.abs(dMin)} min ${dMin > 0 ? "faster" : "slower"} than your last trip`;
+  const walk = Math.abs(dM) < 5 ? "" : ` · ${Math.abs(dM)} m ${dM > 0 ? "less" : "more"}`;
+  return time + walk;
+}
+
+export function cardDataFromRecord(store: StoreGraph, r: TripRecord, previous?: TripRecord): ShareCardData {
+  const total = r.bought.length + r.skipped.length + r.unknown.length;
+  const savedPct = r.baselineM > 0 ? Math.round((1 - r.walkedM / r.baselineM) * 100) : 0;
+  const weekday = new Date(r.date).toLocaleDateString(undefined, { weekday: "short" });
+  const place = (store.address ?? store.name ?? store.storeId).split("·")[0].trim();
+  return {
+    clock: clock(r.timeMs),
+    got: r.bought.length,
+    total,
+    lane: laneLabel(r.lane),
+    walkedM: r.walkedM,
+    aislesNever: r.aislesNever,
+    savedPct,
+    savedMinutes: Math.round(Math.max(0, r.savedM) / WALK_MPS / 60),
+    storeTag: `${place} · ${weekday}`,
+    vsLast: vsLastLine(r.timeMs, r.walkedM, previous),
+  };
+}
+
+export function cardData(store: StoreGraph, router: Router, trip: TripState, previous?: TripRecord): ShareCardData {
   const s = summarize(router, trip);
   const lane = trip.route.legs.find((l) => l.label === "Checkout")?.nodeId ?? null;
   const savedPct = s.baselineM > 0 ? Math.round((1 - s.totalM / s.baselineM) * 100) : 0;
@@ -28,12 +64,13 @@ export function cardData(store: StoreGraph, router: Router, trip: TripState): Sh
     clock: clock(elapsedMs(trip)),
     got: trip.got.length,
     total: trip.original.length,
-    lane: lane ? lane.replace(/^L/, "").replace(/^(\d+)$/, (m) => String(Number(m) + 1)) : null,
+    lane: laneLabel(lane),
     walkedM: s.totalM,
     aislesNever: aislesNeverEntered(store, trip).never.length,
     savedPct,
     savedMinutes: Math.round(Math.max(0, s.savedM) / WALK_MPS / 60),
     storeTag: `${place} · ${weekday}`,
+    vsLast: vsLastLine(elapsedMs(trip), s.totalM, previous),
   };
 }
 
@@ -66,9 +103,10 @@ export function mapQuestions(store: StoreGraph, trip: TripState): Ask[] {
   return out;
 }
 
-export function CheckoutScreen({ store, router, trip, usualSaved, noted, onNote, onSaveUsual, onClose }: CheckoutScreenProps) {
-  const data = cardData(store, router, trip);
-  const asks = mapQuestions(store, trip);
+export function CheckoutScreen({ store, router, trip, record, previous, usualSaved, noted, onNote, onSaveUsual, onClose }: CheckoutScreenProps) {
+  const data = trip ? cardData(store, router, trip, previous) : cardDataFromRecord(store, record!, previous);
+  const asks = trip ? mapQuestions(store, trip) : [];
+  const readOnly = !trip;
   const exportRef = useRef<HTMLDivElement>(null);
   const [sharing, setSharing] = useState<"idle" | "busy" | "done" | "failed">("idle");
 
@@ -88,7 +126,7 @@ export function CheckoutScreen({ store, router, trip, usualSaved, noted, onNote,
     <main className="screen page done-page">
       <header className="done-head on-haze">
         <h1 className="heading" style={{ fontSize: 20, fontWeight: 400 }}>
-          Trip done
+          {readOnly ? new Date(record!.date).toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" }) : "Trip done"}
         </h1>
         <button type="button" onClick={onClose}>
           Close

@@ -262,6 +262,7 @@ button { cursor: pointer; touch-action: manipulation; }
 .card-hero { text-align: center; margin: 26px 0 6px; font-size: clamp(72px, 22vw, 96px); }
 .card-sub { text-align: center; margin: 0 0 6px; font-size: 15px; color: var(--ink-muted); }
 /* the card's middle band: as wide as the card, dot on the art's centre */
+.card-vslast { color: var(--lime); font-weight: 400; margin-top: -2px; }
 .torus { display: block; width: calc(100% + 44px); margin: -6px -22px 4px; height: auto; }
 .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .stat-tile { padding: 16px 16px 14px; }

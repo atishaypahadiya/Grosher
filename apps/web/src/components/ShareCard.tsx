@@ -13,6 +13,8 @@ export interface ShareCardData {
   savedPct: number; // positive = shorter
   savedMinutes: number;
   storeTag: string; // "STORY RD · THU"
+  /** "3 min faster than your last trip · 40 m less", when there is a last trip */
+  vsLast?: string;
 }
 
 export const ShareCard = forwardRef<HTMLDivElement, { data: ShareCardData; className?: string }>(function ShareCard({ data, className }, ref) {
@@ -29,6 +31,11 @@ export const ShareCard = forwardRef<HTMLDivElement, { data: ShareCardData; class
       <p className="card-sub">
         {data.got} of {data.total} items{data.lane ? ` · lane ${data.lane}` : ""}
       </p>
+      {data.vsLast && (
+        <p className="card-sub card-vslast" data-testid="vs-last">
+          {data.vsLast}
+        </p>
+      )}
       <TorusArt />
       <div className="tiles">
         <div className="stat-tile glass-deep tile">
