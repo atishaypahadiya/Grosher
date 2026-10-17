@@ -38,7 +38,7 @@ if (typeof HTMLCanvasElement !== "undefined") HTMLCanvasElement.prototype.getCon
 const MOCK_DEPTS: Record<string, { category: string; subcategory: string; tags?: string[] }> = {
   "oat milk": { category: "milk-alternatives", subcategory: "plant milk", tags: ["chilled"] },
   "almond milk": { category: "milk-alternatives", subcategory: "plant milk", tags: ["chilled"] },
-  "ripple milk": { category: "milk-alternatives", subcategory: "plant milk", tags: ["chilled"] },
+  "zorbo milk": { category: "milk-alternatives", subcategory: "plant milk", tags: ["chilled"] },
   "dish soap": { category: "dish-soap", subcategory: "dish soap" },
   sriracha: { category: "hot-sauce", subcategory: "hot sauce" },
   "frozen waffles": { category: "frozen-breakfast", subcategory: "breakfast", tags: ["frozen"] },

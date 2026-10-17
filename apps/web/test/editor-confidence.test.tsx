@@ -23,7 +23,8 @@ describe("editor confidence view", () => {
       { name: "y", locationId: loc, confidence: 0.95, confirms: 4, misses: 1, lastConfirmed: NOW - 100 * DAY }, // 100 days: stale
     ];
     const marks = locationMarks(store, catalog, memory, NOW);
-    expect(marks.get(loc)).toEqual({ band: "likely", misses: 3, stale: true, entries: 3 }); // the catalog entry (confirmed) + two rows
+    const atLoc = catalog.filter((s) => s.locationIds.includes(loc)).length;
+    expect(marks.get(loc)).toEqual({ band: "likely", misses: 3, stale: true, entries: atLoc + 2 }); // the catalog entries (confirmed) + two rows
     const guess = [{ name: "z", locationId: loc, confidence: 0.4, confirms: 0, lastConfirmed: NOW }];
     expect(locationMarks(store, catalog, guess, NOW).get(loc)?.band).toBe("guess");
     expect(isStale({ confidence: 0.9, lastConfirmed: NOW - 91 * DAY }, NOW)).toBe(true);

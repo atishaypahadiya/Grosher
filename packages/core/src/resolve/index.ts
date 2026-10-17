@@ -391,11 +391,18 @@ export const llmConfidence = (wire: number) => Math.round((0.3 + (Math.max(0.5, 
 export function resolveItem(query: string, ctx: ResolveContext, cands = candidates(ctx.catalog), catCands = categoryCandidates(ctx.categories)): ResolveResult {
   const threshold = ctx.fuzzyThreshold ?? 0.72;
   const now = ctx.now ?? Date.now();
-  // An exact item wins; then what the shopper confirmed; then a sign that names the query outright
-  // ("strawberries" is the berries sign before it is a fuzzy "strawberry bagel"); then fuzzy items,
-  // then a near-identical category spelling, and the model last.
+  // An exact item wins, unless the shopper's own memory is about that very item: a memory row exists only
+  // because they said "Got it" or placed it, and a seeded catalog can be wrong about a shelf. Then memory
+  // for anything else; then a sign that names the query outright ("strawberries" is the berries sign
+  // before it is a fuzzy "strawberry bagel"); then fuzzy items, a near-identical category spelling, and
+  // the model last.
+  const sameItem = (a: ResolveResult, b: ResolveResult) => normalize(a.canonicalName) === normalize(b.canonicalName) || a.locationIds[0] === b.locationIds[0];
   const layers: (() => ResolveResult | null)[] = [
-    () => exactLayer(query, cands, now),
+    () => {
+      const ex = exactLayer(query, cands, now);
+      const mem = ex && memoryLayer(query, ctx.memory, now);
+      return mem && mem.confidence >= FALLTHROUGH && sameItem(mem, ex) ? mem : ex;
+    },
     () => memoryLayer(query, ctx.memory, now),
     () => categoryLayer(query, catCands, now, "exact"),
     () => fuzzyLayer(query, cands, threshold, now),

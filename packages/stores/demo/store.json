@@ -6075,7 +6075,7 @@
       "id": "deli",
       "name": "Deli",
       "color": "#EFC9A6",
-      "texture": "meat.jpg",
+      "texture": "deli.jpg",
       "fixtureKind": "counter"
     },
     {

@@ -29,7 +29,9 @@ export function chipFor(store: StoreGraph, stop: Stop): Chip {
   const dept = locationDepartment(store, first);
   const label = (loc: ShelfLocation) => (AISLE.test(loc.aisle) ? loc.aisle.toUpperCase() : titleCase(locationDepartment(store, loc)?.name ?? loc.aisle));
   let text = label(first);
-  if (locs.length > 1) text = `${text} or ${label(locs[1]).toLowerCase()}`;
+  // a second place only when it reads differently ("A6 or endcap", never "A18 or a18")
+  const second = locs.slice(1).map(label).find((l) => l.toLowerCase() !== text.toLowerCase());
+  if (second) text = `${text} or ${second.toLowerCase()}`;
   else if (AISLE.test(first.aisle) && dept) text = `${text} · ${dept.name.toLowerCase()}`;
   if ((stop.tags ?? []).some((t) => t === "frozen" || t === "chilled")) text += " · last";
   return { text, color: dept?.color };
