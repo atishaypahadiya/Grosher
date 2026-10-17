@@ -13,16 +13,17 @@ Real stores get surveyed with the built-in map editor. `DESIGN.md` is the visual
 
 ```
 package.json          npm workspaces: packages/*, apps/*. Root scripts: test, typecheck, bench, dev.
-packages/core         @grosher/core  routing engine. Zero deps, no build step, Node ≥ 22.18 runs the .ts.
+packages/core         @grosher/core  routing engine + item resolution. Zero deps, no build step, Node ≥ 22.18 runs the .ts.
 packages/stores       @grosher/stores store data: demo/{store,catalog}.json, demo/textures/, departments,
-                      geometry validation, generator scripts.
+                      slots, geometry validation, generator scripts.
 apps/web              @grosher/web   Vite + React 19 + TypeScript PWA: list, 3D trip, checkout, editor.
+apps/resolver         @grosher/resolver optional Cloudflare Worker (Hono) that asks Claude for departments.
 docs/superpowers/specs design notes from earlier sessions.
 ```
 
-Dependency direction: `web → core, stores`; `stores → core` (types, and the engine in its tests); core's
-tests take the demo store from stores as a devDependency. Workspace packages resolve by symlink; `exports`
-point straight at `src/index.ts`, so nothing is compiled.
+Dependency direction: `web → core, stores`; `resolver → core` (the shared LLM prompt); `stores → core`
+(types, and the engine in its tests); core's tests take the demo store from stores as a devDependency.
+Workspace packages resolve by symlink; `exports` point straight at `src/index.ts`, so nothing is compiled.
 
 ## Commands
 
@@ -38,6 +39,8 @@ cd apps/web && npx vitest run test/trip.test.ts                                 
 cd apps/web && npm run build && npx vite preview                                     # production build + SW
 npm run gen:demo -w @grosher/stores      # regenerate demo/store.json + catalog.json from scripts/gen-demo.ts
 npm run gen:textures -w @grosher/stores  # regenerate the placeholder textures + textures.json
+cd packages/core && node --test test/resolution-fixture.test.ts   # prints the per-layer hit-rate tables
+npm run dev -w @grosher/resolver         # wrangler dev on :8787 (anthropic provider only; needs .dev.vars)
 ```
 
 Web tests run in jsdom, where WebGL does not exist, so the trip screen under test always uses the flat
@@ -67,6 +70,63 @@ Read `src/types.ts`, then `graph.ts`, then `solver.ts`.
   added, set already visited, position) or Held–Karp stops being exact. Add it in `prepare()`'s `penalty`
   closure and extend the brute-force comparison test. Bitmasks cap stops at 31 (heuristic) and 20 (exact).
 
+## Item resolution (`packages/core/src/resolve`, `apps/web/src/lib/useResolution.ts`)
+
+A typed list line becomes a `Stop` through five layers, in order; the first hit with confidence ≥ 0.6 wins,
+a weaker hit falls through to the next layer, and the llm layer is last so its guess stands even when weak:
+
+| Layer | Source | How | Confidence |
+| --- | --- | --- | --- |
+| a | `exact` | ids, names and `aliases` (brands too), case / punctuation / quantity ("12 pack", "1 gallon") / plural-insensitive | 1 |
+| b | `fuzzy` | trigram Dice and Damerau–Levenshtein over the same labels, threshold .72; token containment only when the query is the shorter side ("yogurt" ⊂ "greek yogurt", never "oat milk" → "milk") | .6–.95 |
+| c | `memory` | the shopper's own per-store table (name → location, confirms, confidence), match ≥ .9 | the record's |
+| d | `llm` | a cached department guess → up to 6 of that department's locations (`departmentLocations` from stores) | .5–.7 |
+| e | `unknown` | no location; the row offers "Tell me where" | 0 |
+
+`text.ts` holds normalisation and similarity; `index.ts` the layers, `pendingEntry()` (an llm result as a
+catalog entry with `source: "llm"` so it resolves offline next time) and the memory rules; `llmPrompt.ts`
+the prompt, the JSON schema (department enum per store) and `parseLlmResults()` shared by every provider.
+Pure and synchronous: the app owns I/O.
+
+**In the app** (`useResolution`): learning state per store lives in IndexedDB (`lib/db.ts`, in-memory
+fallback): pending catalog entries, the llm answer cache (including "not placeable"), item memory. The list
+re-resolves 150 ms after any change; 600 ms later unknowns that were never asked go to the LLM provider.
+Learning loop: "Got it" → `confirmMemory` (confirms +1, confidence half-way to 1); "Not here" →
+`demoteMemory` (−.3, below .6 the next trip re-asks); "Tell me where" / "Pick aisle" → `placeMemory`
+(.9), and from the checkout screen also a confirmed catalog entry (`source: "memory"`). The editor exports
+`memory.json` only when "Include my item memory" is ticked (it is the shopper's history).
+
+**LLM providers** (`lib/resolver.ts`, chosen by `VITE_RESOLVER_PROVIDER`, default `ollama`):
+
+- `ollama`: `POST {VITE_OLLAMA_URL}/api/chat` (default `http://localhost:11434`), model `VITE_OLLAMA_MODEL`
+  (default `qwen3:14b`), `think: false`, `format` = the JSON schema so output is strict, temperature 0, one
+  call for the whole list, 20 s timeout. Setup on the Mac: `ollama pull qwen3:14b`, and start Ollama with
+  `OLLAMA_ORIGINS` allowing the app's origin (`OLLAMA_ORIGINS="http://localhost:5173,http://192.168.1.20:5173"
+  ollama serve`, or `launchctl setenv OLLAMA_ORIGINS "*"` for the menu-bar app), or the browser's preflight
+  is refused. For the phone, put the Mac's LAN address in `apps/web/.env.local`
+  (`VITE_OLLAMA_URL=http://192.168.1.20:11434`); the phone resolves only while on the same Wi-Fi as the Mac.
+- `anthropic`: the worker in `apps/resolver` at `VITE_RESOLVER_URL` (dev: `/api`, proxied to `wrangler dev`
+  on :8787). One Claude call (`claude-haiku-5-5`, effort low, strict tool output) per list.
+
+Any provider failure (unreachable, timeout, bad JSON) leaves the items unknown and shows the provider's
+one-line note in the list header ("Local model offline · unknown items need a tap"). Never an error state.
+No key ever ships in the client: `apps/web/test/bundle.test.ts` builds the app and fails on any `sk-ant`.
+
+**Worker deploy** (`apps/resolver`): `cp .dev.vars.example .dev.vars` with a real key for local dev;
+`npx wrangler login`; `npx wrangler secret put ANTHROPIC_API_KEY`; set `ALLOWED_ORIGIN` in `wrangler.toml`
+to the web app's exact origin (the `*` is for local dev only, the worker returns 403 to any other origin
+once it is set); keep the `[[unsafe.bindings]]` rate limiter (30 calls per IP per minute, each call is one
+Claude request); `npm run deploy -w @grosher/resolver` prints the workers.dev URL for
+`VITE_RESOLVER_URL`. Payload caps: 8 KB body, 40 items × 60 chars, 24 departments. Upstream error text
+never reaches the client.
+
+**Fixtures** (`packages/core/test/fixtures/`): `resolution.json` is the tuned set, 60 items (20 exact,
+12 fuzzy, 8 memory, 12 llm mocked, 8 unknown); the fuzzy threshold was tuned on it and the test asserts
+zero misses. `resolution-heldout.json` is 30 items written blind after it (Indian grocery items, brands,
+different typos, multi-word); the test prints its table but never asserts, and nothing is ever tuned
+against it. Both print per-layer hit rates: at the time of writing both are 100%. If the held-out fuzzy
+rate drops below 85%, say so and leave it.
+
 ## Store data (`packages/stores`)
 
 - `demo/store.json` (StoreGraph with 33 fixtures and the department table), `demo/catalog.json` (30
@@ -77,6 +137,8 @@ Read `src/types.ts`, then `graph.ts`, then `solver.ts`.
 - `src/departments.ts` is the canonical table from DESIGN.md §2; each store carries a copy.
 - `src/geometry.ts`: simple-polygon and segment-overlap checks; `fixtureProblems(store)` is used by the
   tests and the editor's Validate.
+- `src/resolveContext.ts`: `departmentLocations(store)`, department id → location ids via the fixtures; the
+  resolver's llm layer uses it and core stays free of fixture geometry.
 - `src/slots.ts`: `fixtureParams` (bays, shelves, depth, height defaults by kind), `slotFor(store, location)`
   → fixture, bay (counted from the entrance-facing end), face, shelf, flat-map rect, shelf height;
   `offsetForBay` moves a location to a bay's centre. Shared by the editor picker, the lit slot, the stop
@@ -90,8 +152,10 @@ Screens are state-driven in `App.tsx`: list → trip → checkout, plus `#/edit`
 host rewrite, deliberately not done yet). The ground gradient and blooms sit behind every phone screen in a
 centred 430px column.
 
-- `components/ListScreen` resolves typed names against the catalog (`lib/resolve.ts`), shows department-dot
-  chips (`lib/chips.ts`), hold-to-speak (`lib/speech.ts`) and the lime Route CTA.
+- `components/ListScreen` shows the resolved rows (`useResolution`): a source glyph per row (exact check,
+  fuzzy wave, memory clock, llm star, unknown mark), chip opacity = confidence, llm guesses in the amber
+  guess colour ("probably A4 · cereal"), "Tell me where" opening `PickerSheet` (the flat map, tap a shelf),
+  hold-to-speak (`lib/speech.ts`) and the lime Route CTA.
 - `lib/trip.ts` is the pure trip state: `gotIt` / `skipStop` / `addItem` reroute from the last checked-off
   node; `summarize` compares walked + to-go against `routeForOrder` of the collected items; snapshots (ids
   only) persist across reloads.
