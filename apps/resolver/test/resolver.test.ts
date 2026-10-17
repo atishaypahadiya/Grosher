@@ -16,6 +16,37 @@ describe("resolver worker", () => {
     expect(notJson.status).toBe(400);
   });
 
+  test("caps, origin check, rate limit and generic errors", async () => {
+    let seen: string[] = [];
+    const app = createApp(async ({ items }) => {
+      seen = items;
+      return items.map((item) => ({ item, department: null, confidence: 0 }));
+    });
+    const many = Array.from({ length: 80 }, (_, i) => `item ${i} ${"x".repeat(100)}`);
+    const res = await app.request("/resolve", { method: "POST", body: JSON.stringify({ items: many, departments: ["dairy"] }), headers: { "content-type": "application/json" } });
+    expect(res.status).toBe(413); // over the body cap
+    const some = Array.from({ length: 50 }, (_, i) => `item ${i}`);
+    const res2 = await app.request("/resolve", { method: "POST", body: JSON.stringify({ items: some, departments: ["dairy"] }), headers: { "content-type": "application/json" } });
+    expect(res2.status).toBe(200);
+    expect(seen).toHaveLength(40);
+    // origin enforced when configured
+    const env = { ANTHROPIC_API_KEY: "x", ALLOWED_ORIGIN: "https://grosher.app" };
+    const bad = await app.request("/resolve", { method: "POST", body: JSON.stringify({ items: ["a"], departments: ["dairy"] }), headers: { origin: "https://evil.example" } }, env);
+    expect(bad.status).toBe(403);
+    const good = await app.request("/resolve", { method: "POST", body: JSON.stringify({ items: ["a"], departments: ["dairy"] }), headers: { origin: "https://grosher.app" } }, env);
+    expect(good.status).toBe(200);
+    // rate limiter binding
+    const limited = await app.request("/resolve", { method: "POST", body: JSON.stringify({ items: ["a"], departments: ["dairy"] }) }, { ANTHROPIC_API_KEY: "x", RATE_LIMITER: { limit: async () => ({ success: false }) } });
+    expect(limited.status).toBe(429);
+    // upstream failures never leak their text
+    const failing = createApp(async () => {
+      throw new Error("sk-ant-secret leaked in message");
+    });
+    const err = await failing.request("/resolve", { method: "POST", body: JSON.stringify({ items: ["a"], departments: ["dairy"] }) });
+    expect(err.status).toBe(500);
+    expect(await err.text()).not.toMatch(/sk-ant/);
+  });
+
   test("classify maps the tool call back onto the items, drops unknown departments, bands confidence", async () => {
     const fake = {
       messages: {
