@@ -44,6 +44,10 @@
     "name": "Tortillas",
     "locationIds": [
       "BAKERY-25"
+    ],
+    "aliases": [
+      "wraps",
+      "flour tortillas"
     ]
   },
   {
@@ -66,6 +70,11 @@
     "tags": [
       "chilled",
       "heavy"
+    ],
+    "aliases": [
+      "whole milk",
+      "2 percent milk",
+      "skim milk"
     ]
   },
   {
@@ -76,6 +85,11 @@
     ],
     "tags": [
       "chilled"
+    ],
+    "aliases": [
+      "yogurt",
+      "yoghurt",
+      "chobani"
     ]
   },
   {
@@ -86,6 +100,10 @@
     ],
     "tags": [
       "chilled"
+    ],
+    "aliases": [
+      "chicken",
+      "chicken breast"
     ]
   },
   {
@@ -106,6 +124,11 @@
     ],
     "tags": [
       "heavy"
+    ],
+    "aliases": [
+      "rice",
+      "basmati",
+      "jasmine rice"
     ]
   },
   {
@@ -137,6 +160,10 @@
     "name": "Cereal",
     "locationIds": [
       "A3-8"
+    ],
+    "aliases": [
+      "cheerios",
+      "corn flakes"
     ]
   },
   {
@@ -151,6 +178,11 @@
     "name": "Oats",
     "locationIds": [
       "A3-20"
+    ],
+    "aliases": [
+      "oatmeal",
+      "quaker oats",
+      "rolled oats"
     ]
   },
   {
@@ -158,6 +190,10 @@
     "name": "Cumin",
     "locationIds": [
       "A4-20"
+    ],
+    "aliases": [
+      "cumin seeds",
+      "jeera"
     ]
   },
   {
@@ -169,6 +205,10 @@
     "tags": [
       "heavy",
       "fragile"
+    ],
+    "aliases": [
+      "evoo",
+      "cooking oil"
     ]
   },
   {
@@ -180,6 +220,12 @@
     ],
     "tags": [
       "fragile"
+    ],
+    "aliases": [
+      "crisps",
+      "potato chips",
+      "lays",
+      "doritos"
     ]
   },
   {
@@ -191,6 +237,11 @@
     ],
     "tags": [
       "heavy"
+    ],
+    "aliases": [
+      "water",
+      "bottled water",
+      "water bottles"
     ]
   },
   {
@@ -201,6 +252,13 @@
     ],
     "tags": [
       "heavy"
+    ],
+    "aliases": [
+      "coke",
+      "pepsi",
+      "pop",
+      "cola",
+      "sprite"
     ]
   },
   {
@@ -208,6 +266,12 @@
     "name": "Toilet paper",
     "locationIds": [
       "A8-20"
+    ],
+    "aliases": [
+      "toilet roll",
+      "bath tissue",
+      "charmin",
+      "loo roll"
     ]
   },
   {
@@ -218,6 +282,11 @@
     ],
     "tags": [
       "heavy"
+    ],
+    "aliases": [
+      "laundry detergent",
+      "tide",
+      "tide pods"
     ]
   },
   {
@@ -236,6 +305,11 @@
     ],
     "tags": [
       "frozen"
+    ],
+    "aliases": [
+      "icecream",
+      "ben and jerrys",
+      "gelato"
     ]
   },
   {
@@ -274,6 +348,11 @@
     "locationIds": [
       "A5-20",
       "END-6"
+    ],
+    "aliases": [
+      "granola",
+      "cereal bars",
+      "nature valley"
     ]
   }
 ]

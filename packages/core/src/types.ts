@@ -44,6 +44,9 @@ export interface ShelfLocation {
   offsetM: number;
 }
 
+/** Where a catalog entry came from. Package entries have no source. */
+export type CatalogSource = "catalog" | "llm" | "memory";
+
 /** One thing on the list, resolved to one or more candidate shelf locations. */
 export interface Stop {
   id: string;
@@ -51,6 +54,13 @@ export interface Stop {
   locationIds: string[]; // >1 => item lives in several places (endcaps, seasonal)
   tags?: ItemTag[];
   confidence?: number; // 0..1, from item resolution
+  /** other names and brands that mean this item ("toilet paper", "tide") */
+  aliases?: string[];
+  /** pending entries written by the resolver carry their origin */
+  source?: CatalogSource;
+  /** for llm-sourced pending entries: the department and sub-category guessed */
+  department?: string;
+  subcategory?: string;
 }
 
 /** How a department's fixtures are built in 3D. */

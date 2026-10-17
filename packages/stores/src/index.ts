@@ -10,6 +10,7 @@ import demoTextures from "../demo/textures/textures.json" with { type: "json" };
 export { DEPARTMENTS, departmentById } from "./departments.ts";
 export * from "./geometry.ts";
 export * from "./slots.ts";
+export * from "./resolveContext.ts";
 
 /** textures.json: one entry per department that has a photo (or placeholder). */
 export type TextureManifest = Record<string, { file: string; w: number; h: number; shotAt: string | null; repeatMeters: number }>;

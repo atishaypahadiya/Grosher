@@ -81,3 +81,15 @@ test("slots: demo locations map to a fixture, bay, face and shelf; bays count fr
     assert.ok(p.bays >= 1 && p.shelves >= 1 && p.depth > 0);
   }
 });
+
+import { departmentLocations } from "../src/resolveContext.ts";
+
+test("departmentLocations: every demo location belongs to one department", () => {
+  const { store } = STORES[0];
+  const dl = departmentLocations(store);
+  const all = Object.values(dl).flat();
+  assert.equal(new Set(all).size, store.locations.length);
+  assert.ok(dl.dairy.includes("DAIRY-10"));
+  assert.ok(dl.dry.includes("A3-8"));
+  assert.ok(dl.frozen.includes("A10-20"));
+});
