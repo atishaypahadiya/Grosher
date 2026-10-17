@@ -39,8 +39,11 @@ import {
 import { IconCorridor, IconCube, IconCursor, IconDoor, IconFixture, IconImage, IconPin, IconRuler } from "../components/Icons.tsx";
 import { moveBy, scaleAbout, withWidth, type Underlay } from "./underlay.ts";
 import { slotFor } from "@grosher/stores";
-import { loadLearning } from "../lib/learning.ts";
+import { loadLearning, saveLearning } from "../lib/learning.ts";
+import { loadLists, mergeImported as mergeLists, saveLists, type List } from "../lib/lists.ts";
+import { loadHistory, mergeImported as mergeHistory, saveHistory, type TripRecord } from "../lib/history.ts";
 import type { ItemMemory } from "@grosher/core";
+import type { Personal } from "./io.ts";
 
 type Tool = "select" | "corridor" | "fixture" | "location" | "doors" | "texture" | "measure";
 const TOOLS: { id: Tool; label: string; icon: ReactNode }[] = [
@@ -79,12 +82,14 @@ export function EditorScreen({ bundle, onExit }: { bundle: StoreBundle; onExit: 
   const [underlay, setUnderlay] = useState<Underlay | null>(null);
   const [preview, setPreview] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
-  const [memory, setMemory] = useState<ItemMemory[]>([]);
-  // The item memory is the shopper's own history. It only leaves the browser when they say so.
+  const [personal, setPersonal] = useState<Personal>({ memory: [], lists: [], history: [] });
+  // Memory, lists and history are the shopper's own. They only leave the browser when they say so.
   const [includeMemory, setIncludeMemory] = useState(false);
   useEffect(() => {
-    loadLearning(bundle.store.storeId).then((l) => setMemory(l.memory));
+    const id = bundle.store.storeId;
+    Promise.all([loadLearning(id), loadLists(id), loadHistory(id)]).then(([l, lists, history]) => setPersonal({ memory: l.memory, lists: lists.filter((x) => x.kind !== "draft"), history }));
   }, [bundle.store.storeId]);
+  const memory: ItemMemory[] = personal.memory;
   const importRef = useRef<HTMLInputElement>(null);
 
   // tool state
@@ -196,10 +201,10 @@ export function EditorScreen({ bundle, onExit }: { bundle: StoreBundle; onExit: 
     setLayers((l) => ({ ...l, textures: true }));
   };
 
-  const exportFiles = () => buildExport(draft, bundle.textures, textures, includeMemory ? memory : []);
+  const exportFiles = () => buildExport(draft, bundle.textures, textures, includeMemory ? personal : undefined);
   const onExport = () => {
     downloadAll(exportFiles());
-    setNotice(includeMemory ? `Downloaded store.json, catalog.json, textures and memory.json (${memory.length} items).` : "Downloaded store.json, catalog.json and textures.");
+    setNotice(includeMemory ? `Downloaded store.json, catalog.json, textures, memory.json (${memory.length} items) and lists.json (${personal.lists.length} lists, ${personal.history.length} trips).` : "Downloaded store.json, catalog.json and textures.");
   };
   const onWrite = async () => {
     const dir = await pickPackageDir();
@@ -209,10 +214,25 @@ export function EditorScreen({ bundle, onExit }: { bundle: StoreBundle; onExit: 
   };
   const onImport = async (files: FileList | null) => {
     if (!files?.length) return;
-    const { draft: d, notes } = await importFiles([...files], draft);
-    setDraft(d);
+    const r = await importFiles([...files], draft);
+    setDraft(r.draft);
     setSelection(null);
-    setNotice(notes.join(" · "));
+    const id = bundle.store.storeId;
+    if (r.lists !== undefined || r.history !== undefined) {
+      const [lists, history] = await Promise.all([loadLists(id), loadHistory(id)]);
+      const nextLists: List[] = mergeLists(lists, r.lists);
+      const nextHistory: TripRecord[] = mergeHistory(history, r.history);
+      await Promise.all([saveLists(id, nextLists), saveHistory(id, nextHistory)]);
+      setPersonal((p) => ({ ...p, lists: nextLists.filter((x) => x.kind !== "draft"), history: nextHistory }));
+    }
+    if (Array.isArray(r.memory)) {
+      const l = await loadLearning(id);
+      const mem = r.memory as ItemMemory[];
+      const merged = [...l.memory.filter((m) => !mem.some((x) => x.name.toLowerCase() === m.name.toLowerCase())), ...mem];
+      await saveLearning(id, { ...l, memory: merged });
+      setPersonal((p) => ({ ...p, memory: merged }));
+    }
+    setNotice(r.notes.join(" · "));
   };
 
   const mapSelection: MapSelection | null = selection
@@ -591,7 +611,7 @@ function ToolOptions(p: ToolOptionsProps) {
           <p className="ed-sub">Edits autosave in this browser. Export JSON or Write to package to ship them.</p>
           <label className="ed-check">
             <input type="checkbox" checked={p.includeMemory} onChange={(e) => p.setIncludeMemory(e.target.checked)} />
-            Include my item memory ({p.memoryCount} {p.memoryCount === 1 ? "item" : "items"}: names and shelves) in the export
+            Include my item memory ({p.memoryCount} {p.memoryCount === 1 ? "item" : "items"}), lists and trip history in the export
           </label>
           <button type="button" className="link rose" onClick={p.onReset}>
             Reset draft to the package

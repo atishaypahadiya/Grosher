@@ -71,3 +71,17 @@ globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
   }
   throw new TypeError(`fetch blocked in tests: ${url}`);
 }) as typeof fetch;
+
+// jsdom has no PointerEvent: testing-library then fires a bare Event without coordinates. Give it one.
+if (typeof window !== "undefined" && typeof (window as { PointerEvent?: unknown }).PointerEvent === "undefined") {
+  class PointerEventPolyfill extends MouseEvent {
+    pointerId: number;
+    pointerType: string;
+    constructor(type: string, init: PointerEventInit = {}) {
+      super(type, init);
+      this.pointerId = init.pointerId ?? 1;
+      this.pointerType = init.pointerType ?? "mouse";
+    }
+  }
+  (window as unknown as { PointerEvent: unknown }).PointerEvent = PointerEventPolyfill;
+}

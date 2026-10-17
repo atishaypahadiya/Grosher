@@ -107,10 +107,14 @@ describe("trip mode", () => {
     fireEvent.click(screen.getByRole("button", { name: /^close$/i }));
     expect(localStorage.getItem("grosher.trip")).toBeNull();
 
-    fireEvent.click(await findButton(/^milk$/i));
-    fireEvent.click(screen.getByRole("button", { name: /remove/i }));
-    fireEvent.click(screen.getByRole("button", { name: /usual trip/i }));
-    expect(await find(/5 items · 5 placed/i)).toBeTruthy();
+    // the usual trip was saved from the bought items; load it from the Lists sheet, replacing the draft
+    fireEvent.click((await screen.findAllByRole("button", { name: /^lists$/i }))[0]);
+    const sheet = screen.getByRole("dialog", { name: /^lists$/i });
+    const row = within(sheet).getByText(/ trip$/).closest(".ls-main")!;
+    fireEvent.pointerDown(row, { clientX: 100, clientY: 10 });
+    fireEvent.pointerUp(row, { clientX: 100, clientY: 10 });
+    fireEvent.click(within(sheet).getByRole("button", { name: /replace/i }));
+    expect(await find(/4 items · 4 placed/i)).toBeTruthy();
   });
 
   test("progress strip, back pauses, the list resumes", async () => {

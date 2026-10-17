@@ -13,7 +13,8 @@ export interface ListScreenProps {
   results: ResolveResult[];
   plan: Route | null;
   baselineM: number;
-  usual: string[] | null;
+  /** today's predicted usual trip, if any */
+  usual: { id: string; name: string; count: number } | null;
   asking: boolean;
   warming?: boolean;
   offline: boolean;
@@ -21,6 +22,7 @@ export interface ListScreenProps {
   onAdd: (names: string[]) => void;
   onRemove: (name: string) => void;
   onLoadUsual: () => void;
+  onOpenLists: () => void;
   onTellWhere: (name: string) => void;
   onRoute: () => void;
   /** a paused trip: the CTA resumes it instead of routing the list */
@@ -34,7 +36,7 @@ export const splitItems = (text: string) =>
     .map((s) => s.trim())
     .filter(Boolean);
 
-export function ListScreen({ store, items, results, plan, baselineM, usual, asking, warming, offline, offlineNote, onAdd, onRemove, onLoadUsual, onTellWhere, onRoute, resume }: ListScreenProps) {
+export function ListScreen({ store, items, results, plan, baselineM, usual, asking, warming, offline, offlineNote, onAdd, onRemove, onLoadUsual, onOpenLists, onTellWhere, onRoute, resume }: ListScreenProps) {
   const [draft, setDraft] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
@@ -75,9 +77,14 @@ export function ListScreen({ store, items, results, plan, baselineM, usual, aski
           <span className="eyebrow">{store.name ?? "Store"}</span>
           <h1 className="heading">{store.address ?? store.storeId}</h1>
         </div>
-        <button type="button" className="pill soil-ghost" onClick={() => setHint("One store so far: the demo Supercenter.")}>
-          Change
-        </button>
+        <div className="row">
+          <button type="button" className="pill soil-ghost" onClick={onOpenLists}>
+            Lists
+          </button>
+          <button type="button" className="pill soil-ghost" onClick={() => setHint("One store so far: the demo Supercenter.")}>
+            Change
+          </button>
+        </div>
       </header>
 
       <h2 className="display on-haze list-display">
@@ -121,11 +128,21 @@ export function ListScreen({ store, items, results, plan, baselineM, usual, aski
             {items.length} {items.length === 1 ? "item" : "items"} · {placed} placed
             {asking ? (warming ? " · warming up the local model…" : " · asking") : ""}
           </span>
-          <button type="button" className="eyebrow" onClick={() => (usual ? onLoadUsual() : setHint("Save a usual trip from the trip-done screen."))}>
-            {usual ? "Usual trip" : "No usual trip yet"}
-            {usual && <IconChevronDown />}
+          <button type="button" className="eyebrow" onClick={onOpenLists}>
+            Lists
+            <IconChevronDown />
           </button>
         </div>
+        {items.length === 0 && usual && (
+          <div className="usual-row" data-testid="usual-row">
+            <span>
+              Your usual {usual.name.replace(/ trip$/i, "")} trip · {usual.count} {usual.count === 1 ? "item" : "items"}
+            </span>
+            <button type="button" className="pill lime" onClick={onLoadUsual}>
+              Load
+            </button>
+          </div>
+        )}
         {offline && !asking && <p className="offline-note">{offlineNote ?? "Resolver offline · unknown items need a tap"}</p>}
         {items.length === 0 ? (
           <p className="row-item muted">Nothing yet. Add the first item above.</p>

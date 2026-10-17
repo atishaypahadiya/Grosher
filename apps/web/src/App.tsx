@@ -9,12 +9,13 @@ import { EditorScreen } from "./editor/EditorScreen.tsx";
 import { useResolution } from "./lib/useResolution.ts";
 import { toStop } from "@grosher/core";
 import { PickerSheet } from "./components/PickerSheet.tsx";
+import { ListsSheet } from "./components/ListsSheet.tsx";
+import { useLists } from "./lib/useLists.ts";
+import { draftIsUnsaved, predictUsual } from "./lib/lists.ts";
 import { addItem, fromSnapshot, gotIt, isDone, skipStop, startTrip, toSnapshot, type TripSnapshot, type TripState } from "./lib/trip.ts";
 import { load, save } from "./lib/storage.ts";
 
-const ITEMS_KEY = "grosher.items";
 const TRIP_KEY = "grosher.trip";
-const USUAL_KEY = "grosher.usual";
 const NOTES_KEY = "grosher.notes";
 const FLAT_KEY = "grosher.flat";
 
@@ -34,10 +35,10 @@ export function App() {
   const { store, catalog } = bundle;
   const router = useMemo(() => new Router(new WalkGraph(store)), [store]);
 
-  const [items, setItems] = useState<string[]>(() => load<string[]>(ITEMS_KEY, []));
-  useEffect(() => save(ITEMS_KEY, items), [items]);
-  const [usual, setUsual] = useState<string[] | null>(() => load<string[] | null>(USUAL_KEY, null));
-  useEffect(() => save(USUAL_KEY, usual), [usual]);
+  const listsState = useLists(store.storeId);
+  const { items, setItems } = listsState;
+  const [listsOpen, setListsOpen] = useState(false);
+  const usualToday = useMemo(() => predictUsual(listsState.lists), [listsState.lists]);
   const [notes, setNotes] = useState<string[]>(() => load<string[]>(NOTES_KEY, []));
   useEffect(() => save(NOTES_KEY, notes), [notes]);
   const noted = useMemo(() => new Set(notes.map((n) => n.toLowerCase())), [notes]);
@@ -130,10 +131,10 @@ export function App() {
           store={store}
           router={router}
           trip={trip}
-          usualSaved={!!usual && usual.join("\n") === trip.original.map((s) => s.name).join("\n")}
+          usualSaved={listsState.lists.some((l) => l.kind === "usual" && l.items.join("\n") === trip.got.map((s) => s.name).join("\n"))}
           noted={noted}
           onNote={(name) => setPicking({ name, promote: true })}
-          onSaveUsual={() => setUsual(trip.original.map((s) => s.name))}
+          onSaveUsual={() => listsState.saveUsual(trip.got.map((s) => s.name), trip.doneAt)}
           onClose={() => setTrip(null)}
         />
         {picker}
@@ -150,14 +151,15 @@ export function App() {
         results={res.results}
         plan={plan}
         baselineM={baselineM}
-        usual={usual}
+        usual={usualToday ? { id: usualToday.id, name: usualToday.name, count: usualToday.items.length } : null}
         asking={res.asking}
         warming={res.warming}
         offline={res.offline}
         offlineNote={res.offlineNote}
         onAdd={addItems}
         onRemove={(name) => setItems((cur) => cur.filter((n) => n !== name))}
-        onLoadUsual={() => usual && setItems(usual)}
+        onLoadUsual={() => usualToday && listsState.loadList(usualToday.id)}
+        onOpenLists={() => setListsOpen(true)}
         onTellWhere={(name) => setPicking({ name, promote: false })}
         resume={trip && paused ? { remaining: trip.remaining.length, distanceM: trip.route.legs.reduce((s, l) => s + l.distanceM, 0) } : null}
         onRoute={() => {
@@ -165,6 +167,23 @@ export function App() {
           else if (stops.length) setTrip(startTrip(router, stops, notFound));
         }}
       />
+      {listsOpen && (
+        <ListsSheet
+          lists={listsState.lists}
+          history={[]}
+          draftUnsaved={draftIsUnsaved(listsState.lists)}
+          draftCount={items.length}
+          onLoad={(id) => {
+            listsState.loadList(id);
+            setListsOpen(false);
+          }}
+          onDelete={listsState.deleteList}
+          onRename={listsState.renameList}
+          onSaveDraft={(name) => listsState.saveDraftAs(name)}
+          onOpenRecord={() => {}}
+          onClose={() => setListsOpen(false)}
+        />
+      )}
       {picker}
     </>
   );

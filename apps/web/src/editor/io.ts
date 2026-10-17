@@ -4,6 +4,8 @@
 
 import { parseStoreBundle, type TextureManifest } from "@grosher/stores";
 import type { ItemMemory } from "@grosher/core";
+import type { List } from "../lib/lists.ts";
+import type { TripRecord } from "../lib/history.ts";
 import type { Draft } from "./model.ts";
 
 export interface TextureFile {
@@ -21,20 +23,30 @@ export interface ExportFiles {
   "catalog.json": Blob;
   "textures/textures.json": Blob;
   "memory.json": Blob;
+  "lists.json": Blob;
   images: { path: string; blob: Blob }[];
 }
 
+/** What the shopper opts to export with the package: all of it is personal. */
+export interface Personal {
+  memory: ItemMemory[];
+  lists: List[];
+  history: TripRecord[];
+}
+export const EMPTY_PERSONAL: Personal = { memory: [], lists: [], history: [] };
+
 const json = (v: unknown) => new Blob([JSON.stringify(v, null, 2) + "\n"], { type: "application/json" });
 
-/** `memory` is the shopper's own history; the editor passes it only when they opted in. An empty list still writes an empty memory.json. */
-export function buildExport(draft: Draft, manifest: TextureManifest, textures: TextureFile[], memory: ItemMemory[] = []): ExportFiles {
+/** `personal` is the shopper's own data; the editor passes it only when they opted in. Empty sets still write empty files. */
+export function buildExport(draft: Draft, manifest: TextureManifest, textures: TextureFile[], personal: Personal = EMPTY_PERSONAL): ExportFiles {
   const merged: TextureManifest = { ...manifest };
   for (const t of textures) merged[t.deptId] = { file: t.file, w: t.w, h: t.h, shotAt: t.shotAt, repeatMeters: manifest[t.deptId]?.repeatMeters ?? 2 };
   return {
     "store.json": json({ ...draft.store, version: (draft.store.version ?? 0) + 1 }),
     "catalog.json": json(draft.catalog),
     "textures/textures.json": json(merged),
-    "memory.json": json(memory),
+    "memory.json": json(personal.memory),
+    "lists.json": json({ lists: personal.lists, history: personal.history }),
     images: textures.map((t) => ({ path: `textures/${t.file}`, blob: t.blob })),
   };
 }
@@ -52,6 +64,7 @@ export function downloadAll(files: ExportFiles) {
   download(files["catalog.json"], "catalog.json");
   download(files["textures/textures.json"], "textures.json");
   download(files["memory.json"], "memory.json");
+  download(files["lists.json"], "lists.json");
   for (const img of files.images) download(img.blob, img.path.split("/").pop()!);
 }
 
@@ -92,6 +105,7 @@ export async function writePackage(dir: DirHandle, files: ExportFiles): Promise<
     ["catalog.json", files["catalog.json"]],
     ["textures/textures.json", files["textures/textures.json"]],
     ["memory.json", files["memory.json"]],
+    ["lists.json", files["lists.json"]],
   ] as const) {
     await writeFile(dir, path, blob);
     written.push(path);
@@ -104,9 +118,19 @@ export async function writePackage(dir: DirHandle, files: ExportFiles): Promise<
 }
 
 /** Reads one or more JSON files (store.json, catalog.json, a {store, catalog} bundle) into a draft patch. */
-export async function importFiles(files: File[], current: Draft): Promise<{ draft: Draft; notes: string[] }> {
+export interface ImportResult {
+  draft: Draft;
+  notes: string[];
+  /** personal data found in the files (lists.json / memory.json), for the app to merge */
+  lists?: unknown;
+  history?: unknown;
+  memory?: unknown;
+}
+
+export async function importFiles(files: File[], current: Draft): Promise<ImportResult> {
   let draft = current;
   const notes: string[] = [];
+  const personal: Pick<ImportResult, "lists" | "history" | "memory"> = {};
   for (const f of files) {
     const text = await f.text();
     let data: unknown;
@@ -116,7 +140,15 @@ export async function importFiles(files: File[], current: Draft): Promise<{ draf
       notes.push(`${f.name}: not JSON`);
       continue;
     }
-    if (Array.isArray(data)) {
+    if (data && typeof data === "object" && !Array.isArray(data) && ("lists" in (data as object) || "history" in (data as object))) {
+      const d = data as { lists?: unknown; history?: unknown };
+      personal.lists = d.lists;
+      personal.history = d.history;
+      notes.push(`${f.name}: ${Array.isArray(d.lists) ? d.lists.length : 0} lists, ${Array.isArray(d.history) ? d.history.length : 0} trips`);
+    } else if (Array.isArray(data) && data.every((x) => x && typeof x === "object" && "locationId" in (x as object) && "confirms" in (x as object))) {
+      personal.memory = data;
+      notes.push(`${f.name}: ${data.length} remembered items`);
+    } else if (Array.isArray(data)) {
       const { catalog } = parseStoreBundle({ store: draft.store, catalog: data });
       draft = { ...draft, catalog };
       notes.push(`${f.name}: ${catalog.length} catalog items`);
@@ -132,7 +164,7 @@ export async function importFiles(files: File[], current: Draft): Promise<{ draf
       notes.push(`${f.name}: not a store, catalog or bundle`);
     }
   }
-  return { draft, notes };
+  return { draft, notes, ...personal };
 }
 
 /** Resize any image file to a 512×512 JPEG (q .8), the texture format of the package. */
