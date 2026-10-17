@@ -177,6 +177,7 @@ button { cursor: pointer; touch-action: manipulation; }
 .add-pill .plus { font-size: 24px; font-weight: 200; line-height: 1; color: var(--ink); opacity: 0.9; }
 .add-pill input { flex: 1; min-width: 0; background: transparent; border: 0; padding: 10px 0; font-size: 16px; color: var(--ink); }
 .add-pill input::placeholder { color: rgba(255, 255, 255, 0.75); font-size: 14px; }
+.add-pill input.interim { color: var(--lime); font-style: normal; }
 .add-pill .mic { width: 48px; min-width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--glass-border); background: var(--glass-strong); display: grid; place-items: center; }
 .add-pill .mic.listening { background: var(--lime); color: var(--soil); box-shadow: var(--glow-button); }
 

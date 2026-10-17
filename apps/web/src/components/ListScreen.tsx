@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ClipboardEvent, type FormEvent } from
 import { suggestFromMemory, type ItemMemory, type ResolveResult, type Route, type StoreGraph } from "@grosher/core";
 import { chipForResult } from "../lib/chips.ts";
 import { minutesNum } from "../lib/format.ts";
-import { listen, speechSupported } from "../lib/speech.ts";
+import { listen, speechSupported, type SpeechStop } from "../lib/speech.ts";
 import { Num } from "./Num.tsx";
 import { SourceGlyph } from "./SourceGlyph.tsx";
 import { IconArrowRight, IconChevronDown, IconMic, IconPlus } from "./Icons.tsx";
@@ -44,6 +44,8 @@ export function ListScreen({ store, items, results, plan, baselineM, usual, aski
   const [selected, setSelected] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
   const [listening, setListening] = useState(false);
+  const [interim, setInterim] = useState("");
+  const [micNote, setMicNote] = useState<string | null>(null);
   const stopRef = useRef<() => void>(() => {});
   useEffect(() => () => stopRef.current(), []);
 
@@ -67,7 +69,21 @@ export function ListScreen({ store, items, results, plan, baselineM, usual, aski
   const startSpeech = () => {
     if (listening) return;
     setListening(true);
-    stopRef.current = listen((text) => onAdd(splitItems(text)), () => setListening(false));
+    setMicNote(null);
+    setInterim("");
+    stopRef.current = listen({
+      onInterim: setInterim,
+      onItems: (items) => {
+        onAdd(items);
+        setInterim("");
+      },
+      onEnd: (why: SpeechStop) => {
+        setListening(false);
+        setInterim("");
+        if (why === "denied") setMicNote("Microphone not allowed · type instead");
+        else if (why === "error" || why === "unavailable") setMicNote("Voice entry stopped · type instead");
+      },
+    });
   };
   const stopSpeech = () => stopRef.current();
 
@@ -99,7 +115,9 @@ export function ListScreen({ store, items, results, plan, baselineM, usual, aski
       <form className="add-pill glass" onSubmit={submit}>
         <IconPlus className="plus" />
         <input
-          value={draft}
+          value={listening && interim ? interim : draft}
+          readOnly={listening}
+          className={listening && interim ? "interim" : undefined}
           onChange={(e) => setDraft(e.target.value)}
           onPaste={onPaste}
           placeholder={speechSupported() ? "Add items, paste a list, or hold to speak" : "Add items or paste a list"}
@@ -124,6 +142,8 @@ export function ListScreen({ store, items, results, plan, baselineM, usual, aski
         )}
       </form>
       {hint && <p className="caption-line muted">{hint}</p>}
+      {micNote && <p className="caption-line offline-note">{micNote}</p>}
+      {listening && <p className="caption-line muted" data-testid="listening">Listening… release to add</p>}
 
       <section className="list-sheet glass-deep sheet" aria-label="Items">
         <div className="sheet-head">
