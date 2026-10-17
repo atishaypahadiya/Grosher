@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import type { Department, Fixture, GraphEdge, GraphNode, ItemTag, ShelfLocation, StoreZone } from "@grosher/core";
-import type { TextureManifest } from "@grosher/stores";
+import { offsetForBay, slotFor, type TextureManifest } from "@grosher/stores";
 import { itemsAt, type Draft, type Issue, type Selection } from "./model.ts";
 import type { TextureFile } from "./io.ts";
 import { IconCheck } from "../components/Icons.tsx";
@@ -82,6 +82,8 @@ function LocationPanel({ loc, draft, manifest, textures, textureUrl, onUpdateLoc
   const dept = departmentOf(draft, loc);
   const edge = draft.store.edges.find((e) => e.id === loc.edgeId);
   const items = itemsAt(draft.catalog, loc.id);
+  const slot = slotFor(draft.store, loc);
+  const shelfCount = slot?.params.shelves ?? 5;
   const tex = dept ? textures.find((t) => t.deptId === dept.id) : undefined;
   const texInfo = dept ? manifest[dept.id] : undefined;
   const texFile = tex?.file ?? dept?.texture;
@@ -115,6 +117,35 @@ function LocationPanel({ loc, draft, manifest, textures, textureUrl, onUpdateLoc
         </Field>
       </div>
 
+      {slot && (
+        <div className="ed-grid-2">
+          <Field label={`Bay (1–${slot.params.bays}, from the front)`}>
+            <select
+              value={slot.bay}
+              aria-label="Bay"
+              onChange={(e) => {
+                const off = offsetForBay(draft.store, loc, Number(e.target.value));
+                if (off !== undefined) onUpdateLocation(loc.id, { offsetM: off });
+              }}
+            >
+              {Array.from({ length: slot.params.bays }, (_, i) => (
+                <option key={i + 1} value={i + 1}>
+                  Bay {i + 1}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Shelf">
+            <select value={form.shelf ?? Math.min(2, shelfCount - 1)} aria-label="Shelf" onChange={(e) => setForm({ ...form, shelf: Number(e.target.value) })}>
+              {Array.from({ length: shelfCount }, (_, i) => (
+                <option key={i} value={i}>
+                  {i === 0 ? "Shelf 1 · bottom" : i === shelfCount - 1 ? `Shelf ${i + 1} · top` : `Shelf ${i + 1}`}
+                </option>
+              ))}
+            </select>
+          </Field>
+        </div>
+      )}
       <span className="ed-label">Side</span>
       <div className="segmented" role="radiogroup" aria-label="Side">
         {(

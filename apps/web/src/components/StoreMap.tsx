@@ -32,6 +32,8 @@ export interface MapSelection {
   fixtureId?: string;
   locationId?: string;
   nodeId?: string;
+  /** the chosen bay × side of a location, metres */
+  slot?: { x: number; y: number; w: number; h: number } | null;
 }
 
 export interface StoreMapProps {
@@ -520,6 +522,9 @@ export function StoreMap({
       {/* selection (editor) */}
       {selEdge && nodes.get(selEdge.from) && nodes.get(selEdge.to) && (
         <line data-layer="selection-edge" x1={nodes.get(selEdge.from)!.x} y1={nodes.get(selEdge.from)!.y} x2={nodes.get(selEdge.to)!.x} y2={nodes.get(selEdge.to)!.y} stroke={SOIL} strokeWidth={px(2)} strokeLinecap="round" />
+      )}
+      {selection?.slot && (
+        <rect data-layer="selection-slot" x={selection.slot.x} y={selection.slot.y} width={selection.slot.w} height={selection.slot.h} fill="rgba(212,255,74,0.55)" stroke={SOIL} strokeWidth={px(1.5)} rx={px(2)} />
       )}
       {selNode && <circle cx={selNode.x} cy={selNode.y} r={px(5)} fill={LIME} stroke={SOIL} strokeWidth={hair} data-layer="selection-node" />}
       {selLoc && (

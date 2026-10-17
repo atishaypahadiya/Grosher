@@ -757,350 +757,400 @@
       "aisle": "A1",
       "side": "L",
       "edgeId": "e0",
-      "offsetM": 8
+      "offsetM": 8,
+      "shelf": 1
     },
     {
       "id": "A1-20",
       "aisle": "A1",
       "side": "L",
       "edgeId": "e0",
-      "offsetM": 20
+      "offsetM": 20,
+      "shelf": 2
     },
     {
       "id": "A1-32",
       "aisle": "A1",
       "side": "L",
       "edgeId": "e0",
-      "offsetM": 32
+      "offsetM": 32,
+      "shelf": 3
     },
     {
       "id": "A2-8",
       "aisle": "A2",
       "side": "L",
       "edgeId": "e3",
-      "offsetM": 8
+      "offsetM": 8,
+      "shelf": 1
     },
     {
       "id": "A2-20",
       "aisle": "A2",
       "side": "L",
       "edgeId": "e3",
-      "offsetM": 20
+      "offsetM": 20,
+      "shelf": 2
     },
     {
       "id": "A2-32",
       "aisle": "A2",
       "side": "L",
       "edgeId": "e3",
-      "offsetM": 32
+      "offsetM": 32,
+      "shelf": 3
     },
     {
       "id": "A3-8",
       "aisle": "A3",
       "side": "L",
       "edgeId": "e6",
-      "offsetM": 8
+      "offsetM": 8,
+      "shelf": 1
     },
     {
       "id": "A3-20",
       "aisle": "A3",
       "side": "L",
       "edgeId": "e6",
-      "offsetM": 20
+      "offsetM": 20,
+      "shelf": 2
     },
     {
       "id": "A3-32",
       "aisle": "A3",
       "side": "L",
       "edgeId": "e6",
-      "offsetM": 32
+      "offsetM": 32,
+      "shelf": 3
     },
     {
       "id": "A4-8",
       "aisle": "A4",
       "side": "L",
       "edgeId": "e9",
-      "offsetM": 8
+      "offsetM": 8,
+      "shelf": 1
     },
     {
       "id": "A4-20",
       "aisle": "A4",
       "side": "L",
       "edgeId": "e9",
-      "offsetM": 20
+      "offsetM": 20,
+      "shelf": 2
     },
     {
       "id": "A4-32",
       "aisle": "A4",
       "side": "L",
       "edgeId": "e9",
-      "offsetM": 32
+      "offsetM": 32,
+      "shelf": 3
     },
     {
       "id": "A5-8",
       "aisle": "A5",
       "side": "L",
       "edgeId": "e12",
-      "offsetM": 8
+      "offsetM": 8,
+      "shelf": 1
     },
     {
       "id": "A5-20",
       "aisle": "A5",
       "side": "L",
       "edgeId": "e12",
-      "offsetM": 20
+      "offsetM": 20,
+      "shelf": 2
     },
     {
       "id": "A5-32",
       "aisle": "A5",
       "side": "L",
       "edgeId": "e12",
-      "offsetM": 32
+      "offsetM": 32,
+      "shelf": 3
     },
     {
       "id": "A6-8",
       "aisle": "A6",
       "side": "L",
       "edgeId": "e15",
-      "offsetM": 8
+      "offsetM": 8,
+      "shelf": 1
     },
     {
       "id": "A6-20",
       "aisle": "A6",
       "side": "L",
       "edgeId": "e15",
-      "offsetM": 20
+      "offsetM": 20,
+      "shelf": 2
     },
     {
       "id": "A6-32",
       "aisle": "A6",
       "side": "L",
       "edgeId": "e15",
-      "offsetM": 32
+      "offsetM": 32,
+      "shelf": 3
     },
     {
       "id": "A7-8",
       "aisle": "A7",
       "side": "L",
       "edgeId": "e18",
-      "offsetM": 8
+      "offsetM": 8,
+      "shelf": 1
     },
     {
       "id": "A7-20",
       "aisle": "A7",
       "side": "L",
       "edgeId": "e18",
-      "offsetM": 20
+      "offsetM": 20,
+      "shelf": 2
     },
     {
       "id": "A7-32",
       "aisle": "A7",
       "side": "L",
       "edgeId": "e18",
-      "offsetM": 32
+      "offsetM": 32,
+      "shelf": 3
     },
     {
       "id": "A8-8",
       "aisle": "A8",
       "side": "L",
       "edgeId": "e21",
-      "offsetM": 8
+      "offsetM": 8,
+      "shelf": 1
     },
     {
       "id": "A8-20",
       "aisle": "A8",
       "side": "L",
       "edgeId": "e21",
-      "offsetM": 20
+      "offsetM": 20,
+      "shelf": 2
     },
     {
       "id": "A8-32",
       "aisle": "A8",
       "side": "L",
       "edgeId": "e21",
-      "offsetM": 32
+      "offsetM": 32,
+      "shelf": 3
     },
     {
       "id": "A9-8",
       "aisle": "A9",
       "side": "L",
       "edgeId": "e24",
-      "offsetM": 8
+      "offsetM": 8,
+      "shelf": 1
     },
     {
       "id": "A9-20",
       "aisle": "A9",
       "side": "L",
       "edgeId": "e24",
-      "offsetM": 20
+      "offsetM": 20,
+      "shelf": 2
     },
     {
       "id": "A9-32",
       "aisle": "A9",
       "side": "L",
       "edgeId": "e24",
-      "offsetM": 32
+      "offsetM": 32,
+      "shelf": 3
     },
     {
       "id": "A10-8",
       "aisle": "A10",
       "side": "L",
       "edgeId": "e27",
-      "offsetM": 8
+      "offsetM": 8,
+      "shelf": 1
     },
     {
       "id": "A10-20",
       "aisle": "A10",
       "side": "L",
       "edgeId": "e27",
-      "offsetM": 20
+      "offsetM": 20,
+      "shelf": 2
     },
     {
       "id": "A10-32",
       "aisle": "A10",
       "side": "L",
       "edgeId": "e27",
-      "offsetM": 32
+      "offsetM": 32,
+      "shelf": 3
     },
     {
       "id": "A11-8",
       "aisle": "A11",
       "side": "L",
       "edgeId": "e30",
-      "offsetM": 8
+      "offsetM": 8,
+      "shelf": 1
     },
     {
       "id": "A11-20",
       "aisle": "A11",
       "side": "L",
       "edgeId": "e30",
-      "offsetM": 20
+      "offsetM": 20,
+      "shelf": 2
     },
     {
       "id": "A11-32",
       "aisle": "A11",
       "side": "L",
       "edgeId": "e30",
-      "offsetM": 32
+      "offsetM": 32,
+      "shelf": 3
     },
     {
       "id": "A12-8",
       "aisle": "A12",
       "side": "L",
       "edgeId": "e33",
-      "offsetM": 8
+      "offsetM": 8,
+      "shelf": 1
     },
     {
       "id": "A12-20",
       "aisle": "A12",
       "side": "L",
       "edgeId": "e33",
-      "offsetM": 20
+      "offsetM": 20,
+      "shelf": 2
     },
     {
       "id": "A12-32",
       "aisle": "A12",
       "side": "L",
       "edgeId": "e33",
-      "offsetM": 32
+      "offsetM": 32,
+      "shelf": 3
     },
     {
       "id": "PRODUCE-6",
       "aisle": "PRODUCE",
       "side": "L",
       "edgeId": "e38",
-      "offsetM": 6
+      "offsetM": 6,
+      "shelf": 1
     },
     {
       "id": "PRODUCE-18",
       "aisle": "PRODUCE",
       "side": "L",
       "edgeId": "e38",
-      "offsetM": 18
+      "offsetM": 18,
+      "shelf": 2
     },
     {
       "id": "PRODUCE-30",
       "aisle": "PRODUCE",
       "side": "L",
       "edgeId": "e38",
-      "offsetM": 30
+      "offsetM": 30,
+      "shelf": 3
     },
     {
       "id": "BAKERY-10",
       "aisle": "BAKERY",
       "side": "L",
       "edgeId": "e39",
-      "offsetM": 10
+      "offsetM": 10,
+      "shelf": 1
     },
     {
       "id": "BAKERY-25",
       "aisle": "BAKERY",
       "side": "L",
       "edgeId": "e39",
-      "offsetM": 25
+      "offsetM": 25,
+      "shelf": 2
     },
     {
       "id": "MEAT-1",
       "aisle": "MEAT",
       "side": "L",
       "edgeId": "e4",
-      "offsetM": 2
+      "offsetM": 2,
+      "shelf": 3
     },
     {
       "id": "MEAT-3",
       "aisle": "MEAT",
       "side": "L",
       "edgeId": "e10",
-      "offsetM": 2
+      "offsetM": 2,
+      "shelf": 1
     },
     {
       "id": "MEAT-5",
       "aisle": "MEAT",
       "side": "L",
       "edgeId": "e16",
-      "offsetM": 2
+      "offsetM": 2,
+      "shelf": 2
     },
     {
       "id": "DAIRY-8",
       "aisle": "DAIRY",
       "side": "L",
       "edgeId": "e25",
-      "offsetM": 2
+      "offsetM": 2,
+      "shelf": 3
     },
     {
       "id": "DAIRY-10",
       "aisle": "DAIRY",
       "side": "L",
       "edgeId": "e31",
-      "offsetM": 2
+      "offsetM": 2,
+      "shelf": 1
     },
     {
       "id": "DAIRY-11",
       "aisle": "DAIRY",
       "side": "L",
       "edgeId": "e34",
-      "offsetM": 2
+      "offsetM": 2,
+      "shelf": 2
     },
     {
       "id": "END-2",
       "aisle": "ENDCAP",
       "side": "L",
       "edgeId": "e8",
-      "offsetM": 2
+      "offsetM": 2,
+      "shelf": 3
     },
     {
       "id": "END-6",
       "aisle": "ENDCAP",
       "side": "L",
       "edgeId": "e20",
-      "offsetM": 2
+      "offsetM": 2,
+      "shelf": 1
     },
     {
       "id": "END-9",
       "aisle": "ENDCAP",
       "side": "L",
       "edgeId": "e29",
-      "offsetM": 2
+      "offsetM": 2,
+      "shelf": 2
     }
   ],
   "entranceId": "ENTRANCE",
@@ -1912,60 +1962,70 @@
       "id": "produce",
       "name": "Produce",
       "color": "#6CB26A",
-      "texture": "produce.jpg"
+      "texture": "produce.jpg",
+      "fixtureKind": "produce"
     },
     {
       "id": "dairy",
       "name": "Dairy",
       "color": "#F2EAD2",
-      "texture": "dairy.jpg"
+      "texture": "dairy.jpg",
+      "fixtureKind": "coldcase"
     },
     {
       "id": "frozen",
       "name": "Frozen",
       "color": "#DDEFF0",
-      "texture": "frozen.jpg"
+      "texture": "frozen.jpg",
+      "fixtureKind": "coldcase"
     },
     {
       "id": "bakery",
       "name": "Bakery",
       "color": "#E9B46A",
-      "texture": "bakery.jpg"
+      "texture": "bakery.jpg",
+      "fixtureKind": "bakery"
     },
     {
       "id": "meat",
       "name": "Meat",
       "color": "#E5A2A0",
-      "texture": "meat.jpg"
+      "texture": "meat.jpg",
+      "fixtureKind": "coldcase"
     },
     {
       "id": "dry",
       "name": "Dry goods",
       "color": "#E2C9A2",
-      "texture": "dry.jpg"
+      "texture": "dry.jpg",
+      "fixtureKind": "gondola"
     },
     {
       "id": "snack",
       "name": "Snacks",
       "color": "#F3C96B",
-      "texture": "snack.jpg"
+      "texture": "snack.jpg",
+      "fixtureKind": "gondola"
     },
     {
       "id": "drinks",
       "name": "Drinks",
       "color": "#8FC9E8",
-      "texture": "drinks.jpg"
+      "texture": "drinks.jpg",
+      "fixtureKind": "gondola"
     },
     {
       "id": "household",
       "name": "Household",
       "color": "#D8D4CC",
-      "texture": "household.jpg"
+      "texture": "household.jpg",
+      "fixtureKind": "gondola"
     },
     {
       "id": "checkout",
       "name": "Checkout",
-      "color": "#DCE3D4"
+      "color": "#DCE3D4",
+      "fixtureKind": "counter"
     }
   ]
 }

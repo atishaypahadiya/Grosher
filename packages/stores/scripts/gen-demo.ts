@@ -100,8 +100,9 @@ function makeDemoStore(): StoreGraph {
   E("VEST", "FR", true); // vestibule into the store, not a shortcut back out
 
   // ----- shelf locations
+  let shelfSeq = 0;
   const L = (id: string, aisle: string, edgeId: string, offsetM: number, side: "L" | "R" = "L") =>
-    locations.push({ id, aisle, side, edgeId, offsetM });
+    locations.push({ id, aisle, side, edgeId, offsetM, shelf: 1 + (shelfSeq++ % 3) });
 
   for (let i = 1; i <= AISLES; i++) {
     for (const off of [8, 20, 32]) L(`A${i}-${off}`, `A${i}`, aisleEdge[`A${i}`], off);

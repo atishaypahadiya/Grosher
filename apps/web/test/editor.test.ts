@@ -92,3 +92,20 @@ describe("editor model", () => {
     expect(d.store.checkoutIds).toContain("L0");
   });
 });
+
+import { offsetForBay, slotFor } from "@grosher/stores";
+
+describe("bay + shelf picker", () => {
+  test("choosing a bay moves the location along its corridor; the slot rect follows", () => {
+    let d = cloneDraft(base);
+    const loc = d.store.locations.find((l) => l.id === "A3-20")!;
+    const before = slotFor(d.store, loc)!;
+    const off = offsetForBay(d.store, loc, 3)!;
+    d = updateLocation(d, loc.id, { offsetM: off, shelf: 4 });
+    const after = slotFor(d.store, d.store.locations.find((l) => l.id === "A3-20")!)!;
+    expect(after.bay).toBe(3);
+    expect(after.shelf).toBe(4);
+    expect(after.rect.y).not.toBe(before.rect.y);
+    expect(after.heightM).toBeGreaterThan(before.heightM);
+  });
+});

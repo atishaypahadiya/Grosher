@@ -50,3 +50,34 @@ for (const { store } of STORES) {
     for (const f of store.fixtures ?? []) assert.ok(f.department, `${f.id} has no department`);
   });
 }
+
+import { fixtureParams, offsetForBay, slotFor } from "../src/slots.ts";
+
+test("slots: demo locations map to a fixture, bay, face and shelf; bays count from the front", () => {
+  const { store } = STORES[0];
+  const loc = store.locations.find((l) => l.id === "A3-20")!;
+  const slot = slotFor(store, loc)!;
+  assert.ok(slot, "no slot");
+  assert.equal(slot.params.kind, "gondola");
+  assert.equal(slot.params.bays, Math.round(38.4 / 1.22));
+  assert.equal(slot.params.shelves, 5);
+  assert.ok(slot.bay >= 1 && slot.bay <= slot.params.bays);
+  // offset 20 from the top on a 38.4 m run whose front is the bottom end: bay ≈ (38.4 - 20.8) / 1.22 → 14/15
+  assert.ok(slot.bay >= 13 && slot.bay <= 16, `bay ${slot.bay}`);
+  assert.equal(slot.face, "east"); // side L picks the block west of the corridor, which presents its east face
+  assert.equal(slot.shelf, loc.shelf);
+  assert.ok(slot.heightM > 0.15 && slot.heightM < 1.8);
+  assert.ok(slot.rect.w > 0 && slot.rect.h > 0);
+  // a cold wall location on a horizontal fixture
+  const dairy = slotFor(store, store.locations.find((l) => l.id === "DAIRY-10")!)!;
+  assert.equal(dairy.params.kind, "coldcase");
+  assert.equal(dairy.params.shelves, 4);
+  assert.ok(["north", "south"].includes(dairy.face));
+  // moving to bay 1 puts the location near the front end of its edge
+  const off = offsetForBay(store, loc, 1)!;
+  assert.ok(off > 35 && off <= 40, `offset ${off}`);
+  for (const f of store.fixtures ?? []) {
+    const p = fixtureParams(f, store.departments);
+    assert.ok(p.bays >= 1 && p.shelves >= 1 && p.depth > 0);
+  }
+});

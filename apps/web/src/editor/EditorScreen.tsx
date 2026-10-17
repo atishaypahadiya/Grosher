@@ -38,6 +38,7 @@ import {
 } from "./model.ts";
 import { IconCorridor, IconCube, IconCursor, IconDoor, IconFixture, IconImage, IconPin, IconRuler } from "../components/Icons.tsx";
 import { moveBy, scaleAbout, withWidth, type Underlay } from "./underlay.ts";
+import { slotFor } from "@grosher/stores";
 
 type Tool = "select" | "corridor" | "fixture" | "location" | "doors" | "texture" | "measure";
 const TOOLS: { id: Tool; label: string; icon: ReactNode }[] = [
@@ -212,7 +213,10 @@ export function EditorScreen({ bundle, onExit }: { bundle: StoreBundle; onExit: 
       : selection.kind === "fixture"
         ? { fixtureId: selection.id }
         : selection.kind === "location"
-          ? { locationId: selection.id }
+          ? { locationId: selection.id, slot: (() => {
+              const loc = draft.store.locations.find((l) => l.id === selection.id);
+              return loc ? slotFor(draft.store, loc)?.rect ?? null : null;
+            })() }
           : { nodeId: selection.id }
     : chainFrom
       ? { nodeId: chainFrom }

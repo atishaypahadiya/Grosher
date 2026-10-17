@@ -37,6 +37,7 @@ export interface ShelfLocation {
   side?: "L" | "R" | "E"; // left, right, or endcap
   bay?: string; // Walmart section, e.g. "100" = endcap
   modular?: string; // Walmart modular within the section
+  shelf?: number; // 0 = bottom shelf, default 2
   zone?: StoreZone;
   tags?: ItemTag[]; // what the shelf holds (chilled wall, frozen case); defaults for items placed here
   edgeId: string;
@@ -52,6 +53,9 @@ export interface Stop {
   confidence?: number; // 0..1, from item resolution
 }
 
+/** How a department's fixtures are built in 3D. */
+export type FixtureKind = "gondola" | "coldcase" | "produce" | "bakery" | "counter";
+
 /** A physical block on the floor: shelf run, wall shelving, counter. A box in 3D, a filled polygon in 2D. */
 export interface Fixture {
   id: string;
@@ -60,6 +64,12 @@ export interface Fixture {
   height?: number; // meters, default 1.8; counters 1.0
   department?: string; // key into departments; picks color + texture
   aisle?: string; // "A12" → aisle sign on the front face
+  /** 3D geometry: bays along the run (default round(length / 1.22)) */
+  bays?: number;
+  /** shelf levels (default 5 gondola, 4 cold case, 3 produce / bakery) */
+  shelves?: number;
+  /** shelf depth from each face, metres (default half the block width) */
+  depth?: number;
 }
 
 export interface Department {
@@ -67,6 +77,7 @@ export interface Department {
   name: string;
   color: string; // hex, flat-map fill and the grade on the 3D texture
   texture?: string; // file name in the store's textures/ folder
+  fixtureKind?: FixtureKind; // default gondola
   anchor?: [number, number]; // where the department name sits on the flat map
   angle?: number; // degrees, label rotation
 }
