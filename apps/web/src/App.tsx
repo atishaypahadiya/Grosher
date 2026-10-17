@@ -79,10 +79,12 @@ export function App() {
   useEffect(() => {
     if (restored.current || !res.catalogReady) return;
     restored.current = true;
-    setTrip(fromSnapshot(router, res.catalog, load<TripSnapshot | null>(TRIP_KEY, null)));
+    // never over a trip the shopper started while the catalog was still loading
+    setTrip((current) => current ?? fromSnapshot(router, res.catalog, load<TripSnapshot | null>(TRIP_KEY, null)));
   }, [res.catalogReady, res.catalog, router]);
   useEffect(() => {
-    if (restored.current) save(TRIP_KEY, trip ? toSnapshot(trip) : null);
+    // a trip in progress is always worth saving; a null before the restore would wipe the saved one
+    if (trip || restored.current) save(TRIP_KEY, trip ? toSnapshot(trip) : null);
   }, [trip]);
   const stops = useMemo(() => res.results.map(toStop).filter((s): s is Stop => !!s), [res.results]);
   const notFound = useMemo(() => res.results.filter((r) => !r.locationIds.length).map((r) => r.query), [res.results]);

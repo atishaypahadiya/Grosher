@@ -26,6 +26,14 @@ const STEADY_TIMEOUT_MS = 240_000;
 const page = await ctx.newPage();
 const errors = [];
 page.on("pageerror", (e) => errors.push(e.message));
+page.on("console", (m) => {
+  if (m.type() === "error") errors.push(`console: ${m.text().slice(0, 200)}`);
+});
+// PERF_CPU_THROTTLE=4 slows the main thread like a CI runner (Chromium only)
+if (process.env.PERF_CPU_THROTTLE) {
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("Emulation.setCPUThrottlingRate", { rate: Number(process.env.PERF_CPU_THROTTLE) });
+}
 
 const steady = async (frames) => {
   await page.evaluate(() => {
@@ -35,7 +43,7 @@ const steady = async (frames) => {
     await page.waitForFunction((n) => (window.__grosherPerf?.frames ?? 0) >= n, frames, { timeout: STEADY_TIMEOUT_MS });
   } catch (e) {
     const seen = await page.evaluate(() => window.__grosherPerf);
-    throw new Error(`no steady state after ${STEADY_TIMEOUT_MS / 1000} s (wanted ${frames} frames): ${JSON.stringify(seen)}`, { cause: e });
+    throw new Error(`no steady state after ${STEADY_TIMEOUT_MS / 1000} s (wanted ${frames} frames): ${JSON.stringify(seen)}\npage errors: ${errors.join(" | ") || "none"}`, { cause: e });
   }
   return page.evaluate(() => window.__grosherPerf);
 };
