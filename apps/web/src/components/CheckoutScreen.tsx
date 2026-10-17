@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import type { Router, StoreGraph } from "@grosher/core";
+import { band, type Router, type StoreGraph } from "@grosher/core";
 import { aislesNeverEntered, elapsedMs, summarize, type TripState } from "../lib/trip.ts";
 import type { TripRecord } from "../lib/history.ts";
 import { clock, WALK_MPS } from "../lib/format.ts";
@@ -92,7 +92,8 @@ interface Ask {
 export function mapQuestions(store: StoreGraph, trip: TripState): Ask[] {
   const out: Ask[] = [];
   for (const name of trip.unplaced) out.push({ key: `unplaced:${name.toLowerCase()}`, question: `Where did you find the ${name.toLowerCase()}?`, hint: "Not on the map yet · tap the aisle, or skip" });
-  for (const s of trip.skipped) out.push({ key: s.id, question: `Where was the ${s.name.toLowerCase()}?`, hint: "Not where the map said · tap the aisle, or skip" });
+  // every "Not here": a guess that missed is the map's best lead on a reset; a confirmed shelf that missed says the store changed
+  for (const s of trip.skipped) out.push({ key: s.id, question: `Where was the ${s.name.toLowerCase()}?`, hint: band(s.confidence ?? 1) === "guess" ? "A guess that was wrong · tap the aisle, or skip" : "Not where the map said · tap the aisle, or skip" });
   trip.got.forEach((s, i) => {
     const node = trip.doneNodeIds[i];
     const used = node?.startsWith("loc:") ? node.slice(4) : undefined;

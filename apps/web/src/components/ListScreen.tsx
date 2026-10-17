@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ClipboardEvent, type FormEvent } from "react";
-import { suggestFromMemory, type ItemMemory, type ResolveResult, type Route, type StoreGraph } from "@grosher/core";
-import { chipForResult } from "../lib/chips.ts";
+import { band, suggestFromMemory, type ItemMemory, type ResolveResult, type Route, type StoreGraph } from "@grosher/core";
+import { BAND_OPACITY, chipForResult } from "../lib/chips.ts";
 import { minutesNum } from "../lib/format.ts";
 import { listen, speechSupported, type SpeechStop } from "../lib/speech.ts";
 import { Num } from "./Num.tsx";
@@ -184,8 +184,9 @@ export function ListScreen({ store, items, results, plan, baselineM, usual, aski
               const isSel = selected === name;
               const unknown = !r || r.source === "unknown";
               const suggestion = suggestFromMemory(name, memory);
+              const rowBand = r && !unknown ? band(r.confidence) : undefined;
               return (
-                <li key={name} className={`row-item${suggestion ? " has-suggest" : ""}`} data-source={r?.source ?? "pending"}>
+                <li key={name} className={`row-item${suggestion ? " has-suggest" : ""}`} data-source={r?.source ?? "pending"} data-band={rowBand}>
                   <button type="button" className="row-main" onClick={() => setSelected(isSel ? null : name)} aria-expanded={isSel}>
                     <span className="name">
                       {r && <SourceGlyph source={r.source} />}
@@ -207,7 +208,7 @@ export function ListScreen({ store, items, results, plan, baselineM, usual, aski
                       …
                     </span>
                   ) : !unknown && chip ? (
-                    <span className={`chip${r.source === "llm" ? " guess" : ""}`} style={{ opacity: 0.5 + 0.5 * Math.min(1, r.confidence) }} title={`${Math.round(r.confidence * 100)}%`}>
+                    <span className={`chip${rowBand === "guess" ? " guess" : ""}`} style={{ opacity: BAND_OPACITY[rowBand ?? "confirmed"] }} title={`${rowBand} · ${Math.round(r.confidence * 100)}%`}>
                       <i className="dot" style={chip.color ? { background: chip.color } : undefined} />
                       {chip.text}
                     </span>

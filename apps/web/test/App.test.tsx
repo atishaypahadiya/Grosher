@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, test } from "vitest";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { App } from "../src/App.tsx";
 import { dbClearMemoryFallback } from "../src/lib/db.ts";
+import { saveLearning } from "../src/lib/learning.ts";
 
 beforeEach(() => {
   localStorage.clear();
@@ -253,5 +254,29 @@ describe("settings", () => {
     expect(within(again).getByRole("radio", { name: /worker/i }).getAttribute("aria-checked")).toBe("true");
     fireEvent.click(within(again).getByRole("button", { name: /reset to defaults/i }));
     expect(localStorage.getItem("grosher.resolver")).toBeNull();
+  });
+});
+
+describe("confidence bands", () => {
+  test("the list shows all three bands; the trip sheet flags a guess; a missed guess is asked about at checkout", async () => {
+    // ghee: a memory row at .65 → likely; milk: catalog → confirmed; oat milk: llm → guess
+    await saveLearning("demo-supercenter", { pending: [], llm: [], memory: [{ name: "ghee", locationId: "A1-20", confidence: 0.65, confirms: 1, lastConfirmed: Date.now() }] });
+    render(<App />);
+    add("milk, ghee, oat milk");
+    const list = screen.getByRole("list");
+    await waitFor(() => expect(within(list).getAllByRole("listitem").map((li) => li.getAttribute("data-band"))).toEqual(["confirmed", "likely", "guess"]), { timeout: 3000 });
+    const rows = within(list).getAllByRole("listitem");
+    expect(within(rows[0]).getByTitle(/confirmed · 100%/i).style.opacity).toBe("1");
+    expect(within(rows[1]).getByTitle(/likely · 65%/i).style.opacity).toBe("0.8");
+    expect(within(rows[2]).getByText(/^probably /i).className).toContain("guess");
+
+    fireEvent.click(await findButton(/route 3 items/i));
+    // walk to the guess (route order is the solver's): skip through until the sheet shows the guess line
+    for (let i = 0; i < 3 && !screen.queryByTestId("trip-guess"); i++) fireEvent.click(screen.getByRole("button", { name: /got it/i }));
+    expect(screen.getByTestId("trip-guess").textContent).toMatch(/probably here · tell me if not/i);
+    fireEvent.click(screen.getByRole("button", { name: /not here/i }));
+    while (!screen.queryByText(/trip done/i)) fireEvent.click(screen.getByRole("button", { name: /got it/i }));
+    const ask = screen.getAllByTestId("improve-row").find((r) => /oat milk/i.test(r.textContent ?? ""))!;
+    expect(within(ask).getByText(/a guess that was wrong/i)).toBeTruthy();
   });
 });

@@ -1,6 +1,9 @@
 // Row chips on the List screen: where an item lives, in the store's words.
 
-import type { Department, ResolveResult, ShelfLocation, Stop, StoreGraph } from "@grosher/core";
+import { band, type Band, type Department, type ResolveResult, type ShelfLocation, type Stop, type StoreGraph } from "@grosher/core";
+
+/** How a band reads on a chip: confirmed full, likely 80%, a guess is amber text ("probably …") at full opacity. */
+export const BAND_OPACITY: Record<Band, number> = { confirmed: 1, likely: 0.8, guess: 1 };
 
 const AISLE = /^A\d+$/i;
 
@@ -32,12 +35,12 @@ export function chipFor(store: StoreGraph, stop: Stop): Chip {
   return { text, color: dept?.color };
 }
 
-/** The List row chip for a resolution: llm guesses read "probably A4 · cereal"; memory hits say "yours". */
+/** The List row chip for a resolution: a guess (band < .5, every fresh llm answer) reads "probably A4 · cereal"; memory hits say "yours". */
 export function chipForResult(store: StoreGraph, r: ResolveResult): Chip | null {
   if (!r.locationIds.length) return null;
   const stop: Stop = { id: r.stopId ?? r.query, name: r.canonicalName, locationIds: r.locationIds, tags: r.tags };
   const base = chipFor(store, stop);
-  if (r.source === "llm") {
+  if (band(r.confidence) === "guess") {
     const first = store.locations.find((l) => l.id === r.locationIds[0]);
     const where = first ? (AISLE.test(first.aisle) ? first.aisle.toUpperCase() : titleCase(locationDepartment(store, first)?.name ?? first.aisle)) : r.department ?? "";
     return { text: `probably ${where}${r.subcategory ? ` · ${r.subcategory}` : ""}`, color: base.color };

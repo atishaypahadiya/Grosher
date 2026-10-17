@@ -6,6 +6,7 @@ import type { Router, Stop } from "@grosher/core";
 import type { StoreBundle } from "@grosher/stores";
 import { elapsedMs, isDone, nextLeg, nextStop, type TripState } from "../lib/trip.ts";
 import { clock, describeLocation, WALK_MPS } from "../lib/format.ts";
+import { band } from "@grosher/core";
 import { locationDepartment } from "../lib/chips.ts";
 import { slotFor } from "@grosher/stores";
 import { webglAvailable } from "../map3d/webgl.ts";
@@ -138,6 +139,11 @@ export function TripScreen({ bundle, router, trip, flat, onFlatChange, onGotIt, 
             <div>
               <h2 className="title">{stop.name}</h2>
               <p className="muted trip-where">{locationLine}</p>
+              {band(stop.confidence ?? 1) === "guess" && (
+                <p className="trip-guess" data-testid="trip-guess">
+                  Probably here · tell me if not
+                </p>
+              )}
             </div>
             <div className="trip-dist">
               <Num value={Math.round(leg.distanceM)} />
