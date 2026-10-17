@@ -9,6 +9,7 @@ import type { TripState } from "../lib/trip.ts";
 import { Scene } from "./Scene.tsx";
 import type { CameraRigHandle } from "./CameraRig.tsx";
 import { fixtureBox, fixtureForLocation } from "./layout.ts";
+import { slotFor } from "@grosher/stores";
 import type { Focus, SafeArea } from "./CameraRig.tsx";
 import { OverlayDom, useOverlayItems, type NextLabel, type OverlayRegistry } from "./Overlay.tsx";
 
@@ -68,6 +69,11 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
   const nextIsStop = !!current?.stopId;
   const nextNode = current ? nodes.get(current.nodeId) : undefined;
   const litFixtureId = useMemo(() => (nextIsStop ? fixtureForLocation(store, current?.locationId, nextNode)?.id ?? null : null), [store, current, nextNode, nextIsStop]);
+  const litSlot = useMemo(() => {
+    if (!nextIsStop || !current?.locationId) return null;
+    const loc = store.locations.find((l) => l.id === current.locationId);
+    return loc ? slotFor(store, loc) ?? null : null;
+  }, [store, current, nextIsStop]);
   const legFixtureIds = useMemo(() => {
     const pts = (current?.path ?? []).map((id) => nodes.get(id)).filter((n): n is NonNullable<typeof n> => !!n);
     const ids = new Set<string>();
@@ -110,6 +116,7 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
     nodes,
     positionNodeId: trip.positionNodeId,
     nextNodeId: nextIsStop ? current!.nodeId : null,
+    nextPos: litSlot ? [litSlot.center.x, litSlot.heightM + 0.12, litSlot.center.y] : null,
     nextLabel,
     aheadNodeIds: legs.filter((l) => l.stopId !== null).slice(1).map((l) => l.nodeId),
     doneNodeIds: trip.doneNodeIds,
@@ -186,7 +193,7 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
           nodes={nodes}
           fromEntrance={fromEntrance}
           footprint={footprint}
-          litFixtureId={litFixtureId}
+          litSlot={litSlot}
           legFixtureIds={legFixtureIds}
           ribbon={ribbon}
           overlay={{ items, registry }}

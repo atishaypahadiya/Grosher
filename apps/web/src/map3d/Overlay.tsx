@@ -13,12 +13,16 @@ export interface NextLabel {
   eyebrow: string;
   name: string;
   distance: string;
+  /** "Left · bay 4 · shelf 3" */
+  slot?: string;
 }
 
 export interface OverlayProps {
   nodes: Map<string, GraphNode>;
   positionNodeId: string;
   nextNodeId?: string | null;
+  /** exact next-stop point (the lit slot on the shelf face); falls back to the node at shelf height */
+  nextPos?: [number, number, number] | null;
   nextLabel?: NextLabel | null;
   aheadNodeIds: string[];
   doneNodeIds: string[];
@@ -78,7 +82,7 @@ export function useOverlayItems(p: OverlayProps): OverlayItem[] {
           ),
         });
     }
-    const next = at(p.nextNodeId, h);
+    const next = p.nextPos ?? at(p.nextNodeId, h);
     if (next) {
       out.push({ key: "next", pos: next, node: <span className="m-next"><i className="m-leader" /></span> });
       if (p.nextLabel)
@@ -92,6 +96,7 @@ export function useOverlayItems(p: OverlayProps): OverlayItem[] {
               <span className="eyebrow now">{p.nextLabel.eyebrow}</span>
               <span className="m-label-name">{p.nextLabel.name}</span>
               <span className="m-label-line">{p.nextLabel.distance}</span>
+              {p.nextLabel.slot && <span className="m-label-line m-label-slot">{p.nextLabel.slot}</span>}
             </div>
           ),
         });
@@ -99,7 +104,7 @@ export function useOverlayItems(p: OverlayProps): OverlayItem[] {
     const you = at(p.positionNodeId, 0.1);
     if (you) out.push({ key: "you", pos: you, node: <span className="m-you"><i className="m-halo" /></span> });
     return out;
-  }, [p.nodes, p.positionNodeId, p.nextNodeId, p.nextLabel, p.aheadNodeIds, p.doneNodeIds, p.laneNodeId, p.checkoutLabel, p.entranceId, p.exitId, h]);
+  }, [p.nodes, p.positionNodeId, p.nextNodeId, p.nextPos, p.nextLabel, p.aheadNodeIds, p.doneNodeIds, p.laneNodeId, p.checkoutLabel, p.entranceId, p.exitId, h]);
 }
 
 /** Plain DOM, rendered by TripMap3D next to the Canvas. */

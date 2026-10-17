@@ -7,6 +7,7 @@ import type { StoreBundle } from "@grosher/stores";
 import { elapsedMs, isDone, nextLeg, nextStop, type TripState } from "../lib/trip.ts";
 import { clock, describeLocation, WALK_MPS } from "../lib/format.ts";
 import { locationDepartment } from "../lib/chips.ts";
+import { slotFor } from "@grosher/stores";
 import { webglAvailable } from "../map3d/webgl.ts";
 import { StoreMap } from "./StoreMap.tsx";
 import { AddItem } from "./AddItem.tsx";
@@ -76,7 +77,10 @@ export function TripScreen({ bundle, router, trip, flat, onFlatChange, onGotIt, 
   const remainingM = trip.route.legs.reduce((s, l) => s + l.distanceM, 0);
   const lane = trip.route.legs.find((l) => l.label === "Checkout");
   const eyebrowParts = [dept?.name, loc?.aisle].filter((p, i, arr): p is string => !!p && arr.findIndex((q) => q?.toLowerCase() === p.toLowerCase()) === i);
-  const nextLabel = leg && stop ? { eyebrow: `${eyebrowParts.join(" · ")} · ${position} of ${total}`, name: stop.name, distance: `${Math.round(leg.distanceM)} m` } : null;
+  const slot = loc ? slotFor(store, loc) : undefined;
+  const sideWord = loc?.side === "R" ? "Right" : loc?.side === "E" ? "Endcap" : "Left";
+  const slotLine = slot ? `${sideWord} · bay ${slot.bay} · shelf ${slot.shelf + 1}` : undefined;
+  const nextLabel = leg && stop ? { eyebrow: `${eyebrowParts.join(" · ")} · ${position} of ${total}`, name: stop.name, distance: `${Math.round(leg.distanceM)} m`, slot: slotLine } : null;
   const checkoutLabel = lane ? { eyebrow: `Checkout · lane ${laneNumber(lane.nodeId)}`, line: `${Math.max(1, Math.round(remainingM / WALK_MPS / 60))} min walk (${Math.round(remainingM)} m)` } : null;
 
   const flatMap = (

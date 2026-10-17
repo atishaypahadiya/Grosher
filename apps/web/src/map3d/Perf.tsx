@@ -5,10 +5,11 @@ import { useEffect, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { productStats } from "./Products.tsx";
 import { cameraStats } from "./CameraRig.tsx";
+import { litStats } from "./LitSlot.tsx";
 
 declare global {
   interface Window {
-    __grosherPerf?: { calls: number; triangles: number; frameMs: number; frames: number; programs: number; instances: number; productFixtures: number; distance: number; tilt: number };
+    __grosherPerf?: { calls: number; triangles: number; frameMs: number; frames: number; programs: number; instances: number; productFixtures: number; distance: number; tilt: number; lit: unknown };
   }
 }
 
@@ -40,6 +41,7 @@ export function Perf() {
       productFixtures: productStats.fixtures,
       distance: Math.round(cameraStats.distance * 10) / 10,
       tilt: Math.round(cameraStats.tilt),
+      lit: litStats.slot,
     };
     gl.info.reset();
     invalidate(); // keep rendering so the numbers are a steady-state measurement

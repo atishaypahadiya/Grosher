@@ -9,6 +9,8 @@ import { CanvasTexture, SRGBColorSpace, type DirectionalLight, type HemisphereLi
 import type { SelectiveBloomEffect } from "postprocessing";
 import type { GraphNode, StoreGraph } from "@grosher/core";
 import { Fixtures } from "./Fixtures.tsx";
+import { LitSlot } from "./LitSlot.tsx";
+import type { Slot } from "@grosher/stores";
 import { Products } from "./Products.tsx";
 import { Ribbon } from "./Ribbon.tsx";
 import { OverlayProjector, type OverlayItem, type OverlayRegistry } from "./Overlay.tsx";
@@ -69,7 +71,8 @@ export interface SceneProps {
   nodes: Map<string, GraphNode>;
   fromEntrance: Map<string, number>;
   footprint: { x: number; z: number; w: number; d: number };
-  litFixtureId: string | null;
+  /** the next stop's bay × shelf × face */
+  litSlot: Slot | null;
   /** fixtures along the current leg plus the next stop's */
   legFixtureIds: string[];
   ribbon: { walked: string[]; current: string[]; ahead: string[] };
@@ -83,7 +86,7 @@ export interface SceneProps {
   perf: boolean;
 }
 
-export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, footprint, litFixtureId, legFixtureIds, ribbon, overlay, focus, safe, flat, reducedMotion, cameraRef, onOverZoomOut, perf }: SceneProps) {
+export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, footprint, litSlot, legFixtureIds, ribbon, overlay, focus, safe, flat, reducedMotion, cameraRef, onOverZoomOut, perf }: SceneProps) {
   const [litMesh, setLitMesh] = useState<Mesh | null>(null);
   const [glowLine, setGlowLine] = useState<Object3D | null>(null);
   const bloomRef = useRef<SelectiveBloomEffect | null>(null);
@@ -123,10 +126,11 @@ export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, fo
       <Line points={edge} color="#FFFFFF" transparent opacity={0.3} lineWidth={1} />
 
       <Suspense fallback={null}>
-        <Fixtures store={store} textureUrl={textureUrl} repeatMeters={repeatMeters} litFixtureId={litFixtureId} nodes={nodes} fromEntrance={fromEntrance} onLitMesh={setLitMesh} />
+        <Fixtures store={store} textureUrl={textureUrl} repeatMeters={repeatMeters} nodes={nodes} fromEntrance={fromEntrance} />
         <Products store={store} textureUrl={textureUrl} settled={settled} priority={legFixtureIds} you={{ x: focus.you.x, z: focus.you.y }} />
       </Suspense>
       <Ribbon nodes={nodes} walked={ribbon.walked} current={ribbon.current} ahead={ribbon.ahead} onGlowLine={setGlowLine} />
+      {litSlot && <LitSlot slot={litSlot} onMesh={setLitMesh} />}
       <OverlayProjector items={overlay.items} registry={overlay.registry} safe={safe} />
       <CameraRig ref={cameraRef} focus={focus} safe={safe} distanceRef={distanceRef} onSettle={onSettle} flat={flat} reducedMotion={reducedMotion} onOverZoomOut={onOverZoomOut} />
       <BloomDriver effect={bloomRef} distanceRef={distanceRef} full={0.7} />
