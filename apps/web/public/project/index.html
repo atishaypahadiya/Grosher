@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Grosher · project</title>
+<meta name="description" content="Grosher turns a grocery list into one route through the store, entrance to exit, and reroutes as you shop. A progressive web app with a 3D store map and a local model.">
+<meta name="theme-color" content="#F9D7A8">
+<meta property="og:title" content="Grosher · Your list, not their layout.">
+<meta property="og:description" content="One route through the store, entrance to exit, rerouted as you shop. Offline on the phone; items resolved by a model on a laptop.">
+<meta property="og:image" content="https://grosher.pages.dev/project/img/checkout.webp">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/fonts/outfit-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/doto-latin.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+/* Self-hosted Outfit + Doto (Google Fonts, OFL), the same files the app ships in /fonts. */
+@font-face { font-family: "Outfit"; font-style: normal; font-weight: 200 700; font-display: swap; src: url(/fonts/outfit-latin.woff2) format("woff2"); }
+@font-face { font-family: "Doto"; font-style: normal; font-weight: 400 900; font-display: swap; src: url(/fonts/doto-latin.woff2) format("woff2"); }
+
+/* Tokens: DESIGN.md §2 */
+:root {
+  --haze: #F9D7A8; --apricot: #F0C27A; --lime-green: #B9D96A; --moss: #6CB26A; --leaf: #2E7D46; --deep: #184D2E; --soil: #0F2A1A;
+  --lime: #D4FF4A; --guess: #F6D28C;
+  --ink: #FFFFFF; --ink-muted: rgba(255,255,255,.85); --soil-muted: rgba(15,42,26,.72);
+  --glass: rgba(255,255,255,.14); --glass-strong: rgba(255,255,255,.2); --glass-deep: rgba(15,42,26,.22); --glass-border: rgba(255,255,255,.28);
+  --hairline: rgba(255,255,255,.18); --rule: rgba(255,255,255,.25);
+  --blur: blur(18px) saturate(140%);
+  --glow-button: 0 0 24px rgba(212,255,74,.45); --glow-dot: 0 0 18px rgba(212,255,74,.8);
+  --font: Outfit, system-ui, -apple-system, sans-serif; --font-num: Doto, Outfit, system-ui, monospace;
+  --gutter: 16px; --max: 1120px;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body { margin: 0; font-family: var(--font); font-weight: 300; font-size: 16px; line-height: 1.55; color: var(--ink); background: var(--deep); -webkit-font-smoothing: antialiased; }
+img, video, svg { display: block; max-width: 100%; }
+a { color: inherit; }
+p { margin: 0; }
+h1, h2, h3 { margin: 0; font-weight: 300; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.skip { position: absolute; left: 12px; top: -60px; z-index: 10; padding: 10px 16px; border-radius: 999px; background: var(--soil); color: #fff; text-decoration: none; font-weight: 500; }
+.skip:focus { top: 12px; }
+:focus-visible { outline: 2px solid var(--lime); outline-offset: 3px; }
+.wrap { position: relative; z-index: 1; max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter); }
+
+/* The ground: DESIGN.md's gradient, cut into section slices that meet seamlessly, so the ink of every
+   region is known (soil on haze, white from leaf down). Blooms are radial gradients, not blurred divs. */
+section, header, footer { position: relative; overflow: hidden; }
+.g-hero { background: linear-gradient(180deg, var(--haze) 0%, var(--apricot) 48%, var(--lime-green) 100%); color: var(--soil); }
+.g-visual { background: linear-gradient(180deg, var(--lime-green) 0%, var(--moss) 42%, var(--leaf) 100%); }
+.g-why { background: linear-gradient(180deg, var(--leaf) 0%, #24653A 100%); }
+.g-how { background: linear-gradient(180deg, #24653A 0%, var(--deep) 100%); }
+.g-deep { background: var(--deep); }
+.bloom::before, .bloom::after { content: ""; position: absolute; border-radius: 50%; pointer-events: none; z-index: 0; }
+.g-hero.bloom::before { width: 900px; height: 900px; left: -320px; top: -360px; background: radial-gradient(closest-side, rgba(255,240,210,.9), rgba(255,240,210,0)); }
+.g-hero.bloom::after { width: 760px; height: 760px; right: -260px; bottom: -420px; background: radial-gradient(closest-side, rgba(212,255,74,.42), rgba(212,255,74,0)); }
+.g-visual.bloom::before { width: 820px; height: 820px; left: 50%; top: 10%; transform: translateX(-50%); background: radial-gradient(closest-side, rgba(212,255,74,.38), rgba(212,255,74,0)); }
+.g-visual.bloom::after { width: 900px; height: 900px; right: -340px; bottom: -380px; background: radial-gradient(closest-side, rgba(10,50,28,.8), rgba(10,50,28,0)); }
+.g-deep.bloom::before { width: 900px; height: 900px; left: -380px; top: -200px; background: radial-gradient(closest-side, rgba(212,255,74,.08), rgba(212,255,74,0)); }
+
+/* Type: DESIGN.md §2 */
+.eyebrow { display: block; font-weight: 500; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink); }
+.eyebrow.soil { color: var(--soil-muted); }
+.eyebrow.now { color: var(--lime); }
+.card .eyebrow { color: var(--ink-muted); }
+.display { font-weight: 200; font-size: clamp(44px, 9vw, 84px); line-height: 1.02; letter-spacing: -.02em; }
+.title { font-weight: 300; font-size: clamp(28px, 4.4vw, 40px); line-height: 1.12; letter-spacing: -.01em; margin: 10px 0 0; }
+.num { font-family: var(--font-num); font-weight: 700; letter-spacing: .04em; line-height: .9; font-variant-numeric: tabular-nums; }
+.num .unit { font-family: var(--font); font-weight: 300; letter-spacing: 0; font-size: .42em; margin-left: .18em; }
+.muted { color: var(--ink-muted); }
+
+/* Surfaces */
+.card { position: relative; border-radius: 26px; background: var(--glass-deep); border: 1px solid var(--glass-border); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); padding: 22px; }
+.tile { border-radius: 18px; }
+.pill { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; padding: 0 26px; border-radius: 999px; font: inherit; font-weight: 500; font-size: 16px; text-decoration: none; border: 1px solid var(--glass-border); }
+.pill.lime { background: var(--lime); border-color: var(--lime); color: var(--soil); box-shadow: var(--glow-button); font-weight: 600; }
+.pill.glass { background: rgba(255,255,255,.5); border-color: rgba(255,255,255,.7); color: var(--soil); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); }
+.wordmark { display: inline-flex; align-items: center; gap: 9px; font-weight: 600; font-size: 20px; letter-spacing: -.01em; text-decoration: none; }
+.wordmark .dot { width: 11px; height: 11px; border-radius: 50%; background: var(--lime); box-shadow: var(--glow-dot); flex: none; }
+
+/* 1. Hero */
+.hero { padding-block: 28px 64px; }
+.hero-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.hero-top a.small { display: inline-flex; align-items: center; min-height: 44px; font-size: 14px; font-weight: 500; text-underline-offset: 4px; }
+.hero-body { margin-top: 64px; max-width: 860px; }
+.hero .display { margin-top: 16px; }
+.lede { margin-top: 22px; font-size: clamp(17px, 2.2vw, 20px); line-height: 1.5; max-width: 640px; font-weight: 300; }
+.facts { margin: 34px 0 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0; }
+.facts div { border-radius: 18px; padding: 14px 16px; background: rgba(255,255,255,.34); border: 1px solid rgba(255,255,255,.6); }
+.facts dt { font-weight: 500; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--soil-muted); }
+.facts dd { margin: 4px 0 0; font-weight: 400; font-size: 15px; line-height: 1.35; }
+.cta { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 12px; }
+
+/* 2. Hero visual: three phones */
+.visual { padding-block: 24px 56px; }
+.phones { display: grid; grid-template-columns: 1fr; justify-items: center; gap: 40px; margin: 0; padding: 0; list-style: none; }
+.phone { width: min(280px, 100%); margin: 0; }
+.bezel { border-radius: 44px; padding: 9px; background: var(--soil); border: 1px solid var(--glass-border); }
+.bezel img, .bezel video { width: 100%; height: auto; aspect-ratio: 390 / 844; border-radius: 35px; background: var(--moss); object-fit: cover; }
+.phone figcaption { margin: 14px auto 0; width: fit-content; padding: 7px 14px; border-radius: 999px; background: rgba(15,42,26,.72); border: 1px solid var(--glass-border); font-size: 14px; font-weight: 500; color: #fff; }
+.visual-caption { margin-top: 34px; text-align: center; font-size: 15px; }
+
+/* shared section rhythm */
+.sect { padding-block: 56px; }
+.sect-head { max-width: 760px; }
+.prose { margin-top: 18px; font-size: 18px; line-height: 1.6; max-width: 760px; }
+
+/* 3. Why */
+.goals { margin-top: 32px; display: grid; grid-template-columns: 1fr; gap: 12px; padding: 0; list-style: none; }
+.goals li { padding: 20px; }
+.goals h3 { font-weight: 500; font-size: 17px; }
+.goals p { margin-top: 6px; font-size: 15px; color: var(--ink-muted); }
+.goals .icon { width: 28px; height: 28px; margin-bottom: 12px; color: #fff; }
+
+/* 4. How it works */
+.how { margin-top: 36px; display: grid; grid-template-columns: 1fr; gap: 28px; }
+.steps { margin: 0; padding: 0; list-style: none; display: grid; gap: 12px; }
+.steps li { display: grid; grid-template-columns: auto 1fr; gap: 16px; }
+.steps .n { font-size: 26px; padding-top: 2px; }
+.steps h3 { font-weight: 500; font-size: 18px; }
+.steps p { margin-top: 6px; font-size: 15px; color: var(--ink-muted); }
+.diagram { padding: 18px 12px; }
+.diagram svg { width: 100%; max-width: 380px; margin: 0 auto; height: auto; }
+.diagram text { font-family: var(--font); fill: #fff; }
+.rules { margin-top: 12px; background: rgba(15,42,26,.55); }
+.rules ol { margin: 14px 0 0; padding: 0; list-style: none; display: grid; gap: 14px; }
+.rules li { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: baseline; }
+.rules .n { font-size: 20px; color: var(--lime); }
+.rules strong { display: block; font-weight: 400; font-size: 20px; line-height: 1.3; }
+.rules span.why { display: block; margin-top: 4px; font-size: 14px; color: var(--ink-muted); }
+
+/* 5. Results */
+.results { margin-top: 36px; display: grid; grid-template-columns: 1fr; gap: 12px; align-items: start; }
+.results h3 { font-weight: 500; font-size: 18px; margin-top: 6px; }
+.kind { display: inline-block; margin-top: 12px; font-size: 13px; color: var(--ink-muted); }
+table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 14px; }
+th { text-align: right; font-weight: 400; font-size: 12px; color: var(--ink-muted); padding: 0 0 8px; }
+th:first-child, td:first-child { text-align: left; }
+td { text-align: right; padding: 8px 0; border-top: 1px solid var(--hairline); }
+td .num { font-size: 17px; }
+td .num.now { color: var(--lime); }
+.big { display: flex; align-items: baseline; gap: 14px; margin-top: 16px; flex-wrap: wrap; }
+.big .num { font-size: clamp(64px, 12vw, 88px); letter-spacing: .03em; }
+.big p { font-size: 15px; color: var(--ink-muted); max-width: 240px; }
+.misses { margin: 14px 0 0; padding: 0; list-style: none; font-size: 14px; color: var(--ink-muted); }
+.misses li { padding: 6px 0; border-top: 1px solid var(--hairline); }
+.note { margin-top: 12px; font-size: 13px; color: var(--ink-muted); }
+.budget { margin-top: 16px; display: grid; gap: 14px; }
+.budget .row { display: grid; gap: 6px; }
+.budget .row-head { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
+.budget .row-head > span:last-child { white-space: nowrap; }
+.bar { position: relative; height: 10px; border-radius: 999px; border: 1px solid var(--rule); }
+.bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; background: rgba(255,255,255,.85); }
+.pending { border-color: rgba(246,210,140,.55); }
+.pending .eyebrow, .pending h3 { color: var(--guess); }
+.pending p { margin-top: 8px; font-size: 15px; color: var(--ink-muted); }
+
+/* 6. Interface */
+.iface { margin-top: 36px; display: grid; grid-template-columns: 1fr; gap: 20px; align-items: start; }
+.share-card { max-width: 390px; width: 100%; margin: 0 auto; }
+.card-eyebrows { display: flex; justify-content: space-between; gap: 12px; }
+.card-hero { text-align: center; margin: 26px 0 6px; font-size: clamp(72px, 22vw, 96px); }
+.card-sub { text-align: center; font-size: 15px; color: var(--ink-muted); }
+.torus { width: calc(100% + 44px); margin: -6px -22px 4px; max-width: none; height: auto; }
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.stat-tile { padding: 16px 16px 14px; background: var(--glass-deep); border: 1px solid var(--glass-border); }
+.label-row { display: flex; align-items: center; gap: 10px; font-weight: 400; font-size: 14px; }
+.icon-circle { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--glass-border); background: var(--glass); display: grid; place-items: center; flex: none; }
+.icon-circle svg { width: 18px; height: 18px; }
+.stat-tile .num { display: block; font-size: 32px; margin: 16px 0 10px; }
+.stat-tile .num.now { color: var(--lime); }
+.stat-tile .caption { font-size: 13px; color: var(--ink-muted); }
+.card-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--rule); font-size: 14px; }
+.card-foot .wordmark { font-size: 17px; }
+.card-foot .wordmark .dot { width: 10px; height: 10px; }
+.share-note { margin-top: 12px; text-align: center; font-size: 13px; color: var(--ink-muted); }
+.legend { margin: 0; padding: 0; list-style: none; display: grid; gap: 0; }
+.legend li { display: grid; grid-template-columns: 64px 1fr; gap: 14px; align-items: center; padding: 12px 0; border-top: 1px solid var(--hairline); }
+.legend li:first-child { border-top: 0; }
+.legend svg { width: 64px; height: 28px; }
+.legend strong { display: block; font-weight: 500; font-size: 15px; }
+.legend span { display: block; font-size: 14px; color: var(--ink-muted); }
+.pulse { transform-origin: center; transform-box: fill-box; animation: pulse 1.6s ease-out infinite; }
+@keyframes pulse { from { transform: scale(1); opacity: .35; } to { transform: scale(1.5); opacity: 0; } }
+
+/* 7. Limits */
+.limits { margin: 32px 0 0; padding: 6px 22px; list-style: none; }
+.limits li { padding: 16px 0; border-top: 1px solid var(--hairline); display: grid; grid-template-columns: 1fr; gap: 4px; }
+.limits li:first-child { border-top: 0; }
+.limits strong { font-weight: 500; font-size: 16px; }
+.limits span { font-size: 15px; color: var(--ink-muted); }
+
+/* 8. Footer */
+.foot { padding-block: 40px 56px; }
+.foot::before { content: ""; display: block; border-top: 1px solid var(--rule); margin-bottom: 40px; }
+.foot-row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 14px 24px; align-items: center; }
+.foot a { text-underline-offset: 4px; }
+.foot-row > a { display: inline-flex; align-items: center; min-height: 44px; }
+.credits { margin-top: 18px; font-size: 14px; color: var(--ink-muted); max-width: 760px; }
+.credits a { color: #fff; }
+
+@media (min-width: 720px) {
+  .facts { grid-template-columns: repeat(4, 1fr); }
+  .goals { grid-template-columns: 1fr 1fr; }
+  .results { grid-template-columns: 1fr 1fr; }
+  .results .wide { grid-column: 1 / -1; }
+}
+@media (min-width: 1000px) {
+  :root { --gutter: 32px; }
+  .hero { padding-bottom: 88px; }
+  .hero-body { margin-top: 96px; }
+  .phones { grid-template-columns: repeat(3, 1fr); align-items: start; gap: 28px; }
+  .phone { width: 100%; max-width: 310px; }
+  .phones li:nth-child(2) { margin-top: -28px; }
+  .sect { padding-block: 96px; }
+  .goals { grid-template-columns: repeat(4, 1fr); }
+  .how { grid-template-columns: 1.15fr .85fr; gap: 32px; align-items: start; }
+  .how .diagram { position: sticky; top: 24px; }
+  .results { grid-template-columns: repeat(3, 1fr); }
+  .results .wide { grid-column: span 2; }
+  .iface { grid-template-columns: 420px 1fr; gap: 48px; }
+  .limits li { grid-template-columns: 300px 1fr; gap: 24px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .pulse { animation: none; opacity: .3; }
+}
+</style>
+<script src="/project/project.js" defer></script>
+<noscript><style>#trip-video { background: center / cover no-repeat url(/project/img/trip-poster.png); }</style></noscript>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the write-up</a>
+
+<!-- 1. Hero -->
+<header class="g-hero bloom">
+  <div class="wrap hero">
+    <div class="hero-top">
+      <a class="wordmark" href="/" aria-label="grosher, open the app"><i class="dot" aria-hidden="true"></i>grosher</a>
+      <a class="small" href="https://github.com/atishaypahadiya/Grosher" rel="noopener">GitHub</a>
+    </div>
+    <div class="hero-body">
+      <span class="eyebrow soil">progressive web app · local model · v1</span>
+      <h1 class="display">Your list,<br>not their layout.</h1>
+      <p class="lede">Grosher turns a grocery list into one route through the store, entrance to exit, and reroutes as you shop. It runs offline on the phone and resolves items with a model on my own laptop.</p>
+      <dl class="facts">
+        <div><dt>Role</dt><dd>Solo project</dd></div>
+        <div><dt>When</dt><dd>October 2026</dd></div>
+        <div><dt>Stack</dt><dd>TypeScript, React, three.js, Cloudflare Pages + Workers</dd></div>
+        <div><dt>Model</dt><dd>qwen3:8b via Ollama</dd></div>
+      </dl>
+      <div class="cta">
+        <a class="pill lime" href="https://grosher.pages.dev">Open the app</a>
+        <a class="pill glass" href="https://github.com/atishaypahadiya/Grosher" rel="noopener">Source on GitHub</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- 2. Hero visual. Media: apps/web/scripts/capture-project.mjs, production build, demo store, 390×844. -->
+<section class="g-visual bloom" aria-labelledby="visual-title">
+  <div class="wrap visual">
+    <h2 id="visual-title" class="sr-only">The app on the demo store</h2>
+    <ul class="phones">
+      <li>
+        <figure class="phone">
+          <div class="bezel"><img src="/project/img/list.webp" width="390" height="844" loading="lazy" decoding="async" alt="The list screen on the demo store with ten items, each placed on a shelf: Bananas and Spinach in produce, Basmati rice and Dal in aisle A7, Paneer in A22, Milk in dairy. A lime button at the bottom reads Route 10 items, 490 metres, 8 minutes."></div>
+          <figcaption>List</figcaption>
+        </figure>
+      </li>
+      <li>
+        <figure class="phone">
+          <div class="bezel">
+            <!-- the poster attaches as the video nears the viewport (project.js): a 200 KB image fetched eagerly would compete with the fonts on a slow connection -->
+            <video id="trip-video" width="390" height="844" muted loop playsinline preload="none" controls data-poster="/project/img/trip-poster.png" aria-label="Six-second loop of the 3D trip view. The shopper taps Got it at Spinach in the produce wall; the route re-solves and the camera eases to the next leg, Bananas, then to Dal in aisle A7.">
+              <source src="/project/img/trip.webm" type="video/webm">
+              <source src="/project/img/trip.mp4" type="video/mp4">
+            </video>
+          </div>
+          <figcaption>3D trip</figcaption>
+        </figure>
+      </li>
+      <li>
+        <figure class="phone">
+          <div class="bezel"><img src="/project/img/checkout.webp" width="390" height="844" loading="lazy" decoding="async" alt="The checkout screen after the same ten-item trip: a trip card reading 6:46, 10 of 10 items, lane 10, walked 490 metres, 14% shorter than walking the list in order, with Share card and Save as usual trip buttons."></div>
+          <figcaption>Checkout card</figcaption>
+        </figure>
+      </li>
+    </ul>
+    <p class="visual-caption">Demo Supercenter: a generated layout, not a real store yet.</p>
+  </div>
+</section>
+
+<!-- 3. Why -->
+<section class="g-why sect" aria-labelledby="why-title">
+  <div class="wrap">
+    <div class="sect-head">
+      <span class="eyebrow">Why</span>
+      <h2 id="why-title" class="title">Stores are laid out to make you wander.</h2>
+    </div>
+    <p class="prose">The milk is at the back so you pass everything else on the way. Retailer apps know where every item is shelved and will never route you out the shortest way. Grosher takes your list, finds each item's shelf, and gives you one route, entrance to exit, with the cold things last.</p>
+    <ul class="goals">
+      <li class="card tile">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19c4 0 4-6 8-6s4-6 8-6"/><circle cx="4" cy="19" r="1.6"/><circle cx="20" cy="7" r="1.6"/></svg>
+        <h3>Shortest route, not list order</h3>
+        <p>The solver orders the stops. The order you typed is only the baseline it is measured against.</p>
+      </li>
+      <li class="card tile">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5a10 10 0 0 1 14 0M8 15.5a6 6 0 0 1 8 0"/><circle cx="12" cy="19" r="1"/><path d="M4 4l16 16"/></svg>
+        <h3>Offline in a store with no signal</h3>
+        <p>The app, the map and the catalog with its index stay on the phone after one visit.</p>
+      </li>
+      <li class="card tile">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M9.6 9.5a2.5 2.5 0 1 1 3.3 2.4c-.6.2-.9.7-.9 1.3v.6M12 16.6h.01"/></svg>
+        <h3>Honest about guesses</h3>
+        <p>A model's answer shows as a guess, in amber, until you confirm the shelf.</p>
+      </li>
+      <li class="card tile">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 18l5-5 4 3 7-8"/><path d="M15 8h5v5"/></svg>
+        <h3>Gets better every trip</h3>
+        <p>Got it and Not here move each item's confidence. A run of misses flags the aisle for review.</p>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<!-- 4. How it works -->
+<section class="g-how sect" aria-labelledby="how-title">
+  <div class="wrap">
+    <div class="sect-head">
+      <span class="eyebrow">How it works</span>
+      <h2 id="how-title" class="title">From a typed list to a walked route, and back again.</h2>
+    </div>
+    <div class="how">
+      <div>
+        <ol class="steps">
+          <li class="card">
+            <span class="num n" aria-hidden="true">01</span>
+            <div>
+              <h3>Resolve the list</h3>
+              <!-- 47,612 items: packages/stores/demo/catalog.json (header "sources"); 298 categories: packages/stores/demo/categories.json; layer order: packages/core/src/resolve/index.ts resolveItem -->
+              <p>Each line goes through six layers in order: an exact catalog item, your own memory of where you found it, an aisle sign that names it, a fuzzy match for typos, the local model, and finally a question for you. The catalog is 47,612 items built from the Instacart 2017 product data, mapped onto 298 aisle-sign categories and checked shelf by shelf by a reconcile pass.</p>
+            </div>
+          </li>
+          <li class="card">
+            <span class="num n" aria-hidden="true">02</span>
+            <div>
+              <h3>Solve the route</h3>
+              <!-- packages/core/src/graph.ts (WalkGraph), packages/core/src/solver.ts (EXACT_LIMIT = 13, DEFAULT_WEIGHTS, localSearch) -->
+              <p>The store is a graph of corridors in metres, with every shelf location a virtual node on its corridor, and Dijkstra gives the walk between any two. Up to 13 stops the order is exact, by Held–Karp; above that, 2-opt and Or-opt with delta evaluation. Cold last, heavy early and fragile late are penalties in metres, so they trade against distance instead of overriding it.</p>
+            </div>
+          </li>
+          <li class="card">
+            <span class="num n" aria-hidden="true">03</span>
+            <div>
+              <h3>Walk it</h3>
+              <!-- apps/web/src/map3d/ (CameraRig.tsx, LitSlot.tsx, Ribbon.tsx), apps/web/src/lib/trip.ts (gotIt, skipStop reroute from the last checked-off node) -->
+              <p>The 3D map frames the current leg and lights the exact bay and shelf of the next item. Got it or Not here re-solves the remaining stops from the shelf you are standing at, and the camera eases to the new leg.</p>
+            </div>
+          </li>
+          <li class="card">
+            <span class="num n" aria-hidden="true">04</span>
+            <div>
+              <h3>Learn</h3>
+              <!-- packages/core/src/confidence.ts (30% of the gap, −0.3, 90 days, bands .8 / .5); apps/web/src/lib/reset.ts (3 misses in an aisle, 25% of a trip) -->
+              <p>Every catalog row and memory carries a confidence in three bands. Got it moves it 30% of the way to certain, Not here takes 0.3 off, and anything unconfirmed for 90 days decays. Three misses in one aisle, or a quarter of a trip, flag the store as possibly reset.</p>
+            </div>
+          </li>
+        </ol>
+        <div class="card rules" role="group" aria-labelledby="rules-title">
+          <span class="eyebrow" id="rules-title">Two rules</span>
+          <ol>
+            <li><span class="num n" aria-hidden="true">1</span><div><strong>A guess is always shown as a guess.</strong><span class="why">A model's answer is drawn in amber as "probably …" and flagged on the trip until you confirm it.</span></div></li>
+            <li><span class="num n" aria-hidden="true">2</span><div><strong>Your confirmation beats the catalog.</strong><span class="why">A shelf you confirmed wins over the catalog's for that item; a generated catalog can be wrong.</span></div></li>
+          </ol>
+        </div>
+      </div>
+
+      <figure class="card diagram" aria-labelledby="pipe-cap">
+        <figcaption id="pipe-cap" class="sr-only">The pipeline: your list goes through the resolver's layers to shelf stops, the solver orders them into a 3D route, and each check-off reroutes from the current shelf back through the solver, while confirmations feed the resolver's confidence.</figcaption>
+        <svg viewBox="0 0 360 560" role="img" aria-labelledby="pipe-cap">
+          <defs>
+            <marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L8 4L0 8z" fill="rgba(255,255,255,.85)"/></marker>
+          </defs>
+          <g fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.2">
+            <!-- the spine -->
+            <path d="M170 50V74" marker-end="url(#arrow)"/>
+            <path d="M170 136V160" marker-end="url(#arrow)"/>
+            <path d="M170 204V228" marker-end="url(#arrow)"/>
+            <path d="M170 290V314" marker-end="url(#arrow)"/>
+            <path d="M170 358V382" marker-end="url(#arrow)"/>
+            <path d="M170 426V450" marker-end="url(#arrow)"/>
+            <!-- the reroute loop, back to the solver -->
+            <path d="M300 472H336V259H302" marker-end="url(#arrow)"/>
+          </g>
+          <!-- learning: confirmations back to the resolver -->
+          <path d="M40 404H18V105H38" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="1.2" stroke-dasharray="3 5" marker-end="url(#arrow)"/>
+          <text x="12" y="260" font-size="11" transform="rotate(-90 12 260)" text-anchor="middle" fill-opacity=".85">confidence</text>
+          <text x="346" y="370" font-size="11" transform="rotate(90 346 370)" text-anchor="middle" fill-opacity=".85">reroute</text>
+          <g fill="rgba(15,42,26,.55)" stroke="rgba(255,255,255,.4)" stroke-width="1">
+            <rect x="40" y="8" width="260" height="42" rx="21"/>
+            <rect x="40" y="76" width="260" height="60" rx="18"/>
+            <rect x="40" y="162" width="260" height="42" rx="21"/>
+            <rect x="40" y="230" width="260" height="60" rx="18"/>
+            <rect x="40" y="316" width="260" height="42" rx="21"/>
+            <rect x="40" y="384" width="260" height="42" rx="21"/>
+            <rect x="40" y="452" width="260" height="42" rx="21"/>
+          </g>
+          <g font-size="15" font-weight="500" text-anchor="middle">
+            <text x="170" y="34">Your list</text>
+            <text x="170" y="101">Resolver</text>
+            <text x="170" y="188">Stops on shelves</text>
+            <text x="170" y="255">Solver</text>
+            <text x="170" y="342">3D route</text>
+            <text x="170" y="410">Check-off</text>
+            <text x="170" y="478">Reroute from this shelf</text>
+          </g>
+          <g font-size="11.5" text-anchor="middle" fill-opacity=".85">
+            <text x="170" y="121">exact · memory · sign · fuzzy · model · ask</text>
+            <text x="170" y="275">Dijkstra · Held–Karp ≤ 13 · 2-opt above</text>
+          </g>
+          <!-- the token the script moves round the loop (solver → route → check-off → reroute → solver) -->
+          <path id="loop-path" d="M170 260V472H336V260H170" fill="none" stroke="none"/>
+          <g id="loop-token" aria-hidden="true">
+            <circle r="9" fill="rgba(212,255,74,.3)"/>
+            <circle r="4.5" fill="#D4FF4A"/>
+          </g>
+          <text x="180" y="545" font-size="11" text-anchor="middle" fill-opacity=".85">walk, check off, re-solve from where you stand</text>
+        </svg>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- 5. Results -->
+<section class="g-deep bloom sect" aria-labelledby="results-title">
+  <div class="wrap">
+    <div class="sect-head">
+      <span class="eyebrow">Results</span>
+      <h2 id="results-title" class="title">Numbers from the repo, each with its kind.</h2>
+    </div>
+    <div class="results">
+
+      <article class="card wide">
+        <span class="eyebrow">Benchmark · demo store, random lists</span>
+        <h3>Route vs walking the list in order</h3>
+        <!-- source: README.md "The route" table = `npm run bench` (packages/core/bench/bench.ts), re-run at commit 9d91e7c -->
+        <table>
+          <caption class="sr-only">Walking distance of the list in typed order and of the Grosher route, by number of stops</caption>
+          <thead><tr><th scope="col">Stops</th><th scope="col">List order</th><th scope="col">Grosher</th><th scope="col">Saved</th></tr></thead>
+          <tbody>
+            <tr><td><span class="num">5</span></td><td><span class="num">391</span> m</td><td><span class="num">314</span> m</td><td><span class="num now">20%</span></td></tr>
+            <tr><td><span class="num">8</span></td><td><span class="num">594</span> m</td><td><span class="num">388</span> m</td><td><span class="num now">35%</span></td></tr>
+            <tr><td><span class="num">10</span></td><td><span class="num">666</span> m</td><td><span class="num">431</span> m</td><td><span class="num now">35%</span></td></tr>
+            <tr><td><span class="num">13</span></td><td><span class="num">868</span> m</td><td><span class="num">485</span> m</td><td><span class="num now">44%</span></td></tr>
+            <tr><td><span class="num">18</span></td><td><span class="num">1,171</span> m</td><td><span class="num">584</span> m</td><td><span class="num now">50%</span></td></tr>
+            <tr><td><span class="num">25</span></td><td><span class="num">1,540</span> m</td><td><span class="num">722</span> m</td><td><span class="num now">53%</span></td></tr>
+            <tr><td><span class="num">30</span></td><td><span class="num">1,834</span> m</td><td><span class="num">786</span> m</td><td><span class="num now">57%</span></td></tr>
+          </tbody>
+        </table>
+        <p class="note">Averages over random lists on the generated store, walking distance only, penalties excluded. Exact solver up to 13 stops, heuristic above.</p>
+      </article>
+
+      <article class="card">
+        <span class="eyebrow">Benchmark · median solve time</span>
+        <h3>Solver speed, before and after delta evaluation</h3>
+        <!-- source: CLAUDE.md "Routing engine" (Router.solve paragraph) and commit 3860098; measured with `npm run bench` -->
+        <table>
+          <caption class="sr-only">Median heuristic solve time before and after delta evaluation, by number of stops</caption>
+          <thead><tr><th scope="col">Stops</th><th scope="col">Before</th><th scope="col">After</th></tr></thead>
+          <tbody>
+            <tr><td><span class="num">18</span></td><td><span class="num">29.8</span> ms</td><td><span class="num now">3.6</span> ms</td></tr>
+            <tr><td><span class="num">25</span></td><td><span class="num">130.8</span> ms</td><td><span class="num now">8.0</span> ms</td></tr>
+            <tr><td><span class="num">30</span></td><td><span class="num">306.4</span> ms</td><td><span class="num now">17.7</span> ms</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Moves are scored by the edges and penalties they change, not a full re-evaluation. Three seeded starts keep the 12-stop gap to exact under 10%.</p>
+      </article>
+
+      <article class="card">
+        <span class="eyebrow">Blind set, run once</span>
+        <h3>Item resolution at aisle level</h3>
+        <!-- source: packages/core/test/fixtures/resolution-everyday.json, scored by packages/core/test/resolution-everyday.test.ts at commit 9d91e7c: 147 of 150, no model -->
+        <div class="big"><span class="num">98<span class="unit">%</span></span><p>147 of 150 everyday items written blind, no model involved.</p></div>
+        <table>
+          <caption class="sr-only">Aisle-level accuracy by kind of item</caption>
+          <thead><tr><th scope="col">Kind</th><th scope="col">Items</th><th scope="col">Right aisle</th></tr></thead>
+          <tbody>
+            <tr><td>Food</td><td><span class="num">60</span></td><td><span class="num">58</span></td></tr>
+            <tr><td>Brands</td><td><span class="num">24</span></td><td><span class="num">24</span></td></tr>
+            <tr><td>Pharmacy</td><td><span class="num">19</span></td><td><span class="num">19</span></td></tr>
+            <tr><td>Indian staples</td><td><span class="num">18</span></td><td><span class="num">17</span></td></tr>
+            <tr><td>Household</td><td><span class="num">17</span></td><td><span class="num">17</span></td></tr>
+            <tr><td>Misspellings</td><td><span class="num">12</span></td><td><span class="num">12</span></td></tr>
+          </tbody>
+        </table>
+        <ul class="misses" aria-label="The three misses">
+          <li>"salmon fillet" lands on frozen fillets, not the meat counter</li>
+          <li>"sourdough bread" lands on packaged bread, not the bakery</li>
+          <li>"jeera" lands on the general spice aisle, not Indian spices</li>
+        </ul>
+        <!-- source: packages/core/test/fixtures/resolution.json (60) and resolution-heldout.json (30), resolution-fixture.test.ts -->
+        <p class="note">The two tuned fixtures, 60 and 30 items, are regression checks only (60/60, 30/30) and not a measure of accuracy.</p>
+      </article>
+
+      <article class="card">
+        <span class="eyebrow">Measured · production build, headless Chromium</span>
+        <h3>Performance against the budget</h3>
+        <!-- draw calls and instances: apps/web/scripts/perf-gate.mjs in CI run 39063622947, recorded in CLAUDE.md "Perf gate"; budget: DESIGN.md §3 -->
+        <div class="budget">
+          <div class="row">
+            <div class="row-head"><span>Draw calls, worst framing</span><span><span class="num">44</span> of <span class="num">70</span></span></div>
+            <div class="bar" role="img" aria-label="44 of a 70 draw-call budget"><i style="width:62.9%"></i></div>
+          </div>
+          <div class="row">
+            <div class="row-head"><span>Product instances, worst framing</span><span><span class="num">10,373</span> of <span class="num">12,000</span></span></div>
+            <div class="bar" role="img" aria-label="10,373 of a 12,000 instance budget"><i style="width:86.4%"></i></div>
+          </div>
+        </div>
+        <!-- list interactive (117 / 89 ms) and index ready (990 / 141 ms): CLAUDE.md "Item resolution", CandidateIndex paragraph -->
+        <table>
+          <caption class="sr-only">Load timings, cold and warm</caption>
+          <thead><tr><th scope="col">Load</th><th scope="col">Cold</th><th scope="col">Warm</th></tr></thead>
+          <tbody>
+            <tr><td>List interactive</td><td><span class="num">117</span> ms</td><td><span class="num">89</span> ms</td></tr>
+            <tr><td>Catalog index ready</td><td><span class="num">990</span> ms</td><td><span class="num">141</span> ms</td></tr>
+          </tbody>
+        </table>
+        <p class="note">The 47,612-item index builds in a Web Worker and is cached in IndexedDB by catalog hash, so the list never waits for it. Headless frame times are software rendering, so no frame rate is claimed.</p>
+      </article>
+
+      <article class="card pending">
+        <span class="eyebrow">Not measured</span>
+        <h3>Real-store trip: not run yet.</h3>
+        <p>The Story Rd survey replaces the generated layout; until then no time-saved number is claimed for a real store.</p>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- 6. Interface -->
+<section class="g-deep sect" aria-labelledby="iface-title">
+  <div class="wrap">
+    <div class="sect-head">
+      <span class="eyebrow">Interface</span>
+      <h2 id="iface-title" class="title">One accent, one meaning: lime is now.</h2>
+    </div>
+    <div class="iface">
+      <div>
+        <!-- The share card, live HTML. Every figure: public/project/capture.json (apps/web/scripts/capture-project.mjs), the same trip as the checkout screenshot above. -->
+        <article class="card share-card" aria-label="Trip card">
+          <div class="card-eyebrows"><span class="eyebrow">In and out</span><span class="eyebrow">Synthetic layout · Sat</span></div>
+          <div class="card-hero"><span class="num">6:46</span></div>
+          <p class="card-sub">10 of 10 items · lane 10</p>
+          <svg class="torus" viewBox="0 0 340 152" aria-hidden="true">
+            <g fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="0.8">
+              <ellipse cx="170" cy="76" rx="36" ry="10"/>
+              <ellipse cx="170" cy="76" rx="46.3" ry="14.3" transform="rotate(0.69 170 76)"/>
+              <ellipse cx="170" cy="76" rx="56.6" ry="18.6" transform="rotate(-1.38 170 76)"/>
+              <ellipse cx="170" cy="76" rx="66.9" ry="22.9" transform="rotate(2.08 170 76)"/>
+              <ellipse cx="170" cy="76" rx="77.2" ry="27.2" transform="rotate(-2.77 170 76)"/>
+              <ellipse cx="170" cy="76" rx="87.5" ry="31.5" transform="rotate(3.46 170 76)"/>
+              <ellipse cx="170" cy="76" rx="97.8" ry="35.8" transform="rotate(-4.15 170 76)"/>
+              <ellipse cx="170" cy="76" rx="108.2" ry="40.2" transform="rotate(4.85 170 76)"/>
+              <ellipse cx="170" cy="76" rx="118.5" ry="44.5" transform="rotate(-5.54 170 76)"/>
+              <ellipse cx="170" cy="76" rx="128.8" ry="48.8" transform="rotate(6.23 170 76)"/>
+              <ellipse cx="170" cy="76" rx="139.1" ry="53.1" transform="rotate(-6.92 170 76)"/>
+              <ellipse cx="170" cy="76" rx="149.4" ry="57.4" transform="rotate(7.62 170 76)"/>
+              <ellipse cx="170" cy="76" rx="159.7" ry="61.7" transform="rotate(-8.31 170 76)"/>
+              <ellipse cx="170" cy="76" rx="170" ry="66" transform="rotate(9 170 76)"/>
+            </g>
+            <circle cx="170" cy="76" r="10" fill="rgba(212,255,74,0.25)"/>
+            <circle cx="170" cy="76" r="5" fill="#D4FF4A"/>
+          </svg>
+          <div class="tiles">
+            <div class="stat-tile tile">
+              <div class="label-row"><span class="icon-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 18l4-10 4 6 2-3 6 7"/></svg></span>Walked</div>
+              <span class="num">490<span class="unit">m</span></span>
+              <div class="caption">24 aisles never entered</div>
+            </div>
+            <div class="stat-tile tile">
+              <div class="label-row"><span class="icon-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>Vs list in order</div>
+              <span class="num now">−14<span class="unit">%</span></span>
+              <div class="caption">about 1 minute saved</div>
+            </div>
+          </div>
+          <footer class="card-foot"><span class="wordmark"><i class="dot" aria-hidden="true"></i>grosher</span><span class="muted">Get in. Get it. Get out.</span></footer>
+        </article>
+        <p class="share-note">Live HTML from capture.json: a simulated trip on the demo store, the legs walked at 1 m/s.</p>
+      </div>
+
+      <div class="card">
+        <span class="eyebrow">The map's visual language</span>
+        <!-- DESIGN.md §3 "Route ribbon", "Markers", "Lit slot" -->
+        <ul class="legend">
+          <li>
+            <svg viewBox="0 0 64 28" aria-hidden="true"><path d="M6 14H58" stroke="rgba(255,255,255,.4)" stroke-width="2"/></svg>
+            <div><strong>Walked</strong><span>White at 40%, solid: the route behind you.</span></div>
+          </li>
+          <li>
+            <svg viewBox="0 0 64 28" aria-hidden="true"><path d="M6 14H58" stroke="rgba(255,255,255,.35)" stroke-width="6" stroke-linecap="round"/><path d="M6 14H58" stroke="#fff" stroke-width="2"/></svg>
+            <div><strong>Current leg</strong><span>White at full strength with a soft glow: where you walk now.</span></div>
+          </li>
+          <li>
+            <svg viewBox="0 0 64 28" aria-hidden="true"><path d="M6 14H58" stroke="rgba(255,255,255,.85)" stroke-width="2" stroke-dasharray="1 6" stroke-linecap="round"/></svg>
+            <div><strong>Ahead</strong><span>Dashed: the rest of the route, re-solved at every check-off.</span></div>
+          </li>
+          <li>
+            <svg viewBox="0 0 64 28" aria-hidden="true"><circle class="pulse" cx="32" cy="14" r="9" fill="#D4FF4A"/><circle cx="32" cy="14" r="5.5" fill="#D4FF4A" stroke="#fff" stroke-width=".8"/></svg>
+            <div><strong>You</strong><span>The lime dot with a slow halo. Lime only ever means now.</span></div>
+          </li>
+          <li>
+            <svg viewBox="0 0 64 28" aria-hidden="true"><rect x="18" y="5" width="28" height="18" rx="1.5" fill="rgba(212,255,74,.42)" stroke="#D4FF4A" stroke-width="2"/></svg>
+            <div><strong>Lit slot</strong><span>The exact bay and shelf of the next item, seen through the shelving.</span></div>
+          </li>
+          <li>
+            <svg viewBox="0 0 64 28" aria-hidden="true"><circle cx="32" cy="14" r="7" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="1.5"/><path d="M28.8 14.2l2.2 2.2 4.4-4.6" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div><strong>Done</strong><span>A white ring with a check where an item was collected.</span></div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. Limits -->
+<section class="g-deep sect" aria-labelledby="limits-title">
+  <div class="wrap">
+    <div class="sect-head">
+      <span class="eyebrow">Limits</span>
+      <h2 id="limits-title" class="title">What it does not do yet.</h2>
+    </div>
+    <ul class="card limits">
+      <li><strong>A generated layout</strong><span>The Demo Supercenter is generated; real aisles replace it after the Story Rd survey.</span></li>
+      <li><strong>The resolver needs my laptop awake</strong><span>The model runs on my Mac behind a tunnel and a token gate. When it sleeps, unknown items wait for a tap; everything the catalog and memory can place still works.</span></li>
+      <li><strong>iOS standalone voice is unverified</strong><span>Hold-to-speak is hidden in home-screen mode until it is tested on a device; keyboard dictation covers it.</span></li>
+      <li><strong>Tap to advance, no live dot</strong><span>Position moves when you tap Got it or Not here; there is no indoor positioning yet.</span></li>
+      <li><strong>One store</strong><span>The app knows one map today.</span></li>
+    </ul>
+  </div>
+</section>
+
+</main>
+
+<!-- 8. Footer -->
+<footer class="g-deep">
+  <div class="wrap foot">
+    <div class="foot-row">
+      <span class="wordmark"><i class="dot" aria-hidden="true"></i>Grosher · built by Atishay</span>
+      <a href="https://github.com/atishaypahadiya/Grosher" rel="noopener">Source and full README on GitHub <span aria-hidden="true">↗</span></a>
+    </div>
+    <p class="credits">Product data: <a href="https://www.kaggle.com/c/instacart-market-basket-analysis/data" rel="noopener">The Instacart Online Grocery Shopping Dataset 2017</a>, used under its non-commercial terms. Fonts: Outfit and Doto, SIL Open Font License.</p>
+  </div>
+</footer>
+</body>
+</html>

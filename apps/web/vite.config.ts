@@ -32,6 +32,10 @@ export default defineConfig({
       workbox: {
         // Everything the build emits, textures included, is precached on first load.
         globPatterns: ["**/*.{js,css,html,svg,png,jpg,webp,woff2}"],
+        // the project write-up (public/project/) is a separate static page: not precached with the app,
+        // and never answered with the app shell
+        globIgnores: ["project/**"],
+        navigateFallbackDenylist: [/^\/project(\/|$)/],
         maximumFileSizeToCacheInBytes: 12 * 1024 * 1024, // the full catalog chunk is ~7 MB
         navigateFallback: "index.html",
         cleanupOutdatedCaches: true,

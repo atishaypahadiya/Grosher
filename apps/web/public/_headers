@@ -28,6 +28,10 @@
 /fonts/*
   Cache-Control: public, max-age=31536000, immutable
 
+# the project write-up's media keep their names across captures: a day, then revalidate
+/project/img/*
+  Cache-Control: public, max-age=86400
+
 /workbox-*.js
   Cache-Control: public, max-age=31536000, immutable
 

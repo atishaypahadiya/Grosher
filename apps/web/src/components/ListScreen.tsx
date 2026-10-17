@@ -242,6 +242,8 @@ export function ListScreen({ store, items, results, plan, baselineM, usual, aski
 
       <p className="caption-line muted edit-link">
         <a href="#/edit">Edit the map</a>
+        <span aria-hidden="true"> · </span>
+        <a href="/project/">About</a>
       </p>
 
       <div className="cta-wrap">

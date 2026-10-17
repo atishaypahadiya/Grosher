@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/atishaypahadiya/Grosher/actions/workflows/ci.yml/badge.svg)](https://github.com/atishaypahadiya/Grosher/actions/workflows/ci.yml)
 
+**[Read the project write-up](https://grosher.pages.dev/project/)** · [Open the app](https://grosher.pages.dev)
+
 Grosher turns a shopping list into the shortest walk through the store. Type, paste or dictate the list; each
 line is matched to a shelf (the store's catalog first, then your own memory of where things were, then a local
 language model for the rest); the route is solved exactly for up to 13 stops with the shopping constraints a

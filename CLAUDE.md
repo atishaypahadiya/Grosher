@@ -103,7 +103,8 @@ word postings for token containment), stored as flat typed-array postings (CSR) 
 **In the app** the full catalog's index is built in a Web Worker (`apps/web/src/lib/indexWorker.ts`, driven
 by `lib/indexer.ts`) and cached in IndexedDB under `index:<storeId>` keyed by `catalogHash` (cyrb53 over
 ids, names, aliases and slots), so a new catalog version pays one build and every later visit a lookup.
-Measured on the production build: the list screen is interactive at ~100 ms; the index is ready at 990 ms
+Measured on the production build in headless Chromium at 390×844: the list screen is interactive at 117 ms cold
+and 89 ms warm; the index is ready at 990 ms
 cold (924 in the worker) and 141 ms warm (59 in the worker). Until it lands the resolver works from the
 base rows, the pending rows and the signs (`ResolveContext.index` is the prebuilt index, searched before
 `catalog`'s own small one), and the model's batch waits. Where there is no Worker (jsdom) the build is
@@ -427,8 +428,9 @@ gzipped). The store stays 2D; the scene maps `(x, y) → (x, 0, y)`.
 **Perf gate** (DESIGN.md §3: ≤ 70 draw calls, ≤ 12,000 product instances): open the trip with `?perf=1`;
 `Perf.tsx` writes `window.__grosherPerf = {calls, triangles, programs, frameMs, instances, productFixtures,
 distance, tilt, lit}` with `gl.info` accumulated across all passes. Hull outlines of every fixture are one line batch (one call for the store, not one per department).
-Last measured on the 30-aisle demo store at 390×844 in headless Chromium: default framing 44 calls /
-11,985 instances; down an aisle after two items 53 calls / 12,000; flattened 53 calls / 12,000. Frame time from headless Chromium is SwiftShader (software)
+Last measured by the CI perf gate (`apps/web/scripts/perf-gate.mjs`, run 39063622947, 17 Oct 2026, DPR 1, the
+30-aisle demo store with the 47,612-item catalog): default framing 38 calls / 520 instances; down an aisle after
+two items 44 calls / 10,373; flattened 43 calls / 10,373. Frame time from headless Chromium is SwiftShader (software)
 and is not a device number; measure that on a phone.
 The Playwright scripts that drove these checks live outside the repo; the pattern is: `vite dev`, fill the
 list, Route, `waitForFunction(() => window.__grosherPerf.frames > 100)`, read the object, screenshot.
@@ -467,12 +469,31 @@ to package" (Chrome / Edge only: File System Access API) opens a directory picke
 Elsewhere, "Export JSON" downloads the same files to copy in by hand. "Import JSON" accepts a store, a
 catalog, or a `{store, catalog}` bundle. "Reset draft to the package" discards local edits.
 
+### Project page (`apps/web/public/project/`, served at `/project/`)
+
+A static write-up, no React: `index.html` with its CSS inline (nothing render-blocking), `project.js` for the
+one animation (a lime token round the reroute loop in the pipeline diagram) plus the trip video's lazy poster
+and play-while-visible, `img/` for the media, `capture.json` for the share card's numbers. Linked from the
+README's top and the list screen's footer ("About"). It follows DESIGN.md with one structural choice: the
+ground is cut into section slices that meet seamlessly (haze → lime-green for the hero with soil ink,
+lime-green → leaf for the phones, leaf → deep below with white ink), so the ink of every region is known and
+contrast holds; blooms are radial gradients, not blurred divs. Every figure on it carries an HTML comment with
+its source file; update the page when the README bench, the fixtures, the perf gate or the index timings move.
+Media: `node apps/web/scripts/capture-project.mjs http://localhost:4173` against `vite preview` of a fresh build
+rewrites the two 2× WebP stills, the 6-second WebM + MP4 loop with its PNG poster, and `capture.json` (a
+simulated trip: the page's `Date.now` is frozen and advanced by each leg at `WALK_MPS`, so the card's clock is
+walking time only). The service worker never answers `/project/` with the app shell
+(`navigateFallbackDenylist`) and does not precache it (`globIgnores`). Last Lighthouse at mobile on the
+production preview: 100 performance, 100 accessibility, 100 best practices, 100 SEO; the video's poster is
+attached on approach because a 200 KB image fetched eagerly pushed LCP to 2.8 s. `prefers-reduced-motion`
+keeps the video paused with controls, the token at rest and the you-dot's halo still.
+
 ### PWA
 
 `vite-plugin-pwa` (`registerType: autoUpdate`, registered in `main.tsx`). Workbox precaches every emitted
 file: app, texture JPEGs and the self-hosted fonts (`public/fonts/*.woff2`, declared in `src/fonts.css`;
 Outfit and Doto are not loaded from Google, which would miss the cache on the first visit). Navigations fall
-back to `index.html`. The app works offline after one online load. Icons are in `public/icons/` (lime dot
+back to `index.html`, except `/project/` (the static write-up, neither precached nor shelled). The app works offline after one online load. Icons are in `public/icons/` (lime dot
 on soil). Check with `npm run build && npx vite preview`, load once, go offline, reload.
 
 ### Deploy: Cloudflare Pages (web) + Worker (resolver)
