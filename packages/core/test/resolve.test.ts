@@ -141,3 +141,25 @@ test("brand memory: typed forms are remembered and offered for shorter or varian
   assert.equal(resolveItem("Chobani yoghurt 4 pack", { catalog: [], memory: m, now: 13 }).source, "memory");
   assert.equal(toStop({ ...resolveItem("x", { catalog: [], memory: m }), locationIds: ["A1-8"], query: "x" })!.query, "x");
 });
+
+import { CandidateIndex, catalogHash, hasIndex, primeIndex, transferablesOf } from "../src/resolve/index.ts";
+
+test("index parts round-trip: the same answers after structured clone; the hash tracks content; a prebuilt index is searched before the small one", () => {
+  const big = new CandidateIndex(catalog);
+  const parts = structuredClone(big.toParts());
+  const again = CandidateIndex.fromParts(catalog, parts);
+  for (const q of ["milk", "egs", "toilet rol", "greek yogurt", "tp"]) {
+    assert.deepEqual(again.exact(q)?.stop.id, big.exact(q)?.stop.id, q);
+    assert.deepEqual(again.best(q, 0.72)?.c.stop.id, big.best(q, 0.72)?.c.stop.id, q);
+  }
+  assert.equal(transferablesOf(parts).length, 6);
+  assert.equal(catalogHash(catalog), catalogHash([...catalog]));
+  assert.notEqual(catalogHash(catalog), catalogHash([...catalog, { id: "x", name: "X", locationIds: ["A1-L1"] }]));
+  assert.notEqual(catalogHash(catalog), catalogHash(catalog.map((s) => (s.id === "milk" ? { ...s, aliases: ["moo"] } : s))));
+  // the app: a big prebuilt index plus a small catalog of pending rows
+  const pending: Stop[] = [{ id: "mem:ghee", name: "Ghee", locationIds: ["A7-L11"], source: "memory" }];
+  primeIndex(catalog, again);
+  assert.ok(hasIndex(catalog));
+  const r = resolveList(["milk", "ghee", "egs"], { catalog: pending, index: again });
+  assert.deepEqual(r.map((x) => [x.source, x.stopId]), [["exact", "milk"], ["memory", "mem:ghee"], ["fuzzy", "eggs"]]);
+});

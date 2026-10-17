@@ -5,7 +5,8 @@
 // time; and the learning updates the trip and checkout screens call.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { candidates, categoryCandidates, confirmMemory, confirmed, demoteMemory, missed, normalize, pendingEntry, placeMemory, resolveList, type ItemMemory, type ItemTag, type LlmGuess, type ResolveResult, type Stop } from "@grosher/core";
+import { categoryCandidates, confirmMemory, confirmed, demoteMemory, missed, normalize, pendingEntry, placeMemory, resolveList, type CandidateIndex, type ItemMemory, type ItemTag, type LlmGuess, type ResolveResult, type Stop } from "@grosher/core";
+import { buildCandidateIndex } from "./indexer.ts";
 import { departmentLocations, llmOptions, type StoreBundle } from "@grosher/stores";
 import { defaultProvider, fetchGuesses, type LlmProvider } from "./resolver.ts";
 import { EMPTY_LEARNING, loadLearning, mergedCatalog, saveLearning, type Learning } from "./learning.ts";
@@ -19,7 +20,7 @@ export interface ResolutionState {
   catalog: Stop[]; // merged
   memory: ItemMemory[];
   loaded: boolean;
-  /** the store's full catalog has arrived (until then only the base rows and the signs resolve) */
+  /** the store's full catalog and its index are in (until then only the base rows, pending rows and the signs resolve) */
   catalogReady: boolean;
   asking: boolean; // an llm request is in flight
   warming: boolean; // the local model was not loaded when the request started
@@ -35,16 +36,19 @@ export interface ResolutionState {
 
 export function useResolution(bundle: StoreBundle, items: string[], provider?: LlmProvider): ResolutionState {
   const { store, categories } = bundle;
-  // the full catalog is a separate chunk: start with the base rows, swap in the rest when it lands
-  const [catalog, setCatalog] = useState<Stop[]>(bundle.catalog);
+  // The full catalog is a separate chunk and its index is built in a worker (cached in IndexedDB by content
+  // hash): the list screen is interactive at once against the base rows, the pending rows and the signs, and
+  // the big index is swapped in when it is ready.
+  const [full, setFull] = useState<{ rows: Stop[]; index: CandidateIndex } | null>(null);
   const [catalogReady, setCatalogReady] = useState(false);
   useEffect(() => {
     let live = true;
     bundle
       .loadCatalog()
-      .then((rows) => {
+      .then((rows) => buildCandidateIndex(store.storeId, rows).then((r) => ({ rows, index: r.index })))
+      .then((f) => {
         if (!live) return;
-        setCatalog(rows);
+        setFull(f);
         setCatalogReady(true);
       })
       .catch(() => {
@@ -53,7 +57,8 @@ export function useResolution(bundle: StoreBundle, items: string[], provider?: L
     return () => {
       live = false;
     };
-  }, [bundle]);
+  }, [bundle, store.storeId]);
+  const catalog = full?.rows ?? bundle.catalog;
   const options = useMemo(() => llmOptions(categories), [categories]);
   const llmProvider = useMemo(() => provider ?? defaultProvider(), [provider]);
   // warm the local model once per mount (and prime its cache with this store's category list) so the first real call fits the timeout
@@ -84,11 +89,12 @@ export function useResolution(bundle: StoreBundle, items: string[], provider?: L
   }, [learning, loaded, storeId]);
 
   const merged = useMemo(() => mergedCatalog(catalog, learning.pending), [catalog, learning.pending]);
-  // the candidate index for a seeded catalog takes a few hundred ms to build: do it now, not on the first keystroke
+  // what the resolver indexes on this thread: only the rows that change (base rows and pending entries); the
+  // big index covers the full file and is searched first
+  const own = useMemo(() => mergedCatalog(bundle.catalog, learning.pending), [bundle.catalog, learning.pending]);
   useEffect(() => {
-    candidates(merged);
     categoryCandidates(categories);
-  }, [merged, categories]);
+  }, [categories]);
   const deptLocs = useMemo(() => departmentLocations(store), [store]);
   const llmMap = useMemo(() => new Map<string, LlmGuess | null>(learning.llm), [learning.llm]);
 
@@ -96,11 +102,11 @@ export function useResolution(bundle: StoreBundle, items: string[], provider?: L
   const [results, setResults] = useState<ResolveResult[]>([]);
   const itemsKey = items.join("\n");
   useEffect(() => {
-    const run = () => setResults(resolveList(items, { catalog: merged, categories, departments: store.departments, departmentLocations: deptLocs, memory: learning.memory, llm: llmMap }));
+    const run = () => setResults(resolveList(items, { catalog: own, index: full?.index, categories, departments: store.departments, departmentLocations: deptLocs, memory: learning.memory, llm: llmMap }));
     const id = setTimeout(run, RESOLVE_DEBOUNCE_MS);
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [itemsKey, merged, categories, learning.memory, llmMap, deptLocs, store.departments]);
+  }, [itemsKey, own, full, categories, learning.memory, llmMap, deptLocs, store.departments]);
 
   // debounced llm fetch for unknowns that were never asked
   const inFlight = useRef(new Set<string>());
@@ -120,7 +126,7 @@ export function useResolution(bundle: StoreBundle, items: string[], provider?: L
         setLearning((l) => {
           const llm = new Map(l.llm);
           for (const k of keys) llm.set(k, guesses.get(k) ?? null);
-          const ctx = { catalog: mergedCatalog(catalog, l.pending), categories, departments: store.departments, departmentLocations: deptLocs, memory: l.memory, llm };
+          const ctx = { catalog: mergedCatalog(bundle.catalog, l.pending), index: full?.index, categories, departments: store.departments, departmentLocations: deptLocs, memory: l.memory, llm };
           const pending = [...l.pending];
           for (const r of resolveList(unknown, ctx)) {
             const p = pendingEntry(r);

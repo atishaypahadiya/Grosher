@@ -124,6 +124,11 @@ export interface ResolveContext {
   fuzzyThreshold?: number;
   /** ms epoch for time decay (confidence.ts); default Date.now() */
   now?: number;
+  /**
+   * A prebuilt index over a larger catalog (the app's 47,000-row file, built in a worker) searched before
+   * `catalog`'s own index; `catalog` then holds only the rows that change (base rows, pending entries).
+   */
+  index?: CandidateIndex;
 }
 
 export const FALLTHROUGH = 0.6;
@@ -144,72 +149,169 @@ export interface Candidate {
  * against each query was fine at 30 items and is not now. Cached per catalog
  * array, so the app rebuilds it only when the catalog changes.
  */
-export class CandidateIndex {
-  /** form texts, parallel to `stops` / `labels`; a candidate is reconstructed on demand */
-  private readonly texts: string[] = [];
-  private readonly stops: Stop[] = [];
-  private readonly labels: string[] = [];
-  private readonly byText = new Map<string, number>();
-  private readonly gramId = new Map<string, number>();
-  /** per gram: the forms containing it (built as arrays, frozen into typed arrays) */
-  private gramPost: (number[] | Int32Array)[] = [];
-  private readonly wordId = new Map<string, number>();
-  private wordPost: (number[] | Int32Array)[] = [];
-  /** per form: how many distinct trigrams it has (its padded length + 1 minus repeats) */
-  private gramCount: Uint8Array;
-  private frozen = false;
+/**
+ * The index in flat, transferable parts: strings arrays and typed arrays
+ * (postings in CSR form). Structured-clones into IndexedDB, transfers
+ * from a worker, and `CandidateIndex.fromParts` rebuilds the index in
+ * tens of milliseconds instead of the second a build takes.
+ */
+export interface IndexParts {
+  version: 1;
+  texts: string[];
+  labels: string[];
+  /** per form: index of its stop in the catalog array */
+  stopIdx: Int32Array;
+  gramKeys: string[];
+  gramOffsets: Int32Array;
+  gramData: Int32Array;
+  wordKeys: string[];
+  wordOffsets: Int32Array;
+  wordData: Int32Array;
+  gramCount: Uint8Array;
+}
 
-  constructor(catalog: Stop[]) {
+/** the buffers to hand postMessage so the parts move instead of copying */
+export const transferablesOf = (p: IndexParts): ArrayBuffer[] => [p.stopIdx, p.gramOffsets, p.gramData, p.wordOffsets, p.wordData, p.gramCount].map((a) => a.buffer as ArrayBuffer);
+
+/** cyrb53 over ids, names and aliases: the cache key of an index */
+export function catalogHash(catalog: Stop[]): string {
+  let h1 = 0xdeadbeef;
+  let h2 = 0x41c6ce57;
+  const mix = (str: string) => {
+    for (let i = 0; i < str.length; i++) {
+      const ch = str.charCodeAt(i);
+      h1 = Math.imul(h1 ^ ch, 2654435761);
+      h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+  };
+  for (const s of catalog) {
+    mix(s.id);
+    mix("\u0001");
+    mix(s.name);
+    mix("\u0001");
+    for (const a of s.aliases ?? []) {
+      mix(a);
+      mix("\u0002");
+    }
+    mix(s.locationIds.join(","));
+    mix("\n");
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return `${catalog.length}-${(h2 >>> 0).toString(16).padStart(8, "0")}${(h1 >>> 0).toString(16).padStart(8, "0")}`;
+}
+
+/** CSR postings: the ids with the key `k` are data[offsets[k] .. offsets[k+1]) */
+interface Postings {
+  ids: Map<string, number>;
+  offsets: Int32Array;
+  data: Int32Array;
+}
+
+function csr(keys: string[], lists: number[][]): Postings {
+  const offsets = new Int32Array(lists.length + 1);
+  let total = 0;
+  lists.forEach((l, k) => {
+    offsets[k] = total;
+    total += l.length;
+  });
+  offsets[lists.length] = total;
+  const data = new Int32Array(total);
+  lists.forEach((l, k) => data.set(l, offsets[k]));
+  return { ids: new Map(keys.map((key, k) => [key, k])), offsets, data };
+}
+
+export class CandidateIndex {
+  private readonly texts: string[];
+  private readonly labels: string[];
+  private readonly stopIdx: Int32Array;
+  private readonly catalog: Stop[];
+  private readonly byText = new Map<string, number>();
+  private readonly grams: Postings;
+  private readonly words: Postings;
+  /** per form: how many distinct trigrams it has */
+  private readonly gramCount: Uint8Array;
+
+  constructor(catalog: Stop[], parts?: IndexParts) {
+    this.catalog = catalog;
+    const p = parts ?? CandidateIndex.build(catalog);
+    this.texts = p.texts;
+    this.labels = p.labels;
+    this.stopIdx = p.stopIdx;
+    this.gramCount = p.gramCount;
+    this.grams = { ids: new Map(p.gramKeys.map((k, i) => [k, i])), offsets: p.gramOffsets, data: p.gramData };
+    this.words = { ids: new Map(p.wordKeys.map((k, i) => [k, i])), offsets: p.wordOffsets, data: p.wordData };
+    // the first form with a text wins a tie (the package catalog comes before pending entries)
+    for (let i = 0; i < this.texts.length; i++) if (!this.byText.has(this.texts[i])) this.byText.set(this.texts[i], i);
+  }
+
+  /** an index from parts built elsewhere (a worker, the cache) */
+  static fromParts(catalog: Stop[], parts: IndexParts): CandidateIndex {
+    if (parts.version !== 1 || parts.stopIdx.length !== parts.texts.length) throw new Error("index parts do not fit");
+    return new CandidateIndex(catalog, parts);
+  }
+
+  /** the slow part, ~1 s for 47,000 items: every comparable form of every label, and the postings */
+  static build(catalog: Stop[]): IndexParts {
+    const texts: string[] = [];
+    const labels: string[] = [];
+    const stopIdx: number[] = [];
     const counts: number[] = [];
-    for (const stop of catalog) {
+    const gramKeys: string[] = [];
+    const gramLists: number[][] = [];
+    const gramId = new Map<string, number>();
+    const wordKeys: string[] = [];
+    const wordLists: number[][] = [];
+    const wordId = new Map<string, number>();
+    catalog.forEach((stop, si) => {
       const seen = new Set<string>();
-      const labels = [stop.name, stop.id.replace(/[-_]+/g, " "), ...(stop.aliases ?? [])];
-      for (const label of labels) {
+      for (const label of [stop.name, stop.id.replace(/[-_]+/g, " "), ...(stop.aliases ?? [])]) {
         for (const f of forms(label)) {
           if (seen.has(f)) continue; // one item's own repeat forms ("Eggs" and its alias "eggs") count once
           seen.add(f);
-          counts.push(this.add(stop, f, label));
+          const i = texts.length;
+          texts.push(f);
+          labels.push(label);
+          stopIdx.push(si);
+          let n = 0;
+          for (const gram of trigramCounts(f).keys()) {
+            n++;
+            let g = gramId.get(gram);
+            if (g === undefined) {
+              g = gramKeys.length;
+              gramId.set(gram, g);
+              gramKeys.push(gram);
+              gramLists.push([]);
+            }
+            gramLists[g].push(i);
+          }
+          counts.push(Math.min(255, n));
+          for (const t of new Set(singularize(f).split(" ").filter(Boolean))) {
+            let w = wordId.get(t);
+            if (w === undefined) {
+              w = wordKeys.length;
+              wordId.set(t, w);
+              wordKeys.push(t);
+              wordLists.push([]);
+            }
+            wordLists[w].push(i);
+          }
         }
       }
-    }
-    this.gramCount = Uint8Array.from(counts);
-    this.freeze();
+    });
+    const g = csr(gramKeys, gramLists);
+    const w = csr(wordKeys, wordLists);
+    return { version: 1, texts, labels, stopIdx: Int32Array.from(stopIdx), gramKeys, gramOffsets: g.offsets, gramData: g.data, wordKeys, wordOffsets: w.offsets, wordData: w.data, gramCount: Uint8Array.from(counts) };
   }
 
-  private add(stop: Stop, text: string, label: string): number {
-    const i = this.texts.length;
-    this.texts.push(text);
-    this.stops.push(stop);
-    this.labels.push(label);
-    if (!this.byText.has(text)) this.byText.set(text, i); // the first (the package catalog comes before pending entries) wins a tie
-    let n = 0;
-    for (const gram of trigramCounts(text).keys()) {
-      n++;
-      let g = this.gramId.get(gram);
-      if (g === undefined) {
-        g = this.gramPost.length;
-        this.gramId.set(gram, g);
-        this.gramPost.push([]);
-      }
-      (this.gramPost[g] as number[]).push(i);
-    }
-    for (const t of new Set(singularize(text).split(" ").filter(Boolean))) {
-      let w = this.wordId.get(t);
-      if (w === undefined) {
-        w = this.wordPost.length;
-        this.wordId.set(t, w);
-        this.wordPost.push([]);
-      }
-      (this.wordPost[w] as number[]).push(i);
-    }
-    return Math.min(255, n);
-  }
-
-  /** arrays → typed arrays: a tenth of the memory, and the build is done */
-  private freeze() {
-    this.gramPost = this.gramPost.map((p) => Int32Array.from(p));
-    this.wordPost = this.wordPost.map((p) => Int32Array.from(p));
-    this.frozen = true;
+  /** the parts, for a cache or a postMessage (the typed arrays are the live ones: transfer only after the last use here) */
+  toParts(): IndexParts {
+    const keysOf = (p: Postings) => {
+      const keys = new Array<string>(p.ids.size);
+      for (const [k, i] of p.ids) keys[i] = k;
+      return keys;
+    };
+    return { version: 1, texts: this.texts, labels: this.labels, stopIdx: this.stopIdx, gramKeys: keysOf(this.grams), gramOffsets: this.grams.offsets, gramData: this.grams.data, wordKeys: keysOf(this.words), wordOffsets: this.words.offsets, wordData: this.words.data, gramCount: this.gramCount };
   }
 
   get size() {
@@ -217,7 +319,7 @@ export class CandidateIndex {
   }
 
   private candidate(i: number): Candidate {
-    return { stop: this.stops[i], text: this.texts[i], label: this.labels[i] };
+    return { stop: this.catalog[this.stopIdx[i]], text: this.texts[i], label: this.labels[i] };
   }
 
   exact(text: string): Candidate | undefined {
@@ -227,16 +329,16 @@ export class CandidateIndex {
 
   /** the best candidate for one query form by max(trigram Dice, edit similarity, token containment); null below `threshold` */
   best(q: string, threshold: number): { c: Candidate; sim: number } | null {
-    if (!q || !this.frozen) return null;
+    if (!q) return null;
     // trigrams as a set (repeats are rare in product names): Dice = 2·shared / (|q| + |form|)
     const qGrams = [...trigramCounts(q).keys()];
     const shared = new Map<number, number>();
     for (const gram of qGrams) {
-      const g = this.gramId.get(gram);
+      const g = this.grams.ids.get(gram);
       if (g === undefined) continue;
-      const post = this.gramPost[g];
-      for (let k = 0; k < post.length; k++) {
-        const i = post[k];
+      const end = this.grams.offsets[g + 1];
+      for (let k = this.grams.offsets[g]; k < end; k++) {
+        const i = this.grams.data[k];
         shared.set(i, (shared.get(i) ?? 0) + 1);
       }
     }
@@ -260,11 +362,11 @@ export class CandidateIndex {
     if (qt.length) {
       const seen = new Set<number>();
       for (const t of new Set(qt)) {
-        const w = this.wordId.get(t);
+        const w = this.words.ids.get(t);
         if (w === undefined) continue;
-        const post = this.wordPost[w];
-        for (let k = 0; k < post.length; k++) {
-          const i = post[k];
+        const end = this.words.offsets[w + 1];
+        for (let k = this.words.offsets[w]; k < end; k++) {
+          const i = this.words.data[k];
           if (seen.has(i)) continue;
           seen.add(i);
           consider(i, tokenSimilarityTokens(qt, singularize(this.texts[i]).split(" ").filter(Boolean)));
@@ -277,7 +379,7 @@ export class CandidateIndex {
 
 const INDEX_CACHE = new WeakMap<Stop[], CandidateIndex>();
 
-/** the index for a catalog array, built once per array */
+/** the index for a catalog array, built once per array (synchronously: the app primes big ones from a worker) */
 export function candidates(catalog: Stop[]): CandidateIndex {
   let idx = INDEX_CACHE.get(catalog);
   if (!idx) {
@@ -286,6 +388,14 @@ export function candidates(catalog: Stop[]): CandidateIndex {
   }
   return idx;
 }
+
+/** register an index built elsewhere for this catalog array, so `candidates()` never builds it here */
+export function primeIndex(catalog: Stop[], index: CandidateIndex): void {
+  INDEX_CACHE.set(catalog, index);
+}
+
+/** is there an index for this array already? */
+export const hasIndex = (catalog: Stop[]) => INDEX_CACHE.has(catalog);
 
 const result = (query: string, partial: Omit<ResolveResult, "query">): ResolveResult => ({ query, ...partial });
 
@@ -307,19 +417,25 @@ function fromStop(query: string, stop: Stop, source: ResolveSource, confidence: 
 
 // ---------------------------------------------------------------- layers
 
-export function exactLayer(query: string, cands: CandidateIndex, now = Date.now()): ResolveResult | null {
+export function exactLayer(query: string, cands: CandidateIndex | CandidateIndex[], now = Date.now()): ResolveResult | null {
+  const list = Array.isArray(cands) ? cands : [cands];
   for (const q of forms(query)) {
-    const hit = cands.exact(q);
-    if (hit) return fromStop(query, hit.stop, "exact", 1, hit.label, now);
+    for (const idx of list) {
+      const hit = idx.exact(q);
+      if (hit) return fromStop(query, hit.stop, "exact", 1, hit.label, now);
+    }
   }
   return null;
 }
 
-export function fuzzyLayer(query: string, cands: CandidateIndex, threshold: number, now = Date.now()): ResolveResult | null {
+export function fuzzyLayer(query: string, cands: CandidateIndex | CandidateIndex[], threshold: number, now = Date.now()): ResolveResult | null {
+  const list = Array.isArray(cands) ? cands : [cands];
   let best: { c: Candidate; sim: number } | null = null;
   for (const q of forms(query)) {
-    const b = cands.best(q, threshold);
-    if (b && (!best || b.sim > best.sim)) best = b;
+    for (const idx of list) {
+      const b = idx.best(q, threshold);
+      if (b && (!best || b.sim > best.sim)) best = b;
+    }
   }
   if (!best) return null;
   const confidence = 0.6 + ((best.sim - threshold) / (1 - threshold)) * 0.35;
@@ -427,7 +543,8 @@ export const llmConfidence = (wire: number) => Math.round((0.3 + (Math.max(0.5, 
 
 // ---------------------------------------------------------------- pipeline
 
-export function resolveItem(query: string, ctx: ResolveContext, cands = candidates(ctx.catalog), catCands = categoryCandidates(ctx.categories)): ResolveResult {
+export function resolveItem(query: string, ctx: ResolveContext, own = candidates(ctx.catalog), catCands = categoryCandidates(ctx.categories)): ResolveResult {
+  const cands = ctx.index ? [ctx.index, own] : own;
   const threshold = ctx.fuzzyThreshold ?? 0.72;
   const now = ctx.now ?? Date.now();
   // An exact item wins, unless the shopper's own memory is about that very item: a memory row exists only
@@ -470,9 +587,9 @@ export function resolveItem(query: string, ctx: ResolveContext, cands = candidat
 }
 
 export function resolveList(queries: string[], ctx: ResolveContext): ResolveResult[] {
-  const cands = candidates(ctx.catalog);
+  const own = candidates(ctx.catalog);
   const catCands = categoryCandidates(ctx.categories);
-  return queries.map((q) => resolveItem(q, ctx, cands, catCands));
+  return queries.map((q) => resolveItem(q, ctx, own, catCands));
 }
 
 /** A resolved item as a routable stop. Unknowns have no locations and are not routable. */
