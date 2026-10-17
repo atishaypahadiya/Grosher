@@ -1,0 +1,8 @@
+name = "grosher-resolver"
+main = "src/index.ts"
+compatibility_date = "2025-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+# The API key is a secret, never a var:  npx wrangler secret put ANTHROPIC_API_KEY
+[vars]
+ALLOWED_ORIGIN = "*"

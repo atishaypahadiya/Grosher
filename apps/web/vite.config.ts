@@ -32,7 +32,11 @@ export default defineConfig({
       },
     }),
   ],
-  server: { host: true },
+  server: {
+    host: true,
+    // dev: the resolver worker runs under `wrangler dev` on 8787; the app calls /api/resolve
+    proxy: { "/api": { target: "http://localhost:8787", changeOrigin: true, rewrite: (p) => p.replace(/^\/api/, "") } },
+  },
   test: {
     environment: "jsdom",
     include: ["test/**/*.test.{ts,tsx}"],

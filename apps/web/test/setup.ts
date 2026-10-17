@@ -22,10 +22,13 @@ class MemoryStorage implements Storage {
   }
 }
 Object.defineProperty(globalThis, "localStorage", { value: new MemoryStorage(), configurable: true, writable: true });
+if (typeof document === "undefined") {
+  // the bundle test runs in a plain Node environment; nothing below applies
+}
 
 import { afterEach } from "vitest";
 import { cleanup } from "@testing-library/react";
 afterEach(cleanup);
 
 // jsdom has no canvas: make the WebGL check return "unavailable" quietly so the flat map is used.
-HTMLCanvasElement.prototype.getContext = (() => null) as unknown as HTMLCanvasElement["getContext"];
+if (typeof HTMLCanvasElement !== "undefined") HTMLCanvasElement.prototype.getContext = (() => null) as unknown as HTMLCanvasElement["getContext"];
