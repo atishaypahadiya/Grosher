@@ -82,3 +82,19 @@ test("memory updates: confirm raises toward 1, demote lowers, place replaces", (
   assert.equal(m[0].confidence, 0.9);
   assert.equal(resolveList(["milk", "ghee"], { ...ctx, memory: m })[1].locationIds[0], "A2-8");
 });
+
+import { parseLlmResults } from "../src/resolve/llmPrompt.ts";
+
+test("parseLlmResults: maps by item, drops foreign departments, bands confidence, capitalises names", () => {
+  const rows = parseLlmResults(
+    { results: [{ item: "oat milk", department: "dairy", subcategory: "milk", canonicalName: "oat milk", tags: ["chilled", "nope"], confidence: 0.9 }, { item: "ghee", department: "international", confidence: 0.5 }, { item: "x", department: null }] },
+    ["oat milk", "ghee", "x", "never answered"],
+    ["dairy", "dry"],
+  );
+  assert.equal(rows.length, 4);
+  assert.equal(rows[0].canonicalName, "Oat milk");
+  assert.deepEqual(rows[0].tags, ["chilled"]);
+  assert.ok(Math.abs(rows[0].confidence - 0.68) < 1e-9);
+  assert.equal(rows[1].department, null);
+  assert.equal(rows[3].department, null);
+});

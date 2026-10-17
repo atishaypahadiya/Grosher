@@ -72,7 +72,7 @@ export function parseLlmResults(raw: unknown, items: string[], departments: stri
       item,
       department: g.department,
       subcategory: typeof g.subcategory === "string" && g.subcategory ? g.subcategory : undefined,
-      canonicalName: typeof g.canonicalName === "string" && g.canonicalName ? g.canonicalName : undefined,
+      canonicalName: typeof g.canonicalName === "string" && g.canonicalName.trim() ? g.canonicalName.trim().replace(/^\p{Ll}/u, (c) => c.toUpperCase()) : undefined,
       tags: Array.isArray(g.tags) ? g.tags.filter((t): t is ItemTag => (LLM_TAGS as readonly string[]).includes(t as string)) : [],
       confidence: 0.5 + 0.2 * Math.max(0, Math.min(1, c)),
     };

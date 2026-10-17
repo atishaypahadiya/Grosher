@@ -30,6 +30,20 @@ describe("llm providers", () => {
     expect(map.get("ghee")).toBeNull();
   });
 
+  test("ollama: warmUp loads the model with keep_alive and never throws", async () => {
+    let sent: Record<string, unknown> | null = null;
+    const fake = (async (_: RequestInfo | URL, init?: RequestInit) => {
+      sent = JSON.parse(String(init?.body));
+      return new Response("{}", { status: 200 });
+    }) as typeof fetch;
+    await ollamaProvider(fake).warmUp!();
+    expect(sent).toMatchObject({ model: "qwen3:14b", messages: [], keep_alive: "30m" });
+    const down = (async () => {
+      throw new TypeError("Failed to fetch");
+    }) as typeof fetch;
+    await expect(ollamaProvider(down).warmUp!()).resolves.toBeUndefined();
+  });
+
   test("ollama failures reject: unreachable, timeout, bad JSON, non-JSON content", async () => {
     const down = (async () => {
       throw new TypeError("Failed to fetch");

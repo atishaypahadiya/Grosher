@@ -16,6 +16,8 @@ export interface LlmProvider {
   classify(items: string[], departments: string[]): Promise<LlmWire[]>;
   /** what the list header says when this provider is unreachable */
   offlineNote: string;
+  /** optional: load the model before the first real call (a cold 14B load is ~20 s; warm calls ~10 s) */
+  warmUp?(): Promise<void>;
 }
 
 const env = import.meta.env as Record<string, string | undefined>;
@@ -23,12 +25,22 @@ export const PROVIDER: ProviderName = env.VITE_RESOLVER_PROVIDER === "anthropic"
 export const OLLAMA_URL = (env.VITE_OLLAMA_URL ?? "http://localhost:11434").replace(/\/$/, "");
 export const OLLAMA_MODEL = env.VITE_OLLAMA_MODEL ?? "qwen3:14b";
 export const OLLAMA_TIMEOUT_MS = 20_000;
+/** keep the model loaded for a shopping session */
+export const OLLAMA_KEEP_ALIVE = "30m";
 export const RESOLVER_URL = (env.VITE_RESOLVER_URL ?? "/api").replace(/\/$/, "");
 
 export function ollamaProvider(fetchImpl: typeof fetch = fetch, timeoutMs = OLLAMA_TIMEOUT_MS): LlmProvider {
   return {
     name: "ollama",
     offlineNote: "Local model offline · unknown items need a tap",
+    async warmUp() {
+      // an empty messages array makes Ollama load the model and return at once
+      await fetchImpl(`${OLLAMA_URL}/api/chat`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ model: OLLAMA_MODEL, messages: [], keep_alive: OLLAMA_KEEP_ALIVE }),
+      }).catch(() => undefined);
+    },
     async classify(items, departments) {
       const ctrl = new AbortController();
       const timer = setTimeout(() => ctrl.abort(), timeoutMs);
@@ -41,6 +53,7 @@ export function ollamaProvider(fetchImpl: typeof fetch = fetch, timeoutMs = OLLA
             model: OLLAMA_MODEL,
             stream: false,
             think: false,
+            keep_alive: OLLAMA_KEEP_ALIVE,
             format: llmResultSchema(departments),
             options: { temperature: 0 },
             messages: [

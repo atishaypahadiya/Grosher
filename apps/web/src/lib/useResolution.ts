@@ -31,6 +31,10 @@ export interface ResolutionState {
 export function useResolution(bundle: StoreBundle, items: string[], provider?: LlmProvider): ResolutionState {
   const { store, catalog } = bundle;
   const llmProvider = useMemo(() => provider ?? defaultProvider(), [provider]);
+  // warm the local model once per mount so the first real call fits the timeout
+  useEffect(() => {
+    void llmProvider.warmUp?.();
+  }, [llmProvider]);
   const storeId = store.storeId;
   const [learning, setLearning] = useState<Learning>(EMPTY_LEARNING);
   const [loaded, setLoaded] = useState(false);
