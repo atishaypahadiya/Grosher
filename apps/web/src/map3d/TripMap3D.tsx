@@ -68,6 +68,27 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
   const nextIsStop = !!current?.stopId;
   const nextNode = current ? nodes.get(current.nodeId) : undefined;
   const litFixtureId = useMemo(() => (nextIsStop ? fixtureForLocation(store, current?.locationId, nextNode)?.id ?? null : null), [store, current, nextNode, nextIsStop]);
+  const legFixtureIds = useMemo(() => {
+    const pts = (current?.path ?? []).map((id) => nodes.get(id)).filter((n): n is NonNullable<typeof n> => !!n);
+    const ids = new Set<string>();
+    if (litFixtureId) ids.add(litFixtureId);
+    // sample the path every metre and keep fixtures whose footprint comes within 2.5 m of a sample
+    const samples: { x: number; y: number }[] = [];
+    for (let i = 0; i + 1 < pts.length; i++) {
+      const a = pts[i];
+      const b = pts[i + 1];
+      const len = Math.hypot(b.x - a.x, b.y - a.y);
+      const n = Math.max(1, Math.ceil(len));
+      for (let k = 0; k <= n; k++) samples.push({ x: a.x + ((b.x - a.x) * k) / n, y: a.y + ((b.y - a.y) * k) / n });
+    }
+    if (pts.length === 1) samples.push(pts[0]);
+    for (const f of store.fixtures ?? []) {
+      const b = fixtureBox(f);
+      const near = samples.some((s) => Math.hypot(Math.max(Math.abs(s.x - b.cx) - b.w / 2, 0), Math.max(Math.abs(s.y - b.cz) - b.d / 2, 0)) <= 2.5);
+      if (near) ids.add(f.id);
+    }
+    return [...ids];
+  }, [current, nodes, store, litFixtureId]);
 
   const ribbon = useMemo(
     () => ({ walked: trip.visited, current: current?.path ?? [], ahead: legs.slice(1).flatMap((l) => l.path) }),
@@ -166,6 +187,7 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
           fromEntrance={fromEntrance}
           footprint={footprint}
           litFixtureId={litFixtureId}
+          legFixtureIds={legFixtureIds}
           ribbon={ribbon}
           overlay={{ items, registry }}
           focus={focus}

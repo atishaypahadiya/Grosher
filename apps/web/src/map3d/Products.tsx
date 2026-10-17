@@ -160,9 +160,13 @@ export interface ProductsProps {
   textureUrl: (file: string) => string;
   /** settled camera position, map metres (y up); null until the first settle */
   settled: { x: number; y: number; z: number } | null;
+  /** fixtures that always get products: along the current leg and the next stop's, regardless of distance */
+  priority?: string[];
+  /** where the shopper stands; priority fixtures farthest from here are dropped first when the budget is short */
+  you?: { x: number; z: number } | null;
 }
 
-export function Products({ store, textureUrl, settled }: ProductsProps) {
+export function Products({ store, textureUrl, settled, priority = [], you = null }: ProductsProps) {
   const invalidate = useThree((s) => s.invalidate);
   const departments = useMemo(() => store.departments ?? [], [store]);
   const withTexture = useMemo(() => departments.filter((d) => d.texture), [departments]);
@@ -202,7 +206,8 @@ export function Products({ store, textureUrl, settled }: ProductsProps) {
   const material = useMemo(() => new MeshStandardMaterial({ roughness: 0.72, metalness: 0.02 }), []);
   const meshes = useRef<Record<Prim, InstancedMesh | null>>({ box: null, can: null, bottle: null, bag: null, tray: null });
 
-  // Rebuild the visible set on camera settle.
+  const priorityKey = priority.join("|");
+  // Rebuild the visible set on camera settle, or when the leg changes.
   useEffect(() => {
     const m = new Matrix4();
     const q = new Quaternion();
@@ -211,11 +216,18 @@ export function Products({ store, textureUrl, settled }: ProductsProps) {
     const counts: Record<Prim, number> = { box: 0, can: 0, bottle: 0, bag: 0, tray: 0 };
     let total = 0;
     let fixtures = 0;
-    if (settled) {
-      const d = (fx: FixtureItems) => distToFixture(fx, settled.x, settled.y, settled.z);
-      const near = layout.filter((fx) => d(fx) <= LOD_M).sort((a, b) => d(a) - d(b));
+    {
+      const pri = new Set(priority);
+      const fromYou = (fx: FixtureItems) => (you ? distToFixture(fx, you.x, 1.2, you.z) : 0);
+      // 1. the leg's fixtures, nearest to the shopper first; 2. anything within 25 m of the settled camera
+      const first = layout.filter((fx) => pri.has(fx.id)).sort((a, b) => fromYou(a) - fromYou(b));
+      let rest: FixtureItems[] = [];
+      if (settled) {
+        const d = (fx: FixtureItems) => distToFixture(fx, settled.x, settled.y, settled.z);
+        rest = layout.filter((fx) => !pri.has(fx.id) && d(fx) <= LOD_M).sort((a, b) => d(a) - d(b));
+      }
       // keep whole fixtures while the budget allows; thin the last one by stride
-      for (const fx of near) {
+      for (const fx of [...first, ...rest]) {
         const room = MAX_VISIBLE - total;
         if (room <= 0) break;
         const stride = fx.items.length > room ? Math.ceil(fx.items.length / room) : 1;
@@ -247,7 +259,8 @@ export function Products({ store, textureUrl, settled }: ProductsProps) {
     productStats.instances = total;
     productStats.fixtures = fixtures;
     invalidate();
-  }, [layout, settled, invalidate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layout, settled, invalidate, priorityKey, you?.x, you?.z]);
 
   return (
     <group name="products">

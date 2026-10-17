@@ -34,6 +34,8 @@ export interface OverlayItem {
   pos: [number, number, number];
   node: ReactNode;
   className?: string;
+  /** keep this item inside the padded map area (labels), never under the strip or the sheet */
+  clamp?: "bottom" | "top";
 }
 
 /** Element registry shared between the DOM tree and the projector. */
@@ -67,6 +69,7 @@ export function useOverlayItems(p: OverlayProps): OverlayItem[] {
           key: "lane-label",
           pos: [lane[0], 0.1, lane[2] + 1.4],
           className: "m-anchor-top",
+          clamp: "top",
           node: (
             <div className="m-label m-label-checkout">
               <span className="eyebrow now">{p.checkoutLabel.eyebrow}</span>
@@ -83,6 +86,7 @@ export function useOverlayItems(p: OverlayProps): OverlayItem[] {
           key: "next-label",
           pos: [next[0], next[1] + 2.6, next[2]],
           className: "m-anchor-bottom",
+          clamp: "bottom",
           node: (
             <div className="m-label m-label-next">
               <span className="eyebrow now">{p.nextLabel.eyebrow}</span>
@@ -118,17 +122,26 @@ export function OverlayDom({ items, registry }: { items: OverlayItem[]; registry
   );
 }
 
-/** Inside the Canvas: projects every item each rendered frame. */
-export function OverlayProjector({ items, registry }: { items: OverlayItem[]; registry: OverlayRegistry }) {
+/** Inside the Canvas: projects every item each rendered frame. Labels are clamped into the map area. */
+export function OverlayProjector({ items, registry, safe }: { items: OverlayItem[]; registry: OverlayRegistry; safe?: { top: number; bottom: number } }) {
   const { camera, size, invalidate } = useThree();
   const v = useMemo(() => new Vector3(), []);
+  const PAD = 12;
   const project = () => {
+    const top = (safe?.top ?? 0.16) * size.height + PAD;
+    const bottom = size.height - (safe?.bottom ?? 0.36) * size.height - PAD;
     for (const it of items) {
       const el = registry.get(it.key);
       if (!el) continue;
       v.set(it.pos[0], it.pos[1], it.pos[2]).project(camera);
-      const x = ((v.x + 1) / 2) * size.width;
-      const y = ((1 - v.y) / 2) * size.height;
+      let x = ((v.x + 1) / 2) * size.width;
+      let y = ((1 - v.y) / 2) * size.height;
+      if (it.clamp) {
+        const w = el.offsetWidth || 160;
+        const h = el.offsetHeight || 48;
+        x = Math.max(PAD + w / 2, Math.min(size.width - PAD - w / 2, x));
+        y = it.clamp === "bottom" ? Math.max(top + h, Math.min(bottom, y)) : Math.max(top, Math.min(bottom - h, y));
+      }
       el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
       el.style.visibility = v.z < 1 ? "visible" : "hidden";
     }

@@ -70,6 +70,8 @@ export interface SceneProps {
   fromEntrance: Map<string, number>;
   footprint: { x: number; z: number; w: number; d: number };
   litFixtureId: string | null;
+  /** fixtures along the current leg plus the next stop's */
+  legFixtureIds: string[];
   ribbon: { walked: string[]; current: string[]; ahead: string[] };
   overlay: { items: OverlayItem[]; registry: OverlayRegistry };
   focus: Focus;
@@ -81,7 +83,7 @@ export interface SceneProps {
   perf: boolean;
 }
 
-export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, footprint, litFixtureId, ribbon, overlay, focus, safe, flat, reducedMotion, cameraRef, onOverZoomOut, perf }: SceneProps) {
+export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, footprint, litFixtureId, legFixtureIds, ribbon, overlay, focus, safe, flat, reducedMotion, cameraRef, onOverZoomOut, perf }: SceneProps) {
   const [litMesh, setLitMesh] = useState<Mesh | null>(null);
   const [glowLine, setGlowLine] = useState<Object3D | null>(null);
   const bloomRef = useRef<SelectiveBloomEffect | null>(null);
@@ -122,10 +124,10 @@ export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, fo
 
       <Suspense fallback={null}>
         <Fixtures store={store} textureUrl={textureUrl} repeatMeters={repeatMeters} litFixtureId={litFixtureId} nodes={nodes} fromEntrance={fromEntrance} onLitMesh={setLitMesh} />
-        <Products store={store} textureUrl={textureUrl} settled={settled} />
+        <Products store={store} textureUrl={textureUrl} settled={settled} priority={legFixtureIds} you={{ x: focus.you.x, z: focus.you.y }} />
       </Suspense>
       <Ribbon nodes={nodes} walked={ribbon.walked} current={ribbon.current} ahead={ribbon.ahead} onGlowLine={setGlowLine} />
-      <OverlayProjector items={overlay.items} registry={overlay.registry} />
+      <OverlayProjector items={overlay.items} registry={overlay.registry} safe={safe} />
       <CameraRig ref={cameraRef} focus={focus} safe={safe} distanceRef={distanceRef} onSettle={onSettle} flat={flat} reducedMotion={reducedMotion} onOverZoomOut={onOverZoomOut} />
       <BloomDriver effect={bloomRef} distanceRef={distanceRef} full={0.7} />
 
