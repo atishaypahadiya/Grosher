@@ -21,8 +21,9 @@ import type { Category, ItemTag, Stop } from "@grosher/core";
 
 const OLLAMA_URL = (process.env.OLLAMA_URL ?? "http://localhost:11434").replace(/\/$/, "");
 const MODEL = process.env.OLLAMA_MODEL ?? "qwen3:8b";
-const MIN_ITEMS = 25;
+const MIN_ITEMS = 25; // asked for; a narrow category may honestly have fewer
 const MAX_ITEMS = 40;
+const MIN_ACCEPT = 8;
 const RETRIES = 3;
 const NUM_PREDICT = 2400; // ~40 items × ~50 tokens with aliases, plus the envelope
 const TIMEOUT_MS = 240_000;
@@ -50,9 +51,10 @@ const args = process.argv.slice(2);
 const only = args.includes("--only") ? new Set(args[args.indexOf("--only") + 1].split(",")) : null;
 const redo = args.includes("--redo");
 
-const SYSTEM = `You list the products a US Walmart Supercenter stocks in one shelf category, the way a shopper writes them on a grocery list.
+const SYSTEM = `You list the products a US Walmart Supercenter actually stocks on the shelves of one category, the way a shopper writes them on a grocery list.
 Reply with JSON only: {"items":[{"name":"<canonical name, 1-4 words, lowercase except brands, no sizes>","aliases":["<2-5 other ways people write it: brand names, abbreviations, plural or singular, Indian or Spanish names>"],"tags":[]}]}.
-Give ${MIN_ITEMS} to ${MAX_ITEMS} distinct, common products. No duplicates, no sizes or counts in names, no products that belong to another category.
+Up to ${MAX_ITEMS} distinct, common products, ideally ${MIN_ITEMS} or more, but only products physically shelved in this category: when the category is narrow, stop early rather than pad it with dishes, recipes or products from other aisles (bananas are not banana bread).
+No duplicates, no sizes or counts in names, name the product not the brand unless the brand is what people say (Oreos, Nutella).
 tags, usually empty: frozen (freezer case), chilled (fridge), heavy (over 3 kg or a case of liquid), fragile (eggs, chips, glass), produce (fresh fruit or veg).`;
 
 const schema = {
@@ -62,7 +64,7 @@ const schema = {
   properties: {
     items: {
       type: "array",
-      minItems: MIN_ITEMS,
+      minItems: MIN_ACCEPT,
       maxItems: MAX_ITEMS,
       items: {
         type: "object",
@@ -87,7 +89,17 @@ const slug = (s: string) =>
     .normalize("NFKD")
     .replace(/[^\p{L}\p{N}]+/gu, "-")
     .replace(/^-+|-+$/g, "");
-const norm = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N} ]+/gu, " ").replace(/\s+/g, " ").trim();
+const singular = (w: string) => (w.length > 3 && /ies$/.test(w) ? w.slice(0, -3) + "y" : w.length > 3 && /(s|x|ch|sh)es$/.test(w) ? w.slice(0, -2) : w.length > 3 && /s$/.test(w) && !/ss$/.test(w) ? w.slice(0, -1) : w);
+/** the dedupe key: lowercase, punctuation out, every word singular ("Bananas" and "banana" are one item) */
+const norm = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N} ]+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(" ")
+    .map(singular)
+    .join(" ");
 
 async function ask(c: Category, attempt: number): Promise<SeedItem[]> {
   const ctrl = new AbortController();
@@ -122,7 +134,7 @@ async function ask(c: Category, attempt: number): Promise<SeedItem[]> {
         aliases: (Array.isArray(it.aliases) ? it.aliases : []).filter((a): a is string => typeof a === "string" && a.trim().length > 0).map((a) => a.trim().replace(/\s+/g, " ")),
         tags: (Array.isArray(it.tags) ? it.tags : []).filter((t): t is ItemTag => TAGS.includes(t as ItemTag)),
       }));
-    if (items.length < Math.floor(MIN_ITEMS * 0.6)) throw new Error(`only ${items.length} items (${body.done_reason ?? "?"})`);
+    if (items.length < MIN_ACCEPT) throw new Error(`only ${items.length} items (${body.done_reason ?? "?"})`);
     const tok = body.eval_count ?? 0;
     const ms = Math.round((body.eval_duration ?? 0) / 1e6);
     console.log(`  ${items.length} items · ${tok} tok / ${ms} ms`);
