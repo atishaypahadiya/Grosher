@@ -1,38 +1,59 @@
 {
-  "_note": "Written by apps/web/scripts/capture-project.mjs from the production build on the demo store. Simulated trip: the clock is the legs to the stops (legsToStopsM) at the app's walking pace (WALK_MPS = 1.0 m/s, src/lib/format.ts), no time at the shelf. 'Walked' also counts the legs to the lane and the exit. The project page's share card shows these numbers.",
+  "_note": "Written by apps/web/scripts/capture-project.mjs from the production build on the demo store. Simulated trip: the clock is the legs to the stops (legsToStopsM) at the app's walking pace (WALK_MPS = 1.0 m/s, src/lib/format.ts), no time at the shelf. 'Walked' also counts the legs to the lane and the exit. The 3D still and the end of the video are trip step `tripFrame.step`, zoomed in by `tripFrame.zoomSteps` wheel notches (the app's own zoom). The project page's share card shows these numbers.",
   "capturedAt": "2026-10-17",
   "list": [
-    "Bananas",
-    "Spinach",
-    "Basmati rice",
-    "Toor dal",
-    "Paneer",
-    "Milk",
     "Greek yogurt",
     "Paper towels",
+    "Bananas",
+    "Toor dal",
+    "Frozen pizza",
+    "Coffee",
+    "Dog food",
     "Tylenol",
-    "Ice cream"
+    "Chips",
+    "Bread",
+    "Ice cream",
+    "Shampoo",
+    "Spinach",
+    "Pasta"
   ],
-  "legsToStopsM": 406,
+  "legsToStopsM": 420,
+  "tripFrame": {
+    "step": 11,
+    "of": 14,
+    "midTrip": false,
+    "zoomSteps": 0,
+    "zoom": 1,
+    "cameraDistanceM": 39.1,
+    "cards": 3,
+    "cardsInside": true,
+    "nextInMap": true,
+    "names": [
+      "Frozen pizza2",
+      "Greek yogurt3",
+      "Frozen · A20 · 12 of 14Ice cream42 mLeft · bay 5 · shelf 4"
+    ],
+    "whyNotMidTrip": "every unvisited stop within 40 m of the camera gets a card and the tilted view takes in the whole store; steps 5–9 drew 9, 8, 7, 6, 5 cards"
+  },
   "card": {
     "eyebrows": [
       "In and out",
       "Synthetic layout · Sat"
     ],
-    "clock": "6:46",
-    "sub": "10 of 10 items · lane 10",
+    "clock": "7:00",
+    "sub": "14 of 14 items · lane 10",
     "tiles": [
       {
         "label": "Walked",
-        "value": "490",
+        "value": "504",
         "unit": "m",
-        "caption": "24 aisles never entered"
+        "caption": "18 aisles never entered"
       },
       {
         "label": "Vs list in order",
-        "value": "−14",
+        "value": "−49",
         "unit": "%",
-        "caption": "about 1 minute saved"
+        "caption": "about 8 minutes saved"
       }
     ]
   }

@@ -33,7 +33,7 @@ npm install                              # once, at the root
 npm test                                 # core (node --test), stores (node --test), web (vitest)
 npm run typecheck                        # tsc --noEmit in every workspace
 npm run dev                              # Vite dev server for apps/web, http://localhost:5173 (host: true for phones)
-npm run bench                            # core: route vs. list-order baseline, 5–30 stops
+npm run bench                            # core: route vs. list-order baseline, 5–30 stops, with each row's saved p10–p90, then a 14-stop range on its own seed
 
 cd packages/core && node --test --test-name-pattern="reroute" test/solver.test.ts     # one core test
 cd apps/web && npx vitest run test/trip.test.ts                                      # one web file
@@ -472,21 +472,38 @@ catalog, or a `{store, catalog}` bundle. "Reset draft to the package" discards l
 ### Project page (`apps/web/public/project/`, served at `/project/`)
 
 A static write-up, no React: `index.html` with its CSS inline (nothing render-blocking), `project.js` for the
-one animation (a lime token round the reroute loop in the pipeline diagram) plus the trip video's lazy poster
-and play-while-visible, `img/` for the media, `capture.json` for the share card's numbers. Linked from the
-README's top and the list screen's footer ("About"). It follows DESIGN.md with one structural choice: the
-ground is cut into section slices that meet seamlessly (haze → lime-green for the hero with soil ink,
-lime-green → leaf for the phones, leaf → deep below with white ink), so the ink of every region is known and
-contrast holds; blooms are radial gradients, not blurred divs. Every figure on it carries an HTML comment with
-its source file; update the page when the README bench, the fixtures, the perf gate or the index timings move.
-Media: `node apps/web/scripts/capture-project.mjs http://localhost:4173` against `vite preview` of a fresh build
-rewrites the two 2× WebP stills, the 6-second WebM + MP4 loop with its PNG poster, and `capture.json` (a
-simulated trip: the page's `Date.now` is frozen and advanced by each leg at `WALK_MPS`, so the card's clock is
-walking time only). The service worker never answers `/project/` with the app shell
-(`navigateFallbackDenylist`) and does not precache it (`globIgnores`). Last Lighthouse at mobile on the
-production preview: 100 performance, 100 accessibility, 100 best practices, 100 SEO; the video's poster is
-attached on approach because a 200 KB image fetched eagerly pushed LCP to 2.8 s. `prefers-reduced-motion`
-keeps the video paused with controls, the token at rest and the you-dot's halo still.
+one animation (a lime token round the reroute loop in the pipeline diagram, visible only on the connectors:
+inside a box it hides and that box's border turns lime) and play-while-visible for the hero video, `img/` for
+the media, `capture.json` for the share card's numbers. Linked from the README's top and the list screen's
+footer ("About"). Sections: hero (two columns from 1100 px: text, and the reroute video in a large phone above
+the fold), the app (three phones), why (with the pull quote), how it works (steps, pipeline diagram, two
+rules), decisions (five Problem / Choice / Result cards, each with one number), architecture (an inline SVG,
+a wide variant from 1000 px and a tall one below), results (a bento: bench beside solver over not-measured;
+resolution beside performance), interface (the share card live, equal height with the map legend), limits,
+footer.
+
+Layout: one grid, content 1120 px and prose 680 px from the same left edge; section gaps 72 px mobile / 120
+desktop (`--half-gap` above and below each section). Light per DESIGN.md: each section is its own gradient
+slice, meeting seamlessly (haze → lime-green → leaf → deep, then back up to leaf at the footer), with one or
+two blooms kept inside it vertically (a bloom clipped while still tinted draws a seam). Ink follows the region:
+soil on haze and lime-green, white on green; muted white only where the ground is #276E3E or darker or inside
+a card, full white on the leaf footer. Every figure carries an HTML comment with its source file or commit;
+update the page when the README bench, the fixtures, the perf gate or the index timings move.
+
+Media: `node apps/web/scripts/capture-project.mjs http://localhost:4173` against `vite preview` of a fresh build.
+It types a 14-item list over 13 aisles in no store order, walks the trip, and writes the 2× WebP stills (list,
+3D trip, checkout), the 6-second WebM + MP4 loop with its WebP poster, and `capture.json`. The trip clock is
+simulated: the page's `Date.now` is frozen and advanced by each leg at `WALK_MPS` (1 m/s), so the card reads
+walking time only. The 3D frame is the first step with the next stop's marker in the map area, the camera
+within 40 m, and at most three item cards drawn, none touching an edge; it prefers mid-trip (30–70%), but the
+app draws a card for every unvisited stop within 40 m and the tilted view takes in the whole store, so with
+14 stops the first qualifying step is 11 of 14 (steps 5–9 draw 9 to 5 cards). `capture.json` records the step
+and that reason. The loop's one reroute arrives at that step. The trip's "vs list in order" (49%) sits inside
+the bench's 14-stop range (35–54%, `npm run bench`'s last line).
+
+The service worker never answers `/project/` with the app shell (`navigateFallbackDenylist`) and does not
+precache it (`globIgnores`). `prefers-reduced-motion` keeps the video paused with controls, the token at rest
+and the you-dot's halo still.
 
 ### PWA
 

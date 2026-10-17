@@ -1,8 +1,9 @@
 // The project page's one animation: a lime token travelling the reroute loop in the pipeline
-// diagram (solver → route → check-off → reroute → solver). It also attaches the trip video's
-// poster as it nears the viewport and plays the video only while it is on screen. Under
-// prefers-reduced-motion neither moves: the token rests on the check-off node and the video
-// keeps its controls and poster.
+// diagram (solver → route → check-off → reroute → solver). It moves only along the connectors and
+// the right-hand rail: while its centre is inside a box it is hidden and that box's border turns
+// lime ("now"), so it never passes over a label. The script also plays the trip video only while
+// it is on screen. Under prefers-reduced-motion neither moves: the token rests on the connector
+// below the check-off box and the video keeps its controls and poster.
 
 const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
 
@@ -10,14 +11,31 @@ const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
 const path = document.getElementById("loop-path");
 const token = document.getElementById("loop-token");
 if (path && token) {
+  const svg = path.ownerSVGElement;
   const length = path.getTotalLength();
-  const LAP_MS = 5200;
+  const LAP_MS = 6400;
+  const MARGIN = 8; // the token's halo radius: hidden this close to a box too
+  const boxes = [...svg.querySelectorAll("rect.box")].map((el) => {
+    const x = +el.getAttribute("x");
+    const y = +el.getAttribute("y");
+    return { el, x0: x - MARGIN, y0: y - MARGIN, x1: x + +el.getAttribute("width") + MARGIN, y1: y + +el.getAttribute("height") + MARGIN };
+  });
+  let lit = null;
   const place = (t) => {
-    const p = path.getPointAtLength(((t % 1) + 1) % 1 * length);
+    const p = path.getPointAtLength((((t % 1) + 1) % 1) * length);
+    const inside = boxes.find((b) => p.x > b.x0 && p.x < b.x1 && p.y > b.y0 && p.y < b.y1);
     token.setAttribute("transform", `translate(${p.x} ${p.y})`);
+    token.style.opacity = inside ? "0" : "1";
+    const now = inside && inside.el.dataset.box ? inside.el : null;
+    if (now !== lit) {
+      lit?.classList.remove("now");
+      now?.classList.add("now");
+      lit = now;
+    }
   };
-  // rest on the check-off node (about two fifths of the way round)
-  const rest = () => place(0.36);
+  // at rest: on the connector between check-off and reroute (y ≈ 515)
+  const restAt = (515 - 332) / length;
+  const rest = () => place(restAt);
   let raf = 0;
   let visible = false;
   let start = 0;
@@ -36,22 +54,13 @@ if (path && token) {
   new IntersectionObserver((entries) => {
     visible = entries.some((e) => e.isIntersecting);
     update();
-  }).observe(path.ownerSVGElement);
+  }).observe(svg);
   reduce.addEventListener("change", update);
 }
 
 // ---------------------------------------------------------------- the trip video
 const video = document.getElementById("trip-video");
 if (video) {
-  // the poster, deferred until the video is within a screen of the viewport
-  new IntersectionObserver(
-    (entries, obs) => {
-      if (!entries.some((e) => e.isIntersecting)) return;
-      if (video.dataset.poster && !video.poster) video.poster = video.dataset.poster;
-      obs.disconnect();
-    },
-    { rootMargin: "100% 0px" },
-  ).observe(video);
   let onScreen = false;
   const sync = () => {
     if (reduce.matches) {
@@ -63,7 +72,7 @@ if (video) {
     if (onScreen) {
       if (video.preload === "none") video.preload = "auto";
       video.play().catch(() => {
-        video.controls = true; // autoplay refused: the shopper can still press play
+        video.controls = true; // autoplay refused: the visitor can still press play
       });
     } else video.pause();
   };
