@@ -3,7 +3,7 @@
 // an injected client, so the worker is testable without the network.
 
 import type Anthropic from "@anthropic-ai/sdk";
-import { LLM_SYSTEM, llmResultSchema, llmUserMessage, parseLlmResults, type ItemTag, type LlmWire } from "@grosher/core";
+import { LLM_SYSTEM, llmMaxTokens, llmResultSchema, llmUserMessage, parseLlmResults, type ItemTag, type LlmWire } from "@grosher/core";
 
 export const MODEL = "claude-haiku-5-5";
 export type Tag = ItemTag;
@@ -19,7 +19,7 @@ const TOOL_NAME = "classify_items";
 export function buildTool(departments: string[]): Anthropic.Tool {
   return {
     name: TOOL_NAME,
-    description: "Report, for every item, the grocery department it is shelved in at this store, a short sub-category, a clean canonical name, handling tags, and your confidence.",
+    description: "Report, for every item, the department id it is shelved in at this store (or null), a shelf category of at most three words, and your confidence.",
     strict: true,
     input_schema: llmResultSchema(departments) as unknown as Anthropic.Tool["input_schema"],
   };
@@ -36,7 +36,7 @@ export async function classify(client: Anthropic, req: ClassifyRequest): Promise
   // tool_choice stays "auto" with the instruction naming the tool (the 5.5 family rejects forced tool choice).
   const response = await client.messages.create({
     model: MODEL,
-    max_tokens: 8192,
+    max_tokens: 2048 + llmMaxTokens(items.length), // thinking shares the budget
     system: SYSTEM,
     output_config: { effort: "low" },
     tools: [tool],

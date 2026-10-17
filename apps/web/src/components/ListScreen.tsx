@@ -15,6 +15,7 @@ export interface ListScreenProps {
   baselineM: number;
   usual: string[] | null;
   asking: boolean;
+  warming?: boolean;
   offline: boolean;
   offlineNote?: string;
   onAdd: (names: string[]) => void;
@@ -33,7 +34,7 @@ export const splitItems = (text: string) =>
     .map((s) => s.trim())
     .filter(Boolean);
 
-export function ListScreen({ store, items, results, plan, baselineM, usual, asking, offline, offlineNote, onAdd, onRemove, onLoadUsual, onTellWhere, onRoute, resume }: ListScreenProps) {
+export function ListScreen({ store, items, results, plan, baselineM, usual, asking, warming, offline, offlineNote, onAdd, onRemove, onLoadUsual, onTellWhere, onRoute, resume }: ListScreenProps) {
   const [draft, setDraft] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
@@ -118,7 +119,7 @@ export function ListScreen({ store, items, results, plan, baselineM, usual, aski
         <div className="sheet-head">
           <span className="eyebrow">
             {items.length} {items.length === 1 ? "item" : "items"} · {placed} placed
-            {asking ? " · asking" : ""}
+            {asking ? (warming ? " · warming up the local model…" : " · asking") : ""}
           </span>
           <button type="button" className="eyebrow" onClick={() => (usual ? onLoadUsual() : setHint("Save a usual trip from the trip-done screen."))}>
             {usual ? "Usual trip" : "No usual trip yet"}

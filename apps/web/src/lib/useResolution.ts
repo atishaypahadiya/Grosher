@@ -11,7 +11,8 @@ import { defaultProvider, fetchGuesses, type LlmProvider } from "./resolver.ts";
 import { EMPTY_LEARNING, loadLearning, mergedCatalog, saveLearning, type Learning } from "./learning.ts";
 
 export const RESOLVE_DEBOUNCE_MS = 150;
-export const LLM_DEBOUNCE_MS = 600;
+/** the LLM batch waits for the list to go idle; never per keystroke */
+export const LLM_DEBOUNCE_MS = 1500;
 
 export interface ResolutionState {
   results: ResolveResult[];
@@ -19,6 +20,7 @@ export interface ResolutionState {
   memory: ItemMemory[];
   loaded: boolean;
   asking: boolean; // an llm request is in flight
+  warming: boolean; // the local model was not loaded when the request started
   offline: boolean; // the last llm request failed
   /** the provider's one-line note for the header when offline */
   offlineNote: string;
@@ -39,6 +41,7 @@ export function useResolution(bundle: StoreBundle, items: string[], provider?: L
   const [learning, setLearning] = useState<Learning>(EMPTY_LEARNING);
   const [loaded, setLoaded] = useState(false);
   const [asking, setAsking] = useState(false);
+  const [warming, setWarming] = useState(false);
   const [offline, setOffline] = useState(false);
 
   useEffect(() => {
@@ -82,7 +85,9 @@ export function useResolution(bundle: StoreBundle, items: string[], provider?: L
       keys.forEach((k) => inFlight.current.add(k));
       setAsking(true);
       try {
-        const guesses = await fetchGuesses(unknown, (store.departments ?? []).map((d) => d.id), llmProvider);
+        const loadedNow = (await llmProvider.isLoaded?.()) ?? true;
+        setWarming(!loadedNow);
+        const guesses = await fetchGuesses(unknown, (store.departments ?? []).map((d) => d.id), llmProvider, { coldStart: !loadedNow });
         setOffline(false);
         setLearning((l) => {
           const llm = new Map(l.llm);
@@ -100,6 +105,7 @@ export function useResolution(bundle: StoreBundle, items: string[], provider?: L
       } finally {
         keys.forEach((k) => inFlight.current.delete(k));
         setAsking(false);
+        setWarming(false);
       }
     }, LLM_DEBOUNCE_MS);
     return () => clearTimeout(id);
@@ -121,5 +127,5 @@ export function useResolution(bundle: StoreBundle, items: string[], provider?: L
     [],
   );
 
-  return { results, catalog: merged, memory: learning.memory, loaded, asking, offline, offlineNote: llmProvider.offlineNote, gotIt, notHere, place, learning };
+  return { results, catalog: merged, memory: learning.memory, loaded, asking, warming, offline, offlineNote: llmProvider.offlineNote, gotIt, notHere, place, learning };
 }

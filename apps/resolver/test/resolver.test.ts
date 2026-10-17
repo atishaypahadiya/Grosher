@@ -58,9 +58,9 @@ describe("resolver worker", () => {
               id: "t1",
               input: {
                 results: [
-                  { item: "oat milk", department: "dairy", subcategory: "plant milk", canonicalName: "Oat milk", tags: ["chilled", "bogus"], confidence: 1 },
-                  { item: "ghee", department: "international", subcategory: "", canonicalName: "", tags: [], confidence: 0.5 },
-                  { item: "birthday card", department: null, subcategory: "", canonicalName: "", tags: [], confidence: 0.9 },
+                  { name: "oat milk", dept: "dairy", sub: "plant based milk alternatives", conf: 1 },
+                  { name: "ghee", dept: "international", sub: "", conf: 0.5 },
+                  { name: "birthday card", dept: null, sub: "", conf: 0.9 },
                 ],
               },
             },
@@ -70,12 +70,12 @@ describe("resolver worker", () => {
     } as unknown as import("@anthropic-ai/sdk").default;
     const out = await classify(fake, { items: ["oat milk", "ghee", "birthday card", "oat milk"], departments: ["dairy", "dry"] });
     expect(out).toHaveLength(3);
-    expect(out[0]).toMatchObject({ department: "dairy", subcategory: "plant milk", canonicalName: "Oat milk", tags: ["chilled"] });
+    expect(out[0]).toMatchObject({ department: "dairy", subcategory: "plant based milk", canonicalName: "Oat milk", tags: ["chilled"] });
     expect(out[0].confidence).toBeCloseTo(0.7, 5);
     expect(out[1].department).toBeNull(); // not one of this store's departments
     expect(out[2].department).toBeNull();
     const tool = buildTool(["dairy", "dry"]);
     expect(tool.strict).toBe(true);
-    expect((tool.input_schema as { properties: { results: { items: { properties: { department: { enum: unknown[] } } } } } }).properties.results.items.properties.department.enum).toEqual(["dairy", "dry", null]);
+    expect((tool.input_schema as { properties: { results: { items: { properties: { dept: { enum: unknown[] } } } } } }).properties.results.items.properties.dept.enum).toEqual(["dairy", "dry", null]);
   });
 });

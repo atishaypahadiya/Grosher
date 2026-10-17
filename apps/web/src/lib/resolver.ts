@@ -6,30 +6,52 @@
 // caches the same shape whichever answered. Failures throw; the caller
 // degrades to "unknown" and shows a one-line note.
 
-import { LLM_SYSTEM, llmResultSchema, llmUserMessage, parseLlmResults, type LlmGuess, type LlmWire } from "@grosher/core";
+import { LLM_SYSTEM, llmMaxTokens, llmResultSchema, llmUserMessage, parseLlmResults, type LlmGuess, type LlmWire } from "@grosher/core";
 
 export type ProviderName = "ollama" | "anthropic";
+
+export interface ClassifyOptions {
+  /** the model is not loaded yet: allow a cold load inside this one call */
+  coldStart?: boolean;
+}
 
 export interface LlmProvider {
   name: ProviderName;
   /** one call for the whole list; rejects on any failure */
-  classify(items: string[], departments: string[]): Promise<LlmWire[]>;
+  classify(items: string[], departments: string[], opts?: ClassifyOptions): Promise<LlmWire[]>;
   /** what the list header says when this provider is unreachable */
   offlineNote: string;
-  /** optional: load the model before the first real call (a cold 14B load is ~20 s; warm calls ~10 s) */
+  /** optional: load the model before the first real call; never throws */
   warmUp?(): Promise<void>;
+  /** optional: is the model resident right now? (unknown → true) */
+  isLoaded?(): Promise<boolean>;
 }
 
 const env = import.meta.env as Record<string, string | undefined>;
 export const PROVIDER: ProviderName = env.VITE_RESOLVER_PROVIDER === "anthropic" ? "anthropic" : "ollama";
 export const OLLAMA_URL = (env.VITE_OLLAMA_URL ?? "http://localhost:11434").replace(/\/$/, "");
-export const OLLAMA_MODEL = env.VITE_OLLAMA_MODEL ?? "qwen3:14b";
+export const OLLAMA_DEFAULT_MODEL = "qwen3:8b";
+export const OLLAMA_MODEL = env.VITE_OLLAMA_MODEL ?? OLLAMA_DEFAULT_MODEL;
 export const OLLAMA_TIMEOUT_MS = 20_000;
-/** keep the model loaded for a shopping session */
-export const OLLAMA_KEEP_ALIVE = "30m";
+/** a cold load of the model happens inside the call: allow it once */
+export const OLLAMA_COLD_TIMEOUT_MS = 60_000;
+/** keep the model loaded all day */
+export const OLLAMA_KEEP_ALIVE = "24h";
 export const RESOLVER_URL = (env.VITE_RESOLVER_URL ?? "/api").replace(/\/$/, "");
 
-export function ollamaProvider(fetchImpl: typeof fetch = fetch, timeoutMs = OLLAMA_TIMEOUT_MS): LlmProvider {
+const DEV = !!(import.meta.env as { DEV?: boolean }).DEV;
+
+interface OllamaChat {
+  message?: { content?: string };
+  total_duration?: number;
+  load_duration?: number;
+  prompt_eval_count?: number;
+  prompt_eval_duration?: number;
+  eval_count?: number;
+  eval_duration?: number;
+}
+
+export function ollamaProvider(fetchImpl: typeof fetch = fetch, timeoutMs = OLLAMA_TIMEOUT_MS, coldTimeoutMs = OLLAMA_COLD_TIMEOUT_MS): LlmProvider {
   return {
     name: "ollama",
     offlineNote: "Local model offline · unknown items need a tap",
@@ -41,9 +63,20 @@ export function ollamaProvider(fetchImpl: typeof fetch = fetch, timeoutMs = OLLA
         body: JSON.stringify({ model: OLLAMA_MODEL, messages: [], keep_alive: OLLAMA_KEEP_ALIVE }),
       }).catch(() => undefined);
     },
-    async classify(items, departments) {
+    async isLoaded() {
+      try {
+        const res = await fetchImpl(`${OLLAMA_URL}/api/ps`);
+        if (!res.ok) return true;
+        const body = (await res.json()) as { models?: { name?: string; model?: string }[] };
+        return (body.models ?? []).some((m) => m.name === OLLAMA_MODEL || m.model === OLLAMA_MODEL);
+      } catch {
+        return true;
+      }
+    },
+    async classify(items, departments, opts = {}) {
       const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+      const t0 = performance.now();
+      const timer = setTimeout(() => ctrl.abort(), opts.coldStart ? coldTimeoutMs : timeoutMs);
       try {
         const res = await fetchImpl(`${OLLAMA_URL}/api/chat`, {
           method: "POST",
@@ -55,7 +88,7 @@ export function ollamaProvider(fetchImpl: typeof fetch = fetch, timeoutMs = OLLA
             think: false,
             keep_alive: OLLAMA_KEEP_ALIVE,
             format: llmResultSchema(departments),
-            options: { temperature: 0 },
+            options: { temperature: 0, num_predict: llmMaxTokens(items.length) },
             messages: [
               { role: "system", content: LLM_SYSTEM },
               { role: "user", content: llmUserMessage(items, departments) },
@@ -63,7 +96,7 @@ export function ollamaProvider(fetchImpl: typeof fetch = fetch, timeoutMs = OLLA
           }),
         });
         if (!res.ok) throw new Error(`ollama ${res.status}`);
-        const body = (await res.json()) as { message?: { content?: string } };
+        const body = (await res.json()) as OllamaChat;
         const content = body.message?.content;
         if (typeof content !== "string") throw new Error("ollama: no message content");
         let raw: unknown;
@@ -71,6 +104,13 @@ export function ollamaProvider(fetchImpl: typeof fetch = fetch, timeoutMs = OLLA
           raw = JSON.parse(content);
         } catch {
           throw new Error("ollama: response is not JSON");
+        }
+        if (DEV) {
+          const ms = (ns?: number) => Math.round((ns ?? 0) / 1e6);
+          const evalTokens = body.eval_count ?? 0;
+          console.info(
+            `[resolve] ollama ${OLLAMA_MODEL} · ${items.length} items · wall ${Math.round(performance.now() - t0)} ms · load ${ms(body.load_duration)} ms · prompt ${body.prompt_eval_count ?? 0} tok / ${ms(body.prompt_eval_duration)} ms · gen ${evalTokens} tok / ${ms(body.eval_duration)} ms (${(evalTokens / Math.max(1, items.length)).toFixed(0)} tok/item)${opts.coldStart ? " · cold" : ""}`,
+          );
         }
         return parseLlmResults(raw, items, departments);
       } finally {
@@ -85,6 +125,7 @@ export function anthropicProvider(fetchImpl: typeof fetch = fetch): LlmProvider 
     name: "anthropic",
     offlineNote: "Resolver offline · unknown items need a tap",
     async classify(items, departments) {
+      const t0 = performance.now();
       const res = await fetchImpl(`${RESOLVER_URL}/resolve`, {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -92,8 +133,10 @@ export function anthropicProvider(fetchImpl: typeof fetch = fetch): LlmProvider 
       });
       if (!res.ok) throw new Error(`resolver ${res.status}`);
       const body = (await res.json()) as { results: LlmWire[] };
-      // the worker already parsed and banded; run it through the parser again so both paths are identical
-      return parseLlmResults({ results: body.results }, items, departments).map((w, i) => ({ ...w, confidence: body.results[i]?.department ? body.results[i].confidence : 0 }));
+      if (DEV) console.info(`[resolve] anthropic worker · ${items.length} items · wall ${Math.round(performance.now() - t0)} ms`);
+      // the worker already parsed and banded: keep its rows, every item present
+      const byItem = new Map(body.results.map((r) => [r.item.trim().toLowerCase(), r]));
+      return items.map((item) => byItem.get(item.trim().toLowerCase()) ?? { item, department: null, confidence: 0 });
     },
   };
 }
@@ -112,7 +155,6 @@ export function toGuessMap(rows: LlmWire[]): Map<string, LlmGuess | null> {
   return out;
 }
 
-/** Back-compat helper used by the hook: classify with the default provider. */
-export async function fetchGuesses(items: string[], departments: string[], provider: LlmProvider = defaultProvider()): Promise<Map<string, LlmGuess | null>> {
-  return toGuessMap(await provider.classify(items, departments));
+export async function fetchGuesses(items: string[], departments: string[], provider: LlmProvider = defaultProvider(), opts?: ClassifyOptions): Promise<Map<string, LlmGuess | null>> {
+  return toGuessMap(await provider.classify(items, departments, opts));
 }

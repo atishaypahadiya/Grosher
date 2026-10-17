@@ -44,23 +44,30 @@ const MOCK_DEPTS: Record<string, { department: string; subcategory: string; tags
 };
 globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
   const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
-  const guess = (items: string[]) =>
-    items.map((item) => {
-      const g = MOCK_DEPTS[item.trim().toLowerCase()];
-      return g ? { item, ...g, canonicalName: item.replace(/\b\w/g, (c) => c.toUpperCase()), confidence: 0.8 } : { item, department: null, subcategory: "", canonicalName: "", tags: [], confidence: 0 };
-    });
-  // the Anthropic worker
+  // the Anthropic worker (already parsed rows)
   if (/\/resolve$/.test(url)) {
     const body = JSON.parse(String(init?.body ?? "{}")) as { items: string[] };
-    const results = guess(body.items).map((g) => ({ ...g, confidence: g.department ? 0.66 : 0 }));
+    const results = body.items.map((item) => {
+      const g = MOCK_DEPTS[item.trim().toLowerCase()];
+      return g ? { item, department: g.department, subcategory: g.subcategory, canonicalName: item.replace(/\b\w/g, (c) => c.toUpperCase()), tags: g.tags ?? [], confidence: 0.66 } : { item, department: null, confidence: 0 };
+    });
     return new Response(JSON.stringify({ results }), { status: 200, headers: { "content-type": "application/json" } });
   }
-  // a local Ollama: the answer is a JSON string inside message.content
+  // a local Ollama: /api/ps says the model is loaded; /api/chat answers in the terse schema inside message.content
+  if (/\/api\/ps$/.test(url)) {
+    const model = (import.meta.env as Record<string, string | undefined>).VITE_OLLAMA_MODEL ?? "qwen3:8b";
+    return new Response(JSON.stringify({ models: [{ name: model, model }] }), { status: 200 });
+  }
   if (/\/api\/chat$/.test(url)) {
     const body = JSON.parse(String(init?.body ?? "{}")) as { messages: { role: string; content: string }[] };
+    if (!body.messages.length) return new Response("{}", { status: 200 }); // warm-up
     const user = body.messages.find((m) => m.role === "user")?.content ?? "";
     const items = [...user.matchAll(/^- (.+)$/gm)].map((m) => m[1]);
-    return new Response(JSON.stringify({ message: { role: "assistant", content: JSON.stringify({ results: guess(items) }) } }), { status: 200, headers: { "content-type": "application/json" } });
+    const results = items.map((name) => {
+      const g = MOCK_DEPTS[name.trim().toLowerCase()];
+      return g ? { name, dept: g.department, sub: g.subcategory, conf: 0.8 } : { name, dept: null, sub: "", conf: 0 };
+    });
+    return new Response(JSON.stringify({ message: { role: "assistant", content: JSON.stringify({ results }) }, eval_count: 40 * items.length, eval_duration: 1e9 }), { status: 200, headers: { "content-type": "application/json" } });
   }
   throw new TypeError(`fetch blocked in tests: ${url}`);
 }) as typeof fetch;

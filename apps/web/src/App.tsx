@@ -152,6 +152,7 @@ export function App() {
         baselineM={baselineM}
         usual={usual}
         asking={res.asking}
+        warming={res.warming}
         offline={res.offline}
         offlineNote={res.offlineNote}
         onAdd={addItems}

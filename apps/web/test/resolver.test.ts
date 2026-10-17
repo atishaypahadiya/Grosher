@@ -1,13 +1,17 @@
 import { describe, expect, test } from "vitest";
-import { anthropicProvider, ollamaProvider, OLLAMA_MODEL, PROVIDER, toGuessMap } from "../src/lib/resolver.ts";
+import { anthropicProvider, ollamaProvider, OLLAMA_DEFAULT_MODEL, OLLAMA_MODEL, PROVIDER, toGuessMap } from "../src/lib/resolver.ts";
+
+// a developer's .env.local may override the model and the URL; the tests respect it
+const MODEL = (import.meta.env as Record<string, string | undefined>).VITE_OLLAMA_MODEL ?? OLLAMA_DEFAULT_MODEL;
 
 const depts = ["dairy", "dry", "household"];
-const answer = { results: [{ item: "oat milk", department: "dairy", subcategory: "plant milk", canonicalName: "Oat milk", tags: ["chilled"], confidence: 0.9 }, { item: "ghee", department: null, subcategory: "", canonicalName: "", tags: [], confidence: 0.2 }] };
+const answer = { results: [{ name: "oat milk", dept: "dairy", sub: "plant milk", conf: 0.9 }, { name: "ghee", dept: null, sub: "", conf: 0.2 }] };
 
 describe("llm providers", () => {
-  test("default provider is ollama with qwen3:14b", () => {
+  test("default provider is ollama; the default model is qwen3:8b unless .env overrides it", () => {
     expect(PROVIDER).toBe("ollama");
-    expect(OLLAMA_MODEL).toBe("qwen3:14b");
+    expect(OLLAMA_DEFAULT_MODEL).toBe("qwen3:8b");
+    expect(OLLAMA_MODEL).toBe(MODEL);
   });
 
   test("ollama: strict JSON format, no thinking, one call; parsed into the shared shape", async () => {
@@ -18,10 +22,13 @@ describe("llm providers", () => {
     }) as typeof fetch;
     const rows = await ollamaProvider(fake).classify(["oat milk", "ghee"], depts);
     expect(sent!.url).toMatch(/\/api\/chat$/);
-    expect(sent!.body.model).toBe("qwen3:14b");
+    expect(sent!.body.model).toBe(MODEL);
     expect(sent!.body.think).toBe(false);
     expect(sent!.body.stream).toBe(false);
-    expect((sent!.body.format as { properties: unknown }).properties).toBeTruthy();
+    expect(sent!.body.keep_alive).toBe("24h");
+    expect((sent!.body.options as { num_predict: number }).num_predict).toBe(32 + 50 * 2);
+    const schema = sent!.body.format as { properties: { results: { items: { required: string[] } } } };
+    expect(schema.properties.results.items.required).toEqual(["name", "dept", "sub", "conf"]);
     expect(rows[0]).toMatchObject({ item: "oat milk", department: "dairy", subcategory: "plant milk", tags: ["chilled"] });
     expect(rows[0].confidence).toBeCloseTo(0.68, 5);
     expect(rows[1]).toMatchObject({ item: "ghee", department: null, confidence: 0 });
@@ -37,11 +44,33 @@ describe("llm providers", () => {
       return new Response("{}", { status: 200 });
     }) as typeof fetch;
     await ollamaProvider(fake).warmUp!();
-    expect(sent).toMatchObject({ model: "qwen3:14b", messages: [], keep_alive: "30m" });
+    expect(sent).toMatchObject({ model: MODEL, messages: [], keep_alive: "24h" });
     const down = (async () => {
       throw new TypeError("Failed to fetch");
     }) as typeof fetch;
     await expect(ollamaProvider(down).warmUp!()).resolves.toBeUndefined();
+  });
+
+  test("ollama: isLoaded reads /api/ps; a cold start gets the long timeout", async () => {
+    const ps = (async (url: RequestInfo | URL) => (/\/api\/ps$/.test(String(url)) ? new Response(JSON.stringify({ models: [{ name: MODEL }] })) : new Response("{}"))) as typeof fetch;
+    expect(await ollamaProvider(ps).isLoaded!()).toBe(true);
+    const empty = (async () => new Response(JSON.stringify({ models: [] }))) as typeof fetch;
+    expect(await ollamaProvider(empty).isLoaded!()).toBe(false);
+    const down = (async () => {
+      throw new TypeError("Failed to fetch");
+    }) as typeof fetch;
+    expect(await ollamaProvider(down).isLoaded!()).toBe(true); // unknown → assume loaded, the normal timeout applies
+    // a slow answer that beats the cold timeout but not the normal one
+    const slow = ((_: unknown, init?: RequestInit) =>
+      new Promise<Response>((res, rej) => {
+        const t = setTimeout(() => res(new Response(JSON.stringify({ message: { content: JSON.stringify({ results: [] }) } }))), 60);
+        init?.signal?.addEventListener("abort", () => {
+          clearTimeout(t);
+          rej(new DOMException("aborted", "AbortError"));
+        });
+      })) as typeof fetch;
+    await expect(ollamaProvider(slow, 20, 200).classify(["a"], depts)).rejects.toThrow();
+    await expect(ollamaProvider(slow, 20, 200).classify(["a"], depts, { coldStart: true })).resolves.toHaveLength(1);
   });
 
   test("ollama failures reject: unreachable, timeout, bad JSON, non-JSON content", async () => {
