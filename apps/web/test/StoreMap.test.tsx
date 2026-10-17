@@ -29,7 +29,7 @@ describe("StoreMap", () => {
     const router = new Router(new WalkGraph(store));
     const route = router.solve({ stops: catalog.slice(0, 5) });
     const { container } = render(
-      <StoreMap store={store} route={route} currentNodeId={route.legs[0].nodeId} positionNodeId={store.entranceId} walkedPath={[store.entranceId, "VEST"]} doneNodeIds={["loc:A1-8"]} />,
+      <StoreMap store={store} route={route} currentNodeId={route.legs[0].nodeId} positionNodeId={store.entranceId} walkedPath={[store.entranceId, "VEST"]} doneNodeIds={[`loc:${catalog[0].locationIds[0]}`]} />,
     );
     expect(container.querySelectorAll("[data-stop]")).toHaveLength(5); // next stop + 4 ahead
     expect(container.querySelector('[data-layer="route"] polyline')).not.toBeNull();

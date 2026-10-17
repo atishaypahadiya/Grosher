@@ -30,6 +30,8 @@ function run(label: string, fixture: Fixture): string[] {
   const { store, catalog } = demoSupercenter;
   const deptLocs = departmentLocations(store);
   // the fixture's clock is frozen: its memory rows were confirmed at t = 1, so "now" is t = 2 and no decay applies
+  // these two fixtures exercise the item, memory and llm layers as first tuned: no categories in the context,
+  // and their llm mocks name a department, which the llm layer's department fallback places
   const ctx = { catalog, departments: store.departments, departmentLocations: deptLocs, memory: fixture.memory, llm: new Map(Object.entries(fixture.llm)), now: 2 };
   const results = resolveList(fixture.cases.map((c) => c.q), ctx);
   const layers: ResolveSource[] = ["exact", "fuzzy", "memory", "llm", "unknown"];

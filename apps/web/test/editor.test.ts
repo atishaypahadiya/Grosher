@@ -25,7 +25,7 @@ describe("editor model", () => {
     expect(validateDraft(base).filter((i) => i.level === "error")).toEqual([]);
     const s = stats(base);
     expect(s.nodes).toBe(base.store.nodes.length);
-    expect(s.textures).toBe(9);
+    expect(s.textures).toBe(13);
     expect(s.unreachable).toBe(0);
   });
 
@@ -60,11 +60,11 @@ describe("editor model", () => {
     expect(d.store.fixtures!.at(-1)).toMatchObject({ kind: "shelf", department: "bakery", aisle: "B1", height: 1.2 });
     // a point in aisle A3's corridor, mid-way
     const hit = nearestEdge(d.store, { x: 18.2, y: 30 }, 1.5)!;
-    expect(hit.edge.from).toBe("A3T");
+    expect(hit.edge.from).toBe("A28T"); // x = 18 is A28: A1 is at the right, by produce
     const l = addLocation(d, hit.edge.id, hit.offsetM);
     d = l.draft;
     const loc = d.store.locations.find((x) => x.id === l.id)!;
-    expect(loc.aisle).toBe("A3"); // from the nearest labelled fixture
+    expect(loc.aisle).toBe("A28"); // from the nearest labelled fixture
     expect(loc.offsetM).toBeCloseTo(18, 0);
     d = updateLocation(d, l.id, { side: "R", bay: "012", modular: "3", zone: "GR", tags: ["heavy"] });
     d = addItemAt(d, l.id, "Dog food 20 lb");
@@ -75,10 +75,11 @@ describe("editor model", () => {
   });
 
   test("picking prefers nodes, then locations, then edges, then fixtures", () => {
-    expect(pick(base.store, { x: 10, y: 12 }, 0.6)).toEqual({ kind: "node", id: "A1T" });
-    expect(pick(base.store, { x: 10, y: 20.2 }, 0.6)).toEqual({ kind: "location", id: "A1-8" });
-    expect(pick(base.store, { x: 10.1, y: 26 }, 0.6)?.kind).toBe("edge");
-    expect(pick(base.store, { x: 12, y: 30 }, 0.6)).toEqual({ kind: "fixture", id: "f-A1-A2" });
+    expect(pick(base.store, { x: 10, y: 12 }, 0.6)).toEqual({ kind: "node", id: "A30T" });
+    const a30 = base.store.locations.filter((l) => l.aisle === "A30" && l.side === "L")[1]; // the middle category on the left of A30
+    expect(pick(base.store, { x: 10, y: 12 + a30.offsetM }, 0.6)).toEqual({ kind: "location", id: a30.id });
+    expect(pick(base.store, { x: 10.1, y: 12 + a30.offsetM + 2.5 }, 0.6)?.kind).toBe("edge");
+    expect(pick(base.store, { x: 12, y: 30 }, 0.6)).toEqual({ kind: "fixture", id: "f-A30-A29" });
     expect(pick(base.store, { x: 100, y: 100 }, 0.6)).toBeNull();
   });
 
@@ -98,11 +99,11 @@ import { offsetForBay, slotFor } from "@grosher/stores";
 describe("bay + shelf picker", () => {
   test("choosing a bay moves the location along its corridor; the slot rect follows", () => {
     let d = cloneDraft(base);
-    const loc = d.store.locations.find((l) => l.id === "A3-20")!;
+    const loc = d.store.locations.find((l) => l.id === "A3-L16")!;
     const before = slotFor(d.store, loc)!;
     const off = offsetForBay(d.store, loc, 3)!;
     d = updateLocation(d, loc.id, { offsetM: off, shelf: 4 });
-    const after = slotFor(d.store, d.store.locations.find((l) => l.id === "A3-20")!)!;
+    const after = slotFor(d.store, d.store.locations.find((l) => l.id === "A3-L16")!)!;
     expect(after.bay).toBe(3);
     expect(after.shelf).toBe(4);
     expect(after.rect.y).not.toBe(before.rect.y);

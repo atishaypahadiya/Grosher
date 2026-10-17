@@ -95,7 +95,7 @@ export function Fixtures({ store, textureUrl, repeatMeters = 2, nodes, fromEntra
       const key = b.f.department ?? "_none";
       byDept.set(key, [...(byDept.get(key) ?? []), b]);
     }
-    const out: { key: string; opaque: Mesh | null; glass: Mesh | null; frame: Mesh | null; glow: Mesh | null; edges: LineSegments | null }[] = [];
+    const out: { key: string; opaque: Mesh | null; glass: Mesh | null; frame: Mesh | null; glow: Mesh | null }[] = [];
     for (const [key, list] of byDept) {
       const dept = departments.find((d) => d.id === key);
       const parts = emptyParts();
@@ -109,19 +109,24 @@ export function Fixtures({ store, textureUrl, repeatMeters = 2, nodes, fromEntra
       const glass = merge(parts.glass);
       const frame = merge(parts.frame);
       const glow = merge(parts.glow);
-      const hulls = merge(list.map((b) => hullGeometry(b.hull)));
       out.push({
         key,
         opaque: opaque ? new Mesh(opaque, materialFor(dept)) : null,
         glass: glass ? new Mesh(glass, GLASS) : null,
         frame: frame ? new Mesh(frame, FRAME) : null,
         glow: glow ? new Mesh(glow, GLOW) : null,
-        edges: hulls ? new LineSegments(new EdgesGeometry(hulls), EDGE_WHITE) : null,
       });
     }
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [built, departments, textureFor]);
+
+  // Every hull outline in one line batch: one draw call for the whole store instead of one per department
+  // (thirteen departments would otherwise spend thirteen of the seventy-call budget on outlines).
+  const edges = useMemo(() => {
+    const hulls = merge(built.map((b) => hullGeometry(b.hull)));
+    return hulls ? new LineSegments(new EdgesGeometry(hulls), EDGE_WHITE) : null;
+  }, [built]);
 
   // Aisle signs: one plane per labelled fixture on its entrance-facing end, one atlas texture.
   const signs = useMemo(() => {
@@ -155,9 +160,9 @@ export function Fixtures({ store, textureUrl, repeatMeters = 2, nodes, fromEntra
           {g.glow && <primitive object={g.glow} />}
           {g.frame && <primitive object={g.frame} />}
           {g.glass && <primitive object={g.glass} />}
-          {g.edges && <primitive object={g.edges} />}
         </group>
       ))}
+      {edges && <primitive object={edges} />}
       {signs && <primitive object={signs} />}
     </group>
   );

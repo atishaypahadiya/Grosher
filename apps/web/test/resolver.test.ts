@@ -4,8 +4,12 @@ import { ollamaProvider, OLLAMA_DEFAULT_MODEL, OLLAMA_MODEL, PROVIDER, providerF
 // a developer's .env.local may override the model and the URL; the tests respect it
 const MODEL = (import.meta.env as Record<string, string | undefined>).VITE_OLLAMA_MODEL ?? OLLAMA_DEFAULT_MODEL;
 
-const depts = ["dairy", "dry", "household"];
-const answer = { results: [{ name: "oat milk", dept: "dairy", sub: "plant milk", conf: 0.9 }, { name: "ghee", dept: null, sub: "", conf: 0.2 }] };
+const depts = [
+  { id: "milk-alternatives", name: "Milk alternatives" },
+  { id: "ghee-oils-indian", name: "Ghee & Indian cooking oils" },
+  { id: "dish-soap", name: "Dish soap" },
+];
+const answer = { results: [{ name: "oat milk", cat: "milk-alternatives", sub: "plant milk", conf: 0.9, tags: ["chilled"] }, { name: "ghee", cat: null, sub: "", conf: 0.2, tags: [] }] };
 
 describe("llm providers", () => {
   test("default provider is ollama; the default model is qwen3:8b unless .env overrides it", () => {
@@ -28,12 +32,15 @@ describe("llm providers", () => {
     expect(sent!.body.keep_alive).toBe("24h");
     expect((sent!.body.options as { num_predict: number }).num_predict).toBe(32 + 45 * 2);
     const schema = sent!.body.format as { properties: { results: { items: { required: string[] } } } };
-    expect(schema.properties.results.items.required).toEqual(["name", "dept", "sub", "conf", "tags"]);
-    expect(rows[0]).toMatchObject({ item: "oat milk", department: "dairy", subcategory: "plant milk", tags: ["chilled"] });
+    expect(schema.properties.results.items.required).toEqual(["name", "cat", "sub", "conf", "tags"]);
+    const system = (sent!.body.messages as { role: string; content: string }[])[0];
+    expect(system.role).toBe("system");
+    expect(system.content).toMatch(/milk-alternatives: Milk alternatives/); // the category list rides in the constant prefix
+    expect(rows[0]).toMatchObject({ item: "oat milk", category: "milk-alternatives", subcategory: "plant milk", tags: ["chilled"] });
     expect(rows[0].confidence).toBeCloseTo(0.68, 5);
-    expect(rows[1]).toMatchObject({ item: "ghee", department: null, confidence: 0 });
+    expect(rows[1]).toMatchObject({ item: "ghee", category: null, confidence: 0 });
     const map = toGuessMap(rows);
-    expect(map.get("oat milk")?.department).toBe("dairy");
+    expect(map.get("oat milk")?.category).toBe("milk-alternatives");
     expect(map.get("ghee")).toBeNull();
   });
 
@@ -45,6 +52,9 @@ describe("llm providers", () => {
     }) as typeof fetch;
     await ollamaProvider(fake).warmUp!();
     expect(sent).toMatchObject({ model: MODEL, messages: [], keep_alive: "24h" });
+    await ollamaProvider(fake).warmUp!(depts); // with categories: a one-token call that leaves the system prompt in the cache
+    expect((sent as { options?: { num_predict?: number } } | null)?.options?.num_predict).toBe(1);
+    expect(((sent as { messages?: { content: string }[] } | null)?.messages?.[0]?.content ?? "")).toMatch(/dish-soap: Dish soap/);
     const down = (async () => {
       throw new TypeError("Failed to fetch");
     }) as typeof fetch;
@@ -90,12 +100,12 @@ describe("llm providers", () => {
     let url = "";
     const fake = (async (u: RequestInfo | URL) => {
       url = String(u);
-      return new Response(JSON.stringify({ results: [{ item: "oat milk", department: "dairy", subcategory: "plant milk", tags: ["chilled"], confidence: 0.66 }] }), { status: 200 });
+      return new Response(JSON.stringify({ results: [{ item: "oat milk", category: "milk-alternatives", subcategory: "plant milk", tags: ["chilled"], confidence: 0.66 }] }), { status: 200 });
     }) as typeof fetch;
     const rows = await workerProvider(fake, "https://w.example/").classify(["oat milk"], depts);
     expect(url).toBe("https://w.example/resolve");
-    expect(rows[0]).toMatchObject({ department: "dairy", confidence: 0.66 });
-    const degraded = (async () => new Response(JSON.stringify({ results: [{ item: "oat milk", department: null, confidence: 0 }], degraded: true }), { status: 200 })) as typeof fetch;
+    expect(rows[0]).toMatchObject({ category: "milk-alternatives", confidence: 0.66 });
+    const degraded = (async () => new Response(JSON.stringify({ results: [{ item: "oat milk", category: null, confidence: 0 }], degraded: true }), { status: 200 })) as typeof fetch;
     await expect(workerProvider(degraded).classify(["oat milk"], depts)).rejects.toThrow(/degraded/);
   });
 

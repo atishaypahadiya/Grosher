@@ -35,12 +35,14 @@ if (typeof HTMLCanvasElement !== "undefined") HTMLCanvasElement.prototype.getCon
 
 // The resolver worker, mocked: a tiny classifier for the llm layer so tests
 // never touch the network. Anything else fetched fails fast.
-const MOCK_DEPTS: Record<string, { department: string; subcategory: string; tags?: string[] }> = {
-  "oat milk": { department: "dairy", subcategory: "plant milk", tags: ["chilled"] },
-  "almond milk": { department: "dairy", subcategory: "plant milk", tags: ["chilled"] },
-  "dish soap": { department: "household", subcategory: "dish soap" },
-  sriracha: { department: "dry", subcategory: "hot sauce" },
-  "frozen waffles": { department: "frozen", subcategory: "breakfast", tags: ["frozen"] },
+const MOCK_DEPTS: Record<string, { category: string; subcategory: string; tags?: string[] }> = {
+  "oat milk": { category: "milk-alternatives", subcategory: "plant milk", tags: ["chilled"] },
+  "almond milk": { category: "milk-alternatives", subcategory: "plant milk", tags: ["chilled"] },
+  "ripple milk": { category: "milk-alternatives", subcategory: "plant milk", tags: ["chilled"] },
+  "dish soap": { category: "dish-soap", subcategory: "dish soap" },
+  sriracha: { category: "hot-sauce", subcategory: "hot sauce" },
+  "frozen waffles": { category: "frozen-breakfast", subcategory: "breakfast", tags: ["frozen"] },
+  "thai basil chicken kit": { category: "asian-sauces", subcategory: "meal kit" },
 };
 globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
   const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
@@ -49,7 +51,7 @@ globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     const body = JSON.parse(String(init?.body ?? "{}")) as { items: string[] };
     const results = body.items.map((item) => {
       const g = MOCK_DEPTS[item.trim().toLowerCase()];
-      return g ? { item, department: g.department, subcategory: g.subcategory, canonicalName: item.replace(/\b\w/g, (c) => c.toUpperCase()), tags: g.tags ?? [], confidence: 0.66 } : { item, department: null, confidence: 0 };
+      return g ? { item, category: g.category, subcategory: g.subcategory, canonicalName: item.replace(/\b\w/g, (c) => c.toUpperCase()), tags: g.tags ?? [], confidence: 0.66 } : { item, category: null, confidence: 0 };
     });
     return new Response(JSON.stringify({ results }), { status: 200, headers: { "content-type": "application/json" } });
   }
@@ -65,7 +67,7 @@ globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     const items = [...user.matchAll(/^- (.+)$/gm)].map((m) => m[1]);
     const results = items.map((name) => {
       const g = MOCK_DEPTS[name.trim().toLowerCase()];
-      return g ? { name, dept: g.department, sub: g.subcategory, conf: 0.8 } : { name, dept: null, sub: "", conf: 0 };
+      return g ? { name, cat: g.category, sub: g.subcategory, conf: 0.8, tags: g.tags ?? [] } : { name, cat: null, sub: "", conf: 0, tags: [] };
     });
     return new Response(JSON.stringify({ message: { role: "assistant", content: JSON.stringify({ results }) }, eval_count: 40 * items.length, eval_duration: 1e9 }), { status: 200, headers: { "content-type": "application/json" } });
   }

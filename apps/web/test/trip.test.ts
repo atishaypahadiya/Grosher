@@ -73,9 +73,9 @@ describe("trip timing and coverage", () => {
     expect(t.doneAt).toBeGreaterThanOrEqual(t.startedAt);
     expect(t.visited.length).toBeGreaterThan(5);
     const { never, total } = aislesNeverEntered(store, t);
-    expect(total).toBe(12);
+    expect(total).toBe(30);
     expect(never.length).toBeLessThan(total);
-    expect(never).not.toContain("A1"); // rice lives in A1
+    expect(never).not.toContain("A7"); // rice lives in A7 (Asian · Indian)
     const snap = fromSnapshot(router, catalog, JSON.parse(JSON.stringify(toSnapshot(t))))!;
     expect(snap.startedAt).toBe(t.startedAt);
     expect(snap.visited).toEqual(t.visited);

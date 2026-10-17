@@ -24,9 +24,10 @@ export interface FixtureParams {
 }
 
 export function fixtureKindOf(f: Fixture, departments: Department[] | undefined): FixtureKind {
+  // a counter is a counter whatever department staffs it (the pharmacy counter, a deli counter)
+  if (f.kind === "counter" || f.kind === "selfcheckout" || f.kind === "service") return "counter";
   const dept = departments?.find((x) => x.id === f.department);
   if (dept?.fixtureKind) return dept.fixtureKind;
-  if (f.kind === "counter" || f.kind === "selfcheckout") return "counter";
   return "gondola";
 }
 

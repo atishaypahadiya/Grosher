@@ -42,7 +42,9 @@ const steady = async (frames) => {
 
 const rows = [];
 try {
-  await page.goto(`${BASE}/?perf=1`, { waitUntil: "networkidle" });
+  // "load", not "networkidle": the list screen's warm-up call to a local model can hold a connection for seconds
+  await page.goto(`${BASE}/?perf=1`, { waitUntil: "load" });
+  await page.getByLabel(/add items/i).waitFor({ timeout: 30_000 });
   const webgl = await page.evaluate(() => {
     const c = document.createElement("canvas");
     const gl = c.getContext("webgl2") || c.getContext("webgl");

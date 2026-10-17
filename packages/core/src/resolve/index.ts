@@ -12,14 +12,14 @@
 // tried; the llm layer is last, so its guess stands even when weak. Pure: no
 // I/O, no async. The app owns fetching and caching.
 
-import type { Department, ItemTag, Stop } from "../types.ts";
+import type { Category, Department, ItemTag, Stop } from "../types.ts";
 import { forms, normalize, similarity, singularize } from "./text.ts";
 import { confirmed, decayed, missed } from "../confidence.ts";
 
 export { normalize, stripQuantity, singularize, similarity, forms } from "./text.ts";
 export * from "./llmPrompt.ts";
 
-export type ResolveSource = "exact" | "fuzzy" | "memory" | "llm" | "unknown";
+export type ResolveSource = "exact" | "fuzzy" | "memory" | "category" | "llm" | "unknown";
 
 export interface ResolveResult {
   query: string;
@@ -102,17 +102,20 @@ export function suggestFromMemory(query: string, memory: ItemMemory[] | undefine
 
 /** What the LLM layer knows: one guess per normalised query, or null when it could not place it. */
 export interface LlmGuess {
-  department: string;
+  /** the shelf category the model chose (Category.id) */
+  category: string;
   subcategory?: string;
   tags?: ItemTag[];
-  confidence: number; // 0.5..0.7
+  confidence: number; // 0.5..0.7 on the wire
   canonicalName?: string;
 }
 
 export interface ResolveContext {
   catalog: Stop[];
   departments?: Department[];
-  /** department id → location ids (the app derives it from fixtures) */
+  /** the store's shelf categories: the category layer matches their names and aliases, the llm layer picks among them */
+  categories?: Category[];
+  /** department id → location ids (the app derives it from fixtures); only a fallback when a guess names no category */
   departmentLocations?: Record<string, string[]>;
   memory?: ItemMemory[];
   /** normalised query → guess (null = asked and not placeable) */
@@ -233,19 +236,50 @@ export function memoryLayer(query: string, memory: ItemMemory[] | undefined, now
   });
 }
 
+/** Categories as match candidates: the name, the id's words and the aliases, like a catalog entry. */
+export function categoryCandidates(categories: Category[] | undefined): Candidate[] {
+  if (!categories?.length) return [];
+  return candidates(
+    categories.map((c) => ({ id: c.id, name: c.name, locationIds: [c.locationId], aliases: c.aliases, tags: c.tags, department: c.department, subcategory: c.name })),
+  );
+}
+
+/** likely band: an exact category name or alias is .79, a near-identical spelling scales from .6 */
+export const CATEGORY_EXACT = 0.79;
+/**
+ * Category names and aliases are short and many ("birthday cake", "bath tissue"): the item threshold
+ * would turn "birthday card" into cakes. A category matches exactly, by token containment, or at a
+ * near-identical spelling only.
+ */
+export const CATEGORY_FUZZY = 0.9;
+
+/**
+ * The category layer: the query names a shelf category rather than a product
+ * ("cereal", "tp", "atta"). Its one slot, at likely confidence: the aisle is
+ * right, the exact product is not known.
+ */
+export function categoryLayer(query: string, cands: Candidate[], now = Date.now()): ResolveResult | null {
+  if (!cands.length) return null;
+  const hit = exactLayer(query, cands, now) ?? fuzzyLayer(query, cands, CATEGORY_FUZZY, now);
+  if (!hit) return null;
+  const confidence = hit.source === "exact" ? CATEGORY_EXACT : 0.6 + ((hit.confidence - 0.6) / 0.35) * (CATEGORY_EXACT - 0.6);
+  return { ...hit, source: "category", confidence: Math.min(CATEGORY_EXACT, Math.max(0.6, confidence)), stopId: undefined, subcategory: hit.canonicalName, canonicalName: titleCase(query) };
+}
+
 export function llmLayer(query: string, ctx: ResolveContext): ResolveResult | null {
   const guess = ctx.llm?.get(normalize(query));
   if (!guess) return null;
-  const locs = (ctx.departmentLocations?.[guess.department] ?? []).slice(0, MAX_LLM_LOCATIONS);
+  const cat = ctx.categories?.find((c) => c.id === guess.category);
+  const locs = cat ? [cat.locationId] : (ctx.departmentLocations?.[guess.category] ?? []).slice(0, MAX_LLM_LOCATIONS);
   if (!locs.length) return null;
   return result(query, {
     locationIds: locs,
     confidence: llmConfidence(guess.confidence),
     source: "llm",
     canonicalName: guess.canonicalName ?? titleCase(query),
-    tags: guess.tags ?? [],
-    department: guess.department,
-    subcategory: guess.subcategory,
+    tags: guess.tags?.length ? guess.tags : (cat?.tags ?? []),
+    department: cat?.department ?? guess.category,
+    subcategory: guess.subcategory ?? cat?.name,
   });
 }
 
@@ -256,13 +290,14 @@ export const llmConfidence = (wire: number) => Math.round((0.3 + (Math.max(0.5, 
 
 // ---------------------------------------------------------------- pipeline
 
-export function resolveItem(query: string, ctx: ResolveContext, cands = candidates(ctx.catalog)): ResolveResult {
+export function resolveItem(query: string, ctx: ResolveContext, cands = candidates(ctx.catalog), catCands = categoryCandidates(ctx.categories)): ResolveResult {
   const threshold = ctx.fuzzyThreshold ?? 0.72;
   const now = ctx.now ?? Date.now();
   const layers: (() => ResolveResult | null)[] = [
     () => exactLayer(query, cands, now),
     () => fuzzyLayer(query, cands, threshold, now),
     () => memoryLayer(query, ctx.memory, now),
+    () => categoryLayer(query, catCands, now),
     () => llmLayer(query, ctx),
   ];
   let weak: ResolveResult | null = null;
@@ -288,7 +323,8 @@ export function resolveItem(query: string, ctx: ResolveContext, cands = candidat
 
 export function resolveList(queries: string[], ctx: ResolveContext): ResolveResult[] {
   const cands = candidates(ctx.catalog);
-  return queries.map((q) => resolveItem(q, ctx, cands));
+  const catCands = categoryCandidates(ctx.categories);
+  return queries.map((q) => resolveItem(q, ctx, cands, catCands));
 }
 
 /** A resolved item as a routable stop. Unknowns have no locations and are not routable. */

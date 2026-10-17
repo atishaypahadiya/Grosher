@@ -4,7 +4,7 @@
 // front of Ollama). Same prompt, schema and parser as the web client's
 // direct provider, so the rows are identical whichever path answered.
 
-import { LLM_SYSTEM, llmMaxTokens, llmResultSchema, llmUserMessage, parseLlmResults } from "@grosher/core";
+import { llmMaxTokens, llmResultSchema, llmSystemPrompt, llmUserMessage, parseLlmResults } from "@grosher/core";
 import type { ClassifyRequest, Guess } from "./classify.ts";
 
 export const OLLAMA_DEFAULT_MODEL = "qwen3:8b";
@@ -21,7 +21,8 @@ export interface OllamaUpstream {
 export async function classifyOllama(up: OllamaUpstream, req: ClassifyRequest, fetchImpl: typeof fetch = fetch): Promise<Guess[]> {
   const items = [...new Set(req.items.map((s) => s.trim()).filter(Boolean))];
   if (!items.length) return [];
-  const departments = req.departments.filter(Boolean);
+  const categories = req.categories.filter((c) => c && c.id);
+  const ids = categories.map((c) => c.id);
   const res = await fetchImpl(`${up.url.replace(/\/$/, "")}/api/chat`, {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${up.token}` },
@@ -31,11 +32,11 @@ export async function classifyOllama(up: OllamaUpstream, req: ClassifyRequest, f
       stream: false,
       think: false,
       keep_alive: OLLAMA_KEEP_ALIVE,
-      format: llmResultSchema(departments),
+      format: llmResultSchema(ids),
       options: { temperature: 0, num_predict: llmMaxTokens(items.length) },
       messages: [
-        { role: "system", content: LLM_SYSTEM },
-        { role: "user", content: llmUserMessage(items, departments) },
+        { role: "system", content: llmSystemPrompt(categories) },
+        { role: "user", content: llmUserMessage(items) },
       ],
     }),
   });
@@ -49,5 +50,5 @@ export async function classifyOllama(up: OllamaUpstream, req: ClassifyRequest, f
   } catch {
     throw new Error("ollama upstream: response is not JSON");
   }
-  return parseLlmResults(raw, items, departments);
+  return parseLlmResults(raw, items, ids);
 }

@@ -352,11 +352,9 @@ function evaluateOrder(p: Prepared, order: number[]): { cost: number; choice: nu
   return { cost: best + pen, choice };
 }
 
-function heuristic(p: Prepared): { order: number[]; choice: number[] } {
-  if (p.n > 31) throw new Error("heuristic currently supports up to 31 stops (bitmask penalties)");
+/** Greedy construction: nearest next stop including its penalty. */
+function greedyOrder(p: Prepared): number[] {
   const { n, cand, d, penalty } = p;
-
-  // Greedy construction: nearest next stop including its penalty.
   const order: number[] = [];
   let mask = 0;
   let cur = 0;
@@ -379,7 +377,41 @@ function heuristic(p: Prepared): { order: number[]; choice: number[] } {
     mask |= 1 << bs;
     cur = bpt;
   }
+  return order;
+}
 
+/** A seeded shuffle, so a restart is reproducible. */
+function shuffled(n: number, seed: number): number[] {
+  const out = Array.from({ length: n }, (_, i) => i);
+  let x = seed | 0;
+  for (let i = n - 1; i > 0; i--) {
+    x = (Math.imul(x, 1103515245) + 12345) | 0;
+    const j = ((x >>> 1) % (i + 1) + i + 1) % (i + 1);
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+/** how many starts the local search runs from: the greedy order, then seeded shuffles; the best result wins */
+export const HEURISTIC_RESTARTS = 4;
+
+function heuristic(p: Prepared): { order: number[]; choice: number[] } {
+  if (p.n > 31) throw new Error("heuristic currently supports up to 31 stops (bitmask penalties)");
+  // Local search finds a local optimum; on a long store a greedy start can sit in a poor one. A few
+  // restarts from shuffled orders cost milliseconds at these sizes and close most of the gap to exact.
+  let best: { order: number[]; cost: number } | null = null;
+  for (let r = 0; r < HEURISTIC_RESTARTS; r++) {
+    const start = r === 0 ? greedyOrder(p) : shuffled(p.n, 7919 * (r + 1));
+    const { order, cost } = localSearch(p, start);
+    if (!best || cost < best.cost - 1e-9) best = { order, cost };
+  }
+  return { order: best!.order, choice: evaluateOrder(p, best!.order).choice };
+}
+
+/** 2-opt + Or-opt from a given order, first improvement, until no move helps. */
+function localSearch(p: Prepared, start: number[]): { order: number[]; cost: number } {
+  const { n } = p;
+  const order = [...start];
   let bestCost = evaluateOrder(p, order).cost;
   let improved = true;
   while (improved) {
@@ -417,7 +449,7 @@ function heuristic(p: Prepared): { order: number[]; choice: number[] } {
       }
     }
   }
-  return { order, choice: evaluateOrder(p, order).choice };
+  return { order, cost: bestCost };
 }
 
 function popcount(x: number): number {

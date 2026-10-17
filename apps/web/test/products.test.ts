@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { Color } from "three";
 import { demoSupercenter } from "@grosher/stores";
+import { fixtureKindOf } from "@grosher/stores";
 import { layoutProducts, LOD_M, MAX_VISIBLE } from "../src/map3d/Products.tsx";
 
 const { store } = demoSupercenter;
@@ -10,7 +11,7 @@ describe("products layout", () => {
   test("every non-counter fixture gets products, deterministic, inside its footprint, above its deck", () => {
     const a = layoutProducts(store, colors);
     const b = layoutProducts(store, colors);
-    expect(a.length).toBe((store.fixtures ?? []).filter((f) => f.department !== "checkout").length);
+    expect(a.length).toBe((store.fixtures ?? []).filter((f) => fixtureKindOf(f, store.departments) !== "counter").length); // counters (lanes, pharmacy, deli) carry no products
     expect(a.map((f) => f.items.length)).toEqual(b.map((f) => f.items.length));
     for (const fx of a) {
       expect(fx.items.length).toBeGreaterThan(10);

@@ -14,7 +14,8 @@
     "test": "node --test test/*.test.ts",
     "typecheck": "tsc --noEmit",
     "gen:demo": "node scripts/gen-demo.ts",
-    "gen:textures": "node scripts/make-placeholder-textures.ts"
+    "gen:textures": "node scripts/make-placeholder-textures.ts",
+    "seed:catalog": "node scripts/seed-catalog.ts"
   },
   "dependencies": {
     "@grosher/core": "*"

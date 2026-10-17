@@ -36,7 +36,7 @@ describe("list screen", () => {
 
   test("an unknown item the resolver can place becomes an amber guess with its department", async () => {
     render(<App />);
-    add("oat milk");
+    add("ripple milk");
     expect(await find(/probably/i, )).toBeTruthy();
     const row = within(screen.getByRole("list")).getAllByRole("listitem")[0];
     await waitFor(() => expect(row.getAttribute("data-source")).toBe("llm"));
@@ -64,7 +64,7 @@ describe("list screen", () => {
 describe("trip mode", () => {
   test("list in, route, check off, reroute, checkout card, share and usual trip", async () => {
     render(<App />);
-    add("bread, milk, bananas, ice cream, ghee");
+    add("bread, milk, bananas, ice cream, unicorn");
     fireEvent.click(await findButton(/route 4 items/i));
 
     expect(screen.getByText(/next · 1 of 4/i)).toBeTruthy();
@@ -96,7 +96,7 @@ describe("trip mode", () => {
     expect(within(card).getByText(/vs list in order/i)).toBeTruthy();
     expect(within(card).getByText(/aisles? never entered/i)).toBeTruthy();
     expect(screen.getAllByTestId("improve-row")).toHaveLength(2);
-    expect(screen.getByText(/where did you find the ghee/i)).toBeTruthy();
+    expect(screen.getByText(/where did you find the unicorn/i)).toBeTruthy();
     // Pick aisle opens the picker
     fireEvent.click(screen.getAllByRole("button", { name: /pick aisle/i })[0]);
     const dialog = screen.getByRole("dialog", { name: /where is/i });
@@ -149,7 +149,7 @@ describe("editor", () => {
   test("#/edit opens the editor with stats, tools, layers and the inspector", () => {
     location.hash = "#/edit";
     render(<App />);
-    expect(screen.getByText(/nodes · .* edges · .* locations · 9 textures · 0 unreachable/i)).toBeTruthy();
+    expect(screen.getByText(/nodes · .* edges · .* locations · 13 textures · 0 unreachable/i)).toBeTruthy();
     expect(screen.getByRole("button", { name: /shelf location/i })).toBeTruthy();
     expect(screen.getByRole("button", { name: /preview in 3d/i })).toBeTruthy();
     expect(screen.getByRole("group", { name: /layers/i }).querySelectorAll("button")).toHaveLength(7);
@@ -259,10 +259,10 @@ describe("settings", () => {
 
 describe("confidence bands", () => {
   test("the list shows all three bands; the trip sheet flags a guess; a missed guess is asked about at checkout", async () => {
-    // ghee: a memory row at .65 → likely; milk: catalog → confirmed; oat milk: llm → guess
-    await saveLearning("demo-supercenter", { pending: [], llm: [], memory: [{ name: "ghee", locationId: "A1-20", confidence: 0.65, confirms: 1, lastConfirmed: Date.now() }] });
+    // ghee: a memory row at .65 → likely; milk: catalog → confirmed; ripple milk: llm → guess
+    await saveLearning("demo-supercenter", { pending: [], llm: [], memory: [{ name: "ghee", locationId: "A7-L11", confidence: 0.65, confirms: 1, lastConfirmed: Date.now() }] });
     render(<App />);
-    add("milk, ghee, oat milk");
+    add("milk, ghee, ripple milk");
     const list = screen.getByRole("list");
     await waitFor(() => expect(within(list).getAllByRole("listitem").map((li) => li.getAttribute("data-band"))).toEqual(["confirmed", "likely", "guess"]), { timeout: 3000 });
     const rows = within(list).getAllByRole("listitem");
@@ -276,7 +276,7 @@ describe("confidence bands", () => {
     expect(screen.getByTestId("trip-guess").textContent).toMatch(/probably here · tell me if not/i);
     fireEvent.click(screen.getByRole("button", { name: /not here/i }));
     while (!screen.queryByText(/trip done/i)) fireEvent.click(screen.getByRole("button", { name: /got it/i }));
-    const ask = screen.getAllByTestId("improve-row").find((r) => /oat milk/i.test(r.textContent ?? ""))!;
+    const ask = screen.getAllByTestId("improve-row").find((r) => /ripple milk/i.test(r.textContent ?? ""))!;
     expect(within(ask).getByText(/a guess that was wrong/i)).toBeTruthy();
   });
 });
@@ -332,7 +332,7 @@ describe("reset banner", () => {
 describe("picker on the guess", () => {
   test("Tell me where opens on the map's guess; It's here confirms in one tap; an unknown has no guess", async () => {
     render(<App />);
-    add("oat milk, unicorn");
+    add("ripple milk, unicorn");
     const list = screen.getByRole("list");
     await waitFor(() => expect(within(list).getAllByRole("listitem")[0].getAttribute("data-band")).toBe("guess"), { timeout: 3000 });
     const rows = within(list).getAllByRole("listitem");
@@ -343,7 +343,7 @@ describe("picker on the guess", () => {
     expect(within(unknownDialog).getByText(/nothing picked yet/i)).toBeTruthy();
     fireEvent.click(within(unknownDialog).getByRole("button", { name: /^close$/i }));
     // the guess row through the checkout's Pick aisle path is the same picker; open it directly via the row's chip menu
-    fireEvent.click(within(rows[0]).getByRole("button", { name: /oat milk/i }));
+    fireEvent.click(within(rows[0]).getByRole("button", { name: /ripple milk/i }));
     const guessLoc = (await import("../src/lib/learning.ts")).loadLearning;
     void guessLoc;
     // the picker for a placed item is reached from the trip's checkout ("Pick aisle"); exercise the component contract here
@@ -351,18 +351,18 @@ describe("picker on the guess", () => {
     const { demoSupercenter } = await import("@grosher/stores");
     let confirmedAt: string | null = null;
     let picked: string | null = null;
-    const { unmount } = render(<PickerSheet store={demoSupercenter.store} itemName="Oat milk" guessLocationId="DAIRY-8" onConfirm={(id) => (confirmedAt = id)} onPick={(id) => (picked = id)} onClose={() => {}} />);
-    const dialog = screen.getByRole("dialog", { name: /where is oat milk/i });
+    const { unmount } = render(<PickerSheet store={demoSupercenter.store} itemName="Ripple milk" guessLocationId="DAIRY-L5" onConfirm={(id) => (confirmedAt = id)} onPick={(id) => (picked = id)} onClose={() => {}} />);
+    const dialog = screen.getByRole("dialog", { name: /where is ripple milk/i });
     expect(within(dialog).getByText(/map's guess · /i)).toBeTruthy();
     fireEvent.click(within(dialog).getByTestId("its-here"));
-    expect(confirmedAt).toBe("DAIRY-8");
+    expect(confirmedAt).toBe("DAIRY-L5");
     expect(picked).toBeNull();
     unmount();
   });
 
   test("Pick aisle at checkout opens on the guess and It's here confirms the memory", async () => {
     render(<App />);
-    add("oat milk, milk");
+    add("ripple milk, milk");
     await waitFor(() => expect(within(screen.getByRole("list")).getAllByRole("listitem")[0].getAttribute("data-band")).toBe("guess"), { timeout: 3000 });
     fireEvent.click(await findButton(/route 2 items/i));
     // skip the guess when it comes up, collect the rest
@@ -371,7 +371,7 @@ describe("picker on the guess", () => {
       else fireEvent.click(screen.getByRole("button", { name: /got it/i }));
     }
     fireEvent.click(screen.getAllByRole("button", { name: /pick aisle/i })[0]);
-    const dialog = screen.getByRole("dialog", { name: /where is oat milk/i });
+    const dialog = screen.getByRole("dialog", { name: /where is ripple milk/i });
     expect(within(dialog).getByTestId("its-here")).toBeTruthy();
     fireEvent.click(within(dialog).getByTestId("its-here"));
     expect(screen.queryByRole("dialog")).toBeNull();

@@ -14,12 +14,16 @@ const catalog: Stop[] = [
 ];
 const ctx = {
   catalog,
-  departmentLocations: { dairy: ["DAIRY-8", "DAIRY-10", "DAIRY-11"], dry: ["A1-8", "A2-8"] },
+  categories: [
+    { id: "milk-alternatives", name: "Milk alternatives", group: "Dairy", aisle: "DAIRY", side: "L" as const, bays: [3, 4] as [number, number], locationId: "DAIRY-L3", department: "dairy", tags: ["chilled" as const], aliases: ["almond milk", "plant milk"] }, // "oat milk" stays an llm case here
+    { id: "cereal", name: "Cereal", group: "Cereal · Breakfast", aisle: "A10", side: "L" as const, bays: [1, 8] as [number, number], locationId: "A10-L1", department: "dry", aliases: ["cheerios", "corn flakes"] },
+    { id: "toilet-paper", name: "Toilet paper", group: "Paper", aisle: "A23", side: "L" as const, bays: [1, 8] as [number, number], locationId: "A23-L1", department: "household", aliases: ["tp", "bath tissue"] },
+  ],
   memory: [{ name: "ghee", locationId: "A1-20", lastConfirmed: 1, confirms: 2, confidence: 0.9 }],
   // the clock is frozen just after the memory was confirmed, so no time decay applies
   now: 10,
   llm: new Map([
-    ["oat milk", { department: "dairy", subcategory: "plant milk", tags: ["chilled" as const], confidence: 0.65 }],
+    ["oat milk", { category: "milk-alternatives", subcategory: "plant milk", tags: ["chilled" as const], confidence: 0.65 }],
     ["birthday card", null],
   ]),
 };
@@ -55,7 +59,7 @@ test("layers: exact, fuzzy, memory, llm, unknown, and fall-through order", () =>
   assert.deepEqual(mem.locationIds, ["A1-20"]);
   const llm = resolveItem("oat milk", ctx);
   assert.equal(llm.source, "llm");
-  assert.deepEqual(llm.locationIds, ["DAIRY-8", "DAIRY-10", "DAIRY-11"]);
+  assert.deepEqual(llm.locationIds, ["DAIRY-L3"]); // the category's one slot
   assert.deepEqual(llm.tags, ["chilled"]);
   assert.equal(llm.subcategory, "plant milk");
   assert.equal(resolveItem("birthday card", ctx).source, "unknown");
@@ -105,9 +109,9 @@ test("decay applies on read: a memory confirmed 150 days ago resolves at .7, a c
 
 import { parseLlmResults } from "../src/resolve/llmPrompt.ts";
 
-test("parseLlmResults: maps by item, drops foreign departments, bands confidence, capitalises names", () => {
+test("parseLlmResults: maps by item, drops unknown categories, bands confidence, capitalises names", () => {
   const rows = parseLlmResults(
-    { results: [{ name: "oat milk", dept: "dairy", sub: "plant milk cartons extra", conf: 0.9, tags: ["chilled", "heavy", "bogus"] }, { name: "ghee", dept: "international", conf: 0.5 }, { name: "x", dept: null }] },
+    { results: [{ name: "oat milk", cat: "dairy", sub: "plant milk cartons extra", conf: 0.9, tags: ["chilled", "heavy", "bogus"] }, { name: "ghee", cat: "international", conf: 0.5 }, { name: "x", cat: null }] },
     ["oat milk", "ghee", "x", "never answered"],
     ["dairy", "dry"],
   );
@@ -115,10 +119,10 @@ test("parseLlmResults: maps by item, drops foreign departments, bands confidence
   assert.equal(rows[0].canonicalName, "Oat milk");
   assert.equal(rows[0].subcategory, "plant milk cartons");
   assert.deepEqual(rows[0].tags, ["chilled", "heavy"]); // the model's valid tags win
-  assert.deepEqual(parseLlmResults({ results: [{ name: "oat milk", dept: "dairy", sub: "", conf: 0.9, tags: [] }] }, ["oat milk"], ["dairy"])[0].tags, ["chilled"]); // none given: the department's
+  assert.deepEqual(parseLlmResults({ results: [{ name: "oat milk", cat: "dairy", sub: "", conf: 0.9, tags: [] }] }, ["oat milk"], ["dairy"])[0].tags, undefined); // none given: the llm layer fills them from the category
   assert.ok(Math.abs(rows[0].confidence - 0.68) < 1e-9);
-  assert.equal(rows[1].department, null);
-  assert.equal(rows[3].department, null);
+  assert.equal(rows[1].category, null);
+  assert.equal(rows[3].category, null);
 });
 
 test("brand memory: typed forms are remembered and offered for shorter or variant queries", () => {

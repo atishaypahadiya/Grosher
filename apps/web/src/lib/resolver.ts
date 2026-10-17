@@ -9,7 +9,7 @@
 // degrades to "unknown" and shows a one-line note. A worker answer flagged
 // `degraded` (its upstream was down) throws too, so nothing is cached.
 
-import { LLM_SYSTEM, llmMaxTokens, llmResultSchema, llmUserMessage, parseLlmResults, type LlmGuess, type LlmWire } from "@grosher/core";
+import { llmMaxTokens, llmResultSchema, llmSystemPrompt, llmUserMessage, parseLlmResults, type LlmCategoryOption, type LlmGuess, type LlmWire } from "@grosher/core";
 import { DEFAULT_SETTINGS, loadSettings, OLLAMA_DEFAULT_MODEL, type ProviderName, type ResolverSettings } from "./settings.ts";
 
 export { OLLAMA_DEFAULT_MODEL, type ProviderName };
@@ -21,12 +21,12 @@ export interface ClassifyOptions {
 
 export interface LlmProvider {
   name: ProviderName;
-  /** one call for the whole list; rejects on any failure */
-  classify(items: string[], departments: string[], opts?: ClassifyOptions): Promise<LlmWire[]>;
+  /** one call for the whole list, choosing among the store's categories; rejects on any failure */
+  classify(items: string[], categories: LlmCategoryOption[], opts?: ClassifyOptions): Promise<LlmWire[]>;
   /** what the list header says when this provider is unreachable */
   offlineNote: string;
-  /** optional: load the model before the first real call; never throws */
-  warmUp?(): Promise<void>;
+  /** optional: load the model (and prime the prompt cache with this store's category list) before the first real call; never throws */
+  warmUp?(categories?: LlmCategoryOption[]): Promise<void>;
   /** optional: is the model resident right now? (unknown → true) */
   isLoaded?(): Promise<boolean>;
 }
@@ -65,13 +65,13 @@ export function ollamaProvider(fetchImpl: typeof fetch = fetch, timeoutMs = OLLA
   return {
     name: "ollama",
     offlineNote: "Local model offline · unknown items need a tap",
-    async warmUp() {
-      // an empty messages array makes Ollama load the model and return at once
-      await fetchImpl(`${OLLAMA_URL}/api/chat`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ model: OLLAMA_MODEL, messages: [], keep_alive: OLLAMA_KEEP_ALIVE }),
-      }).catch(() => undefined);
+    async warmUp(categories) {
+      // an empty messages array makes Ollama load the model and return at once; with the category list,
+      // a one-token call also leaves the system prompt (the constant prefix of every real call) in the KV cache
+      const body = categories?.length
+        ? { model: OLLAMA_MODEL, keep_alive: OLLAMA_KEEP_ALIVE, stream: false, think: false, options: { num_predict: 1 }, messages: [{ role: "system", content: llmSystemPrompt(categories) }, { role: "user", content: llmUserMessage(["milk"]) }] }
+        : { model: OLLAMA_MODEL, messages: [], keep_alive: OLLAMA_KEEP_ALIVE };
+      await fetchImpl(`${OLLAMA_URL}/api/chat`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }).catch(() => undefined);
     },
     async isLoaded() {
       try {
@@ -83,7 +83,7 @@ export function ollamaProvider(fetchImpl: typeof fetch = fetch, timeoutMs = OLLA
         return true;
       }
     },
-    async classify(items, departments, opts = {}) {
+    async classify(items, categories, opts = {}) {
       const ctrl = new AbortController();
       const t0 = performance.now();
       const timer = setTimeout(() => ctrl.abort(), opts.coldStart ? coldTimeoutMs : timeoutMs);
@@ -97,11 +97,11 @@ export function ollamaProvider(fetchImpl: typeof fetch = fetch, timeoutMs = OLLA
             stream: false,
             think: false,
             keep_alive: OLLAMA_KEEP_ALIVE,
-            format: llmResultSchema(departments),
+            format: llmResultSchema(categories.map((c) => c.id)),
             options: { temperature: 0, num_predict: llmMaxTokens(items.length) },
             messages: [
-              { role: "system", content: LLM_SYSTEM },
-              { role: "user", content: llmUserMessage(items, departments) },
+              { role: "system", content: llmSystemPrompt(categories) },
+              { role: "user", content: llmUserMessage(items) },
             ],
           }),
         });
@@ -122,7 +122,7 @@ export function ollamaProvider(fetchImpl: typeof fetch = fetch, timeoutMs = OLLA
             `[resolve] ollama ${OLLAMA_MODEL} · ${items.length} items · wall ${Math.round(performance.now() - t0)} ms · load ${ms(body.load_duration)} ms · prompt ${body.prompt_eval_count ?? 0} tok / ${ms(body.prompt_eval_duration)} ms · gen ${evalTokens} tok / ${ms(body.eval_duration)} ms (${(evalTokens / Math.max(1, items.length)).toFixed(0)} tok/item)${opts.coldStart ? " · cold" : ""}`,
           );
         }
-        return parseLlmResults(raw, items, departments);
+        return parseLlmResults(raw, items, categories.map((c) => c.id));
       } finally {
         clearTimeout(timer);
       }
@@ -135,12 +135,12 @@ export function workerProvider(fetchImpl: typeof fetch = fetch, url: string = RE
   return {
     name: "worker",
     offlineNote: "Resolver offline · unknown items need a tap",
-    async classify(items, departments) {
+    async classify(items, categories) {
       const t0 = performance.now();
       const res = await fetchImpl(`${base}/resolve`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ items, departments }),
+        body: JSON.stringify({ items, categories }),
       });
       if (!res.ok) throw new Error(`resolver ${res.status}`);
       const body = (await res.json()) as { results: LlmWire[]; degraded?: boolean };
@@ -149,7 +149,7 @@ export function workerProvider(fetchImpl: typeof fetch = fetch, url: string = RE
       if (DEV) console.info(`[resolve] worker · ${items.length} items · wall ${Math.round(performance.now() - t0)} ms`);
       // the worker already parsed and banded: keep its rows, every item present
       const byItem = new Map(body.results.map((r) => [r.item.trim().toLowerCase(), r]));
-      return items.map((item) => byItem.get(item.trim().toLowerCase()) ?? { item, department: null, confidence: 0 });
+      return items.map((item) => byItem.get(item.trim().toLowerCase()) ?? { item, category: null, confidence: 0 });
     },
   };
 }
@@ -168,11 +168,11 @@ export function toGuessMap(rows: LlmWire[]): Map<string, LlmGuess | null> {
   const out = new Map<string, LlmGuess | null>();
   for (const g of rows) {
     const key = g.item.trim().toLowerCase().replace(/\s+/g, " ");
-    out.set(key, g.department ? { department: g.department, subcategory: g.subcategory, canonicalName: g.canonicalName, tags: g.tags, confidence: g.confidence } : null);
+    out.set(key, g.category ? { category: g.category, subcategory: g.subcategory, canonicalName: g.canonicalName, tags: g.tags, confidence: g.confidence } : null);
   }
   return out;
 }
 
-export async function fetchGuesses(items: string[], departments: string[], provider: LlmProvider = defaultProvider(), opts?: ClassifyOptions): Promise<Map<string, LlmGuess | null>> {
-  return toGuessMap(await provider.classify(items, departments, opts));
+export async function fetchGuesses(items: string[], categories: LlmCategoryOption[], provider: LlmProvider = defaultProvider(), opts?: ClassifyOptions): Promise<Map<string, LlmGuess | null>> {
+  return toGuessMap(await provider.classify(items, categories, opts));
 }

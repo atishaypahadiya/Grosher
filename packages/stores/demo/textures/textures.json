@@ -61,5 +61,33 @@
     "h": 512,
     "shotAt": null,
     "repeatMeters": 2
+  },
+  "deli": {
+    "file": "deli.jpg",
+    "w": 512,
+    "h": 512,
+    "shotAt": null,
+    "repeatMeters": 2
+  },
+  "pet": {
+    "file": "pet.jpg",
+    "w": 512,
+    "h": 512,
+    "shotAt": null,
+    "repeatMeters": 2
+  },
+  "baby": {
+    "file": "baby.jpg",
+    "w": 512,
+    "h": 512,
+    "shotAt": null,
+    "repeatMeters": 2
+  },
+  "pharmacy": {
+    "file": "pharmacy.jpg",
+    "w": 512,
+    "h": 512,
+    "shotAt": null,
+    "repeatMeters": 2
   }
 }

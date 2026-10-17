@@ -44,8 +44,8 @@ describe("editor confidence view", () => {
       pending: [],
       llm: [],
       memory: [
-        { name: "ghee", locationId: "A1-20", confidence: 0.45, confirms: 0, misses: 2, lastConfirmed: Date.now() },
-        { name: "saffron", locationId: "A2-8", confidence: 0.95, confirms: 5, lastConfirmed: Date.now() - 120 * DAY },
+        { name: "ghee", locationId: "A7-L11", confidence: 0.45, confirms: 0, misses: 2, lastConfirmed: Date.now() },
+        { name: "saffron", locationId: "A5-L1", confidence: 0.95, confirms: 5, lastConfirmed: Date.now() - 120 * DAY },
       ],
     });
     location.hash = "#/edit";
@@ -57,13 +57,13 @@ describe("editor confidence view", () => {
       const dots = () => document.querySelectorAll('[data-layer="locations"] [data-location]');
       await new Promise((r) => setTimeout(r, 50));
       expect(dots().length).toBe(store.locations.length);
-      const ghee = () => document.querySelector('[data-location="A1-20"]')!;
+      const ghee = () => document.querySelector('[data-location="A7-L11"]')!;
       expect(ghee().getAttribute("data-band")).toBe("guess");
       expect(ghee().querySelector("[data-misses]")?.textContent).toBe("2");
-      expect(document.querySelector('[data-location="A2-8"]')!.getAttribute("data-stale")).toBe("1");
-      expect(document.querySelector('[data-location="A2-8"]')!.getAttribute("data-band")).toBe("confirmed"); // decayed .95 → .85, still confirmed, but stale
+      expect(document.querySelector('[data-location="A5-L1"]')!.getAttribute("data-stale")).toBe("1");
+      expect(document.querySelector('[data-location="A5-L1"]')!.getAttribute("data-band")).toBe("confirmed"); // decayed .95 → .85, still confirmed, but stale
       fireEvent.click(screen.getByRole("button", { name: /^stale$/i }));
-      expect([...dots()].map((d) => d.getAttribute("data-location")).sort()).toEqual(["A1-20", "A2-8"]);
+      expect([...dots()].map((d) => d.getAttribute("data-location")).sort()).toEqual(["A5-L1", "A7-L11"]);
       fireEvent.click(screen.getByRole("button", { name: /^validate$/i }));
       const counts = screen.getByTestId("band-counts").textContent!;
       expect(counts).toMatch(new RegExp(`${catalog.length + 2} entries · ${catalog.length + 1} confirmed · 0 likely · 1 guess · 2 stale`));

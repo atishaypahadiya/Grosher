@@ -5,7 +5,8 @@ const TITLES: Record<ResolveSource, string> = {
   exact: "In the catalog",
   fuzzy: "Close match",
   memory: "You found it here before",
-  llm: "A guess from the department",
+  category: "The aisle sign says so",
+  llm: "A guess from the model",
   unknown: "Not placed yet",
 };
 
@@ -19,6 +20,8 @@ export function SourceGlyph({ source }: { source: ResolveSource }) {
       return <svg {...common}>{title}<path d="M2 9c2-3 4-3 6 0s4 3 6 0" /></svg>;
     case "memory":
       return <svg {...common}>{title}<circle cx="8" cy="8" r="5.5" /><path d="M8 5v3l2 1.5" /></svg>;
+    case "category":
+      return <svg {...common}>{title}<rect x="2.5" y="4" width="11" height="6" rx="1" /><path d="M8 10v3.5" /></svg>;
     case "llm":
       return <svg {...common}>{title}<path d="M8 2l1.4 3.6L13 7l-3.6 1.4L8 12l-1.4-3.6L3 7l3.6-1.4z" /></svg>;
     default:

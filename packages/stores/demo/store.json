@@ -1,6 +1,6 @@
 {
   "storeId": "demo-supercenter",
-  "version": 2,
+  "version": 3,
   "name": "Demo Supercenter",
   "address": "Synthetic layout · San José",
   "nodes": [
@@ -13,739 +13,1501 @@
     {
       "id": "FL",
       "x": 4,
-      "y": 52,
+      "y": 44,
       "type": "junction"
     },
     {
       "id": "BR",
-      "x": 60,
+      "x": 132,
       "y": 12,
       "type": "junction"
     },
     {
       "id": "FR",
-      "x": 60,
-      "y": 52,
+      "x": 132,
+      "y": 44,
       "type": "junction"
     },
     {
-      "id": "A1T",
+      "id": "A30T",
       "x": 10,
       "y": 12,
       "type": "aisle_end"
     },
     {
-      "id": "A1B",
+      "id": "A30B",
       "x": 10,
-      "y": 52,
+      "y": 44,
       "type": "aisle_end"
     },
     {
-      "id": "A2T",
+      "id": "A29T",
       "x": 14,
       "y": 12,
       "type": "aisle_end"
     },
     {
-      "id": "A2B",
+      "id": "A29B",
       "x": 14,
-      "y": 52,
+      "y": 44,
       "type": "aisle_end"
     },
     {
-      "id": "A3T",
+      "id": "A28T",
       "x": 18,
       "y": 12,
       "type": "aisle_end"
     },
     {
-      "id": "A3B",
+      "id": "A28B",
       "x": 18,
-      "y": 52,
+      "y": 44,
       "type": "aisle_end"
     },
     {
-      "id": "A4T",
+      "id": "A27T",
       "x": 22,
       "y": 12,
       "type": "aisle_end"
     },
     {
-      "id": "A4B",
+      "id": "A27B",
       "x": 22,
-      "y": 52,
+      "y": 44,
       "type": "aisle_end"
     },
     {
-      "id": "A5T",
+      "id": "A26T",
       "x": 26,
       "y": 12,
       "type": "aisle_end"
     },
     {
-      "id": "A5B",
+      "id": "A26B",
       "x": 26,
-      "y": 52,
+      "y": 44,
       "type": "aisle_end"
     },
     {
-      "id": "A6T",
+      "id": "A25T",
       "x": 30,
       "y": 12,
       "type": "aisle_end"
     },
     {
-      "id": "A6B",
+      "id": "A25B",
       "x": 30,
-      "y": 52,
+      "y": 44,
       "type": "aisle_end"
     },
     {
-      "id": "A7T",
+      "id": "A24T",
       "x": 34,
       "y": 12,
       "type": "aisle_end"
     },
     {
-      "id": "A7B",
+      "id": "A24B",
       "x": 34,
-      "y": 52,
+      "y": 44,
       "type": "aisle_end"
     },
     {
-      "id": "A8T",
+      "id": "A23T",
       "x": 38,
       "y": 12,
       "type": "aisle_end"
     },
     {
-      "id": "A8B",
+      "id": "A23B",
       "x": 38,
-      "y": 52,
+      "y": 44,
       "type": "aisle_end"
     },
     {
-      "id": "A9T",
+      "id": "A22T",
       "x": 42,
       "y": 12,
       "type": "aisle_end"
     },
     {
-      "id": "A9B",
+      "id": "A22B",
       "x": 42,
-      "y": 52,
+      "y": 44,
       "type": "aisle_end"
     },
     {
-      "id": "A10T",
+      "id": "A21T",
       "x": 46,
       "y": 12,
       "type": "aisle_end"
     },
     {
-      "id": "A10B",
+      "id": "A21B",
       "x": 46,
-      "y": 52,
+      "y": 44,
       "type": "aisle_end"
     },
     {
-      "id": "A11T",
+      "id": "A20T",
       "x": 50,
       "y": 12,
       "type": "aisle_end"
     },
     {
-      "id": "A11B",
+      "id": "A20B",
       "x": 50,
-      "y": 52,
+      "y": 44,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A19T",
+      "x": 54,
+      "y": 12,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A19B",
+      "x": 54,
+      "y": 44,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A18T",
+      "x": 58,
+      "y": 12,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A18B",
+      "x": 58,
+      "y": 44,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A17T",
+      "x": 62,
+      "y": 12,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A17B",
+      "x": 62,
+      "y": 44,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A16T",
+      "x": 66,
+      "y": 12,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A16B",
+      "x": 66,
+      "y": 44,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A15T",
+      "x": 70,
+      "y": 12,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A15B",
+      "x": 70,
+      "y": 44,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A14T",
+      "x": 74,
+      "y": 12,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A14B",
+      "x": 74,
+      "y": 44,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A13T",
+      "x": 78,
+      "y": 12,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A13B",
+      "x": 78,
+      "y": 44,
       "type": "aisle_end"
     },
     {
       "id": "A12T",
-      "x": 54,
+      "x": 82,
       "y": 12,
       "type": "aisle_end"
     },
     {
       "id": "A12B",
-      "x": 54,
-      "y": 52,
+      "x": 82,
+      "y": 44,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A11T",
+      "x": 86,
+      "y": 12,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A11B",
+      "x": 86,
+      "y": 44,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A10T",
+      "x": 90,
+      "y": 12,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A10B",
+      "x": 90,
+      "y": 44,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A9T",
+      "x": 94,
+      "y": 12,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A9B",
+      "x": 94,
+      "y": 44,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A8T",
+      "x": 98,
+      "y": 12,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A8B",
+      "x": 98,
+      "y": 44,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A7T",
+      "x": 102,
+      "y": 12,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A7B",
+      "x": 102,
+      "y": 44,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A6T",
+      "x": 106,
+      "y": 12,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A6B",
+      "x": 106,
+      "y": 44,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A5T",
+      "x": 110,
+      "y": 12,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A5B",
+      "x": 110,
+      "y": 44,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A4T",
+      "x": 114,
+      "y": 12,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A4B",
+      "x": 114,
+      "y": 44,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A3T",
+      "x": 118,
+      "y": 12,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A3B",
+      "x": 118,
+      "y": 44,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A2T",
+      "x": 122,
+      "y": 12,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A2B",
+      "x": 122,
+      "y": 44,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A1T",
+      "x": 126,
+      "y": 12,
+      "type": "aisle_end"
+    },
+    {
+      "id": "A1B",
+      "x": 126,
+      "y": 44,
       "type": "aisle_end"
     },
     {
       "id": "FC0",
-      "x": 14,
-      "y": 66,
+      "x": 28,
+      "y": 58,
       "type": "junction"
     },
     {
       "id": "L0a",
-      "x": 16,
-      "y": 52,
+      "x": 34,
+      "y": 44,
       "type": "junction"
     },
     {
       "id": "L0",
-      "x": 16,
-      "y": 60,
+      "x": 34,
+      "y": 51,
       "type": "checkout"
     },
     {
       "id": "L0o",
-      "x": 16,
-      "y": 66,
+      "x": 34,
+      "y": 58,
       "type": "junction"
     },
     {
       "id": "L1a",
-      "x": 21,
-      "y": 52,
+      "x": 42,
+      "y": 44,
       "type": "junction"
     },
     {
       "id": "L1",
-      "x": 21,
-      "y": 60,
+      "x": 42,
+      "y": 51,
       "type": "checkout"
     },
     {
       "id": "L1o",
-      "x": 21,
-      "y": 66,
+      "x": 42,
+      "y": 58,
       "type": "junction"
     },
     {
       "id": "L2a",
-      "x": 26,
-      "y": 52,
+      "x": 50,
+      "y": 44,
       "type": "junction"
     },
     {
       "id": "L2",
-      "x": 26,
-      "y": 60,
+      "x": 50,
+      "y": 51,
       "type": "checkout"
     },
     {
       "id": "L2o",
-      "x": 26,
-      "y": 66,
+      "x": 50,
+      "y": 58,
       "type": "junction"
     },
     {
       "id": "L3a",
-      "x": 31,
-      "y": 52,
+      "x": 58,
+      "y": 44,
       "type": "junction"
     },
     {
       "id": "L3",
-      "x": 31,
-      "y": 60,
+      "x": 58,
+      "y": 51,
       "type": "checkout"
     },
     {
       "id": "L3o",
-      "x": 31,
-      "y": 66,
+      "x": 58,
+      "y": 58,
       "type": "junction"
     },
     {
       "id": "L4a",
-      "x": 36,
-      "y": 52,
+      "x": 66,
+      "y": 44,
       "type": "junction"
     },
     {
       "id": "L4",
-      "x": 36,
-      "y": 60,
+      "x": 66,
+      "y": 51,
       "type": "checkout"
     },
     {
       "id": "L4o",
-      "x": 36,
-      "y": 66,
+      "x": 66,
+      "y": 58,
       "type": "junction"
     },
     {
       "id": "L5a",
-      "x": 41,
-      "y": 52,
+      "x": 74,
+      "y": 44,
       "type": "junction"
     },
     {
       "id": "L5",
-      "x": 41,
-      "y": 60,
+      "x": 74,
+      "y": 51,
       "type": "checkout"
     },
     {
       "id": "L5o",
-      "x": 41,
-      "y": 66,
+      "x": 74,
+      "y": 58,
+      "type": "junction"
+    },
+    {
+      "id": "L6a",
+      "x": 82,
+      "y": 44,
+      "type": "junction"
+    },
+    {
+      "id": "L6",
+      "x": 82,
+      "y": 51,
+      "type": "checkout"
+    },
+    {
+      "id": "L6o",
+      "x": 82,
+      "y": 58,
+      "type": "junction"
+    },
+    {
+      "id": "L7a",
+      "x": 90,
+      "y": 44,
+      "type": "junction"
+    },
+    {
+      "id": "L7",
+      "x": 90,
+      "y": 51,
+      "type": "checkout"
+    },
+    {
+      "id": "L7o",
+      "x": 90,
+      "y": 58,
+      "type": "junction"
+    },
+    {
+      "id": "L8a",
+      "x": 98,
+      "y": 44,
+      "type": "junction"
+    },
+    {
+      "id": "L8",
+      "x": 98,
+      "y": 51,
+      "type": "checkout"
+    },
+    {
+      "id": "L8o",
+      "x": 98,
+      "y": 58,
+      "type": "junction"
+    },
+    {
+      "id": "L9a",
+      "x": 106,
+      "y": 44,
+      "type": "junction"
+    },
+    {
+      "id": "L9",
+      "x": 106,
+      "y": 51,
+      "type": "checkout"
+    },
+    {
+      "id": "L9o",
+      "x": 106,
+      "y": 58,
+      "type": "junction"
+    },
+    {
+      "id": "PHARM",
+      "x": 16,
+      "y": 44,
+      "type": "junction"
+    },
+    {
+      "id": "FCW",
+      "x": 16,
+      "y": 58,
       "type": "junction"
     },
     {
       "id": "EXIT",
-      "x": 58,
-      "y": 70,
+      "x": 130,
+      "y": 62,
       "type": "exit"
     },
     {
       "id": "ENTRANCE",
-      "x": 62,
-      "y": 70,
+      "x": 134,
+      "y": 62,
       "type": "entrance"
     },
     {
       "id": "VEST",
-      "x": 60,
-      "y": 66,
+      "x": 132,
+      "y": 58,
       "type": "junction"
     }
   ],
   "edges": [
     {
       "id": "e0",
-      "from": "A1T",
-      "to": "A1B",
+      "from": "A30T",
+      "to": "A30B",
       "oneWay": false
     },
     {
       "id": "e1",
       "from": "BL",
-      "to": "A1T",
+      "to": "A30T",
       "oneWay": false
     },
     {
       "id": "e2",
       "from": "FL",
-      "to": "A1B",
+      "to": "A30B",
       "oneWay": false
     },
     {
       "id": "e3",
-      "from": "A2T",
-      "to": "A2B",
+      "from": "A29T",
+      "to": "A29B",
       "oneWay": false
     },
     {
       "id": "e4",
-      "from": "A1T",
-      "to": "A2T",
+      "from": "A30T",
+      "to": "A29T",
       "oneWay": false
     },
     {
       "id": "e5",
-      "from": "A1B",
-      "to": "A2B",
+      "from": "A30B",
+      "to": "A29B",
       "oneWay": false
     },
     {
       "id": "e6",
-      "from": "A3T",
-      "to": "A3B",
+      "from": "A28T",
+      "to": "A28B",
       "oneWay": false
     },
     {
       "id": "e7",
-      "from": "A2T",
-      "to": "A3T",
+      "from": "A29T",
+      "to": "A28T",
       "oneWay": false
     },
     {
       "id": "e8",
-      "from": "A2B",
-      "to": "A3B",
+      "from": "A29B",
+      "to": "A28B",
       "oneWay": false
     },
     {
       "id": "e9",
-      "from": "A4T",
-      "to": "A4B",
+      "from": "A27T",
+      "to": "A27B",
       "oneWay": false
     },
     {
       "id": "e10",
-      "from": "A3T",
-      "to": "A4T",
+      "from": "A28T",
+      "to": "A27T",
       "oneWay": false
     },
     {
       "id": "e11",
-      "from": "A3B",
-      "to": "A4B",
+      "from": "A28B",
+      "to": "A27B",
       "oneWay": false
     },
     {
       "id": "e12",
-      "from": "A5T",
-      "to": "A5B",
+      "from": "A26T",
+      "to": "A26B",
       "oneWay": false
     },
     {
       "id": "e13",
-      "from": "A4T",
-      "to": "A5T",
+      "from": "A27T",
+      "to": "A26T",
       "oneWay": false
     },
     {
       "id": "e14",
-      "from": "A4B",
-      "to": "A5B",
+      "from": "A27B",
+      "to": "A26B",
       "oneWay": false
     },
     {
       "id": "e15",
-      "from": "A6T",
-      "to": "A6B",
+      "from": "A25T",
+      "to": "A25B",
       "oneWay": false
     },
     {
       "id": "e16",
-      "from": "A5T",
-      "to": "A6T",
+      "from": "A26T",
+      "to": "A25T",
       "oneWay": false
     },
     {
       "id": "e17",
-      "from": "A5B",
-      "to": "A6B",
+      "from": "A26B",
+      "to": "A25B",
       "oneWay": false
     },
     {
       "id": "e18",
-      "from": "A7T",
-      "to": "A7B",
+      "from": "A24T",
+      "to": "A24B",
       "oneWay": false
     },
     {
       "id": "e19",
-      "from": "A6T",
-      "to": "A7T",
+      "from": "A25T",
+      "to": "A24T",
       "oneWay": false
     },
     {
       "id": "e20",
-      "from": "A6B",
-      "to": "A7B",
+      "from": "A25B",
+      "to": "A24B",
       "oneWay": false
     },
     {
       "id": "e21",
-      "from": "A8T",
-      "to": "A8B",
+      "from": "A23T",
+      "to": "A23B",
       "oneWay": false
     },
     {
       "id": "e22",
-      "from": "A7T",
-      "to": "A8T",
+      "from": "A24T",
+      "to": "A23T",
       "oneWay": false
     },
     {
       "id": "e23",
-      "from": "A7B",
-      "to": "A8B",
+      "from": "A24B",
+      "to": "A23B",
       "oneWay": false
     },
     {
       "id": "e24",
-      "from": "A9T",
-      "to": "A9B",
+      "from": "A22T",
+      "to": "A22B",
       "oneWay": false
     },
     {
       "id": "e25",
-      "from": "A8T",
-      "to": "A9T",
+      "from": "A23T",
+      "to": "A22T",
       "oneWay": false
     },
     {
       "id": "e26",
-      "from": "A8B",
-      "to": "A9B",
+      "from": "A23B",
+      "to": "A22B",
       "oneWay": false
     },
     {
       "id": "e27",
-      "from": "A10T",
-      "to": "A10B",
+      "from": "A21T",
+      "to": "A21B",
       "oneWay": false
     },
     {
       "id": "e28",
-      "from": "A9T",
-      "to": "A10T",
+      "from": "A22T",
+      "to": "A21T",
       "oneWay": false
     },
     {
       "id": "e29",
-      "from": "A9B",
-      "to": "A10B",
+      "from": "A22B",
+      "to": "A21B",
       "oneWay": false
     },
     {
       "id": "e30",
-      "from": "A11T",
-      "to": "A11B",
+      "from": "A20T",
+      "to": "A20B",
       "oneWay": false
     },
     {
       "id": "e31",
-      "from": "A10T",
-      "to": "A11T",
+      "from": "A21T",
+      "to": "A20T",
       "oneWay": false
     },
     {
       "id": "e32",
-      "from": "A10B",
-      "to": "A11B",
+      "from": "A21B",
+      "to": "A20B",
       "oneWay": false
     },
     {
       "id": "e33",
-      "from": "A12T",
-      "to": "A12B",
+      "from": "A19T",
+      "to": "A19B",
       "oneWay": false
     },
     {
       "id": "e34",
-      "from": "A11T",
-      "to": "A12T",
+      "from": "A20T",
+      "to": "A19T",
       "oneWay": false
     },
     {
       "id": "e35",
-      "from": "A11B",
-      "to": "A12B",
+      "from": "A20B",
+      "to": "A19B",
       "oneWay": false
     },
     {
       "id": "e36",
-      "from": "A12T",
-      "to": "BR",
+      "from": "A18T",
+      "to": "A18B",
       "oneWay": false
     },
     {
       "id": "e37",
-      "from": "A12B",
-      "to": "FR",
+      "from": "A19T",
+      "to": "A18T",
       "oneWay": false
     },
     {
       "id": "e38",
+      "from": "A19B",
+      "to": "A18B",
+      "oneWay": false
+    },
+    {
+      "id": "e39",
+      "from": "A17T",
+      "to": "A17B",
+      "oneWay": false
+    },
+    {
+      "id": "e40",
+      "from": "A18T",
+      "to": "A17T",
+      "oneWay": false
+    },
+    {
+      "id": "e41",
+      "from": "A18B",
+      "to": "A17B",
+      "oneWay": false
+    },
+    {
+      "id": "e42",
+      "from": "A16T",
+      "to": "A16B",
+      "oneWay": false
+    },
+    {
+      "id": "e43",
+      "from": "A17T",
+      "to": "A16T",
+      "oneWay": false
+    },
+    {
+      "id": "e44",
+      "from": "A17B",
+      "to": "A16B",
+      "oneWay": false
+    },
+    {
+      "id": "e45",
+      "from": "A15T",
+      "to": "A15B",
+      "oneWay": false
+    },
+    {
+      "id": "e46",
+      "from": "A16T",
+      "to": "A15T",
+      "oneWay": false
+    },
+    {
+      "id": "e47",
+      "from": "A16B",
+      "to": "A15B",
+      "oneWay": false
+    },
+    {
+      "id": "e48",
+      "from": "A14T",
+      "to": "A14B",
+      "oneWay": false
+    },
+    {
+      "id": "e49",
+      "from": "A15T",
+      "to": "A14T",
+      "oneWay": false
+    },
+    {
+      "id": "e50",
+      "from": "A15B",
+      "to": "A14B",
+      "oneWay": false
+    },
+    {
+      "id": "e51",
+      "from": "A13T",
+      "to": "A13B",
+      "oneWay": false
+    },
+    {
+      "id": "e52",
+      "from": "A14T",
+      "to": "A13T",
+      "oneWay": false
+    },
+    {
+      "id": "e53",
+      "from": "A14B",
+      "to": "A13B",
+      "oneWay": false
+    },
+    {
+      "id": "e54",
+      "from": "A12T",
+      "to": "A12B",
+      "oneWay": false
+    },
+    {
+      "id": "e55",
+      "from": "A13T",
+      "to": "A12T",
+      "oneWay": false
+    },
+    {
+      "id": "e56",
+      "from": "A13B",
+      "to": "A12B",
+      "oneWay": false
+    },
+    {
+      "id": "e57",
+      "from": "A11T",
+      "to": "A11B",
+      "oneWay": false
+    },
+    {
+      "id": "e58",
+      "from": "A12T",
+      "to": "A11T",
+      "oneWay": false
+    },
+    {
+      "id": "e59",
+      "from": "A12B",
+      "to": "A11B",
+      "oneWay": false
+    },
+    {
+      "id": "e60",
+      "from": "A10T",
+      "to": "A10B",
+      "oneWay": false
+    },
+    {
+      "id": "e61",
+      "from": "A11T",
+      "to": "A10T",
+      "oneWay": false
+    },
+    {
+      "id": "e62",
+      "from": "A11B",
+      "to": "A10B",
+      "oneWay": false
+    },
+    {
+      "id": "e63",
+      "from": "A9T",
+      "to": "A9B",
+      "oneWay": false
+    },
+    {
+      "id": "e64",
+      "from": "A10T",
+      "to": "A9T",
+      "oneWay": false
+    },
+    {
+      "id": "e65",
+      "from": "A10B",
+      "to": "A9B",
+      "oneWay": false
+    },
+    {
+      "id": "e66",
+      "from": "A8T",
+      "to": "A8B",
+      "oneWay": false
+    },
+    {
+      "id": "e67",
+      "from": "A9T",
+      "to": "A8T",
+      "oneWay": false
+    },
+    {
+      "id": "e68",
+      "from": "A9B",
+      "to": "A8B",
+      "oneWay": false
+    },
+    {
+      "id": "e69",
+      "from": "A7T",
+      "to": "A7B",
+      "oneWay": false
+    },
+    {
+      "id": "e70",
+      "from": "A8T",
+      "to": "A7T",
+      "oneWay": false
+    },
+    {
+      "id": "e71",
+      "from": "A8B",
+      "to": "A7B",
+      "oneWay": false
+    },
+    {
+      "id": "e72",
+      "from": "A6T",
+      "to": "A6B",
+      "oneWay": false
+    },
+    {
+      "id": "e73",
+      "from": "A7T",
+      "to": "A6T",
+      "oneWay": false
+    },
+    {
+      "id": "e74",
+      "from": "A7B",
+      "to": "A6B",
+      "oneWay": false
+    },
+    {
+      "id": "e75",
+      "from": "A5T",
+      "to": "A5B",
+      "oneWay": false
+    },
+    {
+      "id": "e76",
+      "from": "A6T",
+      "to": "A5T",
+      "oneWay": false
+    },
+    {
+      "id": "e77",
+      "from": "A6B",
+      "to": "A5B",
+      "oneWay": false
+    },
+    {
+      "id": "e78",
+      "from": "A4T",
+      "to": "A4B",
+      "oneWay": false
+    },
+    {
+      "id": "e79",
+      "from": "A5T",
+      "to": "A4T",
+      "oneWay": false
+    },
+    {
+      "id": "e80",
+      "from": "A5B",
+      "to": "A4B",
+      "oneWay": false
+    },
+    {
+      "id": "e81",
+      "from": "A3T",
+      "to": "A3B",
+      "oneWay": false
+    },
+    {
+      "id": "e82",
+      "from": "A4T",
+      "to": "A3T",
+      "oneWay": false
+    },
+    {
+      "id": "e83",
+      "from": "A4B",
+      "to": "A3B",
+      "oneWay": false
+    },
+    {
+      "id": "e84",
+      "from": "A2T",
+      "to": "A2B",
+      "oneWay": false
+    },
+    {
+      "id": "e85",
+      "from": "A3T",
+      "to": "A2T",
+      "oneWay": false
+    },
+    {
+      "id": "e86",
+      "from": "A3B",
+      "to": "A2B",
+      "oneWay": false
+    },
+    {
+      "id": "e87",
+      "from": "A1T",
+      "to": "A1B",
+      "oneWay": false
+    },
+    {
+      "id": "e88",
+      "from": "A2T",
+      "to": "A1T",
+      "oneWay": false
+    },
+    {
+      "id": "e89",
+      "from": "A2B",
+      "to": "A1B",
+      "oneWay": false
+    },
+    {
+      "id": "e90",
+      "from": "A1T",
+      "to": "BR",
+      "oneWay": false
+    },
+    {
+      "id": "e91",
+      "from": "A1B",
+      "to": "FR",
+      "oneWay": false
+    },
+    {
+      "id": "e92",
       "from": "BL",
       "to": "FL",
       "oneWay": false
     },
     {
-      "id": "e39",
+      "id": "e93",
       "from": "BR",
       "to": "FR",
       "oneWay": false
     },
     {
-      "id": "e40",
+      "id": "e94",
       "from": "L0a",
       "to": "L0",
       "oneWay": true
     },
     {
-      "id": "e41",
+      "id": "e95",
       "from": "L0",
       "to": "L0o",
       "oneWay": true
     },
     {
-      "id": "e42",
+      "id": "e96",
       "from": "FC0",
       "to": "L0o",
       "oneWay": false
     },
     {
-      "id": "e43",
+      "id": "e97",
+      "from": "A25B",
+      "to": "L0a",
+      "oneWay": false
+    },
+    {
+      "id": "e98",
+      "from": "L0a",
+      "to": "A24B",
+      "oneWay": false
+    },
+    {
+      "id": "e99",
       "from": "L1a",
       "to": "L1",
       "oneWay": true
     },
     {
-      "id": "e44",
+      "id": "e100",
       "from": "L1",
       "to": "L1o",
       "oneWay": true
     },
     {
-      "id": "e45",
+      "id": "e101",
       "from": "L0o",
       "to": "L1o",
       "oneWay": false
     },
     {
-      "id": "e46",
+      "id": "e102",
+      "from": "A23B",
+      "to": "L1a",
+      "oneWay": false
+    },
+    {
+      "id": "e103",
+      "from": "L1a",
+      "to": "A22B",
+      "oneWay": false
+    },
+    {
+      "id": "e104",
       "from": "L2a",
       "to": "L2",
       "oneWay": true
     },
     {
-      "id": "e47",
+      "id": "e105",
       "from": "L2",
       "to": "L2o",
       "oneWay": true
     },
     {
-      "id": "e48",
+      "id": "e106",
       "from": "L1o",
       "to": "L2o",
       "oneWay": false
     },
     {
-      "id": "e49",
+      "id": "e107",
+      "from": "A21B",
+      "to": "L2a",
+      "oneWay": false
+    },
+    {
+      "id": "e108",
+      "from": "L2a",
+      "to": "A20B",
+      "oneWay": false
+    },
+    {
+      "id": "e109",
       "from": "L3a",
       "to": "L3",
       "oneWay": true
     },
     {
-      "id": "e50",
+      "id": "e110",
       "from": "L3",
       "to": "L3o",
       "oneWay": true
     },
     {
-      "id": "e51",
+      "id": "e111",
       "from": "L2o",
       "to": "L3o",
       "oneWay": false
     },
     {
-      "id": "e52",
+      "id": "e112",
+      "from": "A19B",
+      "to": "L3a",
+      "oneWay": false
+    },
+    {
+      "id": "e113",
+      "from": "L3a",
+      "to": "A18B",
+      "oneWay": false
+    },
+    {
+      "id": "e114",
       "from": "L4a",
       "to": "L4",
       "oneWay": true
     },
     {
-      "id": "e53",
+      "id": "e115",
       "from": "L4",
       "to": "L4o",
       "oneWay": true
     },
     {
-      "id": "e54",
+      "id": "e116",
       "from": "L3o",
       "to": "L4o",
       "oneWay": false
     },
     {
-      "id": "e55",
+      "id": "e117",
+      "from": "A17B",
+      "to": "L4a",
+      "oneWay": false
+    },
+    {
+      "id": "e118",
+      "from": "L4a",
+      "to": "A16B",
+      "oneWay": false
+    },
+    {
+      "id": "e119",
       "from": "L5a",
       "to": "L5",
       "oneWay": true
     },
     {
-      "id": "e56",
+      "id": "e120",
       "from": "L5",
       "to": "L5o",
       "oneWay": true
     },
     {
-      "id": "e57",
+      "id": "e121",
       "from": "L4o",
       "to": "L5o",
       "oneWay": false
     },
     {
-      "id": "e58",
-      "from": "A2B",
-      "to": "L0a",
-      "oneWay": false
-    },
-    {
-      "id": "e59",
-      "from": "L0a",
-      "to": "A3B",
-      "oneWay": false
-    },
-    {
-      "id": "e60",
-      "from": "A3B",
-      "to": "L1a",
-      "oneWay": false
-    },
-    {
-      "id": "e61",
-      "from": "L1a",
-      "to": "A4B",
-      "oneWay": false
-    },
-    {
-      "id": "e62",
-      "from": "A5B",
-      "to": "L2a",
-      "oneWay": false
-    },
-    {
-      "id": "e63",
-      "from": "L2a",
-      "to": "A6B",
-      "oneWay": false
-    },
-    {
-      "id": "e64",
-      "from": "A6B",
-      "to": "L3a",
-      "oneWay": false
-    },
-    {
-      "id": "e65",
-      "from": "L3a",
-      "to": "A7B",
-      "oneWay": false
-    },
-    {
-      "id": "e66",
-      "from": "A7B",
-      "to": "L4a",
-      "oneWay": false
-    },
-    {
-      "id": "e67",
-      "from": "L4a",
-      "to": "A8B",
-      "oneWay": false
-    },
-    {
-      "id": "e68",
-      "from": "A8B",
+      "id": "e122",
+      "from": "A15B",
       "to": "L5a",
       "oneWay": false
     },
     {
-      "id": "e69",
+      "id": "e123",
       "from": "L5a",
-      "to": "A9B",
+      "to": "A14B",
       "oneWay": false
     },
     {
-      "id": "e70",
+      "id": "e124",
+      "from": "L6a",
+      "to": "L6",
+      "oneWay": true
+    },
+    {
+      "id": "e125",
+      "from": "L6",
+      "to": "L6o",
+      "oneWay": true
+    },
+    {
+      "id": "e126",
       "from": "L5o",
+      "to": "L6o",
+      "oneWay": false
+    },
+    {
+      "id": "e127",
+      "from": "A13B",
+      "to": "L6a",
+      "oneWay": false
+    },
+    {
+      "id": "e128",
+      "from": "L6a",
+      "to": "A12B",
+      "oneWay": false
+    },
+    {
+      "id": "e129",
+      "from": "L7a",
+      "to": "L7",
+      "oneWay": true
+    },
+    {
+      "id": "e130",
+      "from": "L7",
+      "to": "L7o",
+      "oneWay": true
+    },
+    {
+      "id": "e131",
+      "from": "L6o",
+      "to": "L7o",
+      "oneWay": false
+    },
+    {
+      "id": "e132",
+      "from": "A11B",
+      "to": "L7a",
+      "oneWay": false
+    },
+    {
+      "id": "e133",
+      "from": "L7a",
+      "to": "A10B",
+      "oneWay": false
+    },
+    {
+      "id": "e134",
+      "from": "L8a",
+      "to": "L8",
+      "oneWay": true
+    },
+    {
+      "id": "e135",
+      "from": "L8",
+      "to": "L8o",
+      "oneWay": true
+    },
+    {
+      "id": "e136",
+      "from": "L7o",
+      "to": "L8o",
+      "oneWay": false
+    },
+    {
+      "id": "e137",
+      "from": "A9B",
+      "to": "L8a",
+      "oneWay": false
+    },
+    {
+      "id": "e138",
+      "from": "L8a",
+      "to": "A8B",
+      "oneWay": false
+    },
+    {
+      "id": "e139",
+      "from": "L9a",
+      "to": "L9",
+      "oneWay": true
+    },
+    {
+      "id": "e140",
+      "from": "L9",
+      "to": "L9o",
+      "oneWay": true
+    },
+    {
+      "id": "e141",
+      "from": "L8o",
+      "to": "L9o",
+      "oneWay": false
+    },
+    {
+      "id": "e142",
+      "from": "A7B",
+      "to": "L9a",
+      "oneWay": false
+    },
+    {
+      "id": "e143",
+      "from": "L9a",
+      "to": "A6B",
+      "oneWay": false
+    },
+    {
+      "id": "e144",
+      "from": "FL",
+      "to": "PHARM",
+      "oneWay": false
+    },
+    {
+      "id": "e145",
+      "from": "PHARM",
+      "to": "A30B",
+      "oneWay": false
+    },
+    {
+      "id": "e146",
+      "from": "FCW",
+      "to": "FC0",
+      "oneWay": false
+    },
+    {
+      "id": "e147",
+      "from": "L9o",
       "to": "VEST",
       "oneWay": false
     },
     {
-      "id": "e71",
+      "id": "e148",
       "from": "VEST",
       "to": "EXIT",
       "oneWay": true
     },
     {
-      "id": "e72",
+      "id": "e149",
       "from": "ENTRANCE",
       "to": "VEST",
       "oneWay": true
     },
     {
-      "id": "e73",
+      "id": "e150",
       "from": "VEST",
       "to": "FR",
       "oneWay": true
@@ -753,404 +1515,2919 @@
   ],
   "locations": [
     {
-      "id": "A1-8",
+      "id": "A1-L1",
       "aisle": "A1",
       "side": "L",
-      "edgeId": "e0",
-      "offsetM": 8,
-      "shelf": 1
+      "edgeId": "e87",
+      "offsetM": 28.2,
+      "shelf": 1,
+      "tags": [
+        "fragile"
+      ]
     },
     {
-      "id": "A1-20",
+      "id": "A1-L6",
       "aisle": "A1",
       "side": "L",
-      "edgeId": "e0",
-      "offsetM": 20,
-      "shelf": 2
+      "edgeId": "e87",
+      "offsetM": 22.1,
+      "shelf": 2,
+      "tags": [
+        "fragile"
+      ]
     },
     {
-      "id": "A1-32",
+      "id": "A1-L11",
       "aisle": "A1",
       "side": "L",
+      "edgeId": "e87",
+      "offsetM": 16,
+      "shelf": 3,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A1-L16",
+      "aisle": "A1",
+      "side": "L",
+      "edgeId": "e87",
+      "offsetM": 9.9,
+      "shelf": 1,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A1-L21",
+      "aisle": "A1",
+      "side": "L",
+      "edgeId": "e87",
+      "offsetM": 3.8,
+      "shelf": 2,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A1-R1",
+      "aisle": "A1",
+      "side": "R",
+      "edgeId": "e87",
+      "offsetM": 27.6,
+      "shelf": 3
+    },
+    {
+      "id": "A1-R7",
+      "aisle": "A1",
+      "side": "R",
+      "edgeId": "e87",
+      "offsetM": 19.6,
+      "shelf": 1
+    },
+    {
+      "id": "A1-R14",
+      "aisle": "A1",
+      "side": "R",
+      "edgeId": "e87",
+      "offsetM": 11.7,
+      "shelf": 2
+    },
+    {
+      "id": "A1-R20",
+      "aisle": "A1",
+      "side": "R",
+      "edgeId": "e87",
+      "offsetM": 4.4,
+      "shelf": 3,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A2-L1",
+      "aisle": "A2",
+      "side": "L",
+      "edgeId": "e84",
+      "offsetM": 27.6,
+      "shelf": 1
+    },
+    {
+      "id": "A2-L7",
+      "aisle": "A2",
+      "side": "L",
+      "edgeId": "e84",
+      "offsetM": 19.6,
+      "shelf": 2,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A2-L14",
+      "aisle": "A2",
+      "side": "L",
+      "edgeId": "e84",
+      "offsetM": 11.7,
+      "shelf": 3,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A2-L20",
+      "aisle": "A2",
+      "side": "L",
+      "edgeId": "e84",
+      "offsetM": 4.4,
+      "shelf": 1
+    },
+    {
+      "id": "A2-R1",
+      "aisle": "A2",
+      "side": "R",
+      "edgeId": "e84",
+      "offsetM": 28.2,
+      "shelf": 2
+    },
+    {
+      "id": "A2-R6",
+      "aisle": "A2",
+      "side": "R",
+      "edgeId": "e84",
+      "offsetM": 22.1,
+      "shelf": 3
+    },
+    {
+      "id": "A2-R11",
+      "aisle": "A2",
+      "side": "R",
+      "edgeId": "e84",
+      "offsetM": 16,
+      "shelf": 1
+    },
+    {
+      "id": "A2-R16",
+      "aisle": "A2",
+      "side": "R",
+      "edgeId": "e84",
+      "offsetM": 9.9,
+      "shelf": 2
+    },
+    {
+      "id": "A2-R21",
+      "aisle": "A2",
+      "side": "R",
+      "edgeId": "e84",
+      "offsetM": 3.8,
+      "shelf": 3,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A3-L1",
+      "aisle": "A3",
+      "side": "L",
+      "edgeId": "e81",
+      "offsetM": 28.2,
+      "shelf": 1,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A3-L6",
+      "aisle": "A3",
+      "side": "L",
+      "edgeId": "e81",
+      "offsetM": 22.1,
+      "shelf": 2
+    },
+    {
+      "id": "A3-L11",
+      "aisle": "A3",
+      "side": "L",
+      "edgeId": "e81",
+      "offsetM": 16,
+      "shelf": 3,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A3-L16",
+      "aisle": "A3",
+      "side": "L",
+      "edgeId": "e81",
+      "offsetM": 9.9,
+      "shelf": 1,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A3-L21",
+      "aisle": "A3",
+      "side": "L",
+      "edgeId": "e81",
+      "offsetM": 3.8,
+      "shelf": 2,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A3-R1",
+      "aisle": "A3",
+      "side": "R",
+      "edgeId": "e81",
+      "offsetM": 27.6,
+      "shelf": 3,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A3-R7",
+      "aisle": "A3",
+      "side": "R",
+      "edgeId": "e81",
+      "offsetM": 19.6,
+      "shelf": 1,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A3-R14",
+      "aisle": "A3",
+      "side": "R",
+      "edgeId": "e81",
+      "offsetM": 11.7,
+      "shelf": 2,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A3-R20",
+      "aisle": "A3",
+      "side": "R",
+      "edgeId": "e81",
+      "offsetM": 4.4,
+      "shelf": 3
+    },
+    {
+      "id": "A4-L1",
+      "aisle": "A4",
+      "side": "L",
+      "edgeId": "e78",
+      "offsetM": 27.6,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A4-L7",
+      "aisle": "A4",
+      "side": "L",
+      "edgeId": "e78",
+      "offsetM": 19.6,
+      "shelf": 2,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A4-L14",
+      "aisle": "A4",
+      "side": "L",
+      "edgeId": "e78",
+      "offsetM": 11.7,
+      "shelf": 3,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A4-L20",
+      "aisle": "A4",
+      "side": "L",
+      "edgeId": "e78",
+      "offsetM": 4.4,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A4-R1",
+      "aisle": "A4",
+      "side": "R",
+      "edgeId": "e78",
+      "offsetM": 28.2,
+      "shelf": 2,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A4-R6",
+      "aisle": "A4",
+      "side": "R",
+      "edgeId": "e78",
+      "offsetM": 22.1,
+      "shelf": 3,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A4-R11",
+      "aisle": "A4",
+      "side": "R",
+      "edgeId": "e78",
+      "offsetM": 16,
+      "shelf": 1
+    },
+    {
+      "id": "A4-R16",
+      "aisle": "A4",
+      "side": "R",
+      "edgeId": "e78",
+      "offsetM": 9.9,
+      "shelf": 2
+    },
+    {
+      "id": "A4-R21",
+      "aisle": "A4",
+      "side": "R",
+      "edgeId": "e78",
+      "offsetM": 3.8,
+      "shelf": 3,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A5-L1",
+      "aisle": "A5",
+      "side": "L",
+      "edgeId": "e75",
+      "offsetM": 27.6,
+      "shelf": 1
+    },
+    {
+      "id": "A5-L7",
+      "aisle": "A5",
+      "side": "L",
+      "edgeId": "e75",
+      "offsetM": 19.6,
+      "shelf": 2,
+      "tags": [
+        "fragile",
+        "heavy"
+      ]
+    },
+    {
+      "id": "A5-L14",
+      "aisle": "A5",
+      "side": "L",
+      "edgeId": "e75",
+      "offsetM": 11.7,
+      "shelf": 3
+    },
+    {
+      "id": "A5-L20",
+      "aisle": "A5",
+      "side": "L",
+      "edgeId": "e75",
+      "offsetM": 4.4,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A5-R1",
+      "aisle": "A5",
+      "side": "R",
+      "edgeId": "e75",
+      "offsetM": 27.6,
+      "shelf": 2
+    },
+    {
+      "id": "A5-R7",
+      "aisle": "A5",
+      "side": "R",
+      "edgeId": "e75",
+      "offsetM": 19.6,
+      "shelf": 3,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A5-R14",
+      "aisle": "A5",
+      "side": "R",
+      "edgeId": "e75",
+      "offsetM": 11.7,
+      "shelf": 1
+    },
+    {
+      "id": "A5-R20",
+      "aisle": "A5",
+      "side": "R",
+      "edgeId": "e75",
+      "offsetM": 4.4,
+      "shelf": 2
+    },
+    {
+      "id": "A6-L1",
+      "aisle": "A6",
+      "side": "L",
+      "edgeId": "e72",
+      "offsetM": 27.6,
+      "shelf": 3
+    },
+    {
+      "id": "A6-L7",
+      "aisle": "A6",
+      "side": "L",
+      "edgeId": "e72",
+      "offsetM": 19.6,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A6-L14",
+      "aisle": "A6",
+      "side": "L",
+      "edgeId": "e72",
+      "offsetM": 11.7,
+      "shelf": 2,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A6-L20",
+      "aisle": "A6",
+      "side": "L",
+      "edgeId": "e72",
+      "offsetM": 4.4,
+      "shelf": 3
+    },
+    {
+      "id": "A6-R1",
+      "aisle": "A6",
+      "side": "R",
+      "edgeId": "e72",
+      "offsetM": 27.6,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A6-R7",
+      "aisle": "A6",
+      "side": "R",
+      "edgeId": "e72",
+      "offsetM": 19.6,
+      "shelf": 2
+    },
+    {
+      "id": "A6-R14",
+      "aisle": "A6",
+      "side": "R",
+      "edgeId": "e72",
+      "offsetM": 11.7,
+      "shelf": 3
+    },
+    {
+      "id": "A6-R20",
+      "aisle": "A6",
+      "side": "R",
+      "edgeId": "e72",
+      "offsetM": 4.4,
+      "shelf": 1,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A7-L1",
+      "aisle": "A7",
+      "side": "L",
+      "edgeId": "e69",
+      "offsetM": 29.4,
+      "shelf": 2,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A7-L4",
+      "aisle": "A7",
+      "side": "L",
+      "edgeId": "e69",
+      "offsetM": 26.3,
+      "shelf": 3,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A7-L6",
+      "aisle": "A7",
+      "side": "L",
+      "edgeId": "e69",
+      "offsetM": 23.3,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A7-L9",
+      "aisle": "A7",
+      "side": "L",
+      "edgeId": "e69",
+      "offsetM": 20.3,
+      "shelf": 2
+    },
+    {
+      "id": "A7-L11",
+      "aisle": "A7",
+      "side": "L",
+      "edgeId": "e69",
+      "offsetM": 17.2,
+      "shelf": 3,
+      "tags": [
+        "fragile",
+        "heavy"
+      ]
+    },
+    {
+      "id": "A7-L14",
+      "aisle": "A7",
+      "side": "L",
+      "edgeId": "e69",
+      "offsetM": 14.2,
+      "shelf": 1,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A7-L16",
+      "aisle": "A7",
+      "side": "L",
+      "edgeId": "e69",
+      "offsetM": 11.1,
+      "shelf": 2
+    },
+    {
+      "id": "A7-L19",
+      "aisle": "A7",
+      "side": "L",
+      "edgeId": "e69",
+      "offsetM": 8.1,
+      "shelf": 3
+    },
+    {
+      "id": "A7-L21",
+      "aisle": "A7",
+      "side": "L",
+      "edgeId": "e69",
+      "offsetM": 5.1,
+      "shelf": 1
+    },
+    {
+      "id": "A7-L24",
+      "aisle": "A7",
+      "side": "L",
+      "edgeId": "e69",
+      "offsetM": 2,
+      "shelf": 2
+    },
+    {
+      "id": "A7-R1",
+      "aisle": "A7",
+      "side": "R",
+      "edgeId": "e69",
+      "offsetM": 29.4,
+      "shelf": 3
+    },
+    {
+      "id": "A7-R4",
+      "aisle": "A7",
+      "side": "R",
+      "edgeId": "e69",
+      "offsetM": 25.7,
+      "shelf": 1,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A7-R7",
+      "aisle": "A7",
+      "side": "R",
+      "edgeId": "e69",
+      "offsetM": 22.7,
+      "shelf": 2
+    },
+    {
+      "id": "A7-R9",
+      "aisle": "A7",
+      "side": "R",
+      "edgeId": "e69",
+      "offsetM": 19.6,
+      "shelf": 3
+    },
+    {
+      "id": "A7-R12",
+      "aisle": "A7",
+      "side": "R",
+      "edgeId": "e69",
+      "offsetM": 16,
+      "shelf": 1
+    },
+    {
+      "id": "A7-R15",
+      "aisle": "A7",
+      "side": "R",
+      "edgeId": "e69",
+      "offsetM": 12.4,
+      "shelf": 2
+    },
+    {
+      "id": "A7-R18",
+      "aisle": "A7",
+      "side": "R",
+      "edgeId": "e69",
+      "offsetM": 9.3,
+      "shelf": 3,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A7-R20",
+      "aisle": "A7",
+      "side": "R",
+      "edgeId": "e69",
+      "offsetM": 6.3,
+      "shelf": 1,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A7-R23",
+      "aisle": "A7",
+      "side": "R",
+      "edgeId": "e69",
+      "offsetM": 2.6,
+      "shelf": 2
+    },
+    {
+      "id": "A8-L1",
+      "aisle": "A8",
+      "side": "L",
+      "edgeId": "e66",
+      "offsetM": 28.8,
+      "shelf": 3,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A8-L5",
+      "aisle": "A8",
+      "side": "L",
+      "edgeId": "e66",
+      "offsetM": 23.9,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A8-L9",
+      "aisle": "A8",
+      "side": "L",
+      "edgeId": "e66",
+      "offsetM": 18.4,
+      "shelf": 2
+    },
+    {
+      "id": "A8-L14",
+      "aisle": "A8",
+      "side": "L",
+      "edgeId": "e66",
+      "offsetM": 13,
+      "shelf": 3
+    },
+    {
+      "id": "A8-L18",
+      "aisle": "A8",
+      "side": "L",
+      "edgeId": "e66",
+      "offsetM": 8.1,
+      "shelf": 1
+    },
+    {
+      "id": "A8-L22",
+      "aisle": "A8",
+      "side": "L",
+      "edgeId": "e66",
+      "offsetM": 3.2,
+      "shelf": 2,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A8-R1",
+      "aisle": "A8",
+      "side": "R",
+      "edgeId": "e66",
+      "offsetM": 28.2,
+      "shelf": 3,
+      "tags": [
+        "heavy",
+        "fragile"
+      ]
+    },
+    {
+      "id": "A8-R6",
+      "aisle": "A8",
+      "side": "R",
+      "edgeId": "e66",
+      "offsetM": 22.1,
+      "shelf": 1
+    },
+    {
+      "id": "A8-R11",
+      "aisle": "A8",
+      "side": "R",
+      "edgeId": "e66",
+      "offsetM": 16,
+      "shelf": 2
+    },
+    {
+      "id": "A8-R16",
+      "aisle": "A8",
+      "side": "R",
+      "edgeId": "e66",
+      "offsetM": 9.9,
+      "shelf": 3
+    },
+    {
+      "id": "A8-R21",
+      "aisle": "A8",
+      "side": "R",
+      "edgeId": "e66",
+      "offsetM": 3.8,
+      "shelf": 1
+    },
+    {
+      "id": "A9-L1",
+      "aisle": "A9",
+      "side": "L",
+      "edgeId": "e63",
+      "offsetM": 27.6,
+      "shelf": 2
+    },
+    {
+      "id": "A9-L7",
+      "aisle": "A9",
+      "side": "L",
+      "edgeId": "e63",
+      "offsetM": 19.6,
+      "shelf": 3
+    },
+    {
+      "id": "A9-L14",
+      "aisle": "A9",
+      "side": "L",
+      "edgeId": "e63",
+      "offsetM": 11.7,
+      "shelf": 1
+    },
+    {
+      "id": "A9-L20",
+      "aisle": "A9",
+      "side": "L",
+      "edgeId": "e63",
+      "offsetM": 4.4,
+      "shelf": 2
+    },
+    {
+      "id": "A9-R1",
+      "aisle": "A9",
+      "side": "R",
+      "edgeId": "e63",
+      "offsetM": 27.6,
+      "shelf": 3
+    },
+    {
+      "id": "A9-R7",
+      "aisle": "A9",
+      "side": "R",
+      "edgeId": "e63",
+      "offsetM": 19.6,
+      "shelf": 1
+    },
+    {
+      "id": "A9-R14",
+      "aisle": "A9",
+      "side": "R",
+      "edgeId": "e63",
+      "offsetM": 11.7,
+      "shelf": 2
+    },
+    {
+      "id": "A9-R20",
+      "aisle": "A9",
+      "side": "R",
+      "edgeId": "e63",
+      "offsetM": 4.4,
+      "shelf": 3,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A10-L1",
+      "aisle": "A10",
+      "side": "L",
+      "edgeId": "e60",
+      "offsetM": 26.3,
+      "shelf": 1,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A10-L9",
+      "aisle": "A10",
+      "side": "L",
+      "edgeId": "e60",
+      "offsetM": 16,
+      "shelf": 2,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A10-L18",
+      "aisle": "A10",
+      "side": "L",
+      "edgeId": "e60",
+      "offsetM": 5.7,
+      "shelf": 3
+    },
+    {
+      "id": "A10-R1",
+      "aisle": "A10",
+      "side": "R",
+      "edgeId": "e60",
+      "offsetM": 27.6,
+      "shelf": 1
+    },
+    {
+      "id": "A10-R7",
+      "aisle": "A10",
+      "side": "R",
+      "edgeId": "e60",
+      "offsetM": 19.6,
+      "shelf": 2,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A10-R14",
+      "aisle": "A10",
+      "side": "R",
+      "edgeId": "e60",
+      "offsetM": 11.7,
+      "shelf": 3
+    },
+    {
+      "id": "A10-R20",
+      "aisle": "A10",
+      "side": "R",
+      "edgeId": "e60",
+      "offsetM": 4.4,
+      "shelf": 1
+    },
+    {
+      "id": "A11-L1",
+      "aisle": "A11",
+      "side": "L",
+      "edgeId": "e57",
+      "offsetM": 27.6,
+      "shelf": 2
+    },
+    {
+      "id": "A11-L7",
+      "aisle": "A11",
+      "side": "L",
+      "edgeId": "e57",
+      "offsetM": 19.6,
+      "shelf": 3
+    },
+    {
+      "id": "A11-L14",
+      "aisle": "A11",
+      "side": "L",
+      "edgeId": "e57",
+      "offsetM": 11.7,
+      "shelf": 1
+    },
+    {
+      "id": "A11-L20",
+      "aisle": "A11",
+      "side": "L",
+      "edgeId": "e57",
+      "offsetM": 4.4,
+      "shelf": 2
+    },
+    {
+      "id": "A11-R1",
+      "aisle": "A11",
+      "side": "R",
+      "edgeId": "e57",
+      "offsetM": 27.6,
+      "shelf": 3
+    },
+    {
+      "id": "A11-R7",
+      "aisle": "A11",
+      "side": "R",
+      "edgeId": "e57",
+      "offsetM": 19.6,
+      "shelf": 1
+    },
+    {
+      "id": "A11-R14",
+      "aisle": "A11",
+      "side": "R",
+      "edgeId": "e57",
+      "offsetM": 11.7,
+      "shelf": 2
+    },
+    {
+      "id": "A11-R20",
+      "aisle": "A11",
+      "side": "R",
+      "edgeId": "e57",
+      "offsetM": 4.4,
+      "shelf": 3,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A12-L1",
+      "aisle": "A12",
+      "side": "L",
+      "edgeId": "e54",
+      "offsetM": 27.6,
+      "shelf": 1,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A12-L7",
+      "aisle": "A12",
+      "side": "L",
+      "edgeId": "e54",
+      "offsetM": 19.6,
+      "shelf": 2,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A12-L14",
+      "aisle": "A12",
+      "side": "L",
+      "edgeId": "e54",
+      "offsetM": 11.7,
+      "shelf": 3,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A12-L20",
+      "aisle": "A12",
+      "side": "L",
+      "edgeId": "e54",
+      "offsetM": 4.4,
+      "shelf": 1,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A12-R1",
+      "aisle": "A12",
+      "side": "R",
+      "edgeId": "e54",
+      "offsetM": 26.3,
+      "shelf": 2,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A12-R9",
+      "aisle": "A12",
+      "side": "R",
+      "edgeId": "e54",
+      "offsetM": 16,
+      "shelf": 3,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A12-R18",
+      "aisle": "A12",
+      "side": "R",
+      "edgeId": "e54",
+      "offsetM": 5.7,
+      "shelf": 1,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A13-L1",
+      "aisle": "A13",
+      "side": "L",
+      "edgeId": "e51",
+      "offsetM": 26.3,
+      "shelf": 2,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A13-L9",
+      "aisle": "A13",
+      "side": "L",
+      "edgeId": "e51",
+      "offsetM": 16,
+      "shelf": 3,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A13-L18",
+      "aisle": "A13",
+      "side": "L",
+      "edgeId": "e51",
+      "offsetM": 5.7,
+      "shelf": 1,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A13-R1",
+      "aisle": "A13",
+      "side": "R",
+      "edgeId": "e51",
+      "offsetM": 27.6,
+      "shelf": 2
+    },
+    {
+      "id": "A13-R7",
+      "aisle": "A13",
+      "side": "R",
+      "edgeId": "e51",
+      "offsetM": 19.6,
+      "shelf": 3
+    },
+    {
+      "id": "A13-R14",
+      "aisle": "A13",
+      "side": "R",
+      "edgeId": "e51",
+      "offsetM": 11.7,
+      "shelf": 1,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A13-R20",
+      "aisle": "A13",
+      "side": "R",
+      "edgeId": "e51",
+      "offsetM": 4.4,
+      "shelf": 2,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A14-L1",
+      "aisle": "A14",
+      "side": "L",
+      "edgeId": "e48",
+      "offsetM": 27.6,
+      "shelf": 3
+    },
+    {
+      "id": "A14-L7",
+      "aisle": "A14",
+      "side": "L",
+      "edgeId": "e48",
+      "offsetM": 19.6,
+      "shelf": 1
+    },
+    {
+      "id": "A14-L14",
+      "aisle": "A14",
+      "side": "L",
+      "edgeId": "e48",
+      "offsetM": 11.7,
+      "shelf": 2
+    },
+    {
+      "id": "A14-L20",
+      "aisle": "A14",
+      "side": "L",
+      "edgeId": "e48",
+      "offsetM": 4.4,
+      "shelf": 3
+    },
+    {
+      "id": "A14-R1",
+      "aisle": "A14",
+      "side": "R",
+      "edgeId": "e48",
+      "offsetM": 26.3,
+      "shelf": 1
+    },
+    {
+      "id": "A14-R9",
+      "aisle": "A14",
+      "side": "R",
+      "edgeId": "e48",
+      "offsetM": 16,
+      "shelf": 2
+    },
+    {
+      "id": "A14-R18",
+      "aisle": "A14",
+      "side": "R",
+      "edgeId": "e48",
+      "offsetM": 5.7,
+      "shelf": 3
+    },
+    {
+      "id": "A15-L1",
+      "aisle": "A15",
+      "side": "L",
+      "edgeId": "e45",
+      "offsetM": 26.3,
+      "shelf": 1
+    },
+    {
+      "id": "A15-L9",
+      "aisle": "A15",
+      "side": "L",
+      "edgeId": "e45",
+      "offsetM": 16,
+      "shelf": 2
+    },
+    {
+      "id": "A15-L18",
+      "aisle": "A15",
+      "side": "L",
+      "edgeId": "e45",
+      "offsetM": 5.7,
+      "shelf": 3
+    },
+    {
+      "id": "A15-R1",
+      "aisle": "A15",
+      "side": "R",
+      "edgeId": "e45",
+      "offsetM": 26.3,
+      "shelf": 1
+    },
+    {
+      "id": "A15-R9",
+      "aisle": "A15",
+      "side": "R",
+      "edgeId": "e45",
+      "offsetM": 16,
+      "shelf": 2
+    },
+    {
+      "id": "A15-R18",
+      "aisle": "A15",
+      "side": "R",
+      "edgeId": "e45",
+      "offsetM": 5.7,
+      "shelf": 3
+    },
+    {
+      "id": "A16-L1",
+      "aisle": "A16",
+      "side": "L",
+      "edgeId": "e42",
+      "offsetM": 26.3,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A16-L9",
+      "aisle": "A16",
+      "side": "L",
+      "edgeId": "e42",
+      "offsetM": 16,
+      "shelf": 2,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A16-L18",
+      "aisle": "A16",
+      "side": "L",
+      "edgeId": "e42",
+      "offsetM": 5.7,
+      "shelf": 3,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A16-R1",
+      "aisle": "A16",
+      "side": "R",
+      "edgeId": "e42",
+      "offsetM": 26.3,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A16-R9",
+      "aisle": "A16",
+      "side": "R",
+      "edgeId": "e42",
+      "offsetM": 16,
+      "shelf": 2,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A16-R18",
+      "aisle": "A16",
+      "side": "R",
+      "edgeId": "e42",
+      "offsetM": 5.7,
+      "shelf": 3
+    },
+    {
+      "id": "A17-L1",
+      "aisle": "A17",
+      "side": "L",
+      "edgeId": "e39",
+      "offsetM": 26.3,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A17-L9",
+      "aisle": "A17",
+      "side": "L",
+      "edgeId": "e39",
+      "offsetM": 16,
+      "shelf": 2,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A17-L18",
+      "aisle": "A17",
+      "side": "L",
+      "edgeId": "e39",
+      "offsetM": 5.7,
+      "shelf": 3,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A17-R1",
+      "aisle": "A17",
+      "side": "R",
+      "edgeId": "e39",
+      "offsetM": 28.2,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A17-R6",
+      "aisle": "A17",
+      "side": "R",
+      "edgeId": "e39",
+      "offsetM": 22.1,
+      "shelf": 2,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A17-R11",
+      "aisle": "A17",
+      "side": "R",
+      "edgeId": "e39",
+      "offsetM": 16,
+      "shelf": 3,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A17-R16",
+      "aisle": "A17",
+      "side": "R",
+      "edgeId": "e39",
+      "offsetM": 9.9,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A17-R21",
+      "aisle": "A17",
+      "side": "R",
+      "edgeId": "e39",
+      "offsetM": 3.8,
+      "shelf": 2,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A18-L1",
+      "aisle": "A18",
+      "side": "L",
+      "edgeId": "e36",
+      "offsetM": 26.3,
+      "shelf": 3,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "A18-L9",
+      "aisle": "A18",
+      "side": "L",
+      "edgeId": "e36",
+      "offsetM": 16,
+      "shelf": 1,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "A18-L18",
+      "aisle": "A18",
+      "side": "L",
+      "edgeId": "e36",
+      "offsetM": 5.7,
+      "shelf": 2,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "A18-R1",
+      "aisle": "A18",
+      "side": "R",
+      "edgeId": "e36",
+      "offsetM": 27.6,
+      "shelf": 3,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "A18-R7",
+      "aisle": "A18",
+      "side": "R",
+      "edgeId": "e36",
+      "offsetM": 19.6,
+      "shelf": 1,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "A18-R14",
+      "aisle": "A18",
+      "side": "R",
+      "edgeId": "e36",
+      "offsetM": 11.7,
+      "shelf": 2,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "A18-R20",
+      "aisle": "A18",
+      "side": "R",
+      "edgeId": "e36",
+      "offsetM": 4.4,
+      "shelf": 3,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "A19-L1",
+      "aisle": "A19",
+      "side": "L",
+      "edgeId": "e33",
+      "offsetM": 26.3,
+      "shelf": 1,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "A19-L9",
+      "aisle": "A19",
+      "side": "L",
+      "edgeId": "e33",
+      "offsetM": 16,
+      "shelf": 2,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "A19-L18",
+      "aisle": "A19",
+      "side": "L",
+      "edgeId": "e33",
+      "offsetM": 5.7,
+      "shelf": 3,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "A19-R1",
+      "aisle": "A19",
+      "side": "R",
+      "edgeId": "e33",
+      "offsetM": 28.2,
+      "shelf": 1,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "A19-R6",
+      "aisle": "A19",
+      "side": "R",
+      "edgeId": "e33",
+      "offsetM": 22.1,
+      "shelf": 2,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "A19-R11",
+      "aisle": "A19",
+      "side": "R",
+      "edgeId": "e33",
+      "offsetM": 16,
+      "shelf": 3,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "A19-R16",
+      "aisle": "A19",
+      "side": "R",
+      "edgeId": "e33",
+      "offsetM": 9.9,
+      "shelf": 1,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "A19-R21",
+      "aisle": "A19",
+      "side": "R",
+      "edgeId": "e33",
+      "offsetM": 3.8,
+      "shelf": 2,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "A20-L1",
+      "aisle": "A20",
+      "side": "L",
+      "edgeId": "e30",
+      "offsetM": 26.3,
+      "shelf": 3,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "A20-L9",
+      "aisle": "A20",
+      "side": "L",
+      "edgeId": "e30",
+      "offsetM": 16,
+      "shelf": 1,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "A20-L18",
+      "aisle": "A20",
+      "side": "L",
+      "edgeId": "e30",
+      "offsetM": 5.7,
+      "shelf": 2,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "A20-R1",
+      "aisle": "A20",
+      "side": "R",
+      "edgeId": "e30",
+      "offsetM": 23.3,
+      "shelf": 3,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "A20-R14",
+      "aisle": "A20",
+      "side": "R",
+      "edgeId": "e30",
+      "offsetM": 8.1,
+      "shelf": 1,
+      "tags": [
+        "frozen",
+        "heavy"
+      ]
+    },
+    {
+      "id": "A21-L1",
+      "aisle": "A21",
+      "side": "L",
+      "edgeId": "e27",
+      "offsetM": 26.3,
+      "shelf": 2,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "A21-L9",
+      "aisle": "A21",
+      "side": "L",
+      "edgeId": "e27",
+      "offsetM": 16,
+      "shelf": 3,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "A21-L18",
+      "aisle": "A21",
+      "side": "L",
+      "edgeId": "e27",
+      "offsetM": 5.7,
+      "shelf": 1,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "A21-R1",
+      "aisle": "A21",
+      "side": "R",
+      "edgeId": "e27",
+      "offsetM": 23.3,
+      "shelf": 2,
+      "tags": [
+        "frozen",
+        "heavy"
+      ]
+    },
+    {
+      "id": "A21-R14",
+      "aisle": "A21",
+      "side": "R",
+      "edgeId": "e27",
+      "offsetM": 8.1,
+      "shelf": 3,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "A22-L1",
+      "aisle": "A22",
+      "side": "L",
+      "edgeId": "e24",
+      "offsetM": 27.6,
+      "shelf": 1,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "A22-L7",
+      "aisle": "A22",
+      "side": "L",
+      "edgeId": "e24",
+      "offsetM": 19.6,
+      "shelf": 2,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "A22-L14",
+      "aisle": "A22",
+      "side": "L",
+      "edgeId": "e24",
+      "offsetM": 11.7,
+      "shelf": 3,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "A22-L20",
+      "aisle": "A22",
+      "side": "L",
+      "edgeId": "e24",
+      "offsetM": 4.4,
+      "shelf": 1,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "A22-R1",
+      "aisle": "A22",
+      "side": "R",
+      "edgeId": "e24",
+      "offsetM": 28.2,
+      "shelf": 2,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "A22-R6",
+      "aisle": "A22",
+      "side": "R",
+      "edgeId": "e24",
+      "offsetM": 22.1,
+      "shelf": 3,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "A22-R11",
+      "aisle": "A22",
+      "side": "R",
+      "edgeId": "e24",
+      "offsetM": 16,
+      "shelf": 1,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "A22-R16",
+      "aisle": "A22",
+      "side": "R",
+      "edgeId": "e24",
+      "offsetM": 9.9,
+      "shelf": 2,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "A22-R21",
+      "aisle": "A22",
+      "side": "R",
+      "edgeId": "e24",
+      "offsetM": 3.8,
+      "shelf": 3,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "A23-L1",
+      "aisle": "A23",
+      "side": "L",
+      "edgeId": "e21",
+      "offsetM": 26.3,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A23-L9",
+      "aisle": "A23",
+      "side": "L",
+      "edgeId": "e21",
+      "offsetM": 16,
+      "shelf": 2,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A23-L18",
+      "aisle": "A23",
+      "side": "L",
+      "edgeId": "e21",
+      "offsetM": 5.7,
+      "shelf": 3
+    },
+    {
+      "id": "A23-R1",
+      "aisle": "A23",
+      "side": "R",
+      "edgeId": "e21",
+      "offsetM": 28.2,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A23-R6",
+      "aisle": "A23",
+      "side": "R",
+      "edgeId": "e21",
+      "offsetM": 22.1,
+      "shelf": 2
+    },
+    {
+      "id": "A23-R11",
+      "aisle": "A23",
+      "side": "R",
+      "edgeId": "e21",
+      "offsetM": 16,
+      "shelf": 3
+    },
+    {
+      "id": "A23-R16",
+      "aisle": "A23",
+      "side": "R",
+      "edgeId": "e21",
+      "offsetM": 9.9,
+      "shelf": 1
+    },
+    {
+      "id": "A23-R21",
+      "aisle": "A23",
+      "side": "R",
+      "edgeId": "e21",
+      "offsetM": 3.8,
+      "shelf": 2,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A24-L1",
+      "aisle": "A24",
+      "side": "L",
+      "edgeId": "e18",
+      "offsetM": 27.6,
+      "shelf": 3,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A24-L7",
+      "aisle": "A24",
+      "side": "L",
+      "edgeId": "e18",
+      "offsetM": 19.6,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A24-L14",
+      "aisle": "A24",
+      "side": "L",
+      "edgeId": "e18",
+      "offsetM": 11.7,
+      "shelf": 2,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A24-L20",
+      "aisle": "A24",
+      "side": "L",
+      "edgeId": "e18",
+      "offsetM": 4.4,
+      "shelf": 3,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A24-R1",
+      "aisle": "A24",
+      "side": "R",
+      "edgeId": "e18",
+      "offsetM": 28.2,
+      "shelf": 1
+    },
+    {
+      "id": "A24-R6",
+      "aisle": "A24",
+      "side": "R",
+      "edgeId": "e18",
+      "offsetM": 22.1,
+      "shelf": 2
+    },
+    {
+      "id": "A24-R11",
+      "aisle": "A24",
+      "side": "R",
+      "edgeId": "e18",
+      "offsetM": 16,
+      "shelf": 3
+    },
+    {
+      "id": "A24-R16",
+      "aisle": "A24",
+      "side": "R",
+      "edgeId": "e18",
+      "offsetM": 9.9,
+      "shelf": 1
+    },
+    {
+      "id": "A24-R21",
+      "aisle": "A24",
+      "side": "R",
+      "edgeId": "e18",
+      "offsetM": 3.8,
+      "shelf": 2,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A25-L1",
+      "aisle": "A25",
+      "side": "L",
+      "edgeId": "e15",
+      "offsetM": 26.3,
+      "shelf": 3,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A25-L9",
+      "aisle": "A25",
+      "side": "L",
+      "edgeId": "e15",
+      "offsetM": 16,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A25-L18",
+      "aisle": "A25",
+      "side": "L",
+      "edgeId": "e15",
+      "offsetM": 5.7,
+      "shelf": 2
+    },
+    {
+      "id": "A25-R1",
+      "aisle": "A25",
+      "side": "R",
+      "edgeId": "e15",
+      "offsetM": 27.6,
+      "shelf": 3,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A25-R7",
+      "aisle": "A25",
+      "side": "R",
+      "edgeId": "e15",
+      "offsetM": 19.6,
+      "shelf": 1
+    },
+    {
+      "id": "A25-R14",
+      "aisle": "A25",
+      "side": "R",
+      "edgeId": "e15",
+      "offsetM": 11.7,
+      "shelf": 2
+    },
+    {
+      "id": "A25-R20",
+      "aisle": "A25",
+      "side": "R",
+      "edgeId": "e15",
+      "offsetM": 4.4,
+      "shelf": 3
+    },
+    {
+      "id": "A26-L1",
+      "aisle": "A26",
+      "side": "L",
+      "edgeId": "e12",
+      "offsetM": 26.3,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A26-L9",
+      "aisle": "A26",
+      "side": "L",
+      "edgeId": "e12",
+      "offsetM": 16,
+      "shelf": 2
+    },
+    {
+      "id": "A26-L18",
+      "aisle": "A26",
+      "side": "L",
+      "edgeId": "e12",
+      "offsetM": 5.7,
+      "shelf": 3
+    },
+    {
+      "id": "A26-R1",
+      "aisle": "A26",
+      "side": "R",
+      "edgeId": "e12",
+      "offsetM": 27.6,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A26-R7",
+      "aisle": "A26",
+      "side": "R",
+      "edgeId": "e12",
+      "offsetM": 19.6,
+      "shelf": 2,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A26-R14",
+      "aisle": "A26",
+      "side": "R",
+      "edgeId": "e12",
+      "offsetM": 11.7,
+      "shelf": 3
+    },
+    {
+      "id": "A26-R20",
+      "aisle": "A26",
+      "side": "R",
+      "edgeId": "e12",
+      "offsetM": 4.4,
+      "shelf": 1
+    },
+    {
+      "id": "A27-L1",
+      "aisle": "A27",
+      "side": "L",
+      "edgeId": "e9",
+      "offsetM": 27.6,
+      "shelf": 2,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A27-L7",
+      "aisle": "A27",
+      "side": "L",
+      "edgeId": "e9",
+      "offsetM": 19.6,
+      "shelf": 3
+    },
+    {
+      "id": "A27-L14",
+      "aisle": "A27",
+      "side": "L",
+      "edgeId": "e9",
+      "offsetM": 11.7,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A27-L20",
+      "aisle": "A27",
+      "side": "L",
+      "edgeId": "e9",
+      "offsetM": 4.4,
+      "shelf": 2
+    },
+    {
+      "id": "A27-R1",
+      "aisle": "A27",
+      "side": "R",
+      "edgeId": "e9",
+      "offsetM": 26.3,
+      "shelf": 3
+    },
+    {
+      "id": "A27-R9",
+      "aisle": "A27",
+      "side": "R",
+      "edgeId": "e9",
+      "offsetM": 16,
+      "shelf": 1
+    },
+    {
+      "id": "A27-R18",
+      "aisle": "A27",
+      "side": "R",
+      "edgeId": "e9",
+      "offsetM": 5.7,
+      "shelf": 2
+    },
+    {
+      "id": "A28-L1",
+      "aisle": "A28",
+      "side": "L",
+      "edgeId": "e6",
+      "offsetM": 27.6,
+      "shelf": 3
+    },
+    {
+      "id": "A28-L7",
+      "aisle": "A28",
+      "side": "L",
+      "edgeId": "e6",
+      "offsetM": 19.6,
+      "shelf": 1
+    },
+    {
+      "id": "A28-L14",
+      "aisle": "A28",
+      "side": "L",
+      "edgeId": "e6",
+      "offsetM": 11.7,
+      "shelf": 2
+    },
+    {
+      "id": "A28-L20",
+      "aisle": "A28",
+      "side": "L",
+      "edgeId": "e6",
+      "offsetM": 4.4,
+      "shelf": 3
+    },
+    {
+      "id": "A28-R1",
+      "aisle": "A28",
+      "side": "R",
+      "edgeId": "e6",
+      "offsetM": 28.8,
+      "shelf": 1
+    },
+    {
+      "id": "A28-R5",
+      "aisle": "A28",
+      "side": "R",
+      "edgeId": "e6",
+      "offsetM": 23.9,
+      "shelf": 2
+    },
+    {
+      "id": "A28-R9",
+      "aisle": "A28",
+      "side": "R",
+      "edgeId": "e6",
+      "offsetM": 18.4,
+      "shelf": 3
+    },
+    {
+      "id": "A28-R14",
+      "aisle": "A28",
+      "side": "R",
+      "edgeId": "e6",
+      "offsetM": 13,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A28-R18",
+      "aisle": "A28",
+      "side": "R",
+      "edgeId": "e6",
+      "offsetM": 8.1,
+      "shelf": 2
+    },
+    {
+      "id": "A28-R22",
+      "aisle": "A28",
+      "side": "R",
+      "edgeId": "e6",
+      "offsetM": 3.2,
+      "shelf": 3
+    },
+    {
+      "id": "A29-L1",
+      "aisle": "A29",
+      "side": "L",
+      "edgeId": "e3",
+      "offsetM": 27.6,
+      "shelf": 1
+    },
+    {
+      "id": "A29-L7",
+      "aisle": "A29",
+      "side": "L",
+      "edgeId": "e3",
+      "offsetM": 19.6,
+      "shelf": 2
+    },
+    {
+      "id": "A29-L14",
+      "aisle": "A29",
+      "side": "L",
+      "edgeId": "e3",
+      "offsetM": 11.7,
+      "shelf": 3
+    },
+    {
+      "id": "A29-L20",
+      "aisle": "A29",
+      "side": "L",
+      "edgeId": "e3",
+      "offsetM": 4.4,
+      "shelf": 1
+    },
+    {
+      "id": "A29-R1",
+      "aisle": "A29",
+      "side": "R",
+      "edgeId": "e3",
+      "offsetM": 28.8,
+      "shelf": 2
+    },
+    {
+      "id": "A29-R5",
+      "aisle": "A29",
+      "side": "R",
+      "edgeId": "e3",
+      "offsetM": 23.9,
+      "shelf": 3
+    },
+    {
+      "id": "A29-R9",
+      "aisle": "A29",
+      "side": "R",
+      "edgeId": "e3",
+      "offsetM": 18.4,
+      "shelf": 1
+    },
+    {
+      "id": "A29-R14",
+      "aisle": "A29",
+      "side": "R",
+      "edgeId": "e3",
+      "offsetM": 13,
+      "shelf": 2
+    },
+    {
+      "id": "A29-R18",
+      "aisle": "A29",
+      "side": "R",
+      "edgeId": "e3",
+      "offsetM": 8.1,
+      "shelf": 3
+    },
+    {
+      "id": "A29-R22",
+      "aisle": "A29",
+      "side": "R",
+      "edgeId": "e3",
+      "offsetM": 3.2,
+      "shelf": 1
+    },
+    {
+      "id": "A30-L1",
+      "aisle": "A30",
+      "side": "L",
       "edgeId": "e0",
-      "offsetM": 32,
-      "shelf": 3
-    },
-    {
-      "id": "A2-8",
-      "aisle": "A2",
-      "side": "L",
-      "edgeId": "e3",
-      "offsetM": 8,
-      "shelf": 1
-    },
-    {
-      "id": "A2-20",
-      "aisle": "A2",
-      "side": "L",
-      "edgeId": "e3",
-      "offsetM": 20,
+      "offsetM": 26.3,
       "shelf": 2
     },
     {
-      "id": "A2-32",
-      "aisle": "A2",
+      "id": "A30-L9",
+      "aisle": "A30",
       "side": "L",
-      "edgeId": "e3",
-      "offsetM": 32,
+      "edgeId": "e0",
+      "offsetM": 16,
       "shelf": 3
     },
     {
-      "id": "A3-8",
-      "aisle": "A3",
+      "id": "A30-L18",
+      "aisle": "A30",
       "side": "L",
-      "edgeId": "e6",
-      "offsetM": 8,
+      "edgeId": "e0",
+      "offsetM": 5.7,
       "shelf": 1
     },
     {
-      "id": "A3-20",
-      "aisle": "A3",
-      "side": "L",
-      "edgeId": "e6",
-      "offsetM": 20,
+      "id": "A30-R1",
+      "aisle": "A30",
+      "side": "R",
+      "edgeId": "e0",
+      "offsetM": 27.6,
       "shelf": 2
     },
     {
-      "id": "A3-32",
-      "aisle": "A3",
-      "side": "L",
-      "edgeId": "e6",
-      "offsetM": 32,
+      "id": "A30-R7",
+      "aisle": "A30",
+      "side": "R",
+      "edgeId": "e0",
+      "offsetM": 19.6,
       "shelf": 3
     },
     {
-      "id": "A4-8",
-      "aisle": "A4",
-      "side": "L",
-      "edgeId": "e9",
-      "offsetM": 8,
+      "id": "A30-R14",
+      "aisle": "A30",
+      "side": "R",
+      "edgeId": "e0",
+      "offsetM": 11.7,
       "shelf": 1
     },
     {
-      "id": "A4-20",
-      "aisle": "A4",
-      "side": "L",
-      "edgeId": "e9",
-      "offsetM": 20,
+      "id": "A30-R20",
+      "aisle": "A30",
+      "side": "R",
+      "edgeId": "e0",
+      "offsetM": 4.4,
       "shelf": 2
     },
     {
-      "id": "A4-32",
-      "aisle": "A4",
-      "side": "L",
-      "edgeId": "e9",
-      "offsetM": 32,
-      "shelf": 3
-    },
-    {
-      "id": "A5-8",
-      "aisle": "A5",
-      "side": "L",
-      "edgeId": "e12",
-      "offsetM": 8,
-      "shelf": 1
-    },
-    {
-      "id": "A5-20",
-      "aisle": "A5",
-      "side": "L",
-      "edgeId": "e12",
-      "offsetM": 20,
-      "shelf": 2
-    },
-    {
-      "id": "A5-32",
-      "aisle": "A5",
-      "side": "L",
-      "edgeId": "e12",
-      "offsetM": 32,
-      "shelf": 3
-    },
-    {
-      "id": "A6-8",
-      "aisle": "A6",
-      "side": "L",
-      "edgeId": "e15",
-      "offsetM": 8,
-      "shelf": 1
-    },
-    {
-      "id": "A6-20",
-      "aisle": "A6",
-      "side": "L",
-      "edgeId": "e15",
-      "offsetM": 20,
-      "shelf": 2
-    },
-    {
-      "id": "A6-32",
-      "aisle": "A6",
-      "side": "L",
-      "edgeId": "e15",
-      "offsetM": 32,
-      "shelf": 3
-    },
-    {
-      "id": "A7-8",
-      "aisle": "A7",
-      "side": "L",
-      "edgeId": "e18",
-      "offsetM": 8,
-      "shelf": 1
-    },
-    {
-      "id": "A7-20",
-      "aisle": "A7",
-      "side": "L",
-      "edgeId": "e18",
-      "offsetM": 20,
-      "shelf": 2
-    },
-    {
-      "id": "A7-32",
-      "aisle": "A7",
-      "side": "L",
-      "edgeId": "e18",
-      "offsetM": 32,
-      "shelf": 3
-    },
-    {
-      "id": "A8-8",
-      "aisle": "A8",
-      "side": "L",
-      "edgeId": "e21",
-      "offsetM": 8,
-      "shelf": 1
-    },
-    {
-      "id": "A8-20",
-      "aisle": "A8",
-      "side": "L",
-      "edgeId": "e21",
-      "offsetM": 20,
-      "shelf": 2
-    },
-    {
-      "id": "A8-32",
-      "aisle": "A8",
-      "side": "L",
-      "edgeId": "e21",
-      "offsetM": 32,
-      "shelf": 3
-    },
-    {
-      "id": "A9-8",
-      "aisle": "A9",
-      "side": "L",
-      "edgeId": "e24",
-      "offsetM": 8,
-      "shelf": 1
-    },
-    {
-      "id": "A9-20",
-      "aisle": "A9",
-      "side": "L",
-      "edgeId": "e24",
-      "offsetM": 20,
-      "shelf": 2
-    },
-    {
-      "id": "A9-32",
-      "aisle": "A9",
-      "side": "L",
-      "edgeId": "e24",
-      "offsetM": 32,
-      "shelf": 3
-    },
-    {
-      "id": "A10-8",
-      "aisle": "A10",
-      "side": "L",
-      "edgeId": "e27",
-      "offsetM": 8,
-      "shelf": 1
-    },
-    {
-      "id": "A10-20",
-      "aisle": "A10",
-      "side": "L",
-      "edgeId": "e27",
-      "offsetM": 20,
-      "shelf": 2
-    },
-    {
-      "id": "A10-32",
-      "aisle": "A10",
-      "side": "L",
-      "edgeId": "e27",
-      "offsetM": 32,
-      "shelf": 3
-    },
-    {
-      "id": "A11-8",
-      "aisle": "A11",
-      "side": "L",
-      "edgeId": "e30",
-      "offsetM": 8,
-      "shelf": 1
-    },
-    {
-      "id": "A11-20",
-      "aisle": "A11",
-      "side": "L",
-      "edgeId": "e30",
-      "offsetM": 20,
-      "shelf": 2
-    },
-    {
-      "id": "A11-32",
-      "aisle": "A11",
-      "side": "L",
-      "edgeId": "e30",
-      "offsetM": 32,
-      "shelf": 3
-    },
-    {
-      "id": "A12-8",
-      "aisle": "A12",
-      "side": "L",
-      "edgeId": "e33",
-      "offsetM": 8,
-      "shelf": 1
-    },
-    {
-      "id": "A12-20",
-      "aisle": "A12",
-      "side": "L",
-      "edgeId": "e33",
-      "offsetM": 20,
-      "shelf": 2
-    },
-    {
-      "id": "A12-32",
-      "aisle": "A12",
-      "side": "L",
-      "edgeId": "e33",
-      "offsetM": 32,
-      "shelf": 3
-    },
-    {
-      "id": "PRODUCE-6",
+      "id": "PRODUCE-R1",
       "aisle": "PRODUCE",
-      "side": "L",
-      "edgeId": "e38",
-      "offsetM": 6,
-      "shelf": 1
-    },
-    {
-      "id": "PRODUCE-18",
-      "aisle": "PRODUCE",
-      "side": "L",
-      "edgeId": "e38",
-      "offsetM": 18,
-      "shelf": 2
-    },
-    {
-      "id": "PRODUCE-30",
-      "aisle": "PRODUCE",
-      "side": "L",
-      "edgeId": "e38",
+      "side": "R",
+      "edgeId": "e93",
       "offsetM": 30,
-      "shelf": 3
+      "shelf": 3,
+      "tags": [
+        "produce"
+      ]
     },
     {
-      "id": "BAKERY-10",
+      "id": "PRODUCE-R3",
+      "aisle": "PRODUCE",
+      "side": "R",
+      "edgeId": "e93",
+      "offsetM": 28.2,
+      "shelf": 1,
+      "tags": [
+        "produce"
+      ]
+    },
+    {
+      "id": "PRODUCE-R4",
+      "aisle": "PRODUCE",
+      "side": "R",
+      "edgeId": "e93",
+      "offsetM": 26.3,
+      "shelf": 2,
+      "tags": [
+        "produce"
+      ]
+    },
+    {
+      "id": "PRODUCE-R6",
+      "aisle": "PRODUCE",
+      "side": "R",
+      "edgeId": "e93",
+      "offsetM": 23.9,
+      "shelf": 3,
+      "tags": [
+        "produce",
+        "fragile"
+      ]
+    },
+    {
+      "id": "PRODUCE-R8",
+      "aisle": "PRODUCE",
+      "side": "R",
+      "edgeId": "e93",
+      "offsetM": 22.1,
+      "shelf": 1,
+      "tags": [
+        "produce",
+        "heavy"
+      ]
+    },
+    {
+      "id": "PRODUCE-R9",
+      "aisle": "PRODUCE",
+      "side": "R",
+      "edgeId": "e93",
+      "offsetM": 20.3,
+      "shelf": 2,
+      "tags": [
+        "produce"
+      ]
+    },
+    {
+      "id": "PRODUCE-R11",
+      "aisle": "PRODUCE",
+      "side": "R",
+      "edgeId": "e93",
+      "offsetM": 17.8,
+      "shelf": 3,
+      "tags": [
+        "produce"
+      ]
+    },
+    {
+      "id": "PRODUCE-R13",
+      "aisle": "PRODUCE",
+      "side": "R",
+      "edgeId": "e93",
+      "offsetM": 16,
+      "shelf": 1,
+      "tags": [
+        "produce"
+      ]
+    },
+    {
+      "id": "PRODUCE-R14",
+      "aisle": "PRODUCE",
+      "side": "R",
+      "edgeId": "e93",
+      "offsetM": 14.2,
+      "shelf": 2,
+      "tags": [
+        "produce"
+      ]
+    },
+    {
+      "id": "PRODUCE-R16",
+      "aisle": "PRODUCE",
+      "side": "R",
+      "edgeId": "e93",
+      "offsetM": 11.7,
+      "shelf": 3,
+      "tags": [
+        "produce",
+        "heavy"
+      ]
+    },
+    {
+      "id": "PRODUCE-R18",
+      "aisle": "PRODUCE",
+      "side": "R",
+      "edgeId": "e93",
+      "offsetM": 9.9,
+      "shelf": 1,
+      "tags": [
+        "produce"
+      ]
+    },
+    {
+      "id": "PRODUCE-R19",
+      "aisle": "PRODUCE",
+      "side": "R",
+      "edgeId": "e93",
+      "offsetM": 8.1,
+      "shelf": 2,
+      "tags": [
+        "produce",
+        "fragile"
+      ]
+    },
+    {
+      "id": "PRODUCE-R21",
+      "aisle": "PRODUCE",
+      "side": "R",
+      "edgeId": "e93",
+      "offsetM": 5.7,
+      "shelf": 3,
+      "tags": [
+        "produce"
+      ]
+    },
+    {
+      "id": "PRODUCE-R23",
+      "aisle": "PRODUCE",
+      "side": "R",
+      "edgeId": "e93",
+      "offsetM": 3.8,
+      "shelf": 1,
+      "tags": [
+        "chilled",
+        "fragile"
+      ]
+    },
+    {
+      "id": "PRODUCE-R24",
+      "aisle": "PRODUCE",
+      "side": "R",
+      "edgeId": "e93",
+      "offsetM": 2,
+      "shelf": 2,
+      "tags": [
+        "produce"
+      ]
+    },
+    {
+      "id": "DELI-L1",
+      "aisle": "DELI",
+      "side": "L",
+      "edgeId": "e92",
+      "offsetM": 14.7,
+      "shelf": 3,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "DELI-L3",
+      "aisle": "DELI",
+      "side": "L",
+      "edgeId": "e92",
+      "offsetM": 11.6,
+      "shelf": 1,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "DELI-L6",
+      "aisle": "DELI",
+      "side": "L",
+      "edgeId": "e92",
+      "offsetM": 8.4,
+      "shelf": 2,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "DELI-L8",
+      "aisle": "DELI",
+      "side": "L",
+      "edgeId": "e92",
+      "offsetM": 5.2,
+      "shelf": 3,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "DELI-L11",
+      "aisle": "DELI",
+      "side": "L",
+      "edgeId": "e92",
+      "offsetM": 2.1,
+      "shelf": 1,
+      "tags": [
+        "chilled",
+        "fragile"
+      ]
+    },
+    {
+      "id": "BAKERY-L1",
       "aisle": "BAKERY",
       "side": "L",
-      "edgeId": "e39",
-      "offsetM": 10,
-      "shelf": 1
+      "edgeId": "e92",
+      "offsetM": 29.9,
+      "shelf": 2,
+      "tags": [
+        "fragile"
+      ]
     },
     {
-      "id": "BAKERY-25",
+      "id": "BAKERY-L3",
       "aisle": "BAKERY",
       "side": "L",
-      "edgeId": "e39",
-      "offsetM": 25,
-      "shelf": 2
+      "edgeId": "e92",
+      "offsetM": 27.4,
+      "shelf": 3,
+      "tags": [
+        "fragile"
+      ]
     },
     {
-      "id": "MEAT-1",
+      "id": "BAKERY-L5",
+      "aisle": "BAKERY",
+      "side": "L",
+      "edgeId": "e92",
+      "offsetM": 24.9,
+      "shelf": 1,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "BAKERY-L7",
+      "aisle": "BAKERY",
+      "side": "L",
+      "edgeId": "e92",
+      "offsetM": 22.3,
+      "shelf": 2,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "BAKERY-L9",
+      "aisle": "BAKERY",
+      "side": "L",
+      "edgeId": "e92",
+      "offsetM": 19.8,
+      "shelf": 3,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "BAKERY-L11",
+      "aisle": "BAKERY",
+      "side": "L",
+      "edgeId": "e92",
+      "offsetM": 17.3,
+      "shelf": 1,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "MEAT-L1",
       "aisle": "MEAT",
       "side": "L",
-      "edgeId": "e4",
-      "offsetM": 2,
-      "shelf": 3
+      "edgeId": "e43",
+      "offsetM": 2.9,
+      "shelf": 2,
+      "tags": [
+        "chilled"
+      ]
     },
     {
-      "id": "MEAT-3",
+      "id": "MEAT-L6",
+      "aisle": "MEAT",
+      "side": "L",
+      "edgeId": "e40",
+      "offsetM": 0.8,
+      "shelf": 3,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "MEAT-L11",
+      "aisle": "MEAT",
+      "side": "L",
+      "edgeId": "e34",
+      "offsetM": 2,
+      "shelf": 1,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "MEAT-L17",
+      "aisle": "MEAT",
+      "side": "L",
+      "edgeId": "e28",
+      "offsetM": 3.2,
+      "shelf": 2,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "MEAT-L22",
+      "aisle": "MEAT",
+      "side": "L",
+      "edgeId": "e25",
+      "offsetM": 1.1,
+      "shelf": 3,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "MEAT-L27",
+      "aisle": "MEAT",
+      "side": "L",
+      "edgeId": "e19",
+      "offsetM": 2.9,
+      "shelf": 1,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "MEAT-L32",
+      "aisle": "MEAT",
+      "side": "L",
+      "edgeId": "e16",
+      "offsetM": 0.8,
+      "shelf": 2,
+      "tags": [
+        "chilled",
+        "fragile"
+      ]
+    },
+    {
+      "id": "MEAT-L37",
       "aisle": "MEAT",
       "side": "L",
       "edgeId": "e10",
       "offsetM": 2,
-      "shelf": 1
+      "shelf": 3,
+      "tags": [
+        "chilled"
+      ]
     },
     {
-      "id": "MEAT-5",
+      "id": "MEAT-L43",
       "aisle": "MEAT",
       "side": "L",
-      "edgeId": "e16",
-      "offsetM": 2,
-      "shelf": 2
+      "edgeId": "e4",
+      "offsetM": 3.2,
+      "shelf": 1,
+      "tags": [
+        "chilled"
+      ]
     },
     {
-      "id": "DAIRY-8",
+      "id": "MEAT-L48",
+      "aisle": "MEAT",
+      "side": "L",
+      "edgeId": "e1",
+      "offsetM": 3.1,
+      "shelf": 2,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "DAIRY-L1",
       "aisle": "DAIRY",
       "side": "L",
-      "edgeId": "e25",
+      "edgeId": "e90",
+      "offsetM": 3.5,
+      "shelf": 3,
+      "tags": [
+        "chilled",
+        "heavy"
+      ]
+    },
+    {
+      "id": "DAIRY-L5",
+      "aisle": "DAIRY",
+      "side": "L",
+      "edgeId": "e88",
       "offsetM": 2,
+      "shelf": 1,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "DAIRY-L10",
+      "aisle": "DAIRY",
+      "side": "L",
+      "edgeId": "e85",
+      "offsetM": 0.5,
+      "shelf": 2,
+      "tags": [
+        "chilled",
+        "fragile"
+      ]
+    },
+    {
+      "id": "DAIRY-L14",
+      "aisle": "DAIRY",
+      "side": "L",
+      "edgeId": "e79",
+      "offsetM": 3.5,
+      "shelf": 3,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "DAIRY-L18",
+      "aisle": "DAIRY",
+      "side": "L",
+      "edgeId": "e76",
+      "offsetM": 2,
+      "shelf": 1,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "DAIRY-L23",
+      "aisle": "DAIRY",
+      "side": "L",
+      "edgeId": "e73",
+      "offsetM": 0.5,
+      "shelf": 2,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "DAIRY-L27",
+      "aisle": "DAIRY",
+      "side": "L",
+      "edgeId": "e67",
+      "offsetM": 3.5,
+      "shelf": 3,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "DAIRY-L31",
+      "aisle": "DAIRY",
+      "side": "L",
+      "edgeId": "e64",
+      "offsetM": 2,
+      "shelf": 1,
+      "tags": [
+        "chilled",
+        "heavy"
+      ]
+    },
+    {
+      "id": "DAIRY-L36",
+      "aisle": "DAIRY",
+      "side": "L",
+      "edgeId": "e61",
+      "offsetM": 0.5,
+      "shelf": 2,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "DAIRY-L40",
+      "aisle": "DAIRY",
+      "side": "L",
+      "edgeId": "e55",
+      "offsetM": 3.5,
+      "shelf": 3,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "DAIRY-L44",
+      "aisle": "DAIRY",
+      "side": "L",
+      "edgeId": "e52",
+      "offsetM": 2,
+      "shelf": 1,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "DAIRY-L49",
+      "aisle": "DAIRY",
+      "side": "L",
+      "edgeId": "e49",
+      "offsetM": 0.5,
+      "shelf": 2,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "PHARMACY-R1",
+      "aisle": "PHARMACY",
+      "side": "R",
+      "edgeId": "e14",
+      "offsetM": 0.2,
       "shelf": 3
     },
     {
-      "id": "DAIRY-10",
-      "aisle": "DAIRY",
-      "side": "L",
-      "edgeId": "e31",
-      "offsetM": 2,
+      "id": "PHARMACY-R4",
+      "aisle": "PHARMACY",
+      "side": "R",
+      "edgeId": "e11",
+      "offsetM": 1.1,
       "shelf": 1
     },
     {
-      "id": "DAIRY-11",
-      "aisle": "DAIRY",
-      "side": "L",
-      "edgeId": "e34",
-      "offsetM": 2,
-      "shelf": 2
-    },
-    {
-      "id": "END-2",
-      "aisle": "ENDCAP",
-      "side": "L",
+      "id": "PHARMACY-R6",
+      "aisle": "PHARMACY",
+      "side": "R",
       "edgeId": "e8",
       "offsetM": 2,
+      "shelf": 2
+    },
+    {
+      "id": "PHARMACY-R9",
+      "aisle": "PHARMACY",
+      "side": "R",
+      "edgeId": "e5",
+      "offsetM": 2.9,
       "shelf": 3
     },
     {
-      "id": "END-6",
-      "aisle": "ENDCAP",
-      "side": "L",
-      "edgeId": "e20",
-      "offsetM": 2,
+      "id": "PHARMACY-R11",
+      "aisle": "PHARMACY",
+      "side": "R",
+      "edgeId": "e2",
+      "offsetM": 5.8,
       "shelf": 1
-    },
-    {
-      "id": "END-9",
-      "aisle": "ENDCAP",
-      "side": "L",
-      "edgeId": "e29",
-      "offsetM": 2,
-      "shelf": 2
     }
   ],
   "entranceId": "ENTRANCE",
@@ -1160,392 +4437,300 @@
     "L2",
     "L3",
     "L4",
-    "L5"
+    "L5",
+    "L6",
+    "L7",
+    "L8",
+    "L9"
   ],
   "exitId": "EXIT",
   "fixtures": [
     {
-      "id": "f-A1-L",
+      "id": "f-A1-R",
       "kind": "shelf",
       "polygon": [
         [
-          8,
+          126.6,
           12.8
         ],
         [
-          9.4,
+          128,
           12.8
         ],
         [
-          9.4,
-          51.2
+          128,
+          43.2
         ],
         [
-          8,
-          51.2
+          126.6,
+          43.2
         ]
       ],
       "department": "dry",
       "aisle": "A1"
     },
     {
-      "id": "f-A1-A2",
+      "id": "f-A2-A1",
       "kind": "shelf",
       "polygon": [
         [
-          10.6,
+          122.6,
           12.8
         ],
         [
-          13.4,
+          125.4,
           12.8
         ],
         [
-          13.4,
-          51.2
+          125.4,
+          43.2
         ],
         [
-          10.6,
-          51.2
+          122.6,
+          43.2
         ]
       ],
       "department": "dry",
       "aisle": "A1"
     },
     {
-      "id": "f-A2-A3",
+      "id": "f-A3-A2",
       "kind": "shelf",
       "polygon": [
         [
-          14.6,
+          118.6,
           12.8
         ],
         [
-          17.4,
+          121.4,
           12.8
         ],
         [
-          17.4,
-          51.2
+          121.4,
+          43.2
         ],
         [
-          14.6,
-          51.2
+          118.6,
+          43.2
         ]
       ],
       "department": "dry",
       "aisle": "A2"
     },
     {
-      "id": "f-A3-A4",
+      "id": "f-A4-A3",
       "kind": "shelf",
       "polygon": [
         [
-          18.6,
+          114.6,
           12.8
         ],
         [
-          21.4,
+          117.4,
           12.8
         ],
         [
-          21.4,
-          51.2
+          117.4,
+          43.2
         ],
         [
-          18.6,
-          51.2
+          114.6,
+          43.2
         ]
       ],
       "department": "dry",
       "aisle": "A3"
     },
     {
-      "id": "f-A4-A5",
+      "id": "f-A5-A4",
       "kind": "shelf",
       "polygon": [
         [
-          22.6,
+          110.6,
           12.8
         ],
         [
-          25.4,
+          113.4,
           12.8
         ],
         [
-          25.4,
-          51.2
+          113.4,
+          43.2
         ],
         [
-          22.6,
-          51.2
+          110.6,
+          43.2
         ]
       ],
       "department": "dry",
       "aisle": "A4"
     },
     {
-      "id": "f-A5-R",
+      "id": "f-A6-A5",
       "kind": "shelf",
       "polygon": [
         [
-          26.6,
+          106.6,
           12.8
         ],
         [
-          28,
+          109.4,
           12.8
         ],
         [
-          28,
-          51.2
+          109.4,
+          43.2
         ],
         [
-          26.6,
-          51.2
+          106.6,
+          43.2
         ]
       ],
       "department": "dry",
       "aisle": "A5"
     },
     {
-      "id": "f-A6-L",
+      "id": "f-A7-A6",
       "kind": "shelf",
       "polygon": [
         [
-          28,
+          102.6,
           12.8
         ],
         [
-          29.4,
+          105.4,
           12.8
         ],
         [
-          29.4,
-          51.2
+          105.4,
+          43.2
         ],
         [
-          28,
-          51.2
+          102.6,
+          43.2
         ]
       ],
-      "department": "snack",
+      "department": "dry",
       "aisle": "A6"
     },
     {
-      "id": "f-A6-R",
+      "id": "f-A8-A7",
       "kind": "shelf",
       "polygon": [
         [
-          30.6,
+          98.6,
           12.8
         ],
         [
-          32,
+          101.4,
           12.8
         ],
         [
-          32,
-          51.2
+          101.4,
+          43.2
         ],
         [
-          30.6,
-          51.2
+          98.6,
+          43.2
         ]
       ],
-      "department": "snack",
-      "aisle": "A6"
-    },
-    {
-      "id": "f-A7-L",
-      "kind": "shelf",
-      "polygon": [
-        [
-          32,
-          12.8
-        ],
-        [
-          33.4,
-          12.8
-        ],
-        [
-          33.4,
-          51.2
-        ],
-        [
-          32,
-          51.2
-        ]
-      ],
-      "department": "drinks",
+      "department": "dry",
       "aisle": "A7"
     },
     {
-      "id": "f-A7-R",
+      "id": "f-A9-A8",
       "kind": "shelf",
       "polygon": [
         [
-          34.6,
+          94.6,
           12.8
         ],
         [
-          36,
+          97.4,
           12.8
         ],
         [
-          36,
-          51.2
+          97.4,
+          43.2
         ],
         [
-          34.6,
-          51.2
+          94.6,
+          43.2
         ]
       ],
-      "department": "drinks",
-      "aisle": "A7"
-    },
-    {
-      "id": "f-A8-L",
-      "kind": "shelf",
-      "polygon": [
-        [
-          36,
-          12.8
-        ],
-        [
-          37.4,
-          12.8
-        ],
-        [
-          37.4,
-          51.2
-        ],
-        [
-          36,
-          51.2
-        ]
-      ],
-      "department": "household",
+      "department": "dry",
       "aisle": "A8"
     },
     {
-      "id": "f-A8-A9",
+      "id": "f-A10-A9",
       "kind": "shelf",
       "polygon": [
         [
-          38.6,
+          90.6,
           12.8
         ],
         [
-          41.4,
+          93.4,
           12.8
         ],
         [
-          41.4,
-          51.2
+          93.4,
+          43.2
         ],
         [
-          38.6,
-          51.2
+          90.6,
+          43.2
         ]
       ],
-      "department": "household",
-      "aisle": "A8"
-    },
-    {
-      "id": "f-A9-R",
-      "kind": "shelf",
-      "polygon": [
-        [
-          42.6,
-          12.8
-        ],
-        [
-          44,
-          12.8
-        ],
-        [
-          44,
-          51.2
-        ],
-        [
-          42.6,
-          51.2
-        ]
-      ],
-      "department": "household",
+      "department": "dry",
       "aisle": "A9"
     },
     {
-      "id": "f-A10-L",
+      "id": "f-A11-A10",
       "kind": "shelf",
       "polygon": [
         [
-          44,
+          86.6,
           12.8
         ],
         [
-          45.4,
+          89.4,
           12.8
         ],
         [
-          45.4,
-          51.2
+          89.4,
+          43.2
         ],
         [
-          44,
-          51.2
+          86.6,
+          43.2
         ]
       ],
-      "department": "frozen",
+      "department": "dry",
       "aisle": "A10"
     },
     {
-      "id": "f-A10-A11",
+      "id": "f-A11-L",
       "kind": "shelf",
       "polygon": [
         [
-          46.6,
+          84,
           12.8
         ],
         [
-          49.4,
+          85.4,
           12.8
         ],
         [
-          49.4,
-          51.2
+          85.4,
+          43.2
         ],
         [
-          46.6,
-          51.2
+          84,
+          43.2
         ]
       ],
-      "department": "frozen",
-      "aisle": "A10"
-    },
-    {
-      "id": "f-A11-A12",
-      "kind": "shelf",
-      "polygon": [
-        [
-          50.6,
-          12.8
-        ],
-        [
-          53.4,
-          12.8
-        ],
-        [
-          53.4,
-          51.2
-        ],
-        [
-          50.6,
-          51.2
-        ]
-      ],
-      "department": "frozen",
+      "department": "dry",
       "aisle": "A11"
     },
     {
@@ -1553,68 +4738,716 @@
       "kind": "shelf",
       "polygon": [
         [
-          54.6,
+          82.6,
           12.8
         ],
         [
-          56,
+          84,
           12.8
         ],
         [
-          56,
-          51.2
+          84,
+          43.2
         ],
         [
-          54.6,
-          51.2
+          82.6,
+          43.2
+        ]
+      ],
+      "department": "snack",
+      "aisle": "A12"
+    },
+    {
+      "id": "f-A13-A12",
+      "kind": "shelf",
+      "polygon": [
+        [
+          78.6,
+          12.8
+        ],
+        [
+          81.4,
+          12.8
+        ],
+        [
+          81.4,
+          43.2
+        ],
+        [
+          78.6,
+          43.2
+        ]
+      ],
+      "department": "snack",
+      "aisle": "A12"
+    },
+    {
+      "id": "f-A14-A13",
+      "kind": "shelf",
+      "polygon": [
+        [
+          74.6,
+          12.8
+        ],
+        [
+          77.4,
+          12.8
+        ],
+        [
+          77.4,
+          43.2
+        ],
+        [
+          74.6,
+          43.2
+        ]
+      ],
+      "department": "snack",
+      "aisle": "A13"
+    },
+    {
+      "id": "f-A15-A14",
+      "kind": "shelf",
+      "polygon": [
+        [
+          70.6,
+          12.8
+        ],
+        [
+          73.4,
+          12.8
+        ],
+        [
+          73.4,
+          43.2
+        ],
+        [
+          70.6,
+          43.2
+        ]
+      ],
+      "department": "snack",
+      "aisle": "A14"
+    },
+    {
+      "id": "f-A15-L",
+      "kind": "shelf",
+      "polygon": [
+        [
+          68,
+          12.8
+        ],
+        [
+          69.4,
+          12.8
+        ],
+        [
+          69.4,
+          43.2
+        ],
+        [
+          68,
+          43.2
+        ]
+      ],
+      "department": "snack",
+      "aisle": "A15"
+    },
+    {
+      "id": "f-A16-R",
+      "kind": "shelf",
+      "polygon": [
+        [
+          66.6,
+          12.8
+        ],
+        [
+          68,
+          12.8
+        ],
+        [
+          68,
+          43.2
+        ],
+        [
+          66.6,
+          43.2
+        ]
+      ],
+      "department": "drinks",
+      "aisle": "A16"
+    },
+    {
+      "id": "f-A17-A16",
+      "kind": "shelf",
+      "polygon": [
+        [
+          62.6,
+          12.8
+        ],
+        [
+          65.4,
+          12.8
+        ],
+        [
+          65.4,
+          43.2
+        ],
+        [
+          62.6,
+          43.2
+        ]
+      ],
+      "department": "drinks",
+      "aisle": "A16"
+    },
+    {
+      "id": "f-A17-L",
+      "kind": "shelf",
+      "polygon": [
+        [
+          60,
+          12.8
+        ],
+        [
+          61.4,
+          12.8
+        ],
+        [
+          61.4,
+          43.2
+        ],
+        [
+          60,
+          43.2
+        ]
+      ],
+      "department": "drinks",
+      "aisle": "A17"
+    },
+    {
+      "id": "f-A18-R",
+      "kind": "shelf",
+      "polygon": [
+        [
+          58.6,
+          12.8
+        ],
+        [
+          60,
+          12.8
+        ],
+        [
+          60,
+          43.2
+        ],
+        [
+          58.6,
+          43.2
         ]
       ],
       "department": "frozen",
-      "aisle": "A12"
+      "aisle": "A18"
+    },
+    {
+      "id": "f-A19-A18",
+      "kind": "shelf",
+      "polygon": [
+        [
+          54.6,
+          12.8
+        ],
+        [
+          57.4,
+          12.8
+        ],
+        [
+          57.4,
+          43.2
+        ],
+        [
+          54.6,
+          43.2
+        ]
+      ],
+      "department": "frozen",
+      "aisle": "A18"
+    },
+    {
+      "id": "f-A20-A19",
+      "kind": "shelf",
+      "polygon": [
+        [
+          50.6,
+          12.8
+        ],
+        [
+          53.4,
+          12.8
+        ],
+        [
+          53.4,
+          43.2
+        ],
+        [
+          50.6,
+          43.2
+        ]
+      ],
+      "department": "frozen",
+      "aisle": "A19"
+    },
+    {
+      "id": "f-A21-A20",
+      "kind": "shelf",
+      "polygon": [
+        [
+          46.6,
+          12.8
+        ],
+        [
+          49.4,
+          12.8
+        ],
+        [
+          49.4,
+          43.2
+        ],
+        [
+          46.6,
+          43.2
+        ]
+      ],
+      "department": "frozen",
+      "aisle": "A20"
+    },
+    {
+      "id": "f-A21-L",
+      "kind": "shelf",
+      "polygon": [
+        [
+          44,
+          12.8
+        ],
+        [
+          45.4,
+          12.8
+        ],
+        [
+          45.4,
+          43.2
+        ],
+        [
+          44,
+          43.2
+        ]
+      ],
+      "department": "frozen",
+      "aisle": "A21"
+    },
+    {
+      "id": "f-A22-R",
+      "kind": "shelf",
+      "polygon": [
+        [
+          42.6,
+          12.8
+        ],
+        [
+          44,
+          12.8
+        ],
+        [
+          44,
+          43.2
+        ],
+        [
+          42.6,
+          43.2
+        ]
+      ],
+      "department": "dairy",
+      "aisle": "A22"
+    },
+    {
+      "id": "f-A22-L",
+      "kind": "shelf",
+      "polygon": [
+        [
+          40,
+          12.8
+        ],
+        [
+          41.4,
+          12.8
+        ],
+        [
+          41.4,
+          43.2
+        ],
+        [
+          40,
+          43.2
+        ]
+      ],
+      "department": "dairy",
+      "aisle": "A22"
+    },
+    {
+      "id": "f-A23-R",
+      "kind": "shelf",
+      "polygon": [
+        [
+          38.6,
+          12.8
+        ],
+        [
+          40,
+          12.8
+        ],
+        [
+          40,
+          43.2
+        ],
+        [
+          38.6,
+          43.2
+        ]
+      ],
+      "department": "household",
+      "aisle": "A23"
+    },
+    {
+      "id": "f-A24-A23",
+      "kind": "shelf",
+      "polygon": [
+        [
+          34.6,
+          12.8
+        ],
+        [
+          37.4,
+          12.8
+        ],
+        [
+          37.4,
+          43.2
+        ],
+        [
+          34.6,
+          43.2
+        ]
+      ],
+      "department": "household",
+      "aisle": "A23"
+    },
+    {
+      "id": "f-A25-A24",
+      "kind": "shelf",
+      "polygon": [
+        [
+          30.6,
+          12.8
+        ],
+        [
+          33.4,
+          12.8
+        ],
+        [
+          33.4,
+          43.2
+        ],
+        [
+          30.6,
+          43.2
+        ]
+      ],
+      "department": "household",
+      "aisle": "A24"
+    },
+    {
+      "id": "f-A25-L",
+      "kind": "shelf",
+      "polygon": [
+        [
+          28,
+          12.8
+        ],
+        [
+          29.4,
+          12.8
+        ],
+        [
+          29.4,
+          43.2
+        ],
+        [
+          28,
+          43.2
+        ]
+      ],
+      "department": "household",
+      "aisle": "A25"
+    },
+    {
+      "id": "f-A26-R",
+      "kind": "shelf",
+      "polygon": [
+        [
+          26.6,
+          12.8
+        ],
+        [
+          28,
+          12.8
+        ],
+        [
+          28,
+          43.2
+        ],
+        [
+          26.6,
+          43.2
+        ]
+      ],
+      "department": "pet",
+      "aisle": "A26"
+    },
+    {
+      "id": "f-A26-L",
+      "kind": "shelf",
+      "polygon": [
+        [
+          24,
+          12.8
+        ],
+        [
+          25.4,
+          12.8
+        ],
+        [
+          25.4,
+          43.2
+        ],
+        [
+          24,
+          43.2
+        ]
+      ],
+      "department": "pet",
+      "aisle": "A26"
+    },
+    {
+      "id": "f-A27-R",
+      "kind": "shelf",
+      "polygon": [
+        [
+          22.6,
+          12.8
+        ],
+        [
+          24,
+          12.8
+        ],
+        [
+          24,
+          43.2
+        ],
+        [
+          22.6,
+          43.2
+        ]
+      ],
+      "department": "baby",
+      "aisle": "A27"
+    },
+    {
+      "id": "f-A27-L",
+      "kind": "shelf",
+      "polygon": [
+        [
+          20,
+          12.8
+        ],
+        [
+          21.4,
+          12.8
+        ],
+        [
+          21.4,
+          43.2
+        ],
+        [
+          20,
+          43.2
+        ]
+      ],
+      "department": "baby",
+      "aisle": "A27"
+    },
+    {
+      "id": "f-A28-R",
+      "kind": "shelf",
+      "polygon": [
+        [
+          18.6,
+          12.8
+        ],
+        [
+          20,
+          12.8
+        ],
+        [
+          20,
+          43.2
+        ],
+        [
+          18.6,
+          43.2
+        ]
+      ],
+      "department": "pharmacy",
+      "aisle": "A28"
+    },
+    {
+      "id": "f-A29-A28",
+      "kind": "shelf",
+      "polygon": [
+        [
+          14.6,
+          12.8
+        ],
+        [
+          17.4,
+          12.8
+        ],
+        [
+          17.4,
+          43.2
+        ],
+        [
+          14.6,
+          43.2
+        ]
+      ],
+      "department": "pharmacy",
+      "aisle": "A28"
+    },
+    {
+      "id": "f-A30-A29",
+      "kind": "shelf",
+      "polygon": [
+        [
+          10.6,
+          12.8
+        ],
+        [
+          13.4,
+          12.8
+        ],
+        [
+          13.4,
+          43.2
+        ],
+        [
+          10.6,
+          43.2
+        ]
+      ],
+      "department": "pharmacy",
+      "aisle": "A29"
+    },
+    {
+      "id": "f-A30-L",
+      "kind": "shelf",
+      "polygon": [
+        [
+          8,
+          12.8
+        ],
+        [
+          9.4,
+          12.8
+        ],
+        [
+          9.4,
+          43.2
+        ],
+        [
+          8,
+          43.2
+        ]
+      ],
+      "department": "pharmacy",
+      "aisle": "A30"
     },
     {
       "id": "f-PRODUCE",
       "kind": "wall",
       "polygon": [
         [
-          2,
+          132.6,
           12.8
         ],
         [
-          3.4,
+          134,
           12.8
         ],
         [
-          3.4,
-          51.2
+          134,
+          43.2
         ],
         [
-          2,
-          51.2
+          132.6,
+          43.2
         ]
       ],
       "department": "produce",
       "aisle": "PRODUCE"
     },
     {
+      "id": "f-DELI",
+      "kind": "wall",
+      "polygon": [
+        [
+          2,
+          12.8
+        ],
+        [
+          3.4,
+          12.8
+        ],
+        [
+          3.4,
+          28
+        ],
+        [
+          2,
+          28
+        ]
+      ],
+      "department": "deli",
+      "aisle": "DELI"
+    },
+    {
       "id": "f-BAKERY",
       "kind": "wall",
       "polygon": [
         [
-          60.6,
-          12.8
+          2,
+          28
         ],
         [
-          62,
-          12.8
+          3.4,
+          28
         ],
         [
-          62,
-          51.2
+          3.4,
+          43.2
         ],
         [
-          60.6,
-          51.2
+          2,
+          43.2
         ]
       ],
       "department": "bakery",
@@ -1629,11 +5462,11 @@
           10
         ],
         [
-          32,
+          68,
           10
         ],
         [
-          32,
+          68,
           11.4
         ],
         [
@@ -1649,19 +5482,19 @@
       "kind": "wall",
       "polygon": [
         [
-          32,
+          68,
           10
         ],
         [
-          62,
+          134,
           10
         ],
         [
-          62,
+          134,
           11.4
         ],
         [
-          32,
+          68,
           11.4
         ]
       ],
@@ -1669,25 +5502,50 @@
       "aisle": "DAIRY"
     },
     {
+      "id": "f-PHARMACY",
+      "kind": "counter",
+      "height": 1,
+      "polygon": [
+        [
+          8,
+          44.6
+        ],
+        [
+          24,
+          44.6
+        ],
+        [
+          24,
+          46.6
+        ],
+        [
+          8,
+          46.6
+        ]
+      ],
+      "department": "pharmacy",
+      "aisle": "PHARMACY"
+    },
+    {
       "id": "f-L0-L",
       "kind": "counter",
       "height": 1,
       "polygon": [
         [
-          14,
-          53
+          32,
+          45
         ],
         [
-          15.4,
-          53
+          33.4,
+          45
         ],
         [
-          15.4,
-          65
+          33.4,
+          57
         ],
         [
-          14,
-          65
+          32,
+          57
         ]
       ],
       "department": "checkout"
@@ -1698,20 +5556,20 @@
       "height": 1,
       "polygon": [
         [
-          16.6,
-          53
+          34.6,
+          45
         ],
         [
-          18,
-          53
+          36,
+          45
         ],
         [
-          18,
-          65
+          36,
+          57
         ],
         [
-          16.6,
-          65
+          34.6,
+          57
         ]
       ],
       "department": "checkout"
@@ -1722,20 +5580,20 @@
       "height": 1,
       "polygon": [
         [
-          19,
-          53
+          40,
+          45
         ],
         [
-          20.4,
-          53
+          41.4,
+          45
         ],
         [
-          20.4,
-          65
+          41.4,
+          57
         ],
         [
-          19,
-          65
+          40,
+          57
         ]
       ],
       "department": "checkout"
@@ -1746,20 +5604,20 @@
       "height": 1,
       "polygon": [
         [
-          21.6,
-          53
+          42.6,
+          45
         ],
         [
-          23,
-          53
+          44,
+          45
         ],
         [
-          23,
-          65
+          44,
+          57
         ],
         [
-          21.6,
-          65
+          42.6,
+          57
         ]
       ],
       "department": "checkout"
@@ -1770,20 +5628,20 @@
       "height": 1,
       "polygon": [
         [
-          24,
-          53
+          48,
+          45
         ],
         [
-          25.4,
-          53
+          49.4,
+          45
         ],
         [
-          25.4,
-          65
+          49.4,
+          57
         ],
         [
-          24,
-          65
+          48,
+          57
         ]
       ],
       "department": "checkout"
@@ -1794,20 +5652,20 @@
       "height": 1,
       "polygon": [
         [
-          26.6,
-          53
+          50.6,
+          45
         ],
         [
-          28,
-          53
+          52,
+          45
         ],
         [
-          28,
-          65
+          52,
+          57
         ],
         [
-          26.6,
-          65
+          50.6,
+          57
         ]
       ],
       "department": "checkout"
@@ -1818,20 +5676,20 @@
       "height": 1,
       "polygon": [
         [
-          29,
-          53
+          56,
+          45
         ],
         [
-          30.4,
-          53
+          57.4,
+          45
         ],
         [
-          30.4,
-          65
+          57.4,
+          57
         ],
         [
-          29,
-          65
+          56,
+          57
         ]
       ],
       "department": "checkout"
@@ -1842,20 +5700,20 @@
       "height": 1,
       "polygon": [
         [
-          31.6,
-          53
+          58.6,
+          45
         ],
         [
-          33,
-          53
+          60,
+          45
         ],
         [
-          33,
-          65
+          60,
+          57
         ],
         [
-          31.6,
-          65
+          58.6,
+          57
         ]
       ],
       "department": "checkout"
@@ -1866,20 +5724,20 @@
       "height": 1,
       "polygon": [
         [
-          34,
-          53
+          64,
+          45
         ],
         [
-          35.4,
-          53
+          65.4,
+          45
         ],
         [
-          35.4,
-          65
+          65.4,
+          57
         ],
         [
-          34,
-          65
+          64,
+          57
         ]
       ],
       "department": "checkout"
@@ -1890,20 +5748,20 @@
       "height": 1,
       "polygon": [
         [
-          36.6,
-          53
+          66.6,
+          45
         ],
         [
-          38,
-          53
+          68,
+          45
         ],
         [
-          38,
-          65
+          68,
+          57
         ],
         [
-          36.6,
-          65
+          66.6,
+          57
         ]
       ],
       "department": "checkout"
@@ -1914,20 +5772,20 @@
       "height": 1,
       "polygon": [
         [
-          39,
-          53
+          72,
+          45
         ],
         [
-          40.4,
-          53
+          73.4,
+          45
         ],
         [
-          40.4,
-          65
+          73.4,
+          57
         ],
         [
-          39,
-          65
+          72,
+          57
         ]
       ],
       "department": "checkout"
@@ -1938,20 +5796,212 @@
       "height": 1,
       "polygon": [
         [
-          41.6,
-          53
+          74.6,
+          45
         ],
         [
-          43,
-          53
+          76,
+          45
         ],
         [
-          43,
-          65
+          76,
+          57
         ],
         [
-          41.6,
-          65
+          74.6,
+          57
+        ]
+      ],
+      "department": "checkout"
+    },
+    {
+      "id": "f-L6-L",
+      "kind": "counter",
+      "height": 1,
+      "polygon": [
+        [
+          80,
+          45
+        ],
+        [
+          81.4,
+          45
+        ],
+        [
+          81.4,
+          57
+        ],
+        [
+          80,
+          57
+        ]
+      ],
+      "department": "checkout"
+    },
+    {
+      "id": "f-L6-R",
+      "kind": "counter",
+      "height": 1,
+      "polygon": [
+        [
+          82.6,
+          45
+        ],
+        [
+          84,
+          45
+        ],
+        [
+          84,
+          57
+        ],
+        [
+          82.6,
+          57
+        ]
+      ],
+      "department": "checkout"
+    },
+    {
+      "id": "f-L7-L",
+      "kind": "counter",
+      "height": 1,
+      "polygon": [
+        [
+          88,
+          45
+        ],
+        [
+          89.4,
+          45
+        ],
+        [
+          89.4,
+          57
+        ],
+        [
+          88,
+          57
+        ]
+      ],
+      "department": "checkout"
+    },
+    {
+      "id": "f-L7-R",
+      "kind": "counter",
+      "height": 1,
+      "polygon": [
+        [
+          90.6,
+          45
+        ],
+        [
+          92,
+          45
+        ],
+        [
+          92,
+          57
+        ],
+        [
+          90.6,
+          57
+        ]
+      ],
+      "department": "checkout"
+    },
+    {
+      "id": "f-L8-L",
+      "kind": "counter",
+      "height": 1,
+      "polygon": [
+        [
+          96,
+          45
+        ],
+        [
+          97.4,
+          45
+        ],
+        [
+          97.4,
+          57
+        ],
+        [
+          96,
+          57
+        ]
+      ],
+      "department": "checkout"
+    },
+    {
+      "id": "f-L8-R",
+      "kind": "counter",
+      "height": 1,
+      "polygon": [
+        [
+          98.6,
+          45
+        ],
+        [
+          100,
+          45
+        ],
+        [
+          100,
+          57
+        ],
+        [
+          98.6,
+          57
+        ]
+      ],
+      "department": "checkout"
+    },
+    {
+      "id": "f-L9-L",
+      "kind": "counter",
+      "height": 1,
+      "polygon": [
+        [
+          104,
+          45
+        ],
+        [
+          105.4,
+          45
+        ],
+        [
+          105.4,
+          57
+        ],
+        [
+          104,
+          57
+        ]
+      ],
+      "department": "checkout"
+    },
+    {
+      "id": "f-L9-R",
+      "kind": "counter",
+      "height": 1,
+      "polygon": [
+        [
+          106.6,
+          45
+        ],
+        [
+          108,
+          45
+        ],
+        [
+          108,
+          57
+        ],
+        [
+          106.6,
+          57
         ]
       ],
       "department": "checkout"
@@ -2019,6 +6069,34 @@
       "name": "Household",
       "color": "#D8D4CC",
       "texture": "household.jpg",
+      "fixtureKind": "gondola"
+    },
+    {
+      "id": "deli",
+      "name": "Deli",
+      "color": "#EFC9A6",
+      "texture": "meat.jpg",
+      "fixtureKind": "counter"
+    },
+    {
+      "id": "pet",
+      "name": "Pet",
+      "color": "#C9B8A3",
+      "texture": "pet.jpg",
+      "fixtureKind": "gondola"
+    },
+    {
+      "id": "baby",
+      "name": "Baby",
+      "color": "#F1D9E0",
+      "texture": "baby.jpg",
+      "fixtureKind": "gondola"
+    },
+    {
+      "id": "pharmacy",
+      "name": "Pharmacy",
+      "color": "#CFE3DA",
+      "texture": "pharmacy.jpg",
       "fixtureKind": "gondola"
     },
     {

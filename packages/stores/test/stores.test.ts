@@ -51,31 +51,29 @@ for (const { store } of STORES) {
   });
 }
 
-import { fixtureParams, offsetForBay, slotFor } from "../src/slots.ts";
+import { fixtureForLocation, fixtureParams, offsetForBay, slotFor } from "../src/slots.ts";
 
 test("slots: demo locations map to a fixture, bay, face and shelf; bays count from the front", () => {
   const { store } = STORES[0];
-  const loc = store.locations.find((l) => l.id === "A3-20")!;
+  const loc = store.locations.find((l) => l.id === "A3-L16")!; // hot sauce & salsa: bays 16–20 on the left of A3
   const slot = slotFor(store, loc)!;
   assert.ok(slot, "no slot");
   assert.equal(slot.params.kind, "gondola");
-  assert.equal(slot.params.bays, Math.round(38.4 / 1.22));
+  assert.equal(slot.params.bays, Math.round(30.4 / 1.22));
   assert.equal(slot.params.shelves, 5);
-  assert.ok(slot.bay >= 1 && slot.bay <= slot.params.bays);
-  // offset 20 from the top on a 38.4 m run whose front is the bottom end: bay ≈ (38.4 - 20.8) / 1.22 → 14/15
-  assert.ok(slot.bay >= 13 && slot.bay <= 16, `bay ${slot.bay}`);
+  assert.ok(slot.bay >= 16 && slot.bay <= 20, `bay ${slot.bay}`); // the category's own bay run
   assert.equal(slot.face, "east"); // side L picks the block west of the corridor, which presents its east face
   assert.equal(slot.shelf, loc.shelf);
   assert.ok(slot.heightM > 0.15 && slot.heightM < 1.8);
   assert.ok(slot.rect.w > 0 && slot.rect.h > 0);
   // a cold wall location on a horizontal fixture
-  const dairy = slotFor(store, store.locations.find((l) => l.id === "DAIRY-10")!)!;
+  const dairy = slotFor(store, store.locations.find((l) => l.id === "DAIRY-L1")!)!;
   assert.equal(dairy.params.kind, "coldcase");
   assert.equal(dairy.params.shelves, 4);
   assert.ok(["north", "south"].includes(dairy.face));
   // moving to bay 1 puts the location near the front end of its edge
   const off = offsetForBay(store, loc, 1)!;
-  assert.ok(off > 35 && off <= 40, `offset ${off}`);
+  assert.ok(off > 29 && off <= 32, `offset ${off}`);
   for (const f of store.fixtures ?? []) {
     const p = fixtureParams(f, store.departments);
     assert.ok(p.bays >= 1 && p.shelves >= 1 && p.depth > 0);
@@ -89,7 +87,38 @@ test("departmentLocations: every demo location belongs to one department", () =>
   const dl = departmentLocations(store);
   const all = Object.values(dl).flat();
   assert.equal(new Set(all).size, store.locations.length);
-  assert.ok(dl.dairy.includes("DAIRY-10"));
-  assert.ok(dl.dry.includes("A3-8"));
-  assert.ok(dl.frozen.includes("A10-20"));
+  assert.ok(dl.dairy.includes("DAIRY-L1"));
+  assert.ok(dl.dry.includes("A10-L1"));
+  assert.ok(dl.frozen.includes("A20-L1"));
+  assert.ok(dl.pharmacy.includes("A28-L1"));
+});
+
+import { categoryLocations, llmOptions } from "../src/resolveContext.ts";
+
+test("categories: every category has its own location on its aisle and side, every location has exactly one category", () => {
+  const { store, categories } = STORES[0];
+  assert.ok(categories.length >= 290 && categories.length <= 320, `${categories.length} categories`);
+  const seen = new Set<string>();
+  const locs = new Map(store.locations.map((l) => [l.id, l]));
+  for (const c of categories) {
+    assert.ok(!seen.has(c.id), `duplicate category ${c.id}`);
+    seen.add(c.id);
+    const l = locs.get(c.locationId);
+    assert.ok(l, `${c.id}: no location ${c.locationId}`);
+    assert.equal(l!.aisle, c.aisle);
+    assert.equal(l!.side, c.side);
+    assert.ok(c.bays[0] >= 1 && c.bays[1] >= c.bays[0], `${c.id}: bays ${c.bays}`);
+    assert.ok(store.departments!.some((d) => d.id === c.department), `${c.id}: department ${c.department}`);
+    const f = fixtureForLocation(store, l!);
+    assert.equal(f?.department, c.department, `${c.id}: sits against a ${f?.department} fixture`);
+  }
+  const byLoc = new Map<string, number>();
+  for (const c of categories) byLoc.set(c.locationId, (byLoc.get(c.locationId) ?? 0) + 1);
+  assert.equal(byLoc.size, store.locations.length, "a location without a category");
+  assert.ok([...byLoc.values()].every((n) => n === 1), "a location with two categories");
+  assert.equal(categoryLocations(categories)["milk"], "DAIRY-L1");
+  assert.deepEqual(llmOptions(categories)[0], { id: categories[0].id, name: categories[0].name });
+  // the walls and the near general-merchandise aisles are all there
+  for (const aisle of ["PRODUCE", "DAIRY", "MEAT", "DELI", "BAKERY", "PHARMACY", "A1", "A22", "A26", "A27", "A30"]) assert.ok(categories.some((c) => c.aisle === aisle), aisle);
+  assert.ok(categories.some((c) => c.id === "atta-flours" && c.aisle === "A7"));
 });

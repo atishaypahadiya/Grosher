@@ -1,4 +1,4 @@
-// POST /resolve  {items: string[], departments: string[]} → {results: Guess[], degraded?: true}
+// POST /resolve  {items: string[], categories: {id, name}[]} → {results: Guess[], degraded?: true}
 // Two upstreams, chosen by the PROVIDER var: "ollama" forwards to the Mac's
 // model through its tunnel (OLLAMA_UPSTREAM + OLLAMA_TOKEN secrets),
 // "anthropic" asks Claude (ANTHROPIC_API_KEY secret). Secrets live in the
@@ -31,9 +31,10 @@ export interface Env {
 // Hard caps: one call is one Claude request, so the request body is the cost.
 export const MAX_ITEMS = 40;
 export const MAX_ITEM_CHARS = 60;
-export const MAX_DEPARTMENTS = 24;
-export const MAX_DEPARTMENT_CHARS = 32;
-export const MAX_BODY_BYTES = 8 * 1024;
+/** a store's shelf categories: ~300 of {id, name} */
+export const MAX_CATEGORIES = 400;
+export const MAX_CATEGORY_CHARS = 48;
+export const MAX_BODY_BYTES = 48 * 1024;
 
 export type Classifier = (req: ClassifyRequest) => Promise<Guess[]>;
 
@@ -52,7 +53,7 @@ export function classifierFor(env: Env | undefined, fetchImpl: typeof fetch = fe
   return (req) => classify(new Anthropic({ apiKey }), req);
 }
 
-const unknownRows = (items: string[]): Guess[] => items.map((item) => ({ item, department: null, confidence: 0 }));
+const unknownRows = (items: string[]): Guess[] => items.map((item) => ({ item, category: null, confidence: 0 }));
 
 /** The app, with the classifier injectable for tests. */
 export function createApp(classifier?: Classifier) {
@@ -80,21 +81,21 @@ export function createApp(classifier?: Classifier) {
     } catch {
       return c.json({ error: "body must be JSON" }, 400);
     }
-    if (!Array.isArray(body.items) || !Array.isArray(body.departments)) return c.json({ error: "items and departments must be arrays of strings" }, 400);
+    if (!Array.isArray(body.items) || !Array.isArray(body.categories)) return c.json({ error: "items must be strings and categories {id, name} objects" }, 400);
     const items = body.items
       .filter((s): s is string => typeof s === "string")
       .map((s) => s.trim().slice(0, MAX_ITEM_CHARS))
       .filter(Boolean)
       .slice(0, MAX_ITEMS);
-    const departments = body.departments
-      .filter((s): s is string => typeof s === "string")
-      .map((s) => s.trim().slice(0, MAX_DEPARTMENT_CHARS))
-      .filter(Boolean)
-      .slice(0, MAX_DEPARTMENTS);
-    if (!items.length || !departments.length) return c.json({ results: [] });
+    const categories = (body.categories as unknown[])
+      .filter((o): o is { id: unknown; name: unknown } => !!o && typeof o === "object")
+      .map((o) => ({ id: String(o.id ?? "").trim().slice(0, MAX_CATEGORY_CHARS), name: String(o.name ?? "").trim().slice(0, MAX_CATEGORY_CHARS) }))
+      .filter((o) => o.id)
+      .slice(0, MAX_CATEGORIES);
+    if (!items.length || !categories.length) return c.json({ results: [] });
     const run = classifier ?? classifierFor(c.env);
     try {
-      const results = await run({ items, departments });
+      const results = await run({ items, categories });
       return c.json({ results });
     } catch (e) {
       // the upstream is down, slow, misconfigured or rate-limited: the client gets its items back

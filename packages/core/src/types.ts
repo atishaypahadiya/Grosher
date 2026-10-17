@@ -69,6 +69,26 @@ export interface Stop {
   query?: string;
 }
 
+/**
+ * A shelf category the way an aisle sign reads ("Cereal · Breakfast · Coffee" → "Cereal"):
+ * a run of bays on one side of one aisle, with one shelf location as its routing target.
+ * ~300 per store; the LLM layer picks from these, the resolver matches their names and aliases.
+ */
+export interface Category {
+  id: string;
+  name: string;
+  /** the aisle-sign group it hangs under ("Cereal · Breakfast · Coffee") */
+  group: string;
+  aisle: string;
+  side: "L" | "R" | "E";
+  /** first and last bay, counted from the entrance-facing end */
+  bays: [number, number];
+  locationId: string;
+  department: string;
+  tags?: ItemTag[];
+  aliases?: string[];
+}
+
 /** How a department's fixtures are built in 3D. */
 export type FixtureKind = "gondola" | "coldcase" | "produce" | "bakery" | "counter";
 

@@ -13,6 +13,10 @@ export const DEPARTMENTS: Department[] = [
   { id: "snack", name: "Snacks", color: "#F3C96B", texture: "snack.jpg", fixtureKind: "gondola" },
   { id: "drinks", name: "Drinks", color: "#8FC9E8", texture: "drinks.jpg", fixtureKind: "gondola" },
   { id: "household", name: "Household", color: "#D8D4CC", texture: "household.jpg", fixtureKind: "gondola" },
+  { id: "deli", name: "Deli", color: "#EFC9A6", texture: "deli.jpg", fixtureKind: "counter" },
+  { id: "pet", name: "Pet", color: "#C9B8A3", texture: "pet.jpg", fixtureKind: "gondola" },
+  { id: "baby", name: "Baby", color: "#F1D9E0", texture: "baby.jpg", fixtureKind: "gondola" },
+  { id: "pharmacy", name: "Pharmacy", color: "#CFE3DA", texture: "pharmacy.jpg", fixtureKind: "gondola" },
   { id: "checkout", name: "Checkout", color: "#DCE3D4", fixtureKind: "counter" },
 ];
 

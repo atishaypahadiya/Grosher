@@ -1,0 +1,6376 @@
+[
+  {
+    "id": "sandwich-bread",
+    "name": "Sandwich bread",
+    "group": "Bread · Tortillas · Buns",
+    "aisle": "A1",
+    "side": "L",
+    "bays": [
+      1,
+      5
+    ],
+    "locationId": "A1-L1",
+    "department": "dry",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "bread",
+      "white bread",
+      "wheat bread",
+      "loaf of bread"
+    ]
+  },
+  {
+    "id": "buns-rolls",
+    "name": "Buns & rolls",
+    "group": "Bread · Tortillas · Buns",
+    "aisle": "A1",
+    "side": "L",
+    "bays": [
+      6,
+      10
+    ],
+    "locationId": "A1-L6",
+    "department": "dry",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "hamburger buns",
+      "hot dog buns",
+      "dinner rolls"
+    ]
+  },
+  {
+    "id": "bagels-english-muffins",
+    "name": "Bagels & English muffins",
+    "group": "Bread · Tortillas · Buns",
+    "aisle": "A1",
+    "side": "L",
+    "bays": [
+      11,
+      15
+    ],
+    "locationId": "A1-L11",
+    "department": "dry",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "bagels",
+      "english muffins"
+    ]
+  },
+  {
+    "id": "tortillas-wraps",
+    "name": "Tortillas & wraps",
+    "group": "Bread · Tortillas · Buns",
+    "aisle": "A1",
+    "side": "L",
+    "bays": [
+      16,
+      20
+    ],
+    "locationId": "A1-L16",
+    "department": "dry",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "tortillas",
+      "flour tortillas",
+      "corn tortillas",
+      "wraps"
+    ]
+  },
+  {
+    "id": "pita-naan-flatbread",
+    "name": "Pita, naan & flatbread",
+    "group": "Bread · Tortillas · Buns",
+    "aisle": "A1",
+    "side": "L",
+    "bays": [
+      21,
+      25
+    ],
+    "locationId": "A1-L21",
+    "department": "dry",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "naan",
+      "pita",
+      "flatbread",
+      "roti",
+      "chapati"
+    ]
+  },
+  {
+    "id": "croutons-breadcrumbs",
+    "name": "Croutons & bread crumbs",
+    "group": "Bread · Tortillas · Buns",
+    "aisle": "A1",
+    "side": "R",
+    "bays": [
+      1,
+      6
+    ],
+    "locationId": "A1-R1",
+    "department": "dry",
+    "aliases": [
+      "breadcrumbs",
+      "panko",
+      "croutons",
+      "stuffing"
+    ]
+  },
+  {
+    "id": "packaged-pastries",
+    "name": "Packaged pastries & snack cakes",
+    "group": "Bread · Tortillas · Buns",
+    "aisle": "A1",
+    "side": "R",
+    "bays": [
+      7,
+      13
+    ],
+    "locationId": "A1-R7",
+    "department": "dry",
+    "aliases": [
+      "honey buns",
+      "little debbie"
+    ]
+  },
+  {
+    "id": "rice-cakes",
+    "name": "Rice cakes & crispbread",
+    "group": "Bread · Tortillas · Buns",
+    "aisle": "A1",
+    "side": "R",
+    "bays": [
+      14,
+      19
+    ],
+    "locationId": "A1-R14",
+    "department": "dry",
+    "aliases": [
+      "rice cakes",
+      "crispbread"
+    ]
+  },
+  {
+    "id": "gluten-free-bread",
+    "name": "Gluten-free bread & keto",
+    "group": "Bread · Tortillas · Buns",
+    "aisle": "A1",
+    "side": "R",
+    "bays": [
+      20,
+      25
+    ],
+    "locationId": "A1-R20",
+    "department": "dry",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "gluten free bread",
+      "keto bread",
+      "low carb tortillas"
+    ]
+  },
+  {
+    "id": "peanut-butter",
+    "name": "Peanut butter & nut butters",
+    "group": "Peanut butter · Jelly · Honey",
+    "aisle": "A2",
+    "side": "L",
+    "bays": [
+      1,
+      6
+    ],
+    "locationId": "A2-L1",
+    "department": "dry",
+    "aliases": [
+      "peanut butter",
+      "pb",
+      "almond butter",
+      "jif",
+      "skippy"
+    ]
+  },
+  {
+    "id": "jelly-jam",
+    "name": "Jelly, jam & preserves",
+    "group": "Peanut butter · Jelly · Honey",
+    "aisle": "A2",
+    "side": "L",
+    "bays": [
+      7,
+      13
+    ],
+    "locationId": "A2-L7",
+    "department": "dry",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "jelly",
+      "jam",
+      "preserves",
+      "fruit spread"
+    ]
+  },
+  {
+    "id": "honey-syrup",
+    "name": "Honey & syrup",
+    "group": "Peanut butter · Jelly · Honey",
+    "aisle": "A2",
+    "side": "L",
+    "bays": [
+      14,
+      19
+    ],
+    "locationId": "A2-L14",
+    "department": "dry",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "honey",
+      "maple syrup",
+      "pancake syrup",
+      "agave"
+    ]
+  },
+  {
+    "id": "hazelnut-spread",
+    "name": "Chocolate & hazelnut spreads",
+    "group": "Peanut butter · Jelly · Honey",
+    "aisle": "A2",
+    "side": "L",
+    "bays": [
+      20,
+      25
+    ],
+    "locationId": "A2-L20",
+    "department": "dry",
+    "aliases": [
+      "nutella",
+      "hazelnut spread"
+    ]
+  },
+  {
+    "id": "pancake-waffle-mix",
+    "name": "Pancake & waffle mix",
+    "group": "Peanut butter · Jelly · Honey",
+    "aisle": "A2",
+    "side": "R",
+    "bays": [
+      1,
+      5
+    ],
+    "locationId": "A2-R1",
+    "department": "dry",
+    "aliases": [
+      "pancake mix",
+      "bisquick",
+      "waffle mix"
+    ]
+  },
+  {
+    "id": "hot-cereal",
+    "name": "Oatmeal & hot cereal",
+    "group": "Peanut butter · Jelly · Honey",
+    "aisle": "A2",
+    "side": "R",
+    "bays": [
+      6,
+      10
+    ],
+    "locationId": "A2-R6",
+    "department": "dry",
+    "aliases": [
+      "oatmeal",
+      "oats",
+      "rolled oats",
+      "quaker",
+      "grits",
+      "cream of wheat"
+    ]
+  },
+  {
+    "id": "granola",
+    "name": "Granola & muesli",
+    "group": "Peanut butter · Jelly · Honey",
+    "aisle": "A2",
+    "side": "R",
+    "bays": [
+      11,
+      15
+    ],
+    "locationId": "A2-R11",
+    "department": "dry",
+    "aliases": [
+      "granola",
+      "muesli"
+    ]
+  },
+  {
+    "id": "breakfast-bars",
+    "name": "Breakfast & granola bars",
+    "group": "Peanut butter · Jelly · Honey",
+    "aisle": "A2",
+    "side": "R",
+    "bays": [
+      16,
+      20
+    ],
+    "locationId": "A2-R16",
+    "department": "dry",
+    "aliases": [
+      "granola bars",
+      "cereal bars",
+      "nature valley",
+      "breakfast bars"
+    ]
+  },
+  {
+    "id": "dessert-toppings",
+    "name": "Dessert syrups & toppings",
+    "group": "Peanut butter · Jelly · Honey",
+    "aisle": "A2",
+    "side": "R",
+    "bays": [
+      21,
+      25
+    ],
+    "locationId": "A2-R21",
+    "department": "dry",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "chocolate syrup",
+      "caramel sauce",
+      "hersheys syrup",
+      "ice cream topping"
+    ]
+  },
+  {
+    "id": "ketchup-mustard",
+    "name": "Ketchup & mustard",
+    "group": "Condiments · Dressings · Pickles",
+    "aisle": "A3",
+    "side": "L",
+    "bays": [
+      1,
+      5
+    ],
+    "locationId": "A3-L1",
+    "department": "dry",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "ketchup",
+      "mustard",
+      "heinz"
+    ]
+  },
+  {
+    "id": "mayo",
+    "name": "Mayonnaise & sandwich spreads",
+    "group": "Condiments · Dressings · Pickles",
+    "aisle": "A3",
+    "side": "L",
+    "bays": [
+      6,
+      10
+    ],
+    "locationId": "A3-L6",
+    "department": "dry",
+    "aliases": [
+      "mayo",
+      "mayonnaise",
+      "miracle whip",
+      "hellmans"
+    ]
+  },
+  {
+    "id": "bbq-sauce",
+    "name": "BBQ & steak sauce",
+    "group": "Condiments · Dressings · Pickles",
+    "aisle": "A3",
+    "side": "L",
+    "bays": [
+      11,
+      15
+    ],
+    "locationId": "A3-L11",
+    "department": "dry",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "bbq sauce",
+      "barbecue sauce",
+      "steak sauce",
+      "a1"
+    ]
+  },
+  {
+    "id": "hot-sauce",
+    "name": "Hot sauce & salsa",
+    "group": "Condiments · Dressings · Pickles",
+    "aisle": "A3",
+    "side": "L",
+    "bays": [
+      16,
+      20
+    ],
+    "locationId": "A3-L16",
+    "department": "dry",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "hot sauce",
+      "sriracha",
+      "tabasco",
+      "salsa",
+      "chili garlic sauce"
+    ]
+  },
+  {
+    "id": "salad-dressing",
+    "name": "Salad dressing",
+    "group": "Condiments · Dressings · Pickles",
+    "aisle": "A3",
+    "side": "L",
+    "bays": [
+      21,
+      25
+    ],
+    "locationId": "A3-L21",
+    "department": "dry",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "ranch",
+      "dressing",
+      "italian dressing",
+      "vinaigrette"
+    ]
+  },
+  {
+    "id": "pickles-olives",
+    "name": "Pickles, olives & peppers",
+    "group": "Condiments · Dressings · Pickles",
+    "aisle": "A3",
+    "side": "R",
+    "bays": [
+      1,
+      6
+    ],
+    "locationId": "A3-R1",
+    "department": "dry",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "pickles",
+      "olives",
+      "pepperoncini",
+      "relish"
+    ]
+  },
+  {
+    "id": "vinegar",
+    "name": "Vinegar",
+    "group": "Condiments · Dressings · Pickles",
+    "aisle": "A3",
+    "side": "R",
+    "bays": [
+      7,
+      13
+    ],
+    "locationId": "A3-R7",
+    "department": "dry",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "vinegar",
+      "apple cider vinegar",
+      "balsamic",
+      "white vinegar"
+    ]
+  },
+  {
+    "id": "marinades-sauces",
+    "name": "Marinades, soy & worcestershire",
+    "group": "Condiments · Dressings · Pickles",
+    "aisle": "A3",
+    "side": "R",
+    "bays": [
+      14,
+      19
+    ],
+    "locationId": "A3-R14",
+    "department": "dry",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "soy sauce",
+      "worcestershire",
+      "marinade",
+      "teriyaki",
+      "fish sauce"
+    ]
+  },
+  {
+    "id": "gravy-mixes",
+    "name": "Gravy & sauce mixes",
+    "group": "Condiments · Dressings · Pickles",
+    "aisle": "A3",
+    "side": "R",
+    "bays": [
+      20,
+      25
+    ],
+    "locationId": "A3-R20",
+    "department": "dry",
+    "aliases": [
+      "gravy mix",
+      "taco seasoning packet",
+      "sauce packet"
+    ]
+  },
+  {
+    "id": "canned-vegetables",
+    "name": "Canned vegetables",
+    "group": "Canned vegetables · Fruit · Soup",
+    "aisle": "A4",
+    "side": "L",
+    "bays": [
+      1,
+      6
+    ],
+    "locationId": "A4-L1",
+    "department": "dry",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "canned corn",
+      "canned green beans",
+      "canned peas",
+      "canned vegetables"
+    ]
+  },
+  {
+    "id": "canned-tomatoes",
+    "name": "Canned tomatoes & paste",
+    "group": "Canned vegetables · Fruit · Soup",
+    "aisle": "A4",
+    "side": "L",
+    "bays": [
+      7,
+      13
+    ],
+    "locationId": "A4-L7",
+    "department": "dry",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "canned tomatoes",
+      "tomato paste",
+      "tomato sauce",
+      "diced tomatoes",
+      "crushed tomatoes"
+    ]
+  },
+  {
+    "id": "canned-beans",
+    "name": "Canned beans",
+    "group": "Canned vegetables · Fruit · Soup",
+    "aisle": "A4",
+    "side": "L",
+    "bays": [
+      14,
+      19
+    ],
+    "locationId": "A4-L14",
+    "department": "dry",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "canned beans",
+      "black beans",
+      "chickpeas",
+      "garbanzo",
+      "kidney beans",
+      "refried beans"
+    ]
+  },
+  {
+    "id": "canned-fruit",
+    "name": "Canned fruit & applesauce",
+    "group": "Canned vegetables · Fruit · Soup",
+    "aisle": "A4",
+    "side": "L",
+    "bays": [
+      20,
+      25
+    ],
+    "locationId": "A4-L20",
+    "department": "dry",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "canned fruit",
+      "peaches in syrup",
+      "applesauce",
+      "fruit cups"
+    ]
+  },
+  {
+    "id": "soup",
+    "name": "Canned soup",
+    "group": "Canned vegetables · Fruit · Soup",
+    "aisle": "A4",
+    "side": "R",
+    "bays": [
+      1,
+      5
+    ],
+    "locationId": "A4-R1",
+    "department": "dry",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "soup",
+      "campbells",
+      "chicken noodle soup",
+      "tomato soup",
+      "progresso"
+    ]
+  },
+  {
+    "id": "broth-stock",
+    "name": "Broth, stock & bouillon",
+    "group": "Canned vegetables · Fruit · Soup",
+    "aisle": "A4",
+    "side": "R",
+    "bays": [
+      6,
+      10
+    ],
+    "locationId": "A4-R6",
+    "department": "dry",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "chicken broth",
+      "stock",
+      "bouillon",
+      "bone broth"
+    ]
+  },
+  {
+    "id": "ramen-instant",
+    "name": "Ramen & instant noodles",
+    "group": "Canned vegetables · Fruit · Soup",
+    "aisle": "A4",
+    "side": "R",
+    "bays": [
+      11,
+      15
+    ],
+    "locationId": "A4-R11",
+    "department": "dry",
+    "aliases": [
+      "ramen",
+      "instant noodles",
+      "cup noodles",
+      "maggi"
+    ]
+  },
+  {
+    "id": "canned-meat-fish",
+    "name": "Canned tuna, chicken & meat",
+    "group": "Canned vegetables · Fruit · Soup",
+    "aisle": "A4",
+    "side": "R",
+    "bays": [
+      16,
+      20
+    ],
+    "locationId": "A4-R16",
+    "department": "dry",
+    "aliases": [
+      "tuna",
+      "canned chicken",
+      "spam",
+      "sardines",
+      "canned salmon"
+    ]
+  },
+  {
+    "id": "chili-canned-meals",
+    "name": "Chili & canned meals",
+    "group": "Canned vegetables · Fruit · Soup",
+    "aisle": "A4",
+    "side": "R",
+    "bays": [
+      21,
+      25
+    ],
+    "locationId": "A4-R21",
+    "department": "dry",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "chili",
+      "ravioli in a can",
+      "spaghettios",
+      "beef stew"
+    ]
+  },
+  {
+    "id": "pasta",
+    "name": "Pasta",
+    "group": "Pasta · Sauce · Rice · Beans",
+    "aisle": "A5",
+    "side": "L",
+    "bays": [
+      1,
+      6
+    ],
+    "locationId": "A5-L1",
+    "department": "dry",
+    "aliases": [
+      "spaghetti",
+      "penne",
+      "macaroni",
+      "noodles",
+      "barilla",
+      "lasagna noodles"
+    ]
+  },
+  {
+    "id": "pasta-sauce",
+    "name": "Pasta sauce",
+    "group": "Pasta · Sauce · Rice · Beans",
+    "aisle": "A5",
+    "side": "L",
+    "bays": [
+      7,
+      13
+    ],
+    "locationId": "A5-L7",
+    "department": "dry",
+    "tags": [
+      "fragile",
+      "heavy"
+    ],
+    "aliases": [
+      "marinara",
+      "spaghetti sauce",
+      "alfredo",
+      "ragu",
+      "prego"
+    ]
+  },
+  {
+    "id": "mac-and-cheese",
+    "name": "Mac & cheese & pasta kits",
+    "group": "Pasta · Sauce · Rice · Beans",
+    "aisle": "A5",
+    "side": "L",
+    "bays": [
+      14,
+      19
+    ],
+    "locationId": "A5-L14",
+    "department": "dry",
+    "aliases": [
+      "mac and cheese",
+      "kraft mac",
+      "hamburger helper",
+      "velveeta shells"
+    ]
+  },
+  {
+    "id": "rice",
+    "name": "Rice",
+    "group": "Pasta · Sauce · Rice · Beans",
+    "aisle": "A5",
+    "side": "L",
+    "bays": [
+      20,
+      25
+    ],
+    "locationId": "A5-L20",
+    "department": "dry",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "white rice",
+      "jasmine rice",
+      "brown rice",
+      "long grain rice",
+      "rice bag"
+    ]
+  },
+  {
+    "id": "rice-mixes",
+    "name": "Rice & grain mixes",
+    "group": "Pasta · Sauce · Rice · Beans",
+    "aisle": "A5",
+    "side": "R",
+    "bays": [
+      1,
+      6
+    ],
+    "locationId": "A5-R1",
+    "department": "dry",
+    "aliases": [
+      "rice a roni",
+      "rice mix",
+      "quinoa",
+      "couscous",
+      "instant rice"
+    ]
+  },
+  {
+    "id": "dried-beans-lentils",
+    "name": "Dried beans, peas & lentils",
+    "group": "Pasta · Sauce · Rice · Beans",
+    "aisle": "A5",
+    "side": "R",
+    "bays": [
+      7,
+      13
+    ],
+    "locationId": "A5-R7",
+    "department": "dry",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "dried beans",
+      "lentils",
+      "split peas",
+      "pinto beans bag"
+    ]
+  },
+  {
+    "id": "boxed-meals-potatoes",
+    "name": "Boxed dinners & instant potatoes",
+    "group": "Pasta · Sauce · Rice · Beans",
+    "aisle": "A5",
+    "side": "R",
+    "bays": [
+      14,
+      19
+    ],
+    "locationId": "A5-R14",
+    "department": "dry",
+    "aliases": [
+      "instant mashed potatoes",
+      "stuffing mix",
+      "boxed dinner"
+    ]
+  },
+  {
+    "id": "gluten-free-pasta",
+    "name": "Gluten-free & specialty pasta",
+    "group": "Pasta · Sauce · Rice · Beans",
+    "aisle": "A5",
+    "side": "R",
+    "bays": [
+      20,
+      25
+    ],
+    "locationId": "A5-R20",
+    "department": "dry",
+    "aliases": [
+      "gluten free pasta",
+      "chickpea pasta",
+      "lentil pasta"
+    ]
+  },
+  {
+    "id": "salsa-taco",
+    "name": "Taco shells, salsa & taco kits",
+    "group": "Hispanic foods · Latin",
+    "aisle": "A6",
+    "side": "L",
+    "bays": [
+      1,
+      6
+    ],
+    "locationId": "A6-L1",
+    "department": "dry",
+    "aliases": [
+      "taco shells",
+      "taco kit",
+      "tostadas",
+      "old el paso"
+    ]
+  },
+  {
+    "id": "hispanic-beans-rice",
+    "name": "Hispanic beans, rice & masa",
+    "group": "Hispanic foods · Latin",
+    "aisle": "A6",
+    "side": "L",
+    "bays": [
+      7,
+      13
+    ],
+    "locationId": "A6-L7",
+    "department": "dry",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "masa",
+      "maseca",
+      "goya beans",
+      "mexican rice"
+    ]
+  },
+  {
+    "id": "mexican-sauces",
+    "name": "Mole, enchilada & hot sauces",
+    "group": "Hispanic foods · Latin",
+    "aisle": "A6",
+    "side": "L",
+    "bays": [
+      14,
+      19
+    ],
+    "locationId": "A6-L14",
+    "department": "dry",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "enchilada sauce",
+      "mole",
+      "valentina",
+      "tajin",
+      "chamoy"
+    ]
+  },
+  {
+    "id": "hispanic-spices",
+    "name": "Hispanic seasonings & chiles",
+    "group": "Hispanic foods · Latin",
+    "aisle": "A6",
+    "side": "L",
+    "bays": [
+      20,
+      25
+    ],
+    "locationId": "A6-L20",
+    "department": "dry",
+    "aliases": [
+      "adobo",
+      "sazon",
+      "dried chiles",
+      "guajillo",
+      "chipotle in adobo"
+    ]
+  },
+  {
+    "id": "hispanic-drinks",
+    "name": "Hispanic drinks & aguas",
+    "group": "Hispanic foods · Latin",
+    "aisle": "A6",
+    "side": "R",
+    "bays": [
+      1,
+      6
+    ],
+    "locationId": "A6-R1",
+    "department": "dry",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "horchata",
+      "jarritos",
+      "tamarindo drink",
+      "abuelita chocolate",
+      "nescafe clasico"
+    ]
+  },
+  {
+    "id": "hispanic-snacks-sweets",
+    "name": "Hispanic snacks & sweets",
+    "group": "Hispanic foods · Latin",
+    "aisle": "A6",
+    "side": "R",
+    "bays": [
+      7,
+      13
+    ],
+    "locationId": "A6-R7",
+    "department": "dry",
+    "aliases": [
+      "takis",
+      "dulce de leche",
+      "cajeta",
+      "mexican candy",
+      "marias cookies"
+    ]
+  },
+  {
+    "id": "hispanic-cooking",
+    "name": "Hispanic cooking staples",
+    "group": "Hispanic foods · Latin",
+    "aisle": "A6",
+    "side": "R",
+    "bays": [
+      14,
+      19
+    ],
+    "locationId": "A6-R14",
+    "department": "dry",
+    "aliases": [
+      "lard",
+      "manteca",
+      "tamale husks",
+      "crema"
+    ]
+  },
+  {
+    "id": "hispanic-tortillas",
+    "name": "Hispanic tortillas & tostadas",
+    "group": "Hispanic foods · Latin",
+    "aisle": "A6",
+    "side": "R",
+    "bays": [
+      20,
+      25
+    ],
+    "locationId": "A6-R20",
+    "department": "dry",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "corn tortillas 80 count",
+      "tostadas",
+      "mission tortillas"
+    ]
+  },
+  {
+    "id": "atta-flours",
+    "name": "Atta & Indian flours",
+    "group": "Asian · Indian · Mediterranean",
+    "aisle": "A7",
+    "side": "L",
+    "bays": [
+      1,
+      3
+    ],
+    "locationId": "A7-L1",
+    "department": "dry",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "atta",
+      "chapati flour",
+      "aashirvaad",
+      "besan",
+      "gram flour",
+      "sooji",
+      "rava",
+      "maida"
+    ]
+  },
+  {
+    "id": "basmati-indian-rice",
+    "name": "Basmati & Indian rice",
+    "group": "Asian · Indian · Mediterranean",
+    "aisle": "A7",
+    "side": "L",
+    "bays": [
+      4,
+      5
+    ],
+    "locationId": "A7-L4",
+    "department": "dry",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "basmati",
+      "basmati rice",
+      "sona masoori",
+      "idli rice",
+      "poha",
+      "flattened rice",
+      "royal basmati"
+    ]
+  },
+  {
+    "id": "dal-lentils",
+    "name": "Dal & pulses",
+    "group": "Asian · Indian · Mediterranean",
+    "aisle": "A7",
+    "side": "L",
+    "bays": [
+      6,
+      8
+    ],
+    "locationId": "A7-L6",
+    "department": "dry",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "dal",
+      "daal",
+      "toor dal",
+      "moong dal",
+      "chana dal",
+      "urad dal",
+      "masoor dal",
+      "rajma",
+      "chana",
+      "kabuli chana"
+    ]
+  },
+  {
+    "id": "indian-spices",
+    "name": "Indian spices & masalas",
+    "group": "Asian · Indian · Mediterranean",
+    "aisle": "A7",
+    "side": "L",
+    "bays": [
+      9,
+      10
+    ],
+    "locationId": "A7-L9",
+    "department": "dry",
+    "aliases": [
+      "garam masala",
+      "turmeric",
+      "haldi",
+      "jeera",
+      "cumin seeds",
+      "coriander powder",
+      "dhania",
+      "red chili powder",
+      "mdh",
+      "everest",
+      "hing",
+      "asafoetida",
+      "methi"
+    ]
+  },
+  {
+    "id": "ghee-oils-indian",
+    "name": "Ghee & Indian cooking oils",
+    "group": "Asian · Indian · Mediterranean",
+    "aisle": "A7",
+    "side": "L",
+    "bays": [
+      11,
+      13
+    ],
+    "locationId": "A7-L11",
+    "department": "dry",
+    "tags": [
+      "fragile",
+      "heavy"
+    ],
+    "aliases": [
+      "ghee",
+      "desi ghee",
+      "mustard oil"
+    ]
+  },
+  {
+    "id": "indian-pickles-chutney",
+    "name": "Indian pickles, chutney & pastes",
+    "group": "Asian · Indian · Mediterranean",
+    "aisle": "A7",
+    "side": "L",
+    "bays": [
+      14,
+      15
+    ],
+    "locationId": "A7-L14",
+    "department": "dry",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "achar",
+      "mango pickle",
+      "lime pickle",
+      "chutney",
+      "ginger garlic paste",
+      "tamarind",
+      "imli"
+    ]
+  },
+  {
+    "id": "indian-snacks",
+    "name": "Indian snacks & namkeen",
+    "group": "Asian · Indian · Mediterranean",
+    "aisle": "A7",
+    "side": "L",
+    "bays": [
+      16,
+      18
+    ],
+    "locationId": "A7-L16",
+    "department": "dry",
+    "aliases": [
+      "haldirams",
+      "namkeen",
+      "bhujia",
+      "chakli",
+      "papad",
+      "khakhra",
+      "mixture"
+    ]
+  },
+  {
+    "id": "indian-ready-meals",
+    "name": "Indian ready meals & mixes",
+    "group": "Asian · Indian · Mediterranean",
+    "aisle": "A7",
+    "side": "L",
+    "bays": [
+      19,
+      20
+    ],
+    "locationId": "A7-L19",
+    "department": "dry",
+    "aliases": [
+      "mtr",
+      "ready to eat curry",
+      "dosa mix",
+      "idli mix",
+      "gulab jamun mix",
+      "parle g"
+    ]
+  },
+  {
+    "id": "indian-tea-drinks",
+    "name": "Indian tea & drinks",
+    "group": "Asian · Indian · Mediterranean",
+    "aisle": "A7",
+    "side": "L",
+    "bays": [
+      21,
+      23
+    ],
+    "locationId": "A7-L21",
+    "department": "dry",
+    "aliases": [
+      "chai",
+      "taj mahal tea",
+      "red label",
+      "wagh bakri",
+      "rooh afza",
+      "horlicks",
+      "bournvita"
+    ]
+  },
+  {
+    "id": "indian-masala-blends",
+    "name": "Masala blends & curry mixes",
+    "group": "Asian · Indian · Mediterranean",
+    "aisle": "A7",
+    "side": "L",
+    "bays": [
+      24,
+      25
+    ],
+    "locationId": "A7-L24",
+    "department": "dry",
+    "aliases": [
+      "chana masala",
+      "pav bhaji masala",
+      "sambar powder",
+      "rasam powder",
+      "biryani masala",
+      "shan masala",
+      "curry powder"
+    ]
+  },
+  {
+    "id": "asian-noodles-rice",
+    "name": "Asian noodles & rice",
+    "group": "Asian · Indian · Mediterranean",
+    "aisle": "A7",
+    "side": "R",
+    "bays": [
+      1,
+      3
+    ],
+    "locationId": "A7-R1",
+    "department": "dry",
+    "aliases": [
+      "rice noodles",
+      "udon",
+      "soba",
+      "pad thai noodles",
+      "sushi rice",
+      "glass noodles"
+    ]
+  },
+  {
+    "id": "asian-sauces",
+    "name": "Asian sauces & pastes",
+    "group": "Asian · Indian · Mediterranean",
+    "aisle": "A7",
+    "side": "R",
+    "bays": [
+      4,
+      6
+    ],
+    "locationId": "A7-R4",
+    "department": "dry",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "oyster sauce",
+      "hoisin",
+      "gochujang",
+      "miso",
+      "curry paste",
+      "sesame oil",
+      "rice vinegar"
+    ]
+  },
+  {
+    "id": "coconut-milk-curry",
+    "name": "Coconut milk & curry",
+    "group": "Asian · Indian · Mediterranean",
+    "aisle": "A7",
+    "side": "R",
+    "bays": [
+      7,
+      8
+    ],
+    "locationId": "A7-R7",
+    "department": "dry",
+    "aliases": [
+      "coconut milk",
+      "coconut cream",
+      "thai curry",
+      "panang"
+    ]
+  },
+  {
+    "id": "seaweed-asian-snacks",
+    "name": "Seaweed & Asian snacks",
+    "group": "Asian · Indian · Mediterranean",
+    "aisle": "A7",
+    "side": "R",
+    "bays": [
+      9,
+      11
+    ],
+    "locationId": "A7-R9",
+    "department": "dry",
+    "aliases": [
+      "seaweed snacks",
+      "nori",
+      "pocky",
+      "shrimp chips",
+      "mochi"
+    ]
+  },
+  {
+    "id": "mediterranean",
+    "name": "Mediterranean & Middle Eastern",
+    "group": "Asian · Indian · Mediterranean",
+    "aisle": "A7",
+    "side": "R",
+    "bays": [
+      12,
+      14
+    ],
+    "locationId": "A7-R12",
+    "department": "dry",
+    "aliases": [
+      "tahini",
+      "hummus mix",
+      "falafel mix",
+      "grape leaves",
+      "harissa",
+      "halal"
+    ]
+  },
+  {
+    "id": "kosher",
+    "name": "Kosher foods",
+    "group": "Asian · Indian · Mediterranean",
+    "aisle": "A7",
+    "side": "R",
+    "bays": [
+      15,
+      17
+    ],
+    "locationId": "A7-R15",
+    "department": "dry",
+    "aliases": [
+      "matzo",
+      "kosher",
+      "gefilte fish"
+    ]
+  },
+  {
+    "id": "asian-rice-bags",
+    "name": "Asian rice bags",
+    "group": "Asian · Indian · Mediterranean",
+    "aisle": "A7",
+    "side": "R",
+    "bays": [
+      18,
+      19
+    ],
+    "locationId": "A7-R18",
+    "department": "dry",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "jasmine rice 25 lb",
+      "calrose",
+      "sushi rice bag",
+      "thai rice",
+      "sticky rice"
+    ]
+  },
+  {
+    "id": "asian-chili-condiments",
+    "name": "Chili crisp, sambal & Asian condiments",
+    "group": "Asian · Indian · Mediterranean",
+    "aisle": "A7",
+    "side": "R",
+    "bays": [
+      20,
+      22
+    ],
+    "locationId": "A7-R20",
+    "department": "dry",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "chili crisp",
+      "lao gan ma",
+      "sambal oelek",
+      "chili oil",
+      "ponzu"
+    ]
+  },
+  {
+    "id": "asian-instant-noodles",
+    "name": "Asian instant noodles",
+    "group": "Asian · Indian · Mediterranean",
+    "aisle": "A7",
+    "side": "R",
+    "bays": [
+      23,
+      25
+    ],
+    "locationId": "A7-R23",
+    "department": "dry",
+    "aliases": [
+      "shin ramyun",
+      "indomie",
+      "buldak",
+      "nongshim",
+      "mama noodles"
+    ]
+  },
+  {
+    "id": "flour",
+    "name": "Flour",
+    "group": "Baking · Flour · Sugar · Oils",
+    "aisle": "A8",
+    "side": "L",
+    "bays": [
+      1,
+      4
+    ],
+    "locationId": "A8-L1",
+    "department": "dry",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "all purpose flour",
+      "bread flour",
+      "self rising flour",
+      "whole wheat flour",
+      "cornmeal"
+    ]
+  },
+  {
+    "id": "sugar",
+    "name": "Sugar & sweeteners",
+    "group": "Baking · Flour · Sugar · Oils",
+    "aisle": "A8",
+    "side": "L",
+    "bays": [
+      5,
+      8
+    ],
+    "locationId": "A8-L5",
+    "department": "dry",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "sugar",
+      "brown sugar",
+      "powdered sugar",
+      "stevia",
+      "splenda",
+      "jaggery"
+    ]
+  },
+  {
+    "id": "baking-mixes",
+    "name": "Cake, brownie & cookie mixes",
+    "group": "Baking · Flour · Sugar · Oils",
+    "aisle": "A8",
+    "side": "L",
+    "bays": [
+      9,
+      13
+    ],
+    "locationId": "A8-L9",
+    "department": "dry",
+    "aliases": [
+      "cake mix",
+      "brownie mix",
+      "cookie mix",
+      "betty crocker",
+      "muffin mix",
+      "cornbread mix"
+    ]
+  },
+  {
+    "id": "frosting-decorating",
+    "name": "Frosting & decorating",
+    "group": "Baking · Flour · Sugar · Oils",
+    "aisle": "A8",
+    "side": "L",
+    "bays": [
+      14,
+      17
+    ],
+    "locationId": "A8-L14",
+    "department": "dry",
+    "aliases": [
+      "frosting",
+      "sprinkles",
+      "food coloring",
+      "icing"
+    ]
+  },
+  {
+    "id": "baking-essentials",
+    "name": "Baking soda, powder, yeast & extracts",
+    "group": "Baking · Flour · Sugar · Oils",
+    "aisle": "A8",
+    "side": "L",
+    "bays": [
+      18,
+      21
+    ],
+    "locationId": "A8-L18",
+    "department": "dry",
+    "aliases": [
+      "baking soda",
+      "baking powder",
+      "yeast",
+      "vanilla extract",
+      "cornstarch",
+      "cocoa powder"
+    ]
+  },
+  {
+    "id": "specialty-flours",
+    "name": "Specialty & gluten-free flours",
+    "group": "Baking · Flour · Sugar · Oils",
+    "aisle": "A8",
+    "side": "L",
+    "bays": [
+      22,
+      25
+    ],
+    "locationId": "A8-L22",
+    "department": "dry",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "almond flour",
+      "gluten free flour",
+      "coconut flour",
+      "oat flour",
+      "king arthur"
+    ]
+  },
+  {
+    "id": "cooking-oil",
+    "name": "Cooking oil",
+    "group": "Baking · Flour · Sugar · Oils",
+    "aisle": "A8",
+    "side": "R",
+    "bays": [
+      1,
+      5
+    ],
+    "locationId": "A8-R1",
+    "department": "dry",
+    "tags": [
+      "heavy",
+      "fragile"
+    ],
+    "aliases": [
+      "vegetable oil",
+      "canola oil",
+      "olive oil",
+      "evoo",
+      "avocado oil",
+      "cooking spray",
+      "pam"
+    ]
+  },
+  {
+    "id": "baking-chips-nuts",
+    "name": "Chocolate chips & baking nuts",
+    "group": "Baking · Flour · Sugar · Oils",
+    "aisle": "A8",
+    "side": "R",
+    "bays": [
+      6,
+      10
+    ],
+    "locationId": "A8-R6",
+    "department": "dry",
+    "aliases": [
+      "chocolate chips",
+      "walnuts for baking",
+      "pecans",
+      "coconut flakes"
+    ]
+  },
+  {
+    "id": "evaporated-condensed",
+    "name": "Evaporated & condensed milk",
+    "group": "Baking · Flour · Sugar · Oils",
+    "aisle": "A8",
+    "side": "R",
+    "bays": [
+      11,
+      15
+    ],
+    "locationId": "A8-R11",
+    "department": "dry",
+    "aliases": [
+      "condensed milk",
+      "evaporated milk",
+      "dulce de leche can",
+      "cream of coconut"
+    ]
+  },
+  {
+    "id": "pie-filling-pudding",
+    "name": "Pie filling, pudding & gelatin mix",
+    "group": "Baking · Flour · Sugar · Oils",
+    "aisle": "A8",
+    "side": "R",
+    "bays": [
+      16,
+      20
+    ],
+    "locationId": "A8-R16",
+    "department": "dry",
+    "aliases": [
+      "pie filling",
+      "pudding mix",
+      "jello mix",
+      "pumpkin puree"
+    ]
+  },
+  {
+    "id": "shortening-lard",
+    "name": "Shortening & lard",
+    "group": "Baking · Flour · Sugar · Oils",
+    "aisle": "A8",
+    "side": "R",
+    "bays": [
+      21,
+      25
+    ],
+    "locationId": "A8-R21",
+    "department": "dry",
+    "aliases": [
+      "crisco",
+      "shortening"
+    ]
+  },
+  {
+    "id": "spices-herbs",
+    "name": "Spices & dried herbs",
+    "group": "Spices · Seasonings · Salt",
+    "aisle": "A9",
+    "side": "L",
+    "bays": [
+      1,
+      6
+    ],
+    "locationId": "A9-L1",
+    "department": "dry",
+    "aliases": [
+      "spices",
+      "cumin",
+      "paprika",
+      "oregano",
+      "cinnamon",
+      "black pepper",
+      "mccormick",
+      "cayenne",
+      "bay leaves"
+    ]
+  },
+  {
+    "id": "seasoning-blends",
+    "name": "Seasoning blends & rubs",
+    "group": "Spices · Seasonings · Salt",
+    "aisle": "A9",
+    "side": "L",
+    "bays": [
+      7,
+      13
+    ],
+    "locationId": "A9-L7",
+    "department": "dry",
+    "aliases": [
+      "seasoning",
+      "italian seasoning",
+      "taco seasoning",
+      "cajun seasoning",
+      "lemon pepper",
+      "everything bagel seasoning"
+    ]
+  },
+  {
+    "id": "salt",
+    "name": "Salt",
+    "group": "Spices · Seasonings · Salt",
+    "aisle": "A9",
+    "side": "L",
+    "bays": [
+      14,
+      19
+    ],
+    "locationId": "A9-L14",
+    "department": "dry",
+    "aliases": [
+      "salt",
+      "kosher salt",
+      "sea salt",
+      "table salt",
+      "pink salt"
+    ]
+  },
+  {
+    "id": "bouillon-cubes",
+    "name": "Bouillon cubes & soup base",
+    "group": "Spices · Seasonings · Salt",
+    "aisle": "A9",
+    "side": "L",
+    "bays": [
+      20,
+      25
+    ],
+    "locationId": "A9-L20",
+    "department": "dry",
+    "aliases": [
+      "bouillon cubes",
+      "knorr",
+      "better than bouillon",
+      "maggi cubes"
+    ]
+  },
+  {
+    "id": "gravy-dry-mixes",
+    "name": "Gravy & dip mixes",
+    "group": "Spices · Seasonings · Salt",
+    "aisle": "A9",
+    "side": "R",
+    "bays": [
+      1,
+      6
+    ],
+    "locationId": "A9-R1",
+    "department": "dry",
+    "aliases": [
+      "gravy packet",
+      "ranch dip mix",
+      "onion soup mix"
+    ]
+  },
+  {
+    "id": "food-coloring-extract",
+    "name": "Extracts & food coloring",
+    "group": "Spices · Seasonings · Salt",
+    "aisle": "A9",
+    "side": "R",
+    "bays": [
+      7,
+      13
+    ],
+    "locationId": "A9-R7",
+    "department": "dry",
+    "aliases": [
+      "almond extract",
+      "lemon extract"
+    ]
+  },
+  {
+    "id": "breading-coating",
+    "name": "Breading & coating mixes",
+    "group": "Spices · Seasonings · Salt",
+    "aisle": "A9",
+    "side": "R",
+    "bays": [
+      14,
+      19
+    ],
+    "locationId": "A9-R14",
+    "department": "dry",
+    "aliases": [
+      "shake n bake",
+      "breading",
+      "batter mix",
+      "fish fry"
+    ]
+  },
+  {
+    "id": "lemon-lime-juice",
+    "name": "Bottled lemon & lime juice",
+    "group": "Spices · Seasonings · Salt",
+    "aisle": "A9",
+    "side": "R",
+    "bays": [
+      20,
+      25
+    ],
+    "locationId": "A9-R20",
+    "department": "dry",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "lemon juice",
+      "lime juice"
+    ]
+  },
+  {
+    "id": "cereal",
+    "name": "Cereal",
+    "group": "Cereal · Breakfast",
+    "aisle": "A10",
+    "side": "L",
+    "bays": [
+      1,
+      8
+    ],
+    "locationId": "A10-L1",
+    "department": "dry",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "cheerios",
+      "corn flakes",
+      "frosted flakes",
+      "lucky charms",
+      "cinnamon toast crunch",
+      "kids cereal",
+      "cereal box"
+    ]
+  },
+  {
+    "id": "healthy-cereal",
+    "name": "Healthy & adult cereal",
+    "group": "Cereal · Breakfast",
+    "aisle": "A10",
+    "side": "L",
+    "bays": [
+      9,
+      17
+    ],
+    "locationId": "A10-L9",
+    "department": "dry",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "raisin bran",
+      "special k",
+      "bran flakes",
+      "shredded wheat",
+      "kashi"
+    ]
+  },
+  {
+    "id": "toaster-pastries",
+    "name": "Toaster pastries",
+    "group": "Cereal · Breakfast",
+    "aisle": "A10",
+    "side": "L",
+    "bays": [
+      18,
+      25
+    ],
+    "locationId": "A10-L18",
+    "department": "dry",
+    "aliases": [
+      "pop tarts",
+      "toaster strudel pastries"
+    ]
+  },
+  {
+    "id": "breakfast-drinks",
+    "name": "Breakfast & protein drinks",
+    "group": "Cereal · Breakfast",
+    "aisle": "A10",
+    "side": "R",
+    "bays": [
+      1,
+      6
+    ],
+    "locationId": "A10-R1",
+    "department": "dry",
+    "aliases": [
+      "carnation instant breakfast",
+      "protein shake powder",
+      "ensure",
+      "boost",
+      "slimfast"
+    ]
+  },
+  {
+    "id": "protein-powder",
+    "name": "Protein powder & supplements",
+    "group": "Cereal · Breakfast",
+    "aisle": "A10",
+    "side": "R",
+    "bays": [
+      7,
+      13
+    ],
+    "locationId": "A10-R7",
+    "department": "dry",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "protein powder",
+      "whey",
+      "creatine",
+      "pre workout"
+    ]
+  },
+  {
+    "id": "kids-fruit-snacks",
+    "name": "Kids snacks & fruit snacks",
+    "group": "Cereal · Breakfast",
+    "aisle": "A10",
+    "side": "R",
+    "bays": [
+      14,
+      19
+    ],
+    "locationId": "A10-R14",
+    "department": "dry",
+    "aliases": [
+      "fruit snacks",
+      "gushers",
+      "welchs fruit snacks",
+      "kids snack packs"
+    ]
+  },
+  {
+    "id": "breakfast-biscuits",
+    "name": "Breakfast biscuits & oatmeal cups",
+    "group": "Cereal · Breakfast",
+    "aisle": "A10",
+    "side": "R",
+    "bays": [
+      20,
+      25
+    ],
+    "locationId": "A10-R20",
+    "department": "dry",
+    "aliases": [
+      "belvita",
+      "oatmeal cups",
+      "instant oatmeal packets"
+    ]
+  },
+  {
+    "id": "ground-coffee",
+    "name": "Ground & whole bean coffee",
+    "group": "Coffee · Tea · Cocoa",
+    "aisle": "A11",
+    "side": "L",
+    "bays": [
+      1,
+      6
+    ],
+    "locationId": "A11-L1",
+    "department": "dry",
+    "aliases": [
+      "coffee",
+      "folgers",
+      "ground coffee",
+      "coffee beans",
+      "dunkin coffee",
+      "starbucks coffee"
+    ]
+  },
+  {
+    "id": "k-cups",
+    "name": "K-Cups & coffee pods",
+    "group": "Coffee · Tea · Cocoa",
+    "aisle": "A11",
+    "side": "L",
+    "bays": [
+      7,
+      13
+    ],
+    "locationId": "A11-L7",
+    "department": "dry",
+    "aliases": [
+      "k cups",
+      "keurig pods",
+      "coffee pods",
+      "nespresso pods"
+    ]
+  },
+  {
+    "id": "instant-coffee",
+    "name": "Instant coffee & espresso",
+    "group": "Coffee · Tea · Cocoa",
+    "aisle": "A11",
+    "side": "L",
+    "bays": [
+      14,
+      19
+    ],
+    "locationId": "A11-L14",
+    "department": "dry",
+    "aliases": [
+      "instant coffee",
+      "nescafe",
+      "espresso powder",
+      "bru coffee"
+    ]
+  },
+  {
+    "id": "creamer-shelf",
+    "name": "Shelf-stable creamer & sweetener",
+    "group": "Coffee · Tea · Cocoa",
+    "aisle": "A11",
+    "side": "L",
+    "bays": [
+      20,
+      25
+    ],
+    "locationId": "A11-L20",
+    "department": "dry",
+    "aliases": [
+      "coffee mate",
+      "powdered creamer",
+      "sweetener packets"
+    ]
+  },
+  {
+    "id": "tea",
+    "name": "Tea",
+    "group": "Coffee · Tea · Cocoa",
+    "aisle": "A11",
+    "side": "R",
+    "bays": [
+      1,
+      6
+    ],
+    "locationId": "A11-R1",
+    "department": "dry",
+    "aliases": [
+      "tea bags",
+      "black tea",
+      "green tea",
+      "lipton",
+      "chai tea bags",
+      "herbal tea",
+      "chamomile"
+    ]
+  },
+  {
+    "id": "hot-cocoa",
+    "name": "Hot cocoa & drink mixes",
+    "group": "Coffee · Tea · Cocoa",
+    "aisle": "A11",
+    "side": "R",
+    "bays": [
+      7,
+      13
+    ],
+    "locationId": "A11-R7",
+    "department": "dry",
+    "aliases": [
+      "hot chocolate",
+      "hot cocoa",
+      "swiss miss",
+      "ovaltine",
+      "nesquik powder"
+    ]
+  },
+  {
+    "id": "coffee-filters",
+    "name": "Coffee filters & accessories",
+    "group": "Coffee · Tea · Cocoa",
+    "aisle": "A11",
+    "side": "R",
+    "bays": [
+      14,
+      19
+    ],
+    "locationId": "A11-R14",
+    "department": "dry",
+    "aliases": [
+      "coffee filters",
+      "coffee maker cleaner"
+    ]
+  },
+  {
+    "id": "cold-brew",
+    "name": "Cold brew & coffee concentrate",
+    "group": "Coffee · Tea · Cocoa",
+    "aisle": "A11",
+    "side": "R",
+    "bays": [
+      20,
+      25
+    ],
+    "locationId": "A11-R20",
+    "department": "dry",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "cold brew",
+      "coffee concentrate",
+      "iced coffee bottle"
+    ]
+  },
+  {
+    "id": "potato-chips",
+    "name": "Potato chips",
+    "group": "Chips · Pretzels · Popcorn",
+    "aisle": "A12",
+    "side": "L",
+    "bays": [
+      1,
+      6
+    ],
+    "locationId": "A12-L1",
+    "department": "snack",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "chips",
+      "lays",
+      "ruffles",
+      "kettle chips",
+      "pringles",
+      "crisps"
+    ]
+  },
+  {
+    "id": "tortilla-chips",
+    "name": "Tortilla chips",
+    "group": "Chips · Pretzels · Popcorn",
+    "aisle": "A12",
+    "side": "L",
+    "bays": [
+      7,
+      13
+    ],
+    "locationId": "A12-L7",
+    "department": "snack",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "doritos",
+      "tostitos",
+      "tortilla chips",
+      "corn chips",
+      "fritos"
+    ]
+  },
+  {
+    "id": "cheese-puffs",
+    "name": "Cheese puffs & snack mixes",
+    "group": "Chips · Pretzels · Popcorn",
+    "aisle": "A12",
+    "side": "L",
+    "bays": [
+      14,
+      19
+    ],
+    "locationId": "A12-L14",
+    "department": "snack",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "cheetos",
+      "chex mix",
+      "snack mix",
+      "funyuns"
+    ]
+  },
+  {
+    "id": "pretzels",
+    "name": "Pretzels",
+    "group": "Chips · Pretzels · Popcorn",
+    "aisle": "A12",
+    "side": "L",
+    "bays": [
+      20,
+      25
+    ],
+    "locationId": "A12-L20",
+    "department": "snack",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "pretzels",
+      "pretzel sticks",
+      "rold gold"
+    ]
+  },
+  {
+    "id": "popcorn",
+    "name": "Popcorn",
+    "group": "Chips · Pretzels · Popcorn",
+    "aisle": "A12",
+    "side": "R",
+    "bays": [
+      1,
+      8
+    ],
+    "locationId": "A12-R1",
+    "department": "snack",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "microwave popcorn",
+      "popcorn kernels",
+      "orville",
+      "skinny pop"
+    ]
+  },
+  {
+    "id": "veggie-chips",
+    "name": "Veggie, pita & healthier chips",
+    "group": "Chips · Pretzels · Popcorn",
+    "aisle": "A12",
+    "side": "R",
+    "bays": [
+      9,
+      17
+    ],
+    "locationId": "A12-R9",
+    "department": "snack",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "veggie straws",
+      "pita chips",
+      "plantain chips",
+      "popchips"
+    ]
+  },
+  {
+    "id": "dips-salsa-jar",
+    "name": "Dips, queso & jarred salsa",
+    "group": "Chips · Pretzels · Popcorn",
+    "aisle": "A12",
+    "side": "R",
+    "bays": [
+      18,
+      25
+    ],
+    "locationId": "A12-R18",
+    "department": "snack",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "queso",
+      "salsa jar",
+      "french onion dip",
+      "guacamole mix"
+    ]
+  },
+  {
+    "id": "crackers",
+    "name": "Crackers",
+    "group": "Crackers · Cookies",
+    "aisle": "A13",
+    "side": "L",
+    "bays": [
+      1,
+      8
+    ],
+    "locationId": "A13-L1",
+    "department": "snack",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "crackers",
+      "ritz",
+      "saltines",
+      "triscuit",
+      "wheat thins",
+      "goldfish"
+    ]
+  },
+  {
+    "id": "graham-crackers",
+    "name": "Graham crackers & animal crackers",
+    "group": "Crackers · Cookies",
+    "aisle": "A13",
+    "side": "L",
+    "bays": [
+      9,
+      17
+    ],
+    "locationId": "A13-L9",
+    "department": "snack",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "graham crackers",
+      "animal crackers",
+      "teddy grahams"
+    ]
+  },
+  {
+    "id": "cookies",
+    "name": "Cookies",
+    "group": "Crackers · Cookies",
+    "aisle": "A13",
+    "side": "L",
+    "bays": [
+      18,
+      25
+    ],
+    "locationId": "A13-L18",
+    "department": "snack",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "oreos",
+      "chips ahoy",
+      "cookies",
+      "fig newtons",
+      "nilla wafers",
+      "biscuits"
+    ]
+  },
+  {
+    "id": "snack-cakes",
+    "name": "Snack cakes & mini muffins",
+    "group": "Crackers · Cookies",
+    "aisle": "A13",
+    "side": "R",
+    "bays": [
+      1,
+      6
+    ],
+    "locationId": "A13-R1",
+    "department": "snack",
+    "aliases": [
+      "twinkies",
+      "little bites",
+      "hostess",
+      "mini muffins",
+      "snack cakes"
+    ]
+  },
+  {
+    "id": "fruit-snacks-pouches",
+    "name": "Fruit snacks & applesauce pouches",
+    "group": "Crackers · Cookies",
+    "aisle": "A13",
+    "side": "R",
+    "bays": [
+      7,
+      13
+    ],
+    "locationId": "A13-R7",
+    "department": "snack",
+    "aliases": [
+      "applesauce pouches",
+      "fruit roll ups",
+      "fruit leather"
+    ]
+  },
+  {
+    "id": "rice-crispy-treats",
+    "name": "Rice crispy treats & wafers",
+    "group": "Crackers · Cookies",
+    "aisle": "A13",
+    "side": "R",
+    "bays": [
+      14,
+      19
+    ],
+    "locationId": "A13-R14",
+    "department": "snack",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "rice krispies treats",
+      "wafers",
+      "sugar wafers"
+    ]
+  },
+  {
+    "id": "international-biscuits",
+    "name": "International biscuits & cookies",
+    "group": "Crackers · Cookies",
+    "aisle": "A13",
+    "side": "R",
+    "bays": [
+      20,
+      25
+    ],
+    "locationId": "A13-R20",
+    "department": "snack",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "digestives",
+      "marie biscuits",
+      "parle g biscuits",
+      "britannia",
+      "lotus biscoff",
+      "leibniz"
+    ]
+  },
+  {
+    "id": "chocolate-bars",
+    "name": "Chocolate bars & bags",
+    "group": "Candy · Gum · Chocolate",
+    "aisle": "A14",
+    "side": "L",
+    "bays": [
+      1,
+      6
+    ],
+    "locationId": "A14-L1",
+    "department": "snack",
+    "aliases": [
+      "chocolate",
+      "hersheys",
+      "snickers",
+      "reeses",
+      "kit kat",
+      "m and ms",
+      "candy bar"
+    ]
+  },
+  {
+    "id": "gummy-candy",
+    "name": "Gummy & chewy candy",
+    "group": "Candy · Gum · Chocolate",
+    "aisle": "A14",
+    "side": "L",
+    "bays": [
+      7,
+      13
+    ],
+    "locationId": "A14-L7",
+    "department": "snack",
+    "aliases": [
+      "gummy bears",
+      "haribo",
+      "skittles",
+      "starburst",
+      "sour patch",
+      "twizzlers"
+    ]
+  },
+  {
+    "id": "hard-candy-mints",
+    "name": "Hard candy & mints",
+    "group": "Candy · Gum · Chocolate",
+    "aisle": "A14",
+    "side": "L",
+    "bays": [
+      14,
+      19
+    ],
+    "locationId": "A14-L14",
+    "department": "snack",
+    "aliases": [
+      "lollipops",
+      "jolly ranchers",
+      "werthers",
+      "mints",
+      "altoids",
+      "tic tacs"
+    ]
+  },
+  {
+    "id": "gum",
+    "name": "Gum",
+    "group": "Candy · Gum · Chocolate",
+    "aisle": "A14",
+    "side": "L",
+    "bays": [
+      20,
+      25
+    ],
+    "locationId": "A14-L20",
+    "department": "snack",
+    "aliases": [
+      "gum",
+      "chewing gum",
+      "trident",
+      "orbit",
+      "extra gum"
+    ]
+  },
+  {
+    "id": "seasonal-candy",
+    "name": "Seasonal & bagged candy",
+    "group": "Candy · Gum · Chocolate",
+    "aisle": "A14",
+    "side": "R",
+    "bays": [
+      1,
+      8
+    ],
+    "locationId": "A14-R1",
+    "department": "snack",
+    "aliases": [
+      "halloween candy",
+      "candy bags",
+      "bulk candy",
+      "fun size"
+    ]
+  },
+  {
+    "id": "premium-chocolate",
+    "name": "Premium & dark chocolate",
+    "group": "Candy · Gum · Chocolate",
+    "aisle": "A14",
+    "side": "R",
+    "bays": [
+      9,
+      17
+    ],
+    "locationId": "A14-R9",
+    "department": "snack",
+    "aliases": [
+      "lindt",
+      "ghirardelli",
+      "dark chocolate",
+      "ferrero rocher"
+    ]
+  },
+  {
+    "id": "indian-sweets-shelf",
+    "name": "Indian & international sweets",
+    "group": "Candy · Gum · Chocolate",
+    "aisle": "A14",
+    "side": "R",
+    "bays": [
+      18,
+      25
+    ],
+    "locationId": "A14-R18",
+    "department": "snack",
+    "aliases": [
+      "soan papdi",
+      "mysore pak",
+      "halwa",
+      "turkish delight"
+    ]
+  },
+  {
+    "id": "nuts",
+    "name": "Nuts & seeds",
+    "group": "Nuts · Dried fruit · Jerky · Bars",
+    "aisle": "A15",
+    "side": "L",
+    "bays": [
+      1,
+      8
+    ],
+    "locationId": "A15-L1",
+    "department": "snack",
+    "aliases": [
+      "almonds",
+      "cashews",
+      "peanuts",
+      "pistachios",
+      "walnuts",
+      "mixed nuts",
+      "sunflower seeds",
+      "trail mix"
+    ]
+  },
+  {
+    "id": "dried-fruit",
+    "name": "Dried fruit",
+    "group": "Nuts · Dried fruit · Jerky · Bars",
+    "aisle": "A15",
+    "side": "L",
+    "bays": [
+      9,
+      17
+    ],
+    "locationId": "A15-L9",
+    "department": "snack",
+    "aliases": [
+      "raisins",
+      "dates",
+      "dried cranberries",
+      "dried mango",
+      "prunes",
+      "apricots"
+    ]
+  },
+  {
+    "id": "jerky",
+    "name": "Jerky & meat snacks",
+    "group": "Nuts · Dried fruit · Jerky · Bars",
+    "aisle": "A15",
+    "side": "L",
+    "bays": [
+      18,
+      25
+    ],
+    "locationId": "A15-L18",
+    "department": "snack",
+    "aliases": [
+      "beef jerky",
+      "jack links",
+      "slim jim",
+      "meat sticks"
+    ]
+  },
+  {
+    "id": "protein-bars",
+    "name": "Protein & energy bars",
+    "group": "Nuts · Dried fruit · Jerky · Bars",
+    "aisle": "A15",
+    "side": "R",
+    "bays": [
+      1,
+      8
+    ],
+    "locationId": "A15-R1",
+    "department": "snack",
+    "aliases": [
+      "protein bars",
+      "clif bars",
+      "kind bars",
+      "rx bars",
+      "quest bars",
+      "larabar"
+    ]
+  },
+  {
+    "id": "snack-packs",
+    "name": "Snack packs & lunchbox",
+    "group": "Nuts · Dried fruit · Jerky · Bars",
+    "aisle": "A15",
+    "side": "R",
+    "bays": [
+      9,
+      17
+    ],
+    "locationId": "A15-R9",
+    "department": "snack",
+    "aliases": [
+      "snack packs",
+      "cheese crackers packs"
+    ]
+  },
+  {
+    "id": "seeds-superfoods",
+    "name": "Seeds & superfoods",
+    "group": "Nuts · Dried fruit · Jerky · Bars",
+    "aisle": "A15",
+    "side": "R",
+    "bays": [
+      18,
+      25
+    ],
+    "locationId": "A15-R18",
+    "department": "snack",
+    "aliases": [
+      "chia seeds",
+      "flax seeds",
+      "hemp seeds",
+      "quinoa puffs"
+    ]
+  },
+  {
+    "id": "soda",
+    "name": "Soda",
+    "group": "Soda · Sports drinks · Energy",
+    "aisle": "A16",
+    "side": "L",
+    "bays": [
+      1,
+      8
+    ],
+    "locationId": "A16-L1",
+    "department": "drinks",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "coke",
+      "pepsi",
+      "cola",
+      "sprite",
+      "dr pepper",
+      "mountain dew",
+      "pop",
+      "soft drinks",
+      "12 pack soda",
+      "2 liter"
+    ]
+  },
+  {
+    "id": "diet-soda",
+    "name": "Diet & zero sugar soda",
+    "group": "Soda · Sports drinks · Energy",
+    "aisle": "A16",
+    "side": "L",
+    "bays": [
+      9,
+      17
+    ],
+    "locationId": "A16-L9",
+    "department": "drinks",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "diet coke",
+      "coke zero",
+      "pepsi zero",
+      "diet dr pepper"
+    ]
+  },
+  {
+    "id": "sports-drinks",
+    "name": "Sports drinks",
+    "group": "Soda · Sports drinks · Energy",
+    "aisle": "A16",
+    "side": "L",
+    "bays": [
+      18,
+      25
+    ],
+    "locationId": "A16-L18",
+    "department": "drinks",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "gatorade",
+      "powerade",
+      "body armor",
+      "electrolyte drink"
+    ]
+  },
+  {
+    "id": "energy-drinks",
+    "name": "Energy drinks",
+    "group": "Soda · Sports drinks · Energy",
+    "aisle": "A16",
+    "side": "R",
+    "bays": [
+      1,
+      8
+    ],
+    "locationId": "A16-R1",
+    "department": "drinks",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "red bull",
+      "monster",
+      "celsius",
+      "energy drink",
+      "5 hour energy"
+    ]
+  },
+  {
+    "id": "iced-tea-lemonade",
+    "name": "Bottled tea & lemonade",
+    "group": "Soda · Sports drinks · Energy",
+    "aisle": "A16",
+    "side": "R",
+    "bays": [
+      9,
+      17
+    ],
+    "locationId": "A16-R9",
+    "department": "drinks",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "arizona tea",
+      "pure leaf",
+      "bottled iced tea",
+      "lemonade bottle",
+      "snapple"
+    ]
+  },
+  {
+    "id": "drink-mixes",
+    "name": "Drink mixes & powders",
+    "group": "Soda · Sports drinks · Energy",
+    "aisle": "A16",
+    "side": "R",
+    "bays": [
+      18,
+      25
+    ],
+    "locationId": "A16-R18",
+    "department": "drinks",
+    "aliases": [
+      "kool aid",
+      "crystal light",
+      "tang",
+      "liquid iv",
+      "mio",
+      "gatorade powder"
+    ]
+  },
+  {
+    "id": "bottled-water",
+    "name": "Bottled water",
+    "group": "Juice · Water · Sparkling",
+    "aisle": "A17",
+    "side": "L",
+    "bays": [
+      1,
+      8
+    ],
+    "locationId": "A17-L1",
+    "department": "drinks",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "water",
+      "water bottles",
+      "24 pack water",
+      "case of water",
+      "dasani",
+      "aquafina",
+      "gallon water"
+    ]
+  },
+  {
+    "id": "sparkling-water",
+    "name": "Sparkling water & seltzer",
+    "group": "Juice · Water · Sparkling",
+    "aisle": "A17",
+    "side": "L",
+    "bays": [
+      9,
+      17
+    ],
+    "locationId": "A17-L9",
+    "department": "drinks",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "sparkling water",
+      "la croix",
+      "seltzer",
+      "bubly",
+      "club soda",
+      "tonic"
+    ]
+  },
+  {
+    "id": "juice-shelf",
+    "name": "Shelf-stable juice",
+    "group": "Juice · Water · Sparkling",
+    "aisle": "A17",
+    "side": "L",
+    "bays": [
+      18,
+      25
+    ],
+    "locationId": "A17-L18",
+    "department": "drinks",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "apple juice",
+      "cranberry juice",
+      "juice boxes",
+      "capri sun",
+      "grape juice",
+      "v8"
+    ]
+  },
+  {
+    "id": "coconut-water-functional",
+    "name": "Coconut water & functional drinks",
+    "group": "Juice · Water · Sparkling",
+    "aisle": "A17",
+    "side": "R",
+    "bays": [
+      1,
+      5
+    ],
+    "locationId": "A17-R1",
+    "department": "drinks",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "coconut water",
+      "aloe drink"
+    ]
+  },
+  {
+    "id": "mixers",
+    "name": "Mixers & bar",
+    "group": "Juice · Water · Sparkling",
+    "aisle": "A17",
+    "side": "R",
+    "bays": [
+      6,
+      10
+    ],
+    "locationId": "A17-R6",
+    "department": "drinks",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "margarita mix",
+      "bloody mary mix",
+      "ginger beer",
+      "grenadine"
+    ]
+  },
+  {
+    "id": "shelf-milk",
+    "name": "Shelf-stable milk & plant milk",
+    "group": "Juice · Water · Sparkling",
+    "aisle": "A17",
+    "side": "R",
+    "bays": [
+      11,
+      15
+    ],
+    "locationId": "A17-R11",
+    "department": "drinks",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "shelf stable milk",
+      "boxed milk"
+    ]
+  },
+  {
+    "id": "protein-shakes-ready",
+    "name": "Ready-to-drink protein shakes",
+    "group": "Juice · Water · Sparkling",
+    "aisle": "A17",
+    "side": "R",
+    "bays": [
+      16,
+      20
+    ],
+    "locationId": "A17-R16",
+    "department": "drinks",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "premier protein",
+      "fairlife core power",
+      "muscle milk",
+      "protein shake bottle"
+    ]
+  },
+  {
+    "id": "bottled-coffee",
+    "name": "Bottled coffee & tea drinks",
+    "group": "Juice · Water · Sparkling",
+    "aisle": "A17",
+    "side": "R",
+    "bays": [
+      21,
+      25
+    ],
+    "locationId": "A17-R21",
+    "department": "drinks",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "starbucks frappuccino",
+      "bottled coffee",
+      "yerba mate",
+      "matcha drink"
+    ]
+  },
+  {
+    "id": "frozen-pizza",
+    "name": "Frozen pizza",
+    "group": "Frozen meals · Pizza",
+    "aisle": "A18",
+    "side": "L",
+    "bays": [
+      1,
+      8
+    ],
+    "locationId": "A18-L1",
+    "department": "frozen",
+    "tags": [
+      "frozen"
+    ],
+    "aliases": [
+      "frozen pizza",
+      "digiorno",
+      "red baron",
+      "totinos",
+      "pizza rolls"
+    ]
+  },
+  {
+    "id": "frozen-dinners",
+    "name": "Frozen dinners & entrees",
+    "group": "Frozen meals · Pizza",
+    "aisle": "A18",
+    "side": "L",
+    "bays": [
+      9,
+      17
+    ],
+    "locationId": "A18-L9",
+    "department": "frozen",
+    "tags": [
+      "frozen"
+    ],
+    "aliases": [
+      "tv dinner",
+      "lean cuisine",
+      "stouffers",
+      "frozen lasagna",
+      "hungry man",
+      "frozen meal"
+    ]
+  },
+  {
+    "id": "frozen-bowls-indian",
+    "name": "Frozen bowls & international meals",
+    "group": "Frozen meals · Pizza",
+    "aisle": "A18",
+    "side": "L",
+    "bays": [
+      18,
+      25
+    ],
+    "locationId": "A18-L18",
+    "department": "frozen",
+    "tags": [
+      "frozen"
+    ],
+    "aliases": [
+      "frozen indian meals",
+      "deep foods",
+      "frozen curry",
+      "frozen burritos",
+      "frozen bowls"
+    ]
+  },
+  {
+    "id": "frozen-appetizers",
+    "name": "Frozen appetizers & snacks",
+    "group": "Frozen meals · Pizza",
+    "aisle": "A18",
+    "side": "R",
+    "bays": [
+      1,
+      6
+    ],
+    "locationId": "A18-R1",
+    "department": "frozen",
+    "tags": [
+      "frozen"
+    ],
+    "aliases": [
+      "mozzarella sticks",
+      "samosas",
+      "egg rolls",
+      "bagel bites",
+      "taquitos",
+      "jalapeno poppers"
+    ]
+  },
+  {
+    "id": "frozen-chicken",
+    "name": "Frozen chicken & nuggets",
+    "group": "Frozen meals · Pizza",
+    "aisle": "A18",
+    "side": "R",
+    "bays": [
+      7,
+      13
+    ],
+    "locationId": "A18-R7",
+    "department": "frozen",
+    "tags": [
+      "frozen"
+    ],
+    "aliases": [
+      "chicken nuggets",
+      "chicken tenders",
+      "frozen wings",
+      "tyson"
+    ]
+  },
+  {
+    "id": "frozen-sandwiches",
+    "name": "Frozen sandwiches & pockets",
+    "group": "Frozen meals · Pizza",
+    "aisle": "A18",
+    "side": "R",
+    "bays": [
+      14,
+      19
+    ],
+    "locationId": "A18-R14",
+    "department": "frozen",
+    "tags": [
+      "frozen"
+    ],
+    "aliases": [
+      "hot pockets",
+      "frozen breakfast sandwiches",
+      "uncrustables"
+    ]
+  },
+  {
+    "id": "frozen-pasta-entrees",
+    "name": "Frozen pasta & family entrees",
+    "group": "Frozen meals · Pizza",
+    "aisle": "A18",
+    "side": "R",
+    "bays": [
+      20,
+      25
+    ],
+    "locationId": "A18-R20",
+    "department": "frozen",
+    "tags": [
+      "frozen"
+    ],
+    "aliases": [
+      "frozen mac and cheese",
+      "frozen ravioli",
+      "family size lasagna",
+      "frozen enchiladas"
+    ]
+  },
+  {
+    "id": "frozen-vegetables",
+    "name": "Frozen vegetables",
+    "group": "Frozen vegetables · Fruit · Breakfast",
+    "aisle": "A19",
+    "side": "L",
+    "bays": [
+      1,
+      8
+    ],
+    "locationId": "A19-L1",
+    "department": "frozen",
+    "tags": [
+      "frozen"
+    ],
+    "aliases": [
+      "frozen peas",
+      "frozen corn",
+      "frozen broccoli",
+      "frozen mixed vegetables",
+      "frozen spinach",
+      "frozen green beans",
+      "frozen okra"
+    ]
+  },
+  {
+    "id": "frozen-fruit",
+    "name": "Frozen fruit",
+    "group": "Frozen vegetables · Fruit · Breakfast",
+    "aisle": "A19",
+    "side": "L",
+    "bays": [
+      9,
+      17
+    ],
+    "locationId": "A19-L9",
+    "department": "frozen",
+    "tags": [
+      "frozen"
+    ],
+    "aliases": [
+      "frozen berries",
+      "frozen strawberries",
+      "frozen mango",
+      "smoothie fruit"
+    ]
+  },
+  {
+    "id": "frozen-potatoes",
+    "name": "Frozen potatoes & fries",
+    "group": "Frozen vegetables · Fruit · Breakfast",
+    "aisle": "A19",
+    "side": "L",
+    "bays": [
+      18,
+      25
+    ],
+    "locationId": "A19-L18",
+    "department": "frozen",
+    "tags": [
+      "frozen"
+    ],
+    "aliases": [
+      "french fries",
+      "tater tots",
+      "hash browns",
+      "frozen fries",
+      "ore ida"
+    ]
+  },
+  {
+    "id": "frozen-breakfast",
+    "name": "Frozen breakfast",
+    "group": "Frozen vegetables · Fruit · Breakfast",
+    "aisle": "A19",
+    "side": "R",
+    "bays": [
+      1,
+      5
+    ],
+    "locationId": "A19-R1",
+    "department": "frozen",
+    "tags": [
+      "frozen"
+    ],
+    "aliases": [
+      "frozen waffles",
+      "eggo",
+      "frozen pancakes",
+      "frozen breakfast burritos",
+      "jimmy dean"
+    ]
+  },
+  {
+    "id": "frozen-bread-dough",
+    "name": "Frozen bread, dough & pastry",
+    "group": "Frozen vegetables · Fruit · Breakfast",
+    "aisle": "A19",
+    "side": "R",
+    "bays": [
+      6,
+      10
+    ],
+    "locationId": "A19-R6",
+    "department": "frozen",
+    "tags": [
+      "frozen"
+    ],
+    "aliases": [
+      "frozen garlic bread",
+      "frozen rolls",
+      "puff pastry",
+      "frozen pie crust"
+    ]
+  },
+  {
+    "id": "frozen-indian-breads",
+    "name": "Frozen Indian breads & snacks",
+    "group": "Frozen vegetables · Fruit · Breakfast",
+    "aisle": "A19",
+    "side": "R",
+    "bays": [
+      11,
+      15
+    ],
+    "locationId": "A19-R11",
+    "department": "frozen",
+    "tags": [
+      "frozen"
+    ],
+    "aliases": [
+      "frozen paratha",
+      "frozen roti",
+      "frozen naan",
+      "frozen samosa",
+      "frozen idli",
+      "frozen dosa"
+    ]
+  },
+  {
+    "id": "frozen-rice-grains",
+    "name": "Frozen rice, grains & cauliflower rice",
+    "group": "Frozen vegetables · Fruit · Breakfast",
+    "aisle": "A19",
+    "side": "R",
+    "bays": [
+      16,
+      20
+    ],
+    "locationId": "A19-R16",
+    "department": "frozen",
+    "tags": [
+      "frozen"
+    ],
+    "aliases": [
+      "frozen rice",
+      "cauliflower rice",
+      "frozen quinoa",
+      "frozen fried rice"
+    ]
+  },
+  {
+    "id": "frozen-fruit-bars",
+    "name": "Frozen fruit bars & freezer pops",
+    "group": "Frozen vegetables · Fruit · Breakfast",
+    "aisle": "A19",
+    "side": "R",
+    "bays": [
+      21,
+      25
+    ],
+    "locationId": "A19-R21",
+    "department": "frozen",
+    "tags": [
+      "frozen"
+    ],
+    "aliases": [
+      "outshine",
+      "fruit bars",
+      "freeze pops",
+      "otter pops",
+      "paletas"
+    ]
+  },
+  {
+    "id": "ice-cream",
+    "name": "Ice cream",
+    "group": "Ice cream · Frozen desserts",
+    "aisle": "A20",
+    "side": "L",
+    "bays": [
+      1,
+      8
+    ],
+    "locationId": "A20-L1",
+    "department": "frozen",
+    "tags": [
+      "frozen"
+    ],
+    "aliases": [
+      "ice cream",
+      "icecream",
+      "ben and jerrys",
+      "haagen dazs",
+      "blue bell",
+      "vanilla ice cream",
+      "gelato"
+    ]
+  },
+  {
+    "id": "ice-cream-bars",
+    "name": "Ice cream bars & novelties",
+    "group": "Ice cream · Frozen desserts",
+    "aisle": "A20",
+    "side": "L",
+    "bays": [
+      9,
+      17
+    ],
+    "locationId": "A20-L9",
+    "department": "frozen",
+    "tags": [
+      "frozen"
+    ],
+    "aliases": [
+      "popsicles",
+      "ice cream bars",
+      "drumsticks",
+      "klondike",
+      "ice cream sandwiches",
+      "kulfi"
+    ]
+  },
+  {
+    "id": "sherbet-sorbet",
+    "name": "Sherbet, sorbet & non-dairy",
+    "group": "Ice cream · Frozen desserts",
+    "aisle": "A20",
+    "side": "L",
+    "bays": [
+      18,
+      25
+    ],
+    "locationId": "A20-L18",
+    "department": "frozen",
+    "tags": [
+      "frozen"
+    ],
+    "aliases": [
+      "sherbet",
+      "sorbet",
+      "dairy free ice cream",
+      "frozen yogurt"
+    ]
+  },
+  {
+    "id": "frozen-desserts",
+    "name": "Frozen pies, cakes & whipped topping",
+    "group": "Ice cream · Frozen desserts",
+    "aisle": "A20",
+    "side": "R",
+    "bays": [
+      1,
+      13
+    ],
+    "locationId": "A20-R1",
+    "department": "frozen",
+    "tags": [
+      "frozen"
+    ],
+    "aliases": [
+      "cool whip",
+      "frozen pie",
+      "frozen cheesecake",
+      "ice cream cake"
+    ]
+  },
+  {
+    "id": "ice",
+    "name": "Ice & cones",
+    "group": "Ice cream · Frozen desserts",
+    "aisle": "A20",
+    "side": "R",
+    "bays": [
+      14,
+      25
+    ],
+    "locationId": "A20-R14",
+    "department": "frozen",
+    "tags": [
+      "frozen",
+      "heavy"
+    ],
+    "aliases": [
+      "bag of ice",
+      "ice cream cones",
+      "waffle cones"
+    ]
+  },
+  {
+    "id": "frozen-seafood",
+    "name": "Frozen seafood",
+    "group": "Frozen meat · Seafood",
+    "aisle": "A21",
+    "side": "L",
+    "bays": [
+      1,
+      8
+    ],
+    "locationId": "A21-L1",
+    "department": "frozen",
+    "tags": [
+      "frozen"
+    ],
+    "aliases": [
+      "frozen shrimp",
+      "frozen fish",
+      "fish sticks",
+      "frozen salmon",
+      "frozen tilapia",
+      "fish fillets"
+    ]
+  },
+  {
+    "id": "frozen-meat",
+    "name": "Frozen meat & burgers",
+    "group": "Frozen meat · Seafood",
+    "aisle": "A21",
+    "side": "L",
+    "bays": [
+      9,
+      17
+    ],
+    "locationId": "A21-L9",
+    "department": "frozen",
+    "tags": [
+      "frozen"
+    ],
+    "aliases": [
+      "frozen burgers",
+      "frozen ground beef",
+      "frozen meatballs",
+      "frozen sausage"
+    ]
+  },
+  {
+    "id": "frozen-veggie-protein",
+    "name": "Frozen plant-based & veggie burgers",
+    "group": "Frozen meat · Seafood",
+    "aisle": "A21",
+    "side": "L",
+    "bays": [
+      18,
+      25
+    ],
+    "locationId": "A21-L18",
+    "department": "frozen",
+    "tags": [
+      "frozen"
+    ],
+    "aliases": [
+      "veggie burgers",
+      "morningstar",
+      "impossible burger",
+      "frozen tofu"
+    ]
+  },
+  {
+    "id": "frozen-turkey-ham",
+    "name": "Frozen turkey, ham & holiday",
+    "group": "Frozen meat · Seafood",
+    "aisle": "A21",
+    "side": "R",
+    "bays": [
+      1,
+      13
+    ],
+    "locationId": "A21-R1",
+    "department": "frozen",
+    "tags": [
+      "frozen",
+      "heavy"
+    ],
+    "aliases": [
+      "frozen turkey",
+      "butterball",
+      "ham",
+      "cornish hen"
+    ]
+  },
+  {
+    "id": "frozen-international",
+    "name": "Frozen international & dumplings",
+    "group": "Frozen meat · Seafood",
+    "aisle": "A21",
+    "side": "R",
+    "bays": [
+      14,
+      25
+    ],
+    "locationId": "A21-R14",
+    "department": "frozen",
+    "tags": [
+      "frozen"
+    ],
+    "aliases": [
+      "dumplings",
+      "potstickers",
+      "gyoza",
+      "frozen tamales",
+      "bao"
+    ]
+  },
+  {
+    "id": "shredded-cheese",
+    "name": "Shredded & sliced cheese",
+    "group": "Cheese · Lunch meat · Dips",
+    "aisle": "A22",
+    "side": "L",
+    "bays": [
+      1,
+      6
+    ],
+    "locationId": "A22-L1",
+    "department": "dairy",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "shredded cheese",
+      "cheddar",
+      "mozzarella",
+      "kraft singles",
+      "mexican blend"
+    ]
+  },
+  {
+    "id": "block-specialty-cheese",
+    "name": "Block & specialty cheese",
+    "group": "Cheese · Lunch meat · Dips",
+    "aisle": "A22",
+    "side": "L",
+    "bays": [
+      7,
+      13
+    ],
+    "locationId": "A22-L7",
+    "department": "dairy",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "cheese block",
+      "parmesan",
+      "brie",
+      "feta",
+      "goat cheese",
+      "cream cheese"
+    ]
+  },
+  {
+    "id": "paneer-indian-dairy",
+    "name": "Paneer & international dairy",
+    "group": "Cheese · Lunch meat · Dips",
+    "aisle": "A22",
+    "side": "L",
+    "bays": [
+      14,
+      19
+    ],
+    "locationId": "A22-L14",
+    "department": "dairy",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "paneer",
+      "nanak paneer",
+      "amul",
+      "indian cheese",
+      "queso fresco",
+      "labneh"
+    ]
+  },
+  {
+    "id": "lunch-meat",
+    "name": "Packaged lunch meat",
+    "group": "Cheese · Lunch meat · Dips",
+    "aisle": "A22",
+    "side": "L",
+    "bays": [
+      20,
+      25
+    ],
+    "locationId": "A22-L20",
+    "department": "dairy",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "deli turkey packaged",
+      "oscar mayer",
+      "pepperoni",
+      "ham slices packaged"
+    ]
+  },
+  {
+    "id": "hummus-dips",
+    "name": "Hummus & refrigerated dips",
+    "group": "Cheese · Lunch meat · Dips",
+    "aisle": "A22",
+    "side": "R",
+    "bays": [
+      1,
+      5
+    ],
+    "locationId": "A22-R1",
+    "department": "dairy",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "hummus",
+      "guacamole",
+      "spinach dip",
+      "tzatziki",
+      "fresh salsa"
+    ]
+  },
+  {
+    "id": "lunchables-snack-kits",
+    "name": "Lunchables & snack kits",
+    "group": "Cheese · Lunch meat · Dips",
+    "aisle": "A22",
+    "side": "R",
+    "bays": [
+      6,
+      10
+    ],
+    "locationId": "A22-R6",
+    "department": "dairy",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "lunchables",
+      "cheese sticks",
+      "string cheese",
+      "babybel"
+    ]
+  },
+  {
+    "id": "refrigerated-pasta",
+    "name": "Refrigerated pasta & pizza dough",
+    "group": "Cheese · Lunch meat · Dips",
+    "aisle": "A22",
+    "side": "R",
+    "bays": [
+      11,
+      15
+    ],
+    "locationId": "A22-R11",
+    "department": "dairy",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "fresh pasta",
+      "tortellini",
+      "pizza dough",
+      "ravioli"
+    ]
+  },
+  {
+    "id": "kombucha-probiotic",
+    "name": "Kombucha, kefir & probiotic drinks",
+    "group": "Cheese · Lunch meat · Dips",
+    "aisle": "A22",
+    "side": "R",
+    "bays": [
+      16,
+      20
+    ],
+    "locationId": "A22-R16",
+    "department": "dairy",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "kombucha",
+      "kefir",
+      "yakult",
+      "lassi",
+      "probiotic drink"
+    ]
+  },
+  {
+    "id": "dairy-free-cheese",
+    "name": "Plant-based cheese & dairy-free",
+    "group": "Cheese · Lunch meat · Dips",
+    "aisle": "A22",
+    "side": "R",
+    "bays": [
+      21,
+      25
+    ],
+    "locationId": "A22-R21",
+    "department": "dairy",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "vegan cheese",
+      "dairy free yogurt",
+      "daiya",
+      "violife",
+      "coconut yogurt"
+    ]
+  },
+  {
+    "id": "toilet-paper",
+    "name": "Toilet paper",
+    "group": "Paper towels · Toilet paper · Trash bags",
+    "aisle": "A23",
+    "side": "L",
+    "bays": [
+      1,
+      8
+    ],
+    "locationId": "A23-L1",
+    "department": "household",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "toilet paper",
+      "tp",
+      "bath tissue",
+      "charmin",
+      "toilet roll",
+      "loo roll"
+    ]
+  },
+  {
+    "id": "paper-towels",
+    "name": "Paper towels",
+    "group": "Paper towels · Toilet paper · Trash bags",
+    "aisle": "A23",
+    "side": "L",
+    "bays": [
+      9,
+      17
+    ],
+    "locationId": "A23-L9",
+    "department": "household",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "paper towels",
+      "bounty",
+      "kitchen roll"
+    ]
+  },
+  {
+    "id": "facial-tissue",
+    "name": "Facial tissue & napkins",
+    "group": "Paper towels · Toilet paper · Trash bags",
+    "aisle": "A23",
+    "side": "L",
+    "bays": [
+      18,
+      25
+    ],
+    "locationId": "A23-L18",
+    "department": "household",
+    "aliases": [
+      "tissues",
+      "kleenex",
+      "napkins"
+    ]
+  },
+  {
+    "id": "trash-bags",
+    "name": "Trash bags",
+    "group": "Paper towels · Toilet paper · Trash bags",
+    "aisle": "A23",
+    "side": "R",
+    "bays": [
+      1,
+      5
+    ],
+    "locationId": "A23-R1",
+    "department": "household",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "trash bags",
+      "garbage bags",
+      "hefty",
+      "glad bags",
+      "kitchen bags"
+    ]
+  },
+  {
+    "id": "food-storage",
+    "name": "Food storage bags & wrap",
+    "group": "Paper towels · Toilet paper · Trash bags",
+    "aisle": "A23",
+    "side": "R",
+    "bays": [
+      6,
+      10
+    ],
+    "locationId": "A23-R6",
+    "department": "household",
+    "aliases": [
+      "ziploc",
+      "sandwich bags",
+      "foil",
+      "aluminum foil",
+      "plastic wrap",
+      "parchment paper",
+      "freezer bags"
+    ]
+  },
+  {
+    "id": "disposable-plates",
+    "name": "Disposable plates, cups & cutlery",
+    "group": "Paper towels · Toilet paper · Trash bags",
+    "aisle": "A23",
+    "side": "R",
+    "bays": [
+      11,
+      15
+    ],
+    "locationId": "A23-R11",
+    "department": "household",
+    "aliases": [
+      "paper plates",
+      "plastic cups",
+      "solo cups",
+      "plastic forks",
+      "paper bowls"
+    ]
+  },
+  {
+    "id": "storage-containers",
+    "name": "Food storage containers",
+    "group": "Paper towels · Toilet paper · Trash bags",
+    "aisle": "A23",
+    "side": "R",
+    "bays": [
+      16,
+      20
+    ],
+    "locationId": "A23-R16",
+    "department": "household",
+    "aliases": [
+      "tupperware",
+      "glad containers",
+      "rubbermaid",
+      "meal prep containers",
+      "mason jars"
+    ]
+  },
+  {
+    "id": "charcoal-grilling",
+    "name": "Charcoal & grilling supplies",
+    "group": "Paper towels · Toilet paper · Trash bags",
+    "aisle": "A23",
+    "side": "R",
+    "bays": [
+      21,
+      25
+    ],
+    "locationId": "A23-R21",
+    "department": "household",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "charcoal",
+      "kingsford",
+      "lighter fluid",
+      "grill brush",
+      "propane"
+    ]
+  },
+  {
+    "id": "dish-soap",
+    "name": "Dish soap & dishwasher detergent",
+    "group": "Cleaning · Dish · Air fresheners",
+    "aisle": "A24",
+    "side": "L",
+    "bays": [
+      1,
+      6
+    ],
+    "locationId": "A24-L1",
+    "department": "household",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "dish soap",
+      "dawn",
+      "dishwasher pods",
+      "cascade",
+      "finish tabs",
+      "rinse aid"
+    ]
+  },
+  {
+    "id": "all-purpose-cleaners",
+    "name": "All-purpose & kitchen cleaners",
+    "group": "Cleaning · Dish · Air fresheners",
+    "aisle": "A24",
+    "side": "L",
+    "bays": [
+      7,
+      13
+    ],
+    "locationId": "A24-L7",
+    "department": "household",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "all purpose cleaner",
+      "lysol spray",
+      "clorox wipes",
+      "disinfecting wipes",
+      "409",
+      "degreaser"
+    ]
+  },
+  {
+    "id": "bathroom-cleaners",
+    "name": "Bathroom & toilet cleaners",
+    "group": "Cleaning · Dish · Air fresheners",
+    "aisle": "A24",
+    "side": "L",
+    "bays": [
+      14,
+      19
+    ],
+    "locationId": "A24-L14",
+    "department": "household",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "toilet bowl cleaner",
+      "scrubbing bubbles",
+      "tile cleaner",
+      "mold spray"
+    ]
+  },
+  {
+    "id": "bleach",
+    "name": "Bleach & floor cleaners",
+    "group": "Cleaning · Dish · Air fresheners",
+    "aisle": "A24",
+    "side": "L",
+    "bays": [
+      20,
+      25
+    ],
+    "locationId": "A24-L20",
+    "department": "household",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "bleach",
+      "clorox",
+      "pine sol",
+      "fabuloso",
+      "mop solution",
+      "swiffer refills"
+    ]
+  },
+  {
+    "id": "glass-furniture-cleaners",
+    "name": "Glass & furniture cleaners",
+    "group": "Cleaning · Dish · Air fresheners",
+    "aisle": "A24",
+    "side": "R",
+    "bays": [
+      1,
+      5
+    ],
+    "locationId": "A24-R1",
+    "department": "household",
+    "aliases": [
+      "windex",
+      "glass cleaner",
+      "pledge",
+      "stainless steel cleaner"
+    ]
+  },
+  {
+    "id": "sponges-gloves",
+    "name": "Sponges, brushes & gloves",
+    "group": "Cleaning · Dish · Air fresheners",
+    "aisle": "A24",
+    "side": "R",
+    "bays": [
+      6,
+      10
+    ],
+    "locationId": "A24-R6",
+    "department": "household",
+    "aliases": [
+      "sponges",
+      "scrub daddy",
+      "dish brush",
+      "rubber gloves",
+      "steel wool"
+    ]
+  },
+  {
+    "id": "air-fresheners",
+    "name": "Air fresheners & candles",
+    "group": "Cleaning · Dish · Air fresheners",
+    "aisle": "A24",
+    "side": "R",
+    "bays": [
+      11,
+      15
+    ],
+    "locationId": "A24-R11",
+    "department": "household",
+    "aliases": [
+      "air freshener",
+      "febreze",
+      "glade",
+      "plug in",
+      "candles"
+    ]
+  },
+  {
+    "id": "pest-control",
+    "name": "Pest control",
+    "group": "Cleaning · Dish · Air fresheners",
+    "aisle": "A24",
+    "side": "R",
+    "bays": [
+      16,
+      20
+    ],
+    "locationId": "A24-R16",
+    "department": "household",
+    "aliases": [
+      "ant killer",
+      "raid",
+      "mouse traps",
+      "bug spray"
+    ]
+  },
+  {
+    "id": "mops-brooms",
+    "name": "Mops, brooms & dustpans",
+    "group": "Cleaning · Dish · Air fresheners",
+    "aisle": "A24",
+    "side": "R",
+    "bays": [
+      21,
+      25
+    ],
+    "locationId": "A24-R21",
+    "department": "household",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "mop",
+      "broom",
+      "dustpan",
+      "swiffer",
+      "bucket"
+    ]
+  },
+  {
+    "id": "laundry-detergent",
+    "name": "Laundry detergent",
+    "group": "Laundry · Detergent · Fabric softener",
+    "aisle": "A25",
+    "side": "L",
+    "bays": [
+      1,
+      8
+    ],
+    "locationId": "A25-L1",
+    "department": "household",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "detergent",
+      "laundry detergent",
+      "tide",
+      "tide pods",
+      "gain",
+      "persil",
+      "all free clear"
+    ]
+  },
+  {
+    "id": "fabric-softener",
+    "name": "Fabric softener & dryer sheets",
+    "group": "Laundry · Detergent · Fabric softener",
+    "aisle": "A25",
+    "side": "L",
+    "bays": [
+      9,
+      17
+    ],
+    "locationId": "A25-L9",
+    "department": "household",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "fabric softener",
+      "downy",
+      "dryer sheets",
+      "bounce",
+      "scent beads"
+    ]
+  },
+  {
+    "id": "stain-remover",
+    "name": "Stain removers & boosters",
+    "group": "Laundry · Detergent · Fabric softener",
+    "aisle": "A25",
+    "side": "L",
+    "bays": [
+      18,
+      25
+    ],
+    "locationId": "A25-L18",
+    "department": "household",
+    "aliases": [
+      "oxiclean",
+      "stain remover",
+      "shout",
+      "borax",
+      "laundry booster"
+    ]
+  },
+  {
+    "id": "laundry-supplies",
+    "name": "Laundry baskets, hangers & irons",
+    "group": "Laundry · Detergent · Fabric softener",
+    "aisle": "A25",
+    "side": "R",
+    "bays": [
+      1,
+      6
+    ],
+    "locationId": "A25-R1",
+    "department": "household",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "laundry basket",
+      "hangers",
+      "iron",
+      "ironing board",
+      "lint roller"
+    ]
+  },
+  {
+    "id": "batteries-lightbulbs",
+    "name": "Batteries & light bulbs",
+    "group": "Laundry · Detergent · Fabric softener",
+    "aisle": "A25",
+    "side": "R",
+    "bays": [
+      7,
+      13
+    ],
+    "locationId": "A25-R7",
+    "department": "household",
+    "aliases": [
+      "batteries",
+      "aa batteries",
+      "aaa batteries",
+      "light bulbs",
+      "led bulbs",
+      "9v"
+    ]
+  },
+  {
+    "id": "hardware-basics",
+    "name": "Tape, glue & hardware basics",
+    "group": "Laundry · Detergent · Fabric softener",
+    "aisle": "A25",
+    "side": "R",
+    "bays": [
+      14,
+      19
+    ],
+    "locationId": "A25-R14",
+    "department": "household",
+    "aliases": [
+      "duct tape",
+      "super glue",
+      "command strips",
+      "extension cord",
+      "flashlight"
+    ]
+  },
+  {
+    "id": "kitchen-towels",
+    "name": "Kitchen towels & cloths",
+    "group": "Laundry · Detergent · Fabric softener",
+    "aisle": "A25",
+    "side": "R",
+    "bays": [
+      20,
+      25
+    ],
+    "locationId": "A25-R20",
+    "department": "household",
+    "aliases": [
+      "kitchen towels",
+      "dish towels",
+      "microfiber cloths",
+      "dish cloths"
+    ]
+  },
+  {
+    "id": "dog-food",
+    "name": "Dog food",
+    "group": "Pet · Dog · Cat",
+    "aisle": "A26",
+    "side": "L",
+    "bays": [
+      1,
+      8
+    ],
+    "locationId": "A26-L1",
+    "department": "pet",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "dog food",
+      "purina dog",
+      "pedigree",
+      "blue buffalo",
+      "kibble",
+      "dog food bag"
+    ]
+  },
+  {
+    "id": "dog-treats-toys",
+    "name": "Dog treats, chews & toys",
+    "group": "Pet · Dog · Cat",
+    "aisle": "A26",
+    "side": "L",
+    "bays": [
+      9,
+      17
+    ],
+    "locationId": "A26-L9",
+    "department": "pet",
+    "aliases": [
+      "dog treats",
+      "milk bone",
+      "dog chews",
+      "rawhide",
+      "dog toy"
+    ]
+  },
+  {
+    "id": "dog-supplies",
+    "name": "Dog supplies & grooming",
+    "group": "Pet · Dog · Cat",
+    "aisle": "A26",
+    "side": "L",
+    "bays": [
+      18,
+      25
+    ],
+    "locationId": "A26-L18",
+    "department": "pet",
+    "aliases": [
+      "dog shampoo",
+      "leash",
+      "dog collar",
+      "poop bags",
+      "flea treatment"
+    ]
+  },
+  {
+    "id": "cat-food",
+    "name": "Cat food",
+    "group": "Pet · Dog · Cat",
+    "aisle": "A26",
+    "side": "R",
+    "bays": [
+      1,
+      6
+    ],
+    "locationId": "A26-R1",
+    "department": "pet",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "cat food",
+      "fancy feast",
+      "friskies",
+      "meow mix",
+      "kitten food",
+      "wet cat food"
+    ]
+  },
+  {
+    "id": "cat-litter",
+    "name": "Cat litter",
+    "group": "Pet · Dog · Cat",
+    "aisle": "A26",
+    "side": "R",
+    "bays": [
+      7,
+      13
+    ],
+    "locationId": "A26-R7",
+    "department": "pet",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "cat litter",
+      "litter",
+      "tidy cats",
+      "litter box"
+    ]
+  },
+  {
+    "id": "cat-treats-supplies",
+    "name": "Cat treats, toys & supplies",
+    "group": "Pet · Dog · Cat",
+    "aisle": "A26",
+    "side": "R",
+    "bays": [
+      14,
+      19
+    ],
+    "locationId": "A26-R14",
+    "department": "pet",
+    "aliases": [
+      "cat treats",
+      "temptations",
+      "cat toys",
+      "scratching post"
+    ]
+  },
+  {
+    "id": "small-pet-fish-bird",
+    "name": "Fish, bird & small pet",
+    "group": "Pet · Dog · Cat",
+    "aisle": "A26",
+    "side": "R",
+    "bays": [
+      20,
+      25
+    ],
+    "locationId": "A26-R20",
+    "department": "pet",
+    "aliases": [
+      "fish food",
+      "bird seed",
+      "hamster food",
+      "aquarium"
+    ]
+  },
+  {
+    "id": "diapers",
+    "name": "Diapers & training pants",
+    "group": "Baby · Diapers · Formula · Wipes",
+    "aisle": "A27",
+    "side": "L",
+    "bays": [
+      1,
+      6
+    ],
+    "locationId": "A27-L1",
+    "department": "baby",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "diapers",
+      "pampers",
+      "huggies",
+      "pull ups",
+      "size 4 diapers",
+      "overnight diapers"
+    ]
+  },
+  {
+    "id": "baby-wipes",
+    "name": "Baby wipes",
+    "group": "Baby · Diapers · Formula · Wipes",
+    "aisle": "A27",
+    "side": "L",
+    "bays": [
+      7,
+      13
+    ],
+    "locationId": "A27-L7",
+    "department": "baby",
+    "aliases": [
+      "baby wipes",
+      "wipes",
+      "water wipes"
+    ]
+  },
+  {
+    "id": "baby-formula",
+    "name": "Baby formula",
+    "group": "Baby · Diapers · Formula · Wipes",
+    "aisle": "A27",
+    "side": "L",
+    "bays": [
+      14,
+      19
+    ],
+    "locationId": "A27-L14",
+    "department": "baby",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "formula",
+      "similac",
+      "enfamil",
+      "infant formula",
+      "toddler formula"
+    ]
+  },
+  {
+    "id": "baby-food",
+    "name": "Baby food & snacks",
+    "group": "Baby · Diapers · Formula · Wipes",
+    "aisle": "A27",
+    "side": "L",
+    "bays": [
+      20,
+      25
+    ],
+    "locationId": "A27-L20",
+    "department": "baby",
+    "aliases": [
+      "baby food",
+      "gerber",
+      "baby food pouches",
+      "puffs",
+      "teething crackers",
+      "cerelac"
+    ]
+  },
+  {
+    "id": "baby-bath-skin",
+    "name": "Baby bath, lotion & diaper cream",
+    "group": "Baby · Diapers · Formula · Wipes",
+    "aisle": "A27",
+    "side": "R",
+    "bays": [
+      1,
+      8
+    ],
+    "locationId": "A27-R1",
+    "department": "baby",
+    "aliases": [
+      "baby shampoo",
+      "johnsons",
+      "baby lotion",
+      "desitin",
+      "diaper rash cream",
+      "aquaphor baby"
+    ]
+  },
+  {
+    "id": "bottles-feeding",
+    "name": "Bottles, pacifiers & feeding",
+    "group": "Baby · Diapers · Formula · Wipes",
+    "aisle": "A27",
+    "side": "R",
+    "bays": [
+      9,
+      17
+    ],
+    "locationId": "A27-R9",
+    "department": "baby",
+    "aliases": [
+      "baby bottles",
+      "pacifier",
+      "sippy cup",
+      "bottle brush",
+      "nipples"
+    ]
+  },
+  {
+    "id": "baby-health",
+    "name": "Baby medicine & health",
+    "group": "Baby · Diapers · Formula · Wipes",
+    "aisle": "A27",
+    "side": "R",
+    "bays": [
+      18,
+      25
+    ],
+    "locationId": "A27-R18",
+    "department": "baby",
+    "aliases": [
+      "infant tylenol",
+      "gripe water",
+      "baby gas drops",
+      "nasal aspirator",
+      "teething gel"
+    ]
+  },
+  {
+    "id": "pain-relief",
+    "name": "Pain relief",
+    "group": "Vitamins · Pain relief · First aid",
+    "aisle": "A28",
+    "side": "L",
+    "bays": [
+      1,
+      6
+    ],
+    "locationId": "A28-L1",
+    "department": "pharmacy",
+    "aliases": [
+      "tylenol",
+      "advil",
+      "ibuprofen",
+      "aleve",
+      "aspirin",
+      "acetaminophen",
+      "pain reliever",
+      "excedrin"
+    ]
+  },
+  {
+    "id": "vitamins",
+    "name": "Vitamins & supplements",
+    "group": "Vitamins · Pain relief · First aid",
+    "aisle": "A28",
+    "side": "L",
+    "bays": [
+      7,
+      13
+    ],
+    "locationId": "A28-L7",
+    "department": "pharmacy",
+    "aliases": [
+      "vitamins",
+      "multivitamin",
+      "vitamin d",
+      "vitamin c",
+      "fish oil",
+      "melatonin",
+      "magnesium",
+      "zinc"
+    ]
+  },
+  {
+    "id": "first-aid",
+    "name": "First aid",
+    "group": "Vitamins · Pain relief · First aid",
+    "aisle": "A28",
+    "side": "L",
+    "bays": [
+      14,
+      19
+    ],
+    "locationId": "A28-L14",
+    "department": "pharmacy",
+    "aliases": [
+      "band aids",
+      "bandages",
+      "neosporin",
+      "hydrogen peroxide",
+      "rubbing alcohol",
+      "gauze",
+      "first aid kit"
+    ]
+  },
+  {
+    "id": "sleep-aids",
+    "name": "Sleep aids & motion sickness",
+    "group": "Vitamins · Pain relief · First aid",
+    "aisle": "A28",
+    "side": "L",
+    "bays": [
+      20,
+      25
+    ],
+    "locationId": "A28-L20",
+    "department": "pharmacy",
+    "aliases": [
+      "sleep aid",
+      "zzzquil",
+      "dramamine",
+      "unisom"
+    ]
+  },
+  {
+    "id": "diabetes-care",
+    "name": "Diabetes & blood pressure care",
+    "group": "Vitamins · Pain relief · First aid",
+    "aisle": "A28",
+    "side": "R",
+    "bays": [
+      1,
+      4
+    ],
+    "locationId": "A28-R1",
+    "department": "pharmacy",
+    "aliases": [
+      "glucose tablets",
+      "blood pressure monitor",
+      "lancets",
+      "glucose meter"
+    ]
+  },
+  {
+    "id": "foot-care",
+    "name": "Foot care & support",
+    "group": "Vitamins · Pain relief · First aid",
+    "aisle": "A28",
+    "side": "R",
+    "bays": [
+      5,
+      8
+    ],
+    "locationId": "A28-R5",
+    "department": "pharmacy",
+    "aliases": [
+      "insoles",
+      "dr scholls",
+      "foot powder",
+      "ankle brace",
+      "compression socks"
+    ]
+  },
+  {
+    "id": "thermometers",
+    "name": "Thermometers & health devices",
+    "group": "Vitamins · Pain relief · First aid",
+    "aisle": "A28",
+    "side": "R",
+    "bays": [
+      9,
+      13
+    ],
+    "locationId": "A28-R9",
+    "department": "pharmacy",
+    "aliases": [
+      "thermometer",
+      "pulse oximeter",
+      "humidifier",
+      "heating pad"
+    ]
+  },
+  {
+    "id": "incontinence",
+    "name": "Incontinence & adult care",
+    "group": "Vitamins · Pain relief · First aid",
+    "aisle": "A28",
+    "side": "R",
+    "bays": [
+      14,
+      17
+    ],
+    "locationId": "A28-R14",
+    "department": "pharmacy",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "depends",
+      "adult diapers",
+      "bladder pads"
+    ]
+  },
+  {
+    "id": "smoking-cessation",
+    "name": "Smoking cessation",
+    "group": "Vitamins · Pain relief · First aid",
+    "aisle": "A28",
+    "side": "R",
+    "bays": [
+      18,
+      21
+    ],
+    "locationId": "A28-R18",
+    "department": "pharmacy",
+    "aliases": [
+      "nicotine gum",
+      "nicotine patches",
+      "nicorette"
+    ]
+  },
+  {
+    "id": "kids-medicine",
+    "name": "Children's medicine",
+    "group": "Vitamins · Pain relief · First aid",
+    "aisle": "A28",
+    "side": "R",
+    "bays": [
+      22,
+      25
+    ],
+    "locationId": "A28-R22",
+    "department": "pharmacy",
+    "aliases": [
+      "childrens tylenol",
+      "childrens motrin",
+      "kids cold medicine",
+      "pedialyte",
+      "childrens allergy"
+    ]
+  },
+  {
+    "id": "shampoo-conditioner",
+    "name": "Shampoo & conditioner",
+    "group": "Hair care · Skin care · Oral care",
+    "aisle": "A29",
+    "side": "L",
+    "bays": [
+      1,
+      6
+    ],
+    "locationId": "A29-L1",
+    "department": "pharmacy",
+    "aliases": [
+      "shampoo",
+      "conditioner",
+      "head and shoulders",
+      "pantene",
+      "dove shampoo",
+      "dry shampoo"
+    ]
+  },
+  {
+    "id": "hair-styling",
+    "name": "Hair styling & color",
+    "group": "Hair care · Skin care · Oral care",
+    "aisle": "A29",
+    "side": "L",
+    "bays": [
+      7,
+      13
+    ],
+    "locationId": "A29-L7",
+    "department": "pharmacy",
+    "aliases": [
+      "hair gel",
+      "hairspray",
+      "hair dye",
+      "hair color",
+      "mousse",
+      "hair oil"
+    ]
+  },
+  {
+    "id": "body-wash-soap",
+    "name": "Body wash & bar soap",
+    "group": "Hair care · Skin care · Oral care",
+    "aisle": "A29",
+    "side": "L",
+    "bays": [
+      14,
+      19
+    ],
+    "locationId": "A29-L14",
+    "department": "pharmacy",
+    "aliases": [
+      "body wash",
+      "soap",
+      "bar soap",
+      "dove",
+      "irish spring",
+      "dial"
+    ]
+  },
+  {
+    "id": "lotion-skin-care",
+    "name": "Lotion & skin care",
+    "group": "Hair care · Skin care · Oral care",
+    "aisle": "A29",
+    "side": "L",
+    "bays": [
+      20,
+      25
+    ],
+    "locationId": "A29-L20",
+    "department": "pharmacy",
+    "aliases": [
+      "lotion",
+      "body lotion",
+      "moisturizer",
+      "cetaphil",
+      "vaseline",
+      "sunscreen",
+      "face wash",
+      "lip balm"
+    ]
+  },
+  {
+    "id": "toothpaste",
+    "name": "Toothpaste & mouthwash",
+    "group": "Hair care · Skin care · Oral care",
+    "aisle": "A29",
+    "side": "R",
+    "bays": [
+      1,
+      4
+    ],
+    "locationId": "A29-R1",
+    "department": "pharmacy",
+    "aliases": [
+      "toothpaste",
+      "colgate",
+      "crest",
+      "mouthwash",
+      "listerine",
+      "whitening strips"
+    ]
+  },
+  {
+    "id": "toothbrushes-floss",
+    "name": "Toothbrushes & floss",
+    "group": "Hair care · Skin care · Oral care",
+    "aisle": "A29",
+    "side": "R",
+    "bays": [
+      5,
+      8
+    ],
+    "locationId": "A29-R5",
+    "department": "pharmacy",
+    "aliases": [
+      "toothbrush",
+      "floss",
+      "electric toothbrush heads",
+      "dental picks"
+    ]
+  },
+  {
+    "id": "deodorant",
+    "name": "Deodorant",
+    "group": "Hair care · Skin care · Oral care",
+    "aisle": "A29",
+    "side": "R",
+    "bays": [
+      9,
+      13
+    ],
+    "locationId": "A29-R9",
+    "department": "pharmacy",
+    "aliases": [
+      "deodorant",
+      "antiperspirant",
+      "old spice",
+      "secret",
+      "degree"
+    ]
+  },
+  {
+    "id": "cotton-swabs",
+    "name": "Cotton balls, swabs & pads",
+    "group": "Hair care · Skin care · Oral care",
+    "aisle": "A29",
+    "side": "R",
+    "bays": [
+      14,
+      17
+    ],
+    "locationId": "A29-R14",
+    "department": "pharmacy",
+    "aliases": [
+      "q tips",
+      "cotton balls",
+      "cotton rounds",
+      "cotton swabs"
+    ]
+  },
+  {
+    "id": "facial-care",
+    "name": "Facial care & acne",
+    "group": "Hair care · Skin care · Oral care",
+    "aisle": "A29",
+    "side": "R",
+    "bays": [
+      18,
+      21
+    ],
+    "locationId": "A29-R18",
+    "department": "pharmacy",
+    "aliases": [
+      "face mask",
+      "acne wash",
+      "cerave",
+      "neutrogena",
+      "micellar water",
+      "toner"
+    ]
+  },
+  {
+    "id": "hair-accessories",
+    "name": "Hair accessories & brushes",
+    "group": "Hair care · Skin care · Oral care",
+    "aisle": "A29",
+    "side": "R",
+    "bays": [
+      22,
+      25
+    ],
+    "locationId": "A29-R22",
+    "department": "pharmacy",
+    "aliases": [
+      "hair ties",
+      "hair brush",
+      "comb",
+      "bobby pins",
+      "headbands",
+      "scrunchies"
+    ]
+  },
+  {
+    "id": "razors-shaving",
+    "name": "Razors & shaving",
+    "group": "Shaving · Feminine care · Family planning",
+    "aisle": "A30",
+    "side": "L",
+    "bays": [
+      1,
+      8
+    ],
+    "locationId": "A30-L1",
+    "department": "pharmacy",
+    "aliases": [
+      "razors",
+      "razor blades",
+      "gillette",
+      "shaving cream",
+      "shave gel",
+      "electric razor"
+    ]
+  },
+  {
+    "id": "feminine-care",
+    "name": "Feminine care",
+    "group": "Shaving · Feminine care · Family planning",
+    "aisle": "A30",
+    "side": "L",
+    "bays": [
+      9,
+      17
+    ],
+    "locationId": "A30-L9",
+    "department": "pharmacy",
+    "aliases": [
+      "tampons",
+      "pads",
+      "always",
+      "tampax",
+      "panty liners",
+      "feminine wash"
+    ]
+  },
+  {
+    "id": "family-planning",
+    "name": "Family planning",
+    "group": "Shaving · Feminine care · Family planning",
+    "aisle": "A30",
+    "side": "L",
+    "bays": [
+      18,
+      25
+    ],
+    "locationId": "A30-L18",
+    "department": "pharmacy",
+    "aliases": [
+      "condoms",
+      "pregnancy test",
+      "lubricant",
+      "ovulation test"
+    ]
+  },
+  {
+    "id": "hand-soap-sanitizer",
+    "name": "Hand soap & sanitizer",
+    "group": "Shaving · Feminine care · Family planning",
+    "aisle": "A30",
+    "side": "R",
+    "bays": [
+      1,
+      6
+    ],
+    "locationId": "A30-R1",
+    "department": "pharmacy",
+    "aliases": [
+      "hand soap",
+      "softsoap",
+      "hand sanitizer",
+      "purell",
+      "foaming hand soap"
+    ]
+  },
+  {
+    "id": "mens-grooming",
+    "name": "Men's grooming & beard care",
+    "group": "Shaving · Feminine care · Family planning",
+    "aisle": "A30",
+    "side": "R",
+    "bays": [
+      7,
+      13
+    ],
+    "locationId": "A30-R7",
+    "department": "pharmacy",
+    "aliases": [
+      "beard oil",
+      "beard trimmer",
+      "aftershave",
+      "pomade"
+    ]
+  },
+  {
+    "id": "travel-sizes",
+    "name": "Travel sizes & trial",
+    "group": "Shaving · Feminine care · Family planning",
+    "aisle": "A30",
+    "side": "R",
+    "bays": [
+      14,
+      19
+    ],
+    "locationId": "A30-R14",
+    "department": "pharmacy",
+    "aliases": [
+      "travel size",
+      "travel toiletries",
+      "mini shampoo"
+    ]
+  },
+  {
+    "id": "body-spray-fragrance",
+    "name": "Body spray & fragrance",
+    "group": "Shaving · Feminine care · Family planning",
+    "aisle": "A30",
+    "side": "R",
+    "bays": [
+      20,
+      25
+    ],
+    "locationId": "A30-R20",
+    "department": "pharmacy",
+    "aliases": [
+      "body spray",
+      "axe",
+      "perfume",
+      "cologne",
+      "body mist"
+    ]
+  },
+  {
+    "id": "bananas",
+    "name": "Bananas",
+    "group": "Produce · Fresh fruit · Vegetables",
+    "aisle": "PRODUCE",
+    "side": "R",
+    "bays": [
+      1,
+      2
+    ],
+    "locationId": "PRODUCE-R1",
+    "department": "produce",
+    "tags": [
+      "produce"
+    ],
+    "aliases": [
+      "banana"
+    ]
+  },
+  {
+    "id": "apples-pears",
+    "name": "Apples & pears",
+    "group": "Produce · Fresh fruit · Vegetables",
+    "aisle": "PRODUCE",
+    "side": "R",
+    "bays": [
+      3,
+      3
+    ],
+    "locationId": "PRODUCE-R3",
+    "department": "produce",
+    "tags": [
+      "produce"
+    ],
+    "aliases": [
+      "apples",
+      "pears"
+    ]
+  },
+  {
+    "id": "citrus",
+    "name": "Citrus",
+    "group": "Produce · Fresh fruit · Vegetables",
+    "aisle": "PRODUCE",
+    "side": "R",
+    "bays": [
+      4,
+      5
+    ],
+    "locationId": "PRODUCE-R4",
+    "department": "produce",
+    "tags": [
+      "produce"
+    ],
+    "aliases": [
+      "oranges",
+      "lemons",
+      "limes",
+      "grapefruit"
+    ]
+  },
+  {
+    "id": "berries",
+    "name": "Berries",
+    "group": "Produce · Fresh fruit · Vegetables",
+    "aisle": "PRODUCE",
+    "side": "R",
+    "bays": [
+      6,
+      7
+    ],
+    "locationId": "PRODUCE-R6",
+    "department": "produce",
+    "tags": [
+      "produce",
+      "fragile"
+    ],
+    "aliases": [
+      "strawberries",
+      "blueberries",
+      "raspberries"
+    ]
+  },
+  {
+    "id": "grapes-melons",
+    "name": "Grapes & melons",
+    "group": "Produce · Fresh fruit · Vegetables",
+    "aisle": "PRODUCE",
+    "side": "R",
+    "bays": [
+      8,
+      8
+    ],
+    "locationId": "PRODUCE-R8",
+    "department": "produce",
+    "tags": [
+      "produce",
+      "heavy"
+    ],
+    "aliases": [
+      "grapes",
+      "watermelon",
+      "cantaloupe"
+    ]
+  },
+  {
+    "id": "tropical-fruit",
+    "name": "Tropical fruit",
+    "group": "Produce · Fresh fruit · Vegetables",
+    "aisle": "PRODUCE",
+    "side": "R",
+    "bays": [
+      9,
+      10
+    ],
+    "locationId": "PRODUCE-R9",
+    "department": "produce",
+    "tags": [
+      "produce"
+    ],
+    "aliases": [
+      "mango",
+      "pineapple",
+      "papaya",
+      "avocados"
+    ]
+  },
+  {
+    "id": "salad-greens",
+    "name": "Salads & greens",
+    "group": "Produce · Fresh fruit · Vegetables",
+    "aisle": "PRODUCE",
+    "side": "R",
+    "bays": [
+      11,
+      12
+    ],
+    "locationId": "PRODUCE-R11",
+    "department": "produce",
+    "tags": [
+      "produce"
+    ],
+    "aliases": [
+      "lettuce",
+      "spinach",
+      "salad kit",
+      "kale",
+      "arugula"
+    ]
+  },
+  {
+    "id": "tomatoes-peppers",
+    "name": "Tomatoes & peppers",
+    "group": "Produce · Fresh fruit · Vegetables",
+    "aisle": "PRODUCE",
+    "side": "R",
+    "bays": [
+      13,
+      13
+    ],
+    "locationId": "PRODUCE-R13",
+    "department": "produce",
+    "tags": [
+      "produce"
+    ],
+    "aliases": [
+      "tomato",
+      "bell pepper",
+      "jalapeno",
+      "chili peppers"
+    ]
+  },
+  {
+    "id": "onions-garlic",
+    "name": "Onions, garlic & ginger",
+    "group": "Produce · Fresh fruit · Vegetables",
+    "aisle": "PRODUCE",
+    "side": "R",
+    "bays": [
+      14,
+      15
+    ],
+    "locationId": "PRODUCE-R14",
+    "department": "produce",
+    "tags": [
+      "produce"
+    ],
+    "aliases": [
+      "onion",
+      "garlic",
+      "ginger",
+      "shallots"
+    ]
+  },
+  {
+    "id": "potatoes-roots",
+    "name": "Potatoes & root vegetables",
+    "group": "Produce · Fresh fruit · Vegetables",
+    "aisle": "PRODUCE",
+    "side": "R",
+    "bays": [
+      16,
+      17
+    ],
+    "locationId": "PRODUCE-R16",
+    "department": "produce",
+    "tags": [
+      "produce",
+      "heavy"
+    ],
+    "aliases": [
+      "potato",
+      "sweet potato",
+      "carrots",
+      "beets"
+    ]
+  },
+  {
+    "id": "cooking-vegetables",
+    "name": "Cooking vegetables",
+    "group": "Produce · Fresh fruit · Vegetables",
+    "aisle": "PRODUCE",
+    "side": "R",
+    "bays": [
+      18,
+      18
+    ],
+    "locationId": "PRODUCE-R18",
+    "department": "produce",
+    "tags": [
+      "produce"
+    ],
+    "aliases": [
+      "broccoli",
+      "cauliflower",
+      "zucchini",
+      "squash",
+      "green beans",
+      "okra",
+      "eggplant"
+    ]
+  },
+  {
+    "id": "fresh-herbs",
+    "name": "Fresh herbs",
+    "group": "Produce · Fresh fruit · Vegetables",
+    "aisle": "PRODUCE",
+    "side": "R",
+    "bays": [
+      19,
+      20
+    ],
+    "locationId": "PRODUCE-R19",
+    "department": "produce",
+    "tags": [
+      "produce",
+      "fragile"
+    ],
+    "aliases": [
+      "cilantro",
+      "coriander leaves",
+      "mint",
+      "curry leaves",
+      "parsley",
+      "basil"
+    ]
+  },
+  {
+    "id": "mushrooms-sprouts",
+    "name": "Mushrooms & sprouts",
+    "group": "Produce · Fresh fruit · Vegetables",
+    "aisle": "PRODUCE",
+    "side": "R",
+    "bays": [
+      21,
+      22
+    ],
+    "locationId": "PRODUCE-R21",
+    "department": "produce",
+    "tags": [
+      "produce"
+    ],
+    "aliases": [
+      "mushroom",
+      "bean sprouts"
+    ]
+  },
+  {
+    "id": "cut-fruit-juice",
+    "name": "Cut fruit & fresh juice",
+    "group": "Produce · Fresh fruit · Vegetables",
+    "aisle": "PRODUCE",
+    "side": "R",
+    "bays": [
+      23,
+      23
+    ],
+    "locationId": "PRODUCE-R23",
+    "department": "produce",
+    "tags": [
+      "chilled",
+      "fragile"
+    ],
+    "aliases": [
+      "fruit cup",
+      "cold pressed juice"
+    ]
+  },
+  {
+    "id": "cut-vegetables",
+    "name": "Cut vegetables & stir-fry mixes",
+    "group": "Produce · Fresh fruit · Vegetables",
+    "aisle": "PRODUCE",
+    "side": "R",
+    "bays": [
+      24,
+      25
+    ],
+    "locationId": "PRODUCE-R24",
+    "department": "produce",
+    "tags": [
+      "produce"
+    ],
+    "aliases": [
+      "baby carrots",
+      "celery sticks",
+      "stir fry mix",
+      "coleslaw mix",
+      "riced cauliflower fresh"
+    ]
+  },
+  {
+    "id": "rotisserie",
+    "name": "Rotisserie chicken & hot food",
+    "group": "Deli · Rotisserie · Prepared",
+    "aisle": "DELI",
+    "side": "L",
+    "bays": [
+      1,
+      2
+    ],
+    "locationId": "DELI-L1",
+    "department": "deli",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "rotisserie chicken",
+      "hot chicken",
+      "fried chicken"
+    ]
+  },
+  {
+    "id": "deli-meat",
+    "name": "Sliced deli meat",
+    "group": "Deli · Rotisserie · Prepared",
+    "aisle": "DELI",
+    "side": "L",
+    "bays": [
+      3,
+      5
+    ],
+    "locationId": "DELI-L3",
+    "department": "deli",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "turkey slices",
+      "ham slices",
+      "salami",
+      "lunch meat"
+    ]
+  },
+  {
+    "id": "deli-cheese",
+    "name": "Deli cheese",
+    "group": "Deli · Rotisserie · Prepared",
+    "aisle": "DELI",
+    "side": "L",
+    "bays": [
+      6,
+      7
+    ],
+    "locationId": "DELI-L6",
+    "department": "deli",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "sliced cheese",
+      "cheese block from deli"
+    ]
+  },
+  {
+    "id": "prepared-salads",
+    "name": "Prepared salads & sides",
+    "group": "Deli · Rotisserie · Prepared",
+    "aisle": "DELI",
+    "side": "L",
+    "bays": [
+      8,
+      10
+    ],
+    "locationId": "DELI-L8",
+    "department": "deli",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "potato salad",
+      "coleslaw",
+      "macaroni salad"
+    ]
+  },
+  {
+    "id": "party-trays",
+    "name": "Party trays & sandwiches",
+    "group": "Deli · Rotisserie · Prepared",
+    "aisle": "DELI",
+    "side": "L",
+    "bays": [
+      11,
+      12
+    ],
+    "locationId": "DELI-L11",
+    "department": "deli",
+    "tags": [
+      "chilled",
+      "fragile"
+    ],
+    "aliases": [
+      "sub sandwich",
+      "veggie tray",
+      "fruit tray",
+      "sandwich"
+    ]
+  },
+  {
+    "id": "fresh-bread",
+    "name": "Fresh bread & rolls",
+    "group": "Bakery · Fresh bread · Cakes",
+    "aisle": "BAKERY",
+    "side": "L",
+    "bays": [
+      1,
+      2
+    ],
+    "locationId": "BAKERY-L1",
+    "department": "bakery",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "french bread",
+      "baguette",
+      "sourdough",
+      "dinner rolls",
+      "naan from bakery"
+    ]
+  },
+  {
+    "id": "cakes-cupcakes",
+    "name": "Cakes & cupcakes",
+    "group": "Bakery · Fresh bread · Cakes",
+    "aisle": "BAKERY",
+    "side": "L",
+    "bays": [
+      3,
+      4
+    ],
+    "locationId": "BAKERY-L3",
+    "department": "bakery",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "birthday cake",
+      "cake",
+      "cupcakes",
+      "sheet cake"
+    ]
+  },
+  {
+    "id": "donuts-pastries",
+    "name": "Donuts & pastries",
+    "group": "Bakery · Fresh bread · Cakes",
+    "aisle": "BAKERY",
+    "side": "L",
+    "bays": [
+      5,
+      6
+    ],
+    "locationId": "BAKERY-L5",
+    "department": "bakery",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "donuts",
+      "doughnuts",
+      "croissants",
+      "danish",
+      "muffins"
+    ]
+  },
+  {
+    "id": "cookies-bakery",
+    "name": "Bakery cookies & brownies",
+    "group": "Bakery · Fresh bread · Cakes",
+    "aisle": "BAKERY",
+    "side": "L",
+    "bays": [
+      7,
+      8
+    ],
+    "locationId": "BAKERY-L7",
+    "department": "bakery",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "bakery cookies",
+      "brownies"
+    ]
+  },
+  {
+    "id": "pies-desserts",
+    "name": "Pies & desserts",
+    "group": "Bakery · Fresh bread · Cakes",
+    "aisle": "BAKERY",
+    "side": "L",
+    "bays": [
+      9,
+      10
+    ],
+    "locationId": "BAKERY-L9",
+    "department": "bakery",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "apple pie",
+      "pumpkin pie",
+      "cheesecake"
+    ]
+  },
+  {
+    "id": "international-breads",
+    "name": "International breads",
+    "group": "Bakery · Fresh bread · Cakes",
+    "aisle": "BAKERY",
+    "side": "L",
+    "bays": [
+      11,
+      12
+    ],
+    "locationId": "BAKERY-L11",
+    "department": "bakery",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "pan dulce",
+      "conchas",
+      "bolillo",
+      "challah",
+      "brioche"
+    ]
+  },
+  {
+    "id": "chicken",
+    "name": "Chicken",
+    "group": "Meat · Seafood",
+    "aisle": "MEAT",
+    "side": "L",
+    "bays": [
+      1,
+      5
+    ],
+    "locationId": "MEAT-L1",
+    "department": "meat",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "chicken breast",
+      "chicken thighs",
+      "whole chicken",
+      "drumsticks",
+      "wings"
+    ]
+  },
+  {
+    "id": "beef",
+    "name": "Beef",
+    "group": "Meat · Seafood",
+    "aisle": "MEAT",
+    "side": "L",
+    "bays": [
+      6,
+      10
+    ],
+    "locationId": "MEAT-L6",
+    "department": "meat",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "ground beef",
+      "steak",
+      "stew meat",
+      "ribeye"
+    ]
+  },
+  {
+    "id": "pork",
+    "name": "Pork",
+    "group": "Meat · Seafood",
+    "aisle": "MEAT",
+    "side": "L",
+    "bays": [
+      11,
+      16
+    ],
+    "locationId": "MEAT-L11",
+    "department": "meat",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "pork chops",
+      "pork loin",
+      "ribs",
+      "ground pork"
+    ]
+  },
+  {
+    "id": "turkey-lamb",
+    "name": "Turkey & lamb",
+    "group": "Meat · Seafood",
+    "aisle": "MEAT",
+    "side": "L",
+    "bays": [
+      17,
+      21
+    ],
+    "locationId": "MEAT-L17",
+    "department": "meat",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "ground turkey",
+      "turkey",
+      "lamb",
+      "goat meat",
+      "mutton"
+    ]
+  },
+  {
+    "id": "bacon-sausage",
+    "name": "Bacon & sausage",
+    "group": "Meat · Seafood",
+    "aisle": "MEAT",
+    "side": "L",
+    "bays": [
+      22,
+      26
+    ],
+    "locationId": "MEAT-L22",
+    "department": "meat",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "bacon",
+      "sausage",
+      "breakfast sausage",
+      "chorizo"
+    ]
+  },
+  {
+    "id": "hot-dogs",
+    "name": "Hot dogs & franks",
+    "group": "Meat · Seafood",
+    "aisle": "MEAT",
+    "side": "L",
+    "bays": [
+      27,
+      31
+    ],
+    "locationId": "MEAT-L27",
+    "department": "meat",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "hot dogs",
+      "franks",
+      "wieners"
+    ]
+  },
+  {
+    "id": "seafood",
+    "name": "Fresh seafood",
+    "group": "Meat · Seafood",
+    "aisle": "MEAT",
+    "side": "L",
+    "bays": [
+      32,
+      36
+    ],
+    "locationId": "MEAT-L32",
+    "department": "meat",
+    "tags": [
+      "chilled",
+      "fragile"
+    ],
+    "aliases": [
+      "fish",
+      "salmon",
+      "tilapia",
+      "shrimp",
+      "cod",
+      "catfish"
+    ]
+  },
+  {
+    "id": "plant-protein",
+    "name": "Plant-based protein & tofu",
+    "group": "Meat · Seafood",
+    "aisle": "MEAT",
+    "side": "L",
+    "bays": [
+      37,
+      42
+    ],
+    "locationId": "MEAT-L37",
+    "department": "meat",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "tofu",
+      "tempeh",
+      "plant based meat",
+      "beyond meat"
+    ]
+  },
+  {
+    "id": "marinated-meat",
+    "name": "Marinated & ready to cook",
+    "group": "Meat · Seafood",
+    "aisle": "MEAT",
+    "side": "L",
+    "bays": [
+      43,
+      47
+    ],
+    "locationId": "MEAT-L43",
+    "department": "meat",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "marinated chicken",
+      "kebabs",
+      "fajita meat"
+    ]
+  },
+  {
+    "id": "halal-meat",
+    "name": "Halal meat",
+    "group": "Meat · Seafood",
+    "aisle": "MEAT",
+    "side": "L",
+    "bays": [
+      48,
+      52
+    ],
+    "locationId": "MEAT-L48",
+    "department": "meat",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "halal chicken",
+      "halal goat",
+      "halal beef",
+      "zabiha"
+    ]
+  },
+  {
+    "id": "milk",
+    "name": "Milk",
+    "group": "Dairy · Milk · Eggs · Yogurt",
+    "aisle": "DAIRY",
+    "side": "L",
+    "bays": [
+      1,
+      4
+    ],
+    "locationId": "DAIRY-L1",
+    "department": "dairy",
+    "tags": [
+      "chilled",
+      "heavy"
+    ],
+    "aliases": [
+      "whole milk",
+      "2 percent milk",
+      "skim milk",
+      "gallon of milk"
+    ]
+  },
+  {
+    "id": "milk-alternatives",
+    "name": "Milk alternatives",
+    "group": "Dairy · Milk · Eggs · Yogurt",
+    "aisle": "DAIRY",
+    "side": "L",
+    "bays": [
+      5,
+      9
+    ],
+    "locationId": "DAIRY-L5",
+    "department": "dairy",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "oat milk",
+      "almond milk",
+      "soy milk",
+      "plant milk"
+    ]
+  },
+  {
+    "id": "eggs",
+    "name": "Eggs",
+    "group": "Dairy · Milk · Eggs · Yogurt",
+    "aisle": "DAIRY",
+    "side": "L",
+    "bays": [
+      10,
+      13
+    ],
+    "locationId": "DAIRY-L10",
+    "department": "dairy",
+    "tags": [
+      "chilled",
+      "fragile"
+    ],
+    "aliases": [
+      "egg",
+      "dozen eggs"
+    ]
+  },
+  {
+    "id": "yogurt",
+    "name": "Yogurt",
+    "group": "Dairy · Milk · Eggs · Yogurt",
+    "aisle": "DAIRY",
+    "side": "L",
+    "bays": [
+      14,
+      17
+    ],
+    "locationId": "DAIRY-L14",
+    "department": "dairy",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "yoghurt",
+      "greek yogurt",
+      "curd",
+      "dahi"
+    ]
+  },
+  {
+    "id": "butter-margarine",
+    "name": "Butter & margarine",
+    "group": "Dairy · Milk · Eggs · Yogurt",
+    "aisle": "DAIRY",
+    "side": "L",
+    "bays": [
+      18,
+      22
+    ],
+    "locationId": "DAIRY-L18",
+    "department": "dairy",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "butter",
+      "margarine"
+    ]
+  },
+  {
+    "id": "cream-creamer",
+    "name": "Cream & creamer",
+    "group": "Dairy · Milk · Eggs · Yogurt",
+    "aisle": "DAIRY",
+    "side": "L",
+    "bays": [
+      23,
+      26
+    ],
+    "locationId": "DAIRY-L23",
+    "department": "dairy",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "heavy cream",
+      "half and half",
+      "coffee creamer",
+      "whipping cream"
+    ]
+  },
+  {
+    "id": "sour-cream-dips",
+    "name": "Sour cream & cottage cheese",
+    "group": "Dairy · Milk · Eggs · Yogurt",
+    "aisle": "DAIRY",
+    "side": "L",
+    "bays": [
+      27,
+      30
+    ],
+    "locationId": "DAIRY-L27",
+    "department": "dairy",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "sour cream",
+      "cottage cheese"
+    ]
+  },
+  {
+    "id": "refrigerated-juice",
+    "name": "Refrigerated juice",
+    "group": "Dairy · Milk · Eggs · Yogurt",
+    "aisle": "DAIRY",
+    "side": "L",
+    "bays": [
+      31,
+      35
+    ],
+    "locationId": "DAIRY-L31",
+    "department": "dairy",
+    "tags": [
+      "chilled",
+      "heavy"
+    ],
+    "aliases": [
+      "orange juice",
+      "oj",
+      "lemonade"
+    ]
+  },
+  {
+    "id": "refrigerated-dough",
+    "name": "Refrigerated dough",
+    "group": "Dairy · Milk · Eggs · Yogurt",
+    "aisle": "DAIRY",
+    "side": "L",
+    "bays": [
+      36,
+      39
+    ],
+    "locationId": "DAIRY-L36",
+    "department": "dairy",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "biscuits in a can",
+      "crescent rolls",
+      "pie crust",
+      "cookie dough"
+    ]
+  },
+  {
+    "id": "pudding-jello",
+    "name": "Pudding & gelatin cups",
+    "group": "Dairy · Milk · Eggs · Yogurt",
+    "aisle": "DAIRY",
+    "side": "L",
+    "bays": [
+      40,
+      43
+    ],
+    "locationId": "DAIRY-L40",
+    "department": "dairy",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "pudding",
+      "jello"
+    ]
+  },
+  {
+    "id": "liquid-egg",
+    "name": "Liquid egg & egg substitutes",
+    "group": "Dairy · Milk · Eggs · Yogurt",
+    "aisle": "DAIRY",
+    "side": "L",
+    "bays": [
+      44,
+      48
+    ],
+    "locationId": "DAIRY-L44",
+    "department": "dairy",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "egg whites",
+      "just egg",
+      "egg beaters"
+    ]
+  },
+  {
+    "id": "whipped-cream",
+    "name": "Whipped cream & dairy desserts",
+    "group": "Dairy · Milk · Eggs · Yogurt",
+    "aisle": "DAIRY",
+    "side": "L",
+    "bays": [
+      49,
+      52
+    ],
+    "locationId": "DAIRY-L49",
+    "department": "dairy",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "reddi wip",
+      "whipped cream can",
+      "cheesecake cups"
+    ]
+  },
+  {
+    "id": "pharmacy-counter",
+    "name": "Pharmacy counter",
+    "group": "Pharmacy · Cold & flu · Allergy",
+    "aisle": "PHARMACY",
+    "side": "R",
+    "bays": [
+      1,
+      3
+    ],
+    "locationId": "PHARMACY-R1",
+    "department": "pharmacy",
+    "aliases": [
+      "prescription",
+      "rx",
+      "pickup prescription",
+      "flu shot"
+    ]
+  },
+  {
+    "id": "cold-flu",
+    "name": "Cold, cough & flu",
+    "group": "Pharmacy · Cold & flu · Allergy",
+    "aisle": "PHARMACY",
+    "side": "R",
+    "bays": [
+      4,
+      5
+    ],
+    "locationId": "PHARMACY-R4",
+    "department": "pharmacy",
+    "aliases": [
+      "cough syrup",
+      "dayquil",
+      "nyquil",
+      "cough drops",
+      "cold medicine"
+    ]
+  },
+  {
+    "id": "allergy-sinus",
+    "name": "Allergy & sinus",
+    "group": "Pharmacy · Cold & flu · Allergy",
+    "aisle": "PHARMACY",
+    "side": "R",
+    "bays": [
+      6,
+      8
+    ],
+    "locationId": "PHARMACY-R6",
+    "department": "pharmacy",
+    "aliases": [
+      "allergy medicine",
+      "zyrtec",
+      "claritin",
+      "antihistamine",
+      "nasal spray"
+    ]
+  },
+  {
+    "id": "digestive",
+    "name": "Digestive & antacids",
+    "group": "Pharmacy · Cold & flu · Allergy",
+    "aisle": "PHARMACY",
+    "side": "R",
+    "bays": [
+      9,
+      10
+    ],
+    "locationId": "PHARMACY-R9",
+    "department": "pharmacy",
+    "aliases": [
+      "tums",
+      "pepto",
+      "antacid",
+      "laxative",
+      "probiotics"
+    ]
+  },
+  {
+    "id": "eye-ear-care",
+    "name": "Eye & ear care",
+    "group": "Pharmacy · Cold & flu · Allergy",
+    "aisle": "PHARMACY",
+    "side": "R",
+    "bays": [
+      11,
+      13
+    ],
+    "locationId": "PHARMACY-R11",
+    "department": "pharmacy",
+    "aliases": [
+      "eye drops",
+      "contact solution",
+      "ear drops"
+    ]
+  }
+]

@@ -1,57 +1,234 @@
 {
   "_note": "Held-out set: written after the tuned fixture without re-reading it or the thresholds. Never retune on this.",
   "memory": [
-    { "name": "toor dal", "locationId": "A1-20", "lastConfirmed": 1, "confirms": 2, "confidence": 0.9 },
-    { "name": "besan", "locationId": "A1-8", "lastConfirmed": 1, "confirms": 1, "confidence": 0.8 },
-    { "name": "garam masala", "locationId": "A4-20", "lastConfirmed": 1, "confirms": 3, "confidence": 0.95 },
-    { "name": "poha", "locationId": "A1-20", "lastConfirmed": 1, "confirms": 1, "confidence": 0.8 },
-    { "name": "curd", "locationId": "DAIRY-11", "lastConfirmed": 1, "confirms": 2, "confidence": 0.9 },
-    { "name": "hing", "locationId": "A4-20", "lastConfirmed": 1, "confirms": 1, "confidence": 0.8 }
+    {
+      "name": "toor dal",
+      "locationId": "A7-L6",
+      "lastConfirmed": 1,
+      "confirms": 2,
+      "confidence": 0.9
+    },
+    {
+      "name": "besan",
+      "locationId": "A7-L1",
+      "lastConfirmed": 1,
+      "confirms": 1,
+      "confidence": 0.8
+    },
+    {
+      "name": "garam masala",
+      "locationId": "A7-L9",
+      "lastConfirmed": 1,
+      "confirms": 3,
+      "confidence": 0.95
+    },
+    {
+      "name": "poha",
+      "locationId": "A7-L4",
+      "lastConfirmed": 1,
+      "confirms": 1,
+      "confidence": 0.8
+    },
+    {
+      "name": "curd",
+      "locationId": "DAIRY-L14",
+      "lastConfirmed": 1,
+      "confirms": 2,
+      "confidence": 0.9
+    },
+    {
+      "name": "hing",
+      "locationId": "A7-L9",
+      "lastConfirmed": 1,
+      "confirms": 1,
+      "confidence": 0.8
+    }
   ],
   "llm": {
-    "heinz ketchup": { "department": "dry", "subcategory": "condiments", "confidence": 0.7 },
-    "nutella": { "department": "dry", "subcategory": "spreads", "confidence": 0.68 },
-    "gatorade": { "department": "drinks", "subcategory": "sports drinks", "confidence": 0.7 },
-    "dawn dish soap": { "department": "household", "subcategory": "dish soap", "confidence": 0.7 },
-    "turmeric powder": { "department": "dry", "subcategory": "spices", "confidence": 0.66 },
-    "unsalted butter sticks": { "department": "dairy", "subcategory": "butter", "tags": ["chilled"], "confidence": 0.7 },
+    "heinz ketchup": {
+      "subcategory": "condiments",
+      "confidence": 0.7,
+      "category": "dry"
+    },
+    "nutella": {
+      "subcategory": "spreads",
+      "confidence": 0.68,
+      "category": "dry"
+    },
+    "gatorade": {
+      "subcategory": "sports drinks",
+      "confidence": 0.7,
+      "category": "drinks"
+    },
+    "dawn dish soap": {
+      "subcategory": "dish soap",
+      "confidence": 0.7,
+      "category": "household"
+    },
+    "turmeric powder": {
+      "subcategory": "spices",
+      "confidence": 0.66,
+      "category": "dry"
+    },
+    "unsalted butter sticks": {
+      "subcategory": "butter",
+      "tags": [
+        "chilled"
+      ],
+      "confidence": 0.7,
+      "category": "dairy"
+    },
     "printer paper": null,
     "hello": null
   },
   "cases": [
-    { "q": "corn flakes", "source": "exact", "stop": "cereal" },
-    { "q": "Rolled oats", "source": "exact", "stop": "oats" },
-    { "q": "loo roll", "source": "exact", "stop": "tp" },
-    { "q": "Lays", "source": "exact", "stop": "chips" },
-    { "q": "cumin seeds", "source": "exact", "stop": "spices" },
-    { "q": "Frozen berries", "source": "exact", "stop": "berries" },
-    { "q": "pepsi", "source": "exact", "stop": "soda" },
-    { "q": "Granola", "source": "exact", "stop": "snacks" },
-
-    { "q": "greek yoghurt", "source": "fuzzy", "stop": "yogurt" },
-    { "q": "pasta sause", "source": "fuzzy", "stop": "sauce" },
-    { "q": "frozen pees", "source": "fuzzy", "stop": "peas" },
-    { "q": "toiletpaper", "source": "fuzzy", "stop": "tp" },
-    { "q": "ice crem", "source": "fuzzy", "stop": "icecream" },
-    { "q": "basmatti rice", "source": "fuzzy", "stop": "rice" },
-    { "q": "tortillias", "source": "fuzzy", "stop": "tortillas" },
-    { "q": "jasmin rice", "source": "fuzzy", "stop": "rice" },
-
-    { "q": "Toor dal", "source": "memory", "location": "A1-20" },
-    { "q": "besan", "source": "memory", "location": "A1-8" },
-    { "q": "Garam Masala", "source": "memory", "location": "A4-20" },
-    { "q": "poha", "source": "memory", "location": "A1-20" },
-    { "q": "curd", "source": "memory", "location": "DAIRY-11" },
-    { "q": "hing", "source": "memory", "location": "A4-20" },
-
-    { "q": "Heinz ketchup", "source": "llm", "department": "dry" },
-    { "q": "Nutella", "source": "llm", "department": "dry" },
-    { "q": "Gatorade", "source": "llm", "department": "drinks" },
-    { "q": "Dawn dish soap", "source": "llm", "department": "household" },
-    { "q": "turmeric powder", "source": "llm", "department": "dry" },
-    { "q": "unsalted butter sticks", "source": "llm", "department": "dairy" },
-
-    { "q": "printer paper", "source": "unknown" },
-    { "q": "hello", "source": "unknown" }
+    {
+      "q": "corn flakes",
+      "source": "exact",
+      "stop": "cereal"
+    },
+    {
+      "q": "Rolled oats",
+      "source": "exact",
+      "stop": "oats"
+    },
+    {
+      "q": "loo roll",
+      "source": "exact",
+      "stop": "tp"
+    },
+    {
+      "q": "Lays",
+      "source": "exact",
+      "stop": "chips"
+    },
+    {
+      "q": "cumin seeds",
+      "source": "exact",
+      "stop": "spices"
+    },
+    {
+      "q": "Frozen berries",
+      "source": "exact",
+      "stop": "berries"
+    },
+    {
+      "q": "pepsi",
+      "source": "exact",
+      "stop": "soda"
+    },
+    {
+      "q": "Granola",
+      "source": "exact",
+      "stop": "snacks"
+    },
+    {
+      "q": "greek yoghurt",
+      "source": "fuzzy",
+      "stop": "yogurt"
+    },
+    {
+      "q": "pasta sause",
+      "source": "fuzzy",
+      "stop": "sauce"
+    },
+    {
+      "q": "frozen pees",
+      "source": "fuzzy",
+      "stop": "peas"
+    },
+    {
+      "q": "toiletpaper",
+      "source": "fuzzy",
+      "stop": "tp"
+    },
+    {
+      "q": "ice crem",
+      "source": "fuzzy",
+      "stop": "icecream"
+    },
+    {
+      "q": "basmatti rice",
+      "source": "fuzzy",
+      "stop": "rice"
+    },
+    {
+      "q": "tortillias",
+      "source": "fuzzy",
+      "stop": "tortillas"
+    },
+    {
+      "q": "jasmin rice",
+      "source": "fuzzy",
+      "stop": "rice"
+    },
+    {
+      "q": "Toor dal",
+      "source": "memory",
+      "location": "A7-L6"
+    },
+    {
+      "q": "besan",
+      "source": "memory",
+      "location": "A7-L1"
+    },
+    {
+      "q": "Garam Masala",
+      "source": "memory",
+      "location": "A7-L9"
+    },
+    {
+      "q": "poha",
+      "source": "memory",
+      "location": "A7-L4"
+    },
+    {
+      "q": "curd",
+      "source": "memory",
+      "location": "DAIRY-L14"
+    },
+    {
+      "q": "hing",
+      "source": "memory",
+      "location": "A7-L9"
+    },
+    {
+      "q": "Heinz ketchup",
+      "source": "llm",
+      "department": "dry"
+    },
+    {
+      "q": "Nutella",
+      "source": "llm",
+      "department": "dry"
+    },
+    {
+      "q": "Gatorade",
+      "source": "llm",
+      "department": "drinks"
+    },
+    {
+      "q": "Dawn dish soap",
+      "source": "llm",
+      "department": "household"
+    },
+    {
+      "q": "turmeric powder",
+      "source": "llm",
+      "department": "dry"
+    },
+    {
+      "q": "unsalted butter sticks",
+      "source": "llm",
+      "department": "dairy"
+    },
+    {
+      "q": "printer paper",
+      "source": "unknown"
+    },
+    {
+      "q": "hello",
+      "source": "unknown"
+    }
   ]
 }
