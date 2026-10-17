@@ -233,3 +233,25 @@ describe("usual-trip prediction", () => {
     expect(screen.queryByTestId("usual-row")).toBeNull();
   });
 });
+
+describe("settings", () => {
+  test("the gear opens the resolver settings; switching to the worker is saved per device", async () => {
+    render(<App />);
+    fireEvent.click(screen.getAllByRole("button", { name: /^settings$/i })[0]);
+    const dialog = screen.getByRole("dialog", { name: /settings/i });
+    expect(within(dialog).getByRole("radio", { name: /local ollama/i }).getAttribute("aria-checked")).toBe("true");
+    expect(within(dialog).getByLabelText(/model/i)).toBeTruthy();
+    fireEvent.click(within(dialog).getByRole("radio", { name: /worker/i }));
+    const url = within(dialog).getByLabelText(/resolver url/i) as HTMLInputElement;
+    fireEvent.change(url, { target: { value: "https://r.example/" } });
+    fireEvent.click(within(dialog).getByRole("button", { name: /^save$/i }));
+    expect(screen.queryByRole("dialog", { name: /settings/i })).toBeNull();
+    expect(JSON.parse(localStorage.getItem("grosher.resolver")!)).toMatchObject({ provider: "worker", workerUrl: "https://r.example" });
+    // the choice survives a reload and Reset puts the defaults back
+    fireEvent.click(screen.getAllByRole("button", { name: /^settings$/i })[0]);
+    const again = screen.getByRole("dialog", { name: /settings/i });
+    expect(within(again).getByRole("radio", { name: /worker/i }).getAttribute("aria-checked")).toBe("true");
+    fireEvent.click(within(again).getByRole("button", { name: /reset to defaults/i }));
+    expect(localStorage.getItem("grosher.resolver")).toBeNull();
+  });
+});

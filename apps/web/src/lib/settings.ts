@@ -1,0 +1,76 @@
+// Resolver settings the shopper can change at runtime (the gear on the list
+// screen): which LLM provider answers, where it is, which model. Stored in
+// localStorage; the defaults come from the VITE_ variables at build time.
+//
+//   ollama  straight to an Ollama over http (dev: the Mac on the same Wi-Fi).
+//           An installed app served over https cannot call plain http, so
+//           this is a development path.
+//   worker  the Cloudflare worker (apps/resolver), which reaches the Mac's
+//           model through its tunnel, or Claude. Production.
+
+export type ProviderName = "ollama" | "worker";
+
+export interface ResolverSettings {
+  provider: ProviderName;
+  ollamaUrl: string;
+  model: string;
+  workerUrl: string;
+}
+
+export const SETTINGS_KEY = "grosher.resolver";
+export const OLLAMA_DEFAULT_MODEL = "qwen3:8b";
+
+const env = import.meta.env as Record<string, string | undefined>;
+const trimUrl = (s: string) => s.trim().replace(/\/$/, "");
+
+/** the build-time defaults: VITE_RESOLVER_PROVIDER (worker | anthropic | ollama), VITE_OLLAMA_URL, VITE_OLLAMA_MODEL, VITE_RESOLVER_URL */
+export const DEFAULT_SETTINGS: ResolverSettings = {
+  provider: env.VITE_RESOLVER_PROVIDER === "worker" || env.VITE_RESOLVER_PROVIDER === "anthropic" ? "worker" : "ollama",
+  ollamaUrl: trimUrl(env.VITE_OLLAMA_URL ?? "http://localhost:11434"),
+  model: (env.VITE_OLLAMA_MODEL ?? OLLAMA_DEFAULT_MODEL).trim(),
+  workerUrl: trimUrl(env.VITE_RESOLVER_URL ?? "/api"),
+};
+
+/** anything stored is coerced back onto the defaults field by field */
+export function sanitize(raw: unknown, defaults: ResolverSettings = DEFAULT_SETTINGS): ResolverSettings {
+  const o = (raw && typeof raw === "object" ? raw : {}) as Partial<Record<keyof ResolverSettings, unknown>>;
+  const str = (v: unknown, d: string) => (typeof v === "string" && v.trim() ? trimUrl(v) : d);
+  return {
+    provider: o.provider === "worker" || o.provider === "ollama" ? o.provider : defaults.provider,
+    ollamaUrl: str(o.ollamaUrl, defaults.ollamaUrl),
+    model: str(o.model, defaults.model),
+    workerUrl: str(o.workerUrl, defaults.workerUrl),
+  };
+}
+
+export function loadSettings(): ResolverSettings {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    return raw ? sanitize(JSON.parse(raw)) : DEFAULT_SETTINGS;
+  } catch {
+    return DEFAULT_SETTINGS;
+  }
+}
+
+export function saveSettings(s: ResolverSettings): ResolverSettings {
+  const clean = sanitize(s);
+  try {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(clean));
+  } catch {
+    /* private mode: the choice lasts the session */
+  }
+  return clean;
+}
+
+export function resetSettings(): ResolverSettings {
+  try {
+    localStorage.removeItem(SETTINGS_KEY);
+  } catch {
+    /* ignore */
+  }
+  return DEFAULT_SETTINGS;
+}
+
+/** a page served over https cannot fetch a plain-http Ollama (mixed content) */
+export const mixedContent = (s: ResolverSettings, pageProtocol = typeof location !== "undefined" ? location.protocol : "http:") =>
+  s.provider === "ollama" && pageProtocol === "https:" && /^http:\/\//i.test(s.ollamaUrl) && !/^http:\/\/localhost(:|\/|$)/i.test(s.ollamaUrl);

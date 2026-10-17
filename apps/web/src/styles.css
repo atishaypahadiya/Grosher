@@ -232,6 +232,16 @@ button { cursor: pointer; touch-action: manipulation; }
 .ls-save { display: flex; gap: 8px; }
 .ls-save input { flex: 1; min-width: 0; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 999px; padding: 10px 16px; font-size: 16px; color: var(--ink); }
 .ls-save-btn { align-self: flex-start; }
+
+/* settings sheet */
+.st-sheet { gap: 14px; }
+.st-seg { display: flex; gap: 8px; }
+.st-seg .pill { flex: 1; }
+.st-note { margin: 0; font-size: 13px; line-height: 1.4; color: var(--ink-muted); }
+.st-note.warn { color: var(--status-guess); }
+.st-field { display: flex; flex-direction: column; gap: 6px; }
+.st-field input { width: 100%; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 999px; padding: 10px 16px; font-size: 16px; color: var(--ink); font-family: inherit; }
+.st-field input:focus { outline: 2px solid var(--lime); outline-offset: 1px; }
 .usual-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 16px; margin: 8px 0 4px; border-radius: 18px; background: var(--glass-deep); border: 1px solid var(--glass-border); }
 .chip.action { min-height: 36px; }
 

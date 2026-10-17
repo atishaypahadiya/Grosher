@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { anthropicProvider, ollamaProvider, OLLAMA_DEFAULT_MODEL, OLLAMA_MODEL, PROVIDER, toGuessMap } from "../src/lib/resolver.ts";
+import { ollamaProvider, OLLAMA_DEFAULT_MODEL, OLLAMA_MODEL, PROVIDER, providerFor, toGuessMap, workerProvider } from "../src/lib/resolver.ts";
 
 // a developer's .env.local may override the model and the URL; the tests respect it
 const MODEL = (import.meta.env as Record<string, string | undefined>).VITE_OLLAMA_MODEL ?? OLLAMA_DEFAULT_MODEL;
@@ -86,9 +86,32 @@ describe("llm providers", () => {
     await expect(ollamaProvider(notJson).classify(["a"], depts)).rejects.toThrow(/not JSON/);
   });
 
-  test("anthropic: the worker's rows come through unchanged", async () => {
-    const fake = (async () => new Response(JSON.stringify({ results: [{ item: "oat milk", department: "dairy", subcategory: "plant milk", tags: ["chilled"], confidence: 0.66 }] }), { status: 200 })) as typeof fetch;
-    const rows = await anthropicProvider(fake).classify(["oat milk"], depts);
+  test("worker: the rows come through unchanged; a degraded answer throws so nothing is cached", async () => {
+    let url = "";
+    const fake = (async (u: RequestInfo | URL) => {
+      url = String(u);
+      return new Response(JSON.stringify({ results: [{ item: "oat milk", department: "dairy", subcategory: "plant milk", tags: ["chilled"], confidence: 0.66 }] }), { status: 200 });
+    }) as typeof fetch;
+    const rows = await workerProvider(fake, "https://w.example/").classify(["oat milk"], depts);
+    expect(url).toBe("https://w.example/resolve");
     expect(rows[0]).toMatchObject({ department: "dairy", confidence: 0.66 });
+    const degraded = (async () => new Response(JSON.stringify({ results: [{ item: "oat milk", department: null, confidence: 0 }], degraded: true }), { status: 200 })) as typeof fetch;
+    await expect(workerProvider(degraded).classify(["oat milk"], depts)).rejects.toThrow(/degraded/);
+  });
+
+  test("providerFor follows the settings: provider, URL and model", async () => {
+    let sent: { url: string; model?: string } | null = null;
+    const fake = (async (u: RequestInfo | URL, init?: RequestInit) => {
+      sent = { url: String(u), model: init?.body ? (JSON.parse(String(init.body)) as { model?: string }).model : undefined };
+      return new Response(JSON.stringify({ message: { content: JSON.stringify({ results: [] }) }, results: [] }));
+    }) as typeof fetch;
+    const o = providerFor({ provider: "ollama", ollamaUrl: "http://10.0.0.9:11434/", model: "qwen3:14b", workerUrl: "/api" }, fake);
+    expect(o.name).toBe("ollama");
+    await o.classify(["a"], depts);
+    expect(sent).toEqual({ url: "http://10.0.0.9:11434/api/chat", model: "qwen3:14b" });
+    const w = providerFor({ provider: "worker", ollamaUrl: "http://localhost:11434", model: "qwen3:8b", workerUrl: "https://r.example" }, fake);
+    expect(w.name).toBe("worker");
+    await w.classify(["a"], depts);
+    expect(sent!.url).toBe("https://r.example/resolve");
   });
 });

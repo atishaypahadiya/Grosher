@@ -5,7 +5,7 @@ import { minutesNum } from "../lib/format.ts";
 import { listen, speechSupported, type SpeechStop } from "../lib/speech.ts";
 import { Num } from "./Num.tsx";
 import { SourceGlyph } from "./SourceGlyph.tsx";
-import { IconArrowRight, IconChevronDown, IconMic, IconPlus } from "./Icons.tsx";
+import { IconArrowRight, IconChevronDown, IconGear, IconMic, IconPlus } from "./Icons.tsx";
 
 export interface ListScreenProps {
   store: StoreGraph;
@@ -26,6 +26,7 @@ export interface ListScreenProps {
   memory?: ItemMemory[];
   onLoadUsual: () => void;
   onOpenLists: () => void;
+  onOpenSettings?: () => void;
   onTellWhere: (name: string) => void;
   onRoute: () => void;
   /** a paused trip: the CTA resumes it instead of routing the list */
@@ -39,7 +40,7 @@ export const splitItems = (text: string) =>
     .map((s) => s.trim())
     .filter(Boolean);
 
-export function ListScreen({ store, items, results, plan, baselineM, usual, asking, warming, offline, offlineNote, onAdd, onRemove, onReplace, memory, onLoadUsual, onOpenLists, onTellWhere, onRoute, resume }: ListScreenProps) {
+export function ListScreen({ store, items, results, plan, baselineM, usual, asking, warming, offline, offlineNote, onAdd, onRemove, onReplace, memory, onLoadUsual, onOpenLists, onOpenSettings, onTellWhere, onRoute, resume }: ListScreenProps) {
   const [draft, setDraft] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
@@ -104,6 +105,11 @@ export function ListScreen({ store, items, results, plan, baselineM, usual, aski
           <button type="button" className="pill soil-ghost" onClick={() => setHint("One store so far: the demo Supercenter.")}>
             Change
           </button>
+          {onOpenSettings && (
+            <button type="button" className="pill soil-ghost circle" aria-label="Settings" onClick={onOpenSettings}>
+              <IconGear />
+            </button>
+          )}
         </div>
       </header>
 

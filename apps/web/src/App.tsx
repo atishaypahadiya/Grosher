@@ -10,6 +10,9 @@ import { useResolution } from "./lib/useResolution.ts";
 import { toStop } from "@grosher/core";
 import { PickerSheet } from "./components/PickerSheet.tsx";
 import { ListsSheet } from "./components/ListsSheet.tsx";
+import { SettingsSheet } from "./components/SettingsSheet.tsx";
+import { loadSettings, resetSettings, saveSettings } from "./lib/settings.ts";
+import { providerFor } from "./lib/resolver.ts";
 import { useLists } from "./lib/useLists.ts";
 import { useHistory } from "./lib/useHistory.ts";
 import { previousOf, recordFrom, type TripRecord } from "./lib/history.ts";
@@ -60,7 +63,10 @@ export function App() {
   useEffect(() => save(FLAT_KEY, flat), [flat]);
   const [paused, setPaused] = useState(false);
 
-  const res = useResolution(bundle, items);
+  const [settings, setSettings] = useState(loadSettings);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const provider = useMemo(() => providerFor(settings), [settings]);
+  const res = useResolution(bundle, items, provider);
   const stops = useMemo(() => res.results.map(toStop).filter((s): s is Stop => !!s), [res.results]);
   const notFound = useMemo(() => res.results.filter((r) => !r.locationIds.length).map((r) => r.query), [res.results]);
   const plan = useMemo(() => (stops.length ? router.solve({ stops }) : null), [stops, router]);
@@ -193,6 +199,7 @@ export function App() {
         memory={res.memory}
         onLoadUsual={() => usualToday && listsState.loadList(usualToday.id)}
         onOpenLists={() => setListsOpen(true)}
+        onOpenSettings={() => setSettingsOpen(true)}
         onTellWhere={(name) => setPicking({ name, promote: false })}
         resume={trip && paused ? { remaining: trip.remaining.length, distanceM: trip.route.legs.reduce((s, l) => s + l.distanceM, 0) } : null}
         onRoute={() => {
@@ -218,6 +225,20 @@ export function App() {
             setViewing(r);
           }}
           onClose={() => setListsOpen(false)}
+        />
+      )}
+      {settingsOpen && (
+        <SettingsSheet
+          settings={settings}
+          onSave={(s) => {
+            setSettings(saveSettings(s));
+            setSettingsOpen(false);
+          }}
+          onReset={() => {
+            setSettings(resetSettings());
+            setSettingsOpen(false);
+          }}
+          onClose={() => setSettingsOpen(false)}
         />
       )}
       {picker}

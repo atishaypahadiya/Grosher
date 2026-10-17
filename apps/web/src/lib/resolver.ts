@@ -1,14 +1,18 @@
-// The LLM layer's transport. Two providers behind one interface:
-//   ollama    (default) a local model over POST {VITE_OLLAMA_URL}/api/chat,
-//             strict JSON via `format`, no thinking, one call for the list
-//   anthropic the Cloudflare worker at VITE_RESOLVER_URL (apps/resolver)
+// The LLM layer's transport. Two providers behind one interface, chosen at
+// runtime by the resolver settings (lib/settings.ts, the gear on the list):
+//   ollama  a local model over POST {ollamaUrl}/api/chat, strict JSON via
+//           `format`, no thinking, one call for the list (dev, plain http)
+//   worker  the Cloudflare worker at {workerUrl} (apps/resolver), which
+//           forwards to the Mac's model through its tunnel, or to Claude
 // Both use the prompt, schema and parser from @grosher/core, so the app
 // caches the same shape whichever answered. Failures throw; the caller
-// degrades to "unknown" and shows a one-line note.
+// degrades to "unknown" and shows a one-line note. A worker answer flagged
+// `degraded` (its upstream was down) throws too, so nothing is cached.
 
 import { LLM_SYSTEM, llmMaxTokens, llmResultSchema, llmUserMessage, parseLlmResults, type LlmGuess, type LlmWire } from "@grosher/core";
+import { DEFAULT_SETTINGS, loadSettings, OLLAMA_DEFAULT_MODEL, type ProviderName, type ResolverSettings } from "./settings.ts";
 
-export type ProviderName = "ollama" | "anthropic";
+export { OLLAMA_DEFAULT_MODEL, type ProviderName };
 
 export interface ClassifyOptions {
   /** the model is not loaded yet: allow a cold load inside this one call */
@@ -27,17 +31,16 @@ export interface LlmProvider {
   isLoaded?(): Promise<boolean>;
 }
 
-const env = import.meta.env as Record<string, string | undefined>;
-export const PROVIDER: ProviderName = env.VITE_RESOLVER_PROVIDER === "anthropic" ? "anthropic" : "ollama";
-export const OLLAMA_URL = (env.VITE_OLLAMA_URL ?? "http://localhost:11434").replace(/\/$/, "");
-export const OLLAMA_DEFAULT_MODEL = "qwen3:8b";
-export const OLLAMA_MODEL = env.VITE_OLLAMA_MODEL ?? OLLAMA_DEFAULT_MODEL;
+/** the build-time defaults (VITE_ variables); the settings sheet can override them per device */
+export const PROVIDER: ProviderName = DEFAULT_SETTINGS.provider;
+export const OLLAMA_URL = DEFAULT_SETTINGS.ollamaUrl;
+export const OLLAMA_MODEL = DEFAULT_SETTINGS.model;
+export const RESOLVER_URL = DEFAULT_SETTINGS.workerUrl;
 export const OLLAMA_TIMEOUT_MS = 20_000;
 /** a cold load of the model happens inside the call: allow it once */
 export const OLLAMA_COLD_TIMEOUT_MS = 60_000;
 /** keep the model loaded all day */
 export const OLLAMA_KEEP_ALIVE = "24h";
-export const RESOLVER_URL = (env.VITE_RESOLVER_URL ?? "/api").replace(/\/$/, "");
 
 const DEV = !!(import.meta.env as { DEV?: boolean }).DEV;
 
@@ -51,7 +54,14 @@ interface OllamaChat {
   eval_duration?: number;
 }
 
-export function ollamaProvider(fetchImpl: typeof fetch = fetch, timeoutMs = OLLAMA_TIMEOUT_MS, coldTimeoutMs = OLLAMA_COLD_TIMEOUT_MS): LlmProvider {
+export interface OllamaTarget {
+  url: string;
+  model: string;
+}
+
+export function ollamaProvider(fetchImpl: typeof fetch = fetch, timeoutMs = OLLAMA_TIMEOUT_MS, coldTimeoutMs = OLLAMA_COLD_TIMEOUT_MS, target: OllamaTarget = { url: OLLAMA_URL, model: OLLAMA_MODEL }): LlmProvider {
+  const OLLAMA_URL = target.url.replace(/\/$/, "");
+  const OLLAMA_MODEL = target.model || OLLAMA_DEFAULT_MODEL;
   return {
     name: "ollama",
     offlineNote: "Local model offline · unknown items need a tap",
@@ -120,20 +130,23 @@ export function ollamaProvider(fetchImpl: typeof fetch = fetch, timeoutMs = OLLA
   };
 }
 
-export function anthropicProvider(fetchImpl: typeof fetch = fetch): LlmProvider {
+export function workerProvider(fetchImpl: typeof fetch = fetch, url: string = RESOLVER_URL): LlmProvider {
+  const base = url.replace(/\/$/, "");
   return {
-    name: "anthropic",
+    name: "worker",
     offlineNote: "Resolver offline · unknown items need a tap",
     async classify(items, departments) {
       const t0 = performance.now();
-      const res = await fetchImpl(`${RESOLVER_URL}/resolve`, {
+      const res = await fetchImpl(`${base}/resolve`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ items, departments }),
       });
       if (!res.ok) throw new Error(`resolver ${res.status}`);
-      const body = (await res.json()) as { results: LlmWire[] };
-      if (DEV) console.info(`[resolve] anthropic worker · ${items.length} items · wall ${Math.round(performance.now() - t0)} ms`);
+      const body = (await res.json()) as { results: LlmWire[]; degraded?: boolean };
+      // the worker could not reach its model: unknown rows with a flag; do not cache them
+      if (body.degraded) throw new Error("resolver degraded: upstream unreachable");
+      if (DEV) console.info(`[resolve] worker · ${items.length} items · wall ${Math.round(performance.now() - t0)} ms`);
       // the worker already parsed and banded: keep its rows, every item present
       const byItem = new Map(body.results.map((r) => [r.item.trim().toLowerCase(), r]));
       return items.map((item) => byItem.get(item.trim().toLowerCase()) ?? { item, department: null, confidence: 0 });
@@ -141,8 +154,13 @@ export function anthropicProvider(fetchImpl: typeof fetch = fetch): LlmProvider 
   };
 }
 
+/** the provider the settings name, pointed at their URL and model */
+export function providerFor(s: ResolverSettings, fetchImpl: typeof fetch = fetch): LlmProvider {
+  return s.provider === "worker" ? workerProvider(fetchImpl, s.workerUrl) : ollamaProvider(fetchImpl, OLLAMA_TIMEOUT_MS, OLLAMA_COLD_TIMEOUT_MS, { url: s.ollamaUrl, model: s.model });
+}
+
 export function defaultProvider(): LlmProvider {
-  return PROVIDER === "anthropic" ? anthropicProvider() : ollamaProvider();
+  return providerFor(loadSettings());
 }
 
 /** Wire rows → the resolver's cache entries, keyed by normalised item text. */
