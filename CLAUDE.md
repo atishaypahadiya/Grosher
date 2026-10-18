@@ -50,6 +50,7 @@ npm run gen:textures -w @grosher/stores  # regenerate the placeholder textures +
 cd packages/core && node --test test/resolution-fixture.test.ts   # prints the per-layer hit-rate tables
 npm run dev -w @grosher/resolver         # wrangler dev on :8787 (anthropic provider only; needs .dev.vars)
 npm run chain:status -w @grosher/resolver   # the Mac → worker chain, one ✓ / ✗ line per link with the fix
+cd apps/web && node scripts/boot-resilience.mjs     # stale worker + old state + a deploy → the app renders (CI runs it)
 ```
 
 Web tests run in jsdom, where WebGL does not exist, so the trip screen under test always uses the flat
@@ -284,7 +285,8 @@ to strawberries). Never tune against it.
 
 ## Lists, history and personal data (`apps/web/src/lib/lists.ts`, `history.ts`, `useLists.ts`, `useHistory.ts`)
 
-All of it is per store, in IndexedDB (`lists:<storeId>`, `history:<storeId>`, `learning:<storeId>`), with
+All of it is per store, in IndexedDB (`lists:<storeId>`, `history:<storeId>`, `learning:<storeId>`; versioned
+and validated, see "Never a blank screen" under PWA), with
 the in-memory fallback of `lib/db.ts` where IndexedDB is blocked.
 
 - `List` = `{id, name, items: string[], storeId, createdAt, updatedAt, kind: "draft" | "saved" | "usual",
@@ -541,11 +543,47 @@ and the you-dot's halo still.
 
 ### PWA
 
-`vite-plugin-pwa` (`registerType: autoUpdate`, registered in `main.tsx`). Workbox precaches every emitted
-file: app, texture JPEGs and the self-hosted fonts (`public/fonts/*.woff2`, declared in `src/fonts.css`;
-Outfit and Doto are not loaded from Google, which would miss the cache on the first visit). Navigations fall
-back to `index.html`, except `/project/` (the static write-up, neither precached nor shelled). The app works offline after one online load. Icons are in `public/icons/` (lime dot
-on soil). Check with `npm run build && npx vite preview`, load once, go offline, reload.
+`vite-plugin-pwa` (`registerType: autoUpdate`, registered in `main.tsx`) with its own worker, `src/sw.ts`
+(`strategies: injectManifest`, built to `/sw.js`; typechecked by `tsconfig.sw.json`). It precaches every
+emitted file: app, texture JPEGs and the self-hosted fonts (`public/fonts/*.woff2`, declared in
+`src/fonts.css`; Outfit and Doto are not loaded from Google, which would miss the cache on the first visit).
+**Navigations are network-first** (4 s, then the precached `index.html`; registered before the precache
+route, whose `directoryIndex` would otherwise answer `/` from the cache), except `/project/` (the static
+write-up, neither precached nor shelled). A new worker takes over at once (`skipWaiting` + `clients.claim`),
+deletes every cache but the precache, then (in a message to itself: a reload inside `activate` deadlocks,
+fetches wait for activation) pings each window; a window that does not answer or answers "failed" is
+reloaded with `WindowClient.navigate`. The app works offline after one online load. Icons are in
+`public/icons/` (lime dot on soil). Check with `npm run build && npx vite preview`, load once, go offline,
+reload.
+
+**Never a blank screen** (after an iPhone opened to the bare `--deep` body: a stored `grosher.notes` of the
+wrong shape threw in the first render, and the old worker served its cached shell cache-first):
+
+- **Persisted state is versioned** (`lib/persist.ts`). `storage.ts` (localStorage) and `db.ts` (IndexedDB)
+  write `{__grosher: 1, v, data}`; a bare value from before is version 0. Each key has migrations and a
+  validator; a value that fails (corrupt JSON, wrong shape, a version newer than the build) is quarantined
+  (`grosher.quarantine.<key>.<time>` / `quarantine:<key>:<time>`, at most 8 kept) and the reader gets its
+  fallback; lists and history keep their good rows. A new persisted key gets a schema in `SCHEMAS`; a shape
+  change bumps its version with a migration. Read storage only through `load` / `dbGet`, never raw.
+- **The boot guard** is inline in `index.html` (between `<!-- boot-guard -->` markers, so it works when no
+  chunk loads): the error plate ("Something went wrong", the error and three frames, Reload, Reset local
+  data, the build id; soil plate on the ground, passes the contrast gate), the 8 s watchdog (the plate
+  if `Booted` in `main.tsx` has not run; it goes away if the app starts after all), one-time recovery when a
+  hashed chunk is missing (a stale build: unregister the worker, delete the caches, reload; at most once a
+  minute via `sessionStorage`, a second failure shows the plate) and the answer to the worker's ping.
+  Reset local data downloads `grosher-lists-<date>.json` (lists and history per store) first, then clears
+  `grosher.*` localStorage, the IndexedDB database, the caches and the worker. `db.ts` keeps one connection
+  that closes on `versionchange`, so the delete is not blocked.
+- **Boundaries.** `ErrorBoundary` at the root hands render errors to the plate (a chunk error to the
+  recovery); `FallbackBoundary` around the lazy 3D map falls back to the flat map once recovery has been
+  spent. `#/__crash` throws on purpose (the gate and the test use it). `VITE_BUILD_ID` (the Pages commit,
+  else `git rev-parse`) is logged on boot and shown on the plate.
+- **Test:** `node apps/web/scripts/boot-resilience.mjs [--shots dir]` (CI runs it): three builds (the
+  legacy generateSW worker and guard-less shell via `GROSHER_LEGACY_SW=1`, "old" and "new"), a local host
+  that answers missing files with `index.html` as Pages does, and six cases: legacy worker + old-format
+  state + an evicted entry chunk → deploy → the new build renders (measured 5.8 s, unaided); this worker's
+  next open after a deploy; a missing lazy chunk (one reload); a chunk that keeps failing (one reload, then
+  the flat map); a render error (the plate, Reset exports then clears); no first render (the plate at 8 s).
 
 ### Deploy: Cloudflare Pages (web) + Worker (resolver)
 
@@ -570,7 +608,7 @@ on their next open; `/assets/*`, `/fonts/*` and the Workbox runtime are hashed a
 navigations fall back to `index.html` through the service worker. The build also fails on any `sk-ant` string
 (`bundle.test.ts`), and CI's perf gate runs on every push (`.github/workflows/ci.yml`,
 `apps/web/scripts/perf-gate.mjs`: three framings of the 3D view within 70 draw calls and 12,000 instances),
-followed by the contrast gate (`apps/web/scripts/contrast-gate.mjs`).
+followed by the contrast gate (`apps/web/scripts/contrast-gate.mjs`) and the boot-resilience test.
 `apps/web/.env.local` is git-ignored (it was tracked once): a LAN Ollama address there would otherwise bake
 into the deployed bundle.
 

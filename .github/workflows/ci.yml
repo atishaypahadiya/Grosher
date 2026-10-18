@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   check:
-    name: typecheck · test · build · perf gate · contrast gate
+    name: typecheck · test · build · perf gate · contrast gate · boot resilience
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -67,3 +67,7 @@ jobs:
           curl -sf http://localhost:4173/ > /dev/null || (npx vite preview --port 4173 --strictPort &)
           for i in $(seq 1 40); do curl -sf http://localhost:4173/ > /dev/null && break; sleep 0.5; done
           node scripts/contrast-gate.mjs http://localhost:4173 --report
+
+      - name: Boot resilience (old state + a stale service-worker cache, then a deploy → the app renders)
+        working-directory: apps/web
+        run: node scripts/boot-resilience.mjs

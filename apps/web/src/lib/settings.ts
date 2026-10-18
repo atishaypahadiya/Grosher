@@ -8,6 +8,8 @@
 //   worker  the Cloudflare worker (apps/resolver), which reaches the Mac's
 //           model through its tunnel, or Claude. Production.
 
+import { load, remove, save } from "./storage.ts";
+
 export type ProviderName = "ollama" | "worker";
 
 export interface ResolverSettings {
@@ -44,30 +46,19 @@ export function sanitize(raw: unknown, defaults: ResolverSettings = DEFAULT_SETT
 }
 
 export function loadSettings(): ResolverSettings {
-  try {
-    const raw = localStorage.getItem(SETTINGS_KEY);
-    return raw ? sanitize(JSON.parse(raw)) : DEFAULT_SETTINGS;
-  } catch {
-    return DEFAULT_SETTINGS;
-  }
+  const raw = load<unknown>(SETTINGS_KEY, null);
+  return raw ? sanitize(raw) : DEFAULT_SETTINGS;
 }
 
+/** private mode: the choice lasts the session */
 export function saveSettings(s: ResolverSettings): ResolverSettings {
   const clean = sanitize(s);
-  try {
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(clean));
-  } catch {
-    /* private mode: the choice lasts the session */
-  }
+  save(SETTINGS_KEY, clean);
   return clean;
 }
 
 export function resetSettings(): ResolverSettings {
-  try {
-    localStorage.removeItem(SETTINGS_KEY);
-  } catch {
-    /* ignore */
-  }
+  remove(SETTINGS_KEY);
   return DEFAULT_SETTINGS;
 }
 

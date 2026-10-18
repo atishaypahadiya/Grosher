@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, test } from "vitest";
+import { load } from "../src/lib/storage.ts";
 import { DEFAULT_SETTINGS, loadSettings, mixedContent, resetSettings, sanitize, saveSettings, SETTINGS_KEY } from "../src/lib/settings.ts";
 
 beforeEach(() => localStorage.clear());
@@ -14,7 +15,7 @@ describe("resolver settings", () => {
     const saved = saveSettings({ provider: "worker", ollamaUrl: "http://10.0.0.9:11434/", model: " qwen3:14b ", workerUrl: "https://r.example/" });
     expect(saved).toEqual({ provider: "worker", ollamaUrl: "http://10.0.0.9:11434", model: "qwen3:14b", workerUrl: "https://r.example" });
     expect(loadSettings()).toEqual(saved);
-    expect(JSON.parse(localStorage.getItem(SETTINGS_KEY)!)).toEqual(saved);
+    expect(load(SETTINGS_KEY, null)).toEqual(saved);
     expect(resetSettings()).toEqual(DEFAULT_SETTINGS);
     expect(loadSettings()).toEqual(DEFAULT_SETTINGS);
   });

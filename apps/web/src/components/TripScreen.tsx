@@ -15,6 +15,8 @@ import { AddItem } from "./AddItem.tsx";
 import { Num } from "./Num.tsx";
 import { IconArrowLeft, IconCheck, IconLayers, IconPlus } from "./Icons.tsx";
 
+import { FallbackBoundary } from "./ErrorBoundary.tsx";
+
 const TripMap3D = lazy(() => import("../map3d/TripMap3D.tsx"));
 
 export interface TripScreenProps {
@@ -101,9 +103,11 @@ export function TripScreen({ bundle, router, trip, flat, onFlatChange, onGotIt, 
     <div className="trip-screen" ref={screenRef}>
       <div className="trip-map">
         {webgl ? (
-          <Suspense fallback={flatMap}>
-            <TripMap3D bundle={bundle} trip={trip} flat={flat} onFlatChange={onFlatChange} nextLabel={nextLabel} checkoutLabel={checkoutLabel} perf={perf} safe={safe} />
-          </Suspense>
+          <FallbackBoundary name="3D map" fallback={<>{flatMap}{vignette}</>}>
+            <Suspense fallback={flatMap}>
+              <TripMap3D bundle={bundle} trip={trip} flat={flat} onFlatChange={onFlatChange} nextLabel={nextLabel} checkoutLabel={checkoutLabel} perf={perf} safe={safe} />
+            </Suspense>
+          </FallbackBoundary>
         ) : (
           <>
             {flatMap}

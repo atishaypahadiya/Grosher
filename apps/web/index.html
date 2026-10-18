@@ -12,6 +12,184 @@
     <meta name="description" content="Your list, not their layout. The shortest walk through the store." />
     <link rel="preload" href="/fonts/outfit-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/doto-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <!-- boot-guard -->
+    <!-- The boot guard: inline, so it works when the app's own files do not load. It shows the error plate
+         (a render error, a failed boot, 8 s without a first render), reloads once when a hashed chunk is
+         missing (a stale build), and answers the service worker's "did you start?" after a deploy. -->
+    <style>
+      .boot-fail { position: fixed; inset: 0; z-index: 2147483647; display: grid; place-items: center; padding: 16px; background: linear-gradient(170deg, #FF9E6B 0%, #F2703A 11%, #E2A23C 32%, #86B84A 52%, #2E7D46 76%, #184D2E 100%); font-family: Outfit, system-ui, sans-serif; }
+      .boot-plate { box-sizing: border-box; width: 100%; max-width: 360px; background: rgba(15, 42, 26, 0.88); border: 1px solid rgba(255, 255, 255, 0.32); border-radius: 24px; padding: 22px; color: #FFFFFF; }
+      .boot-plate h1 { margin: 0 0 8px; font-size: 22px; font-weight: 500; }
+      .boot-plate p { margin: 0 0 12px; font-size: 14px; line-height: 1.45; color: rgba(255, 255, 255, 0.85); }
+      .boot-plate code { display: block; margin: 0 0 16px; padding: 10px 12px; max-height: 30vh; overflow: auto; border-radius: 12px; background: rgba(0, 0, 0, 0.28); color: #FFFFFF; font-size: 12px; white-space: pre-wrap; word-break: break-word; }
+      .boot-plate .boot-row { display: flex; flex-wrap: wrap; gap: 10px; }
+      .boot-plate button { min-height: 44px; padding: 0 18px; border-radius: 999px; font: inherit; font-size: 15px; font-weight: 500; cursor: pointer; }
+      .boot-plate button:focus-visible { outline: 2px solid #D4FF4A; outline-offset: 2px; box-shadow: 0 0 0 2px #2A0F06; }
+      .boot-plate .boot-reload { border: 0; background: #D4FF4A; color: #0F2A1A; }
+      .boot-plate .boot-reset { border: 1px solid rgba(255, 255, 255, 0.6); background: transparent; color: #FFFFFF; }
+      .boot-plate .boot-build { margin: 14px 0 0; font-size: 12px; color: rgba(255, 255, 255, 0.85); }
+    </style>
+    <script>
+      (function () {
+        var BUILD = "%VITE_BUILD_ID%";
+        var BOOT_MS = 8000;
+        var RECOVER_KEY = "grosher.recover";
+        var RECOVER_WINDOW_MS = 60000;
+        var CHUNK = /dynamically imported module|Importing a module script failed|error loading dynamically imported module|Unable to preload CSS|Failed to load module script/i;
+        var state = "booting"; // booting → ok, or failed (plate shown)
+        var plate = null;
+        var plateBy = "";
+
+        function el(tag, cls, text) {
+          var e = document.createElement(tag);
+          if (cls) e.className = cls;
+          if (text) e.textContent = text;
+          return e;
+        }
+
+        function fail(err, where) {
+          console.error("[grosher] " + (where || "error"), err);
+          if (plate) return;
+          state = "failed";
+          plateBy = where || "";
+          var wrap = el("div", "boot-fail");
+          wrap.setAttribute("role", "alert");
+          var p = el("div", "boot-plate");
+          p.appendChild(el("h1", "", "Something went wrong"));
+          p.appendChild(el("p", "", "Grosher could not start on this device. Reload first; if it happens again, reset this device's Grosher data. Your lists are saved as a file before anything is cleared."));
+          var msg = String((err && err.message) || err);
+          var frames = String((err && err.stack) || "").split("\n").filter(function (l) { return /^\s*at |@/.test(l); }).slice(0, 3).join("\n");
+          p.appendChild(el("code", "", (msg + (frames ? "\n" + frames : "")).slice(0, 600)));
+          var row = el("div", "boot-row");
+          var reload = el("button", "boot-reload", "Reload");
+          reload.type = "button";
+          reload.onclick = function () {
+            try { sessionStorage.removeItem(RECOVER_KEY); } catch (e) {}
+            var sw = navigator.serviceWorker;
+            (sw ? sw.getRegistration().then(function (r) { return r && r.update(); }).catch(function () {}) : Promise.resolve()).then(function () { location.reload(); });
+          };
+          var reset = el("button", "boot-reset", "Reset local data");
+          reset.type = "button";
+          reset.onclick = function () { resetLocalData(reset); };
+          row.appendChild(reload);
+          row.appendChild(reset);
+          p.appendChild(row);
+          p.appendChild(el("p", "boot-build", "Build " + BUILD));
+          wrap.appendChild(p);
+          plate = wrap;
+          (document.body || document.documentElement).appendChild(wrap);
+          reload.focus({ preventScroll: true });
+        }
+
+        // a missing hashed chunk means this page is an older build than the server: drop the service
+        // worker and its caches and reload, once a minute at most. A second failure shows the plate, or,
+        // soft (a part with its own fallback, like the 3D map), leaves it to that fallback
+        function recover(reason, soft) {
+          var last = 0;
+          try { last = +sessionStorage.getItem(RECOVER_KEY) || 0; } catch (e) {}
+          if (Date.now() - last < RECOVER_WINDOW_MS) {
+            if (!soft) fail(new Error(reason), "still failing after a reload");
+            return false;
+          }
+          try { sessionStorage.setItem(RECOVER_KEY, String(Date.now())); } catch (e) {}
+          console.warn("[grosher] stale build (" + reason + "): clearing the service worker and caches, reloading once");
+          Promise.all([
+            navigator.serviceWorker ? navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }) : 0,
+            window.caches ? caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }) : 0,
+          ]).catch(function () {}).then(function () { location.reload(); });
+          return true;
+        }
+
+        function readAllDb() {
+          return new Promise(function (resolve) {
+            var req;
+            try { req = indexedDB.open("grosher"); } catch (e) { return resolve([]); }
+            req.onerror = function () { resolve([]); };
+            req.onsuccess = function () {
+              var db = req.result;
+              if (!db.objectStoreNames.contains("kv")) { db.close(); return resolve([]); }
+              var out = [];
+              var cur = db.transaction("kv", "readonly").objectStore("kv").openCursor();
+              cur.onsuccess = function () {
+                var c = cur.result;
+                if (c) { out.push([String(c.key), c.value]); c.continue(); } else { db.close(); resolve(out); }
+              };
+              cur.onerror = function () { db.close(); resolve(out); };
+            };
+          });
+        }
+
+        function clearDb() {
+          return new Promise(function (resolve) {
+            try {
+              var req = indexedDB.deleteDatabase("grosher");
+              req.onsuccess = req.onerror = req.onblocked = function () { resolve(); };
+            } catch (e) { resolve(); }
+          });
+        }
+
+        // lists and trip history to a JSON file first, then everything Grosher keeps on this device
+        function resetLocalData(btn) {
+          btn.disabled = true;
+          btn.textContent = "Saving your lists…";
+          var data = function (v) { return v && v.__grosher === 1 ? v.data : v; };
+          readAllDb().then(function (rows) {
+            var out = { app: "grosher", build: BUILD, exportedAt: new Date().toISOString(), lists: {}, history: {} };
+            rows.forEach(function (r) {
+              if (r[0].indexOf("lists:") === 0) out.lists[r[0].slice(6)] = data(r[1]);
+              if (r[0].indexOf("history:") === 0) out.history[r[0].slice(8)] = data(r[1]);
+            });
+            var a = document.createElement("a");
+            a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 1)], { type: "application/json" }));
+            a.download = "grosher-lists-" + new Date().toISOString().slice(0, 10) + ".json";
+            document.body.appendChild(a);
+            a.click();
+            return new Promise(function (r) { setTimeout(r, 1200); });
+          }).catch(function (e) { console.error("[grosher] export before reset failed", e); }).then(function () {
+            btn.textContent = "Clearing…";
+            try {
+              for (var i = localStorage.length - 1; i >= 0; i--) { var k = localStorage.key(i); if (k && k.indexOf("grosher.") === 0) localStorage.removeItem(k); }
+              sessionStorage.clear();
+            } catch (e) {}
+            return Promise.all([
+              clearDb(),
+              navigator.serviceWorker ? navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }) : 0,
+              window.caches ? caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }) : 0,
+            ]).catch(function () {});
+          }).then(function () { location.reload(); });
+        }
+
+        window.__grosherFail = fail;
+        window.__grosherRecover = recover;
+        window.__grosherIsChunkError = function (e) { return CHUNK.test(String((e && e.message) || e)); };
+        // the app's first commit: a plate the watchdog raised on a slow network goes away again
+        window.__grosherBoot = function () {
+          state = "ok";
+          window.__grosherBooted = true;
+          if (plate && plateBy === "boot watchdog") { plate.remove(); plate = null; }
+        };
+
+        window.addEventListener("error", function (e) {
+          var t = e.target;
+          var src = t && t !== window ? t.src || t.href || "" : "";
+          if (src && /\/assets\//.test(src) && (t.tagName === "SCRIPT" || t.tagName === "LINK")) recover("could not load " + src);
+        }, true);
+        window.addEventListener("unhandledrejection", function (e) {
+          if (window.__grosherIsChunkError(e.reason)) recover(String((e.reason && e.reason.message) || e.reason));
+        });
+        // (vite:preloadError is left alone: the failed import rejects to its caller, a boundary with or
+        // without a fallback, or the unhandledrejection above)
+        setTimeout(function () {
+          if (state === "booting") fail(new Error("The app did not start within " + BOOT_MS / 1000 + " seconds."), "boot watchdog");
+        }, BOOT_MS);
+        if (navigator.serviceWorker) {
+          navigator.serviceWorker.addEventListener("message", function (e) {
+            if (e.data && e.data.type === "grosher:ping" && e.source) e.source.postMessage({ type: "grosher:pong", state: state });
+          });
+        }
+      })();
+    </script>
+    <!-- /boot-guard -->
   </head>
   <body>
     <div id="root"></div>

@@ -8,6 +8,7 @@
 
 import type { StoreGraph } from "@grosher/core";
 import type { TripState } from "./trip.ts";
+import { load, save } from "./storage.ts";
 
 export const RESET_AISLE_MISSES = 3;
 export const RESET_MISS_SHARE = 0.25;
@@ -86,24 +87,12 @@ export interface ResetState {
 const key = (storeId: string) => `grosher.reset.${storeId}`;
 
 export function loadResetState(storeId: string): ResetState {
-  try {
-    const raw = localStorage.getItem(key(storeId));
-    if (raw) {
-      const o = JSON.parse(raw) as Partial<ResetState>;
-      return { flag: o.flag ?? null, dismissedId: o.dismissedId ?? null };
-    }
-  } catch {
-    /* ignore */
-  }
-  return { flag: null, dismissedId: null };
+  const o = load<Partial<ResetState> | null>(key(storeId), null);
+  return { flag: o?.flag ?? null, dismissedId: o?.dismissedId ?? null };
 }
 
 export function saveResetState(storeId: string, s: ResetState): void {
-  try {
-    localStorage.setItem(key(storeId), JSON.stringify(s));
-  } catch {
-    /* ignore */
-  }
+  save(key(storeId), s);
 }
 
 export const resetVisible = (s: ResetState) => !!s.flag && s.flag.id !== s.dismissedId;

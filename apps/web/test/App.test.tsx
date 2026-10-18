@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, test } from "vitest";
+import { load } from "../src/lib/storage.ts";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { App } from "../src/App.tsx";
 import { dbClearMemoryFallback } from "../src/lib/db.ts";
@@ -129,7 +130,7 @@ describe("trip mode", () => {
     fireEvent.click(screen.getByRole("button", { name: /got it/i }));
     expect(bar.querySelectorAll(".seg.done")).toHaveLength(1);
     fireEvent.click(screen.getByRole("button", { name: /flatten the map/i }));
-    expect(localStorage.getItem("grosher.flat")).toBe("true");
+    expect(load("grosher.flat", false)).toBe(true);
     fireEvent.click(screen.getByRole("button", { name: /back to the list/i }));
     fireEvent.click(await findButton(/resume trip · 2 left/i));
     expect(screen.getByText(/next · 2 of 3/i)).toBeTruthy();
@@ -248,7 +249,7 @@ describe("settings", () => {
     fireEvent.change(url, { target: { value: "https://r.example/" } });
     fireEvent.click(within(dialog).getByRole("button", { name: /^save$/i }));
     expect(screen.queryByRole("dialog", { name: /settings/i })).toBeNull();
-    expect(JSON.parse(localStorage.getItem("grosher.resolver")!)).toMatchObject({ provider: "worker", workerUrl: "https://r.example" });
+    expect(load("grosher.resolver", null)).toMatchObject({ provider: "worker", workerUrl: "https://r.example" });
     // the choice survives a reload and Reset puts the defaults back
     fireEvent.click(screen.getAllByRole("button", { name: /^settings$/i })[0]);
     const again = screen.getByRole("dialog", { name: /settings/i });
@@ -298,7 +299,7 @@ describe("reset banner", () => {
     render(<App />);
     fireEvent.click(within(screen.getByTestId("reset-banner")).getByRole("button", { name: /dismiss/i }));
     expect(screen.queryByTestId("reset-banner")).toBeNull();
-    expect(JSON.parse(localStorage.getItem("grosher.reset.demo-supercenter")!).dismissedId).toBe("t_9");
+    expect(load<{ dismissedId: string }>("grosher.reset.demo-supercenter", { dismissedId: "" }).dismissedId).toBe("t_9");
   });
 
   test("the editor opened from the banner highlights the aisle and lists the items", () => {
@@ -324,7 +325,7 @@ describe("reset banner", () => {
     fireEvent.click(await findButton(/route 4 items/i));
     fireEvent.click(screen.getByRole("button", { name: /not here/i }));
     while (!screen.queryByText(/trip done/i)) fireEvent.click(screen.getByRole("button", { name: /got it/i }));
-    await waitFor(() => expect(JSON.parse(localStorage.getItem("grosher.reset.demo-supercenter") ?? "{}").flag).toMatchObject({ reason: "share", misses: 1, placed: 4 }));
+    await waitFor(() => expect(load<{ flag?: unknown }>("grosher.reset.demo-supercenter", {}).flag).toMatchObject({ reason: "share", misses: 1, placed: 4 }));
     fireEvent.click(screen.getByRole("button", { name: /^close$/i }));
     expect(screen.getByTestId("reset-banner").textContent).toMatch(/1 miss on/);
   });

@@ -128,6 +128,9 @@ export function App() {
       return out;
     });
 
+  // the error plate's own check (scripts/boot-resilience.mjs): a render error on purpose
+  if (hash === "#/__crash") throw new Error("Crash test (#/__crash)");
+
   if (hash.startsWith("#/edit")) {
     return (
       <EditorScreen

@@ -284,6 +284,11 @@ try {
   await sheet(where, "picker sheet");
   await sheet(sp.getByRole("button", { name: /^settings$/i }), "settings");
   await sheet(sp.getByRole("button", { name: /^lists$/i }).first(), "lists sheet");
+  // the error plate (index.html's boot guard), raised by a render error on purpose
+  await sp.goto(`${BASE}/#/__crash`, { waitUntil: "load" });
+  await sp.locator(".boot-fail").waitFor({ timeout: 30_000 });
+  await sp.evaluate(() => document.fonts.ready);
+  all.push(...(await measure(sp, "error plate")));
   await sctx.close();
 
   // ---- the project page at 390 and 1440, full height, motion reduced (the video and the token rest)
