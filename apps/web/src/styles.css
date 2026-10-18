@@ -25,6 +25,10 @@
   --glass-deep: rgba(15, 42, 26, 0.22);
   /* deep glass for content cards that start on the warm half (list, share card, reset banner): white ink stays ≥ 4.5:1 over mango */
   --glass-deep-warm: rgba(15, 42, 26, 0.56);
+  /* the plate under every label drawn over the 3D scene: near-solid soil and a white hairline, so the
+     label's contrast is the plate's, whatever the scene behind it does */
+  --plate: rgba(15, 42, 26, 0.88);
+  --plate-line: rgba(255, 255, 255, 0.32);
   --glass-border: rgba(255, 255, 255, 0.28);
   --column: 430px;
   --hairline: rgba(255, 255, 255, 0.18);
@@ -397,23 +401,26 @@ button { cursor: pointer; touch-action: manipulation; }
 @keyframes m-halo { from { transform: scale(1); opacity: 1; } to { transform: scale(1.5); opacity: 0; } }
 .m-next { position: relative; display: block; width: 8px; height: 8px; border-radius: 50%; background: var(--lime); box-shadow: var(--glow-dot); }
 .m-leader { position: absolute; left: 50%; bottom: 8px; width: 1px; height: 46px; background: var(--lime); }
-.m-ahead { display: block; width: 12px; height: 12px; border-radius: 50%; background: #FFFFFF; color: var(--soil); font: 600 8px/12px var(--font); text-align: center; }
+/* a later stop's numbered dot: the plate as a disc, white number, white hairline */
+.m-ahead { display: block; width: 13px; height: 13px; border-radius: 50%; background: var(--plate); box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.75); color: #FFFFFF; font: 600 8px/13px var(--font); text-align: center; }
 .m-done { display: grid; place-items: center; width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.8); color: #FFFFFF; }
 .m-done .icon { width: 8px; height: 8px; }
 .m-lane { display: block; width: 8px; height: 8px; border-radius: 50%; background: var(--lime); box-shadow: var(--glow-dot); }
 .m-ring { display: grid; place-items: center; width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid #FFFFFF; color: #FFFFFF; }
 .m-ring .icon { width: 8px; height: 8px; }
 .m-exit { border-color: var(--lime); }
-.m-label { display: flex; flex-direction: column; gap: 2px; white-space: nowrap; color: #FFFFFF; text-shadow: 0 1px 10px rgba(0, 0, 0, 0.25); }
+.m-label { display: flex; flex-direction: column; gap: 2px; white-space: nowrap; color: #FFFFFF; }
+/* the checkout callout: lime eyebrow and a white line on the plate */
+.m-label-checkout { padding: 7px 11px 8px; border-radius: 14px; background: var(--plate); border: 1px solid var(--plate-line); }
 .m-label-next { align-items: center; text-align: center; }
 .m-label-name { font-weight: 500; font-size: 17px; }
 .m-label-line { font-weight: 300; font-size: 12px; color: rgba(255, 255, 255, 0.85); }
 .m-label-slot { color: var(--lime); }
 
-/* ---- stop cards at their shelf slots (deep glass); the next stop's card is lime */
+/* ---- stop cards at their shelf slots, the edge chips and the next stop's card (lime border): all on the plate */
 .m-card {
   display: inline-flex; align-items: center; gap: 7px; padding: 6px 11px; border-radius: 999px;
-  background: var(--glass-deep); border: 1px solid var(--glass-border); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
+  background: var(--plate); border: 1px solid var(--plate-line);
   color: #FFFFFF; font-size: 13px; font-weight: 400; white-space: nowrap; text-shadow: none;
 }
 .m-card .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255, 255, 255, 0.7); flex: none; }

@@ -4,7 +4,8 @@
 //   npm run build -w @grosher/web && npx vite preview --port 4173 &
 //   node scripts/contrast-gate.mjs http://localhost:4173            [--json out.json] [--report]
 //
-// Screens: list, trip (mid-trip) and checkout at 390×844; the project page at 390 and 1440, full height.
+// Screens: list, the trip at three camera states (the start of the route, mid-route, the last leg to the
+// checkout) and checkout at 390×844; the project page at 390 and 1440, full height.
 // Targets: text ≥ 4.5:1 (≥ 3:1 at 24 px, or 18.66 px bold); icon glyphs in controls and focus rings ≥ 3:1.
 //
 // Method. Text: its colour (with its alpha and every ancestor's opacity) against the background sampled
@@ -16,8 +17,9 @@
 // the darker and the lighter tone (split halfway between the extremes), and the better tone's median ratio against the unfocused pixels must
 // reach 3:1: the two-tone ring is built so that one tone always contrasts with the ground it sits on.
 // Pixels are decoded on a canvas in a blank page, so the gate needs nothing beyond Playwright.
-// The 3D trip map's own markers and labels (.m-overlay) are drawn over a moving scene; they are reported
-// but not gated.
+// The 3D trip map's labels (.m-overlay: the next-stop card, the checkout callout, stop cards, edge chips,
+// numbered dots) sit on solid plates, so they are gated like everything else: the pixels behind their text
+// are the plate's, whatever the scene does.
 
 import { chromium } from "playwright";
 import { writeFileSync } from "node:fs";
@@ -238,17 +240,20 @@ try {
     await page.waitForFunction(() => (window.__grosherPerf?.frames ?? 0) >= 4, null, { timeout: 240_000 });
     await page.waitForTimeout(700);
   };
+  const gotIt = async (n) => {
+    for (let k = 0; k < n; k++) {
+      await page.getByRole("button", { name: /got it/i }).click();
+      await page.waitForTimeout(500);
+    }
+    await settle();
+  };
   await settle();
-  for (let k = 0; k < 6; k++) {
-    await page.getByRole("button", { name: /got it/i }).click();
-    await page.waitForTimeout(600);
-  }
-  await settle();
-  all.push(...(await measure(page, "trip")));
-  for (let k = 0; k < 8; k++) {
-    await page.getByRole("button", { name: /got it/i }).click();
-    await page.waitForTimeout(300);
-  }
+  all.push(...(await measure(page, "trip start")));
+  await gotIt(6); // 7 of 14 next
+  all.push(...(await measure(page, "trip mid")));
+  await gotIt(7); // 14 of 14 next: the last leg, the checkout lane beyond it
+  all.push(...(await measure(page, "trip end")));
+  await page.getByRole("button", { name: /got it/i }).click();
   await page.getByText(/trip done/i).waitFor({ timeout: 60_000 });
   await page.waitForTimeout(600);
   all.push(...(await measure(page, "checkout")));
@@ -273,18 +278,18 @@ try {
   await browser.close();
 }
 
-const gated = all.filter((r) => r.where === "ui");
+const gated = all;
 const fails = gated.filter((r) => r.ratio < r.need);
-const fmt = (r) => `${r.ratio.toFixed(2)} (need ${r.need}) ${r.kind} "${r.text}" .${r.cls}${r.note ? ` · ${r.note}` : ""}${r.dark !== undefined ? ` · tones ${r.dark} / ${r.light}` : ""}`;
+const fmt = (r) => `${r.ratio.toFixed(2)} (need ${r.need}) ${r.where === "map" ? "map " : ""}${r.kind} "${r.text}" .${r.cls}${r.note ? ` · ${r.note}` : ""}${r.dark !== undefined ? ` · tones ${r.dark} / ${r.light}` : ""}`;
 for (const screen of [...new Set(all.map((r) => r.screen))]) {
-  const rows = gated.filter((r) => r.screen === screen);
+  const rows = gated.filter((r) => r.screen === screen && r.where === "ui");
   const low = (kind) => {
     const k = rows.filter((r) => r.kind === kind);
     return k.length ? `${kind} ${k.length}, lowest ${Math.min(...k.map((r) => r.ratio)).toFixed(2)}` : `${kind} 0`;
   };
   const map = all.filter((r) => r.screen === screen && r.where === "map");
-  console.log(`${screen.padEnd(13)} ${low("text")} · ${low("icon")} · ${low("focus")}${map.length ? ` · map labels (not gated) ${map.length}, lowest ${Math.min(...map.map((r) => r.ratio)).toFixed(2)}` : ""}`);
-  if (process.argv.includes("--report")) for (const r of [...rows].sort((a, b) => a.ratio / a.need - b.ratio / b.need).slice(0, 6)) console.log(`    ${fmt(r)}`);
+  console.log(`${screen.padEnd(13)} ${low("text")} · ${low("icon")} · ${low("focus")}${map.length ? ` · map labels ${map.length}, lowest ${Math.min(...map.map((r) => r.ratio)).toFixed(2)}` : ""}`);
+  if (process.argv.includes("--report")) for (const r of [...rows, ...map].sort((a, b) => a.ratio / a.need - b.ratio / b.need).slice(0, 6)) console.log(`    ${fmt(r)}`);
 }
 if (JSON_OUT) writeFileSync(JSON_OUT, JSON.stringify(all, null, 1));
 if (errors.length) console.log(`page errors: ${errors.join(" | ")}`);

@@ -576,8 +576,10 @@ the precache filled, manifest with name / icons 192 + 512 + maskable / `standalo
   `--glass-deep-warm` (.56) so their white ink holds 4.5:1; lime on orange or cream gets `--ring-soil`.
   Focus is one global two-tone ring (`:focus-visible`: 2 px warm ink inside, 2 px lime outside), never per
   component. `apps/web/scripts/contrast-gate.mjs` measures text (≥ 4.5:1), icon glyphs and focus rings
-  (≥ 3:1) against the pixels behind them on list, trip, checkout and the project page; CI fails under
-  target, so run it after any colour, glass or ground change.
+  (≥ 3:1) against the pixels behind them on list, trip (start, mid-route, last leg), checkout and the
+  project page; CI fails under target, so run it after any colour, glass or ground change. Every label
+  over the 3D scene sits on `--plate` (soil .88 + white hairline) with white or lime text: never put text
+  on the scene itself.
 - Outfit for words, Doto for every number that matters. No emoji, no Inter / Roboto, no drop shadows (glows
   and blur only).
 - Only two labels on the map: the next stop and the checkout callout. Markers and labels never scale with zoom.
