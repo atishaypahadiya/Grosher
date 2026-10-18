@@ -15,6 +15,8 @@ This is the contract for `apps/web`. The canvas with the mockups is exported at 
 
 ## 2. Tokens
 
+The boards in `design/boards/` were drawn before the "Papaya" warm half (haze, apricot, the mango hand-off, moss) and are kept as drawn. Where they differ on colour, ink, glass or plates, this section wins.
+
 ### Light (gradient stops, front of store → back)
 
 | Token | Hex | Where |
@@ -51,7 +53,7 @@ One ring for every control, set globally on `:focus-visible` and never per compo
 | `--lime` | `#D4FF4A` · glow `0 0 24px rgba(212,255,74,.45)` on buttons, `0 0 18px rgba(212,255,74,.8)` on dots |
 | `--glass` | `rgba(255,255,255,.14)` fill · `1px solid rgba(255,255,255,.28)` · `backdrop-filter: blur(18px) saturate(140%)` |
 | `--glass-strong` | same with fill `.20` (editor pills on cream use `rgba(255,255,255,.7)`) |
-| `--glass-deep-warm` | `rgba(15,42,26,.56)` fill, same border and blur: content cards that start on the warm half (the list sheet, the share card, the reset banner), so their white ink stays ≥ 4.5:1 over mango; `.58` in the share-card export (no blur) |
+| `--glass-deep-warm` | `rgba(15,42,26,.56)` fill, same border and blur: content cards that start on the warm half (the list sheet, the share card, the reset banner, and the Picker, Settings and Lists sheets), so their white ink stays ≥ 4.5:1 over mango; `.58` in the share-card export (no blur) |
 | `--ring-soil` | `inset 0 0 0 1.5px --soil`: any lime control on an orange or cream ground (the listening mic, the project page's hero button), as the editor's lime dots have; inset, so the focus ring lands outside it on the ground |
 | `--glass-deep` | `rgba(15,42,26,.22)` fill · `1px solid rgba(255,255,255,.28)` · same blur. Every card that holds content: share card, stat tiles, list sheet, "make the map better" rows. Eyebrows inside it are white 85%. White glass stays for pills, inputs, header controls and the Trip bottom sheet. |
 | `--hairline` | `rgba(255,255,255,.18)` row dividers inside glass; `.25` section rules |
@@ -143,7 +145,7 @@ Stack: `three` + `@react-three/fiber` + `@react-three/drei` + `@react-three/post
 
 Keep the existing SVG component; restyle it:
 
-- Canvas `#EDE9DB` with the dot grid; fixtures filled with the department hex, stroke `rgba(15,42,26,.35)` 1px, radius 2; walk graph thin `rgba(15,42,26,.35)` lines with white node dots; shelf locations `rgba(15,42,26,.55)` 2px dots; aisle codes Outfit 500 at the aisle ends; department names tracked caps along walls.
+- Canvas `#EDE9DB` with the dot grid; fixtures filled with the department hex, stroke `rgba(15,42,26,.35)` 1px, radius 2; walk graph thin `rgba(15,42,26,.35)` lines with white node dots; shelf locations `rgba(15,42,26,.55)` 2px dots; aisle codes Outfit 500 at the aisle ends and department names tracked caps along walls, both in solid `--soil` on a 3px canvas-colour halo (`paint-order: stroke`), so they read where they cross fills and location dots (at 55% with no halo they measured 2.5:1).
 - Selection: the pinned edge in `--soil` 2px, the bay in `rgba(212,255,74,.55)` with a soil stroke, the location dot lime with soil ring, offset label in soil.
 - Route in fallback mode: white ribbon over department fills as in 3D.
 

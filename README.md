@@ -15,9 +15,11 @@ to the right aisle without a survey; real stores are surveyed with the built-in 
 The visual contract is [DESIGN.md](DESIGN.md).
 
 <p>
-  <img src="design/boards/01-list.png" width="30%" alt="The list screen: items resolved to departments, the route call to action" />
-  <img src="design/boards/02-trip.png" width="30%" alt="The trip: a 3D view of the store with the next shelf lit" />
-  <img src="design/boards/03-checkout.png" width="30%" alt="Checkout: time, metres walked, and how much shorter than walking the list in order" />
+  <img src="apps/web/public/project/img/list.webp" width="30%" alt="The list screen with 14 items, each placed on a shelf, and the lime Route button" />
+  <img src="apps/web/public/project/img/trip.webp" width="30%" alt="The 3D trip mid-route: the next stop, Chips, in a lime card with its shelf lit; the two stops after it as chips on the map's edge" />
+  <img src="apps/web/public/project/img/checkout.webp" width="30%" alt="Checkout: 7:00, 504 metres walked, 49% shorter than walking the list in order" />
+</p>
+<p><sub>Screenshots of the app as built (<code>apps/web/scripts/capture-project.mjs</code> keeps them current). The original design boards are in <a href="design/boards/">design/boards/</a>.</sub>
 </p>
 
 ## The route

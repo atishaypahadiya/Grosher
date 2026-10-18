@@ -8,7 +8,9 @@ Grocery navigation: a shopping list in, the shortest walk through the store out,
 items are checked off. One store map exists, a synthetic Walmart-style Supercenter in `packages/stores/demo`
 (30 aisles, 298 shelf categories, a 47,000-item catalog from the Instacart 2017 product list plus a seeded
 remainder) that resolves most everyday items at aisle precision without a survey. Real stores get surveyed with the built-in map editor. `DESIGN.md` is the visual contract; its boards are in
-`design/boards/`. The boards win on feel, `DESIGN.md` wins on numbers.
+`design/boards/`. The boards win on feel, `DESIGN.md` wins on numbers. The boards predate the "Papaya" warm
+half and are kept as drawn: for colour, ink and plates `DESIGN.md` is the reference, and the README shows
+screenshots of the app as built (`apps/web/public/project/img/`), not the boards.
 
 ## Layout
 
@@ -495,7 +497,7 @@ Layout: one grid, content 1120 px and prose 680 px from the same left edge; sect
 desktop (`--half-gap` above and below each section). Light per DESIGN.md: each section is its own gradient
 slice, meeting seamlessly (haze → lime-green → leaf → deep, then back up to leaf at the footer), with one or
 two blooms kept inside it vertically (a bloom clipped while still tinted draws a seam). Ink follows the region:
-soil on haze and lime-green, white on green; muted white only where the ground is #276E3E or darker or inside
+warm ink (`--ink-warm`) on haze and the mango hand-off, white on green; muted white only where the ground is #276E3E or darker or inside
 a card, full white on the leaf footer. Every figure carries an HTML comment with its source file or commit;
 update the page when the README bench, the fixtures, the perf gate or the index timings move.
 

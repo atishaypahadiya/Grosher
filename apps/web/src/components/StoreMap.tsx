@@ -513,7 +513,9 @@ export function StoreMap({
       </g>
 
       {/* labels */}
-      <g data-layer="labels" fill={SOIL_55} textAnchor="middle" fontWeight={500}>
+      {/* full soil on a cream halo (painted under the glyphs): at 55% with no halo the codes measured 2.5:1
+          where they cross department fills and location dots */}
+      <g data-layer="labels" fill={SOIL} stroke="#EDE9DB" strokeWidth={px(3)} strokeLinejoin="round" paintOrder="stroke" textAnchor="middle" fontWeight={500}>
         {labels.map((l) => (
           <text
             key={l.key}

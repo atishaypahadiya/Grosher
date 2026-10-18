@@ -219,6 +219,8 @@ button { cursor: pointer; touch-action: manipulation; }
 .offline-note { margin: 6px 0 2px; font-size: 13px; color: var(--status-guess); }
 /* under the add pill the ground is still orange: the hint, the mic note and "Listening…" are on-haze */
 .caption-line.on-haze.muted { color: var(--ink-warm-muted); }
+/* the footer links can sit on the lighter green when the list is short: full white there */
+.caption-line.edit-link { color: #FFFFFF; }
 .caption-line.on-haze.offline-note { color: var(--ink-warm); }
 .chip.guess { color: var(--status-guess); }
 .row-item.has-suggest { flex-wrap: wrap; }
@@ -336,7 +338,7 @@ button { cursor: pointer; touch-action: manipulation; }
 .share-export .scale { position: absolute; left: 0; top: 0; width: 390px; transform-origin: 0 0; transform: translate(0, 0) scale(2.7692); padding: 54px 16px 0; }
 .share-export .glass-deep { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(15, 42, 26, 0.26); }
 /* the card's top sits on the orange: a deeper fill keeps its white ink at 4.5:1 or better, live and in the export */
-.share-card.glass-deep, .list-sheet.glass-deep, .reset-banner.glass-deep { background: var(--glass-deep-warm); }
+.share-card.glass-deep, .list-sheet.glass-deep, .reset-banner.glass-deep, .picker-sheet.glass-deep { background: var(--glass-deep-warm); }
 .share-export .share-card.glass-deep { background: rgba(15, 42, 26, 0.58); }
 
 /* ---- Trip screen: interim glass panel until the 3D restyle (step 4) */

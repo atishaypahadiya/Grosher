@@ -5,7 +5,8 @@
 //   node scripts/contrast-gate.mjs http://localhost:4173            [--json out.json] [--report]
 //
 // Screens: list, the trip at three camera states (the start of the route, mid-route, the last leg to the
-// checkout) and checkout at 390×844; the project page at 390 and 1440, full height.
+// checkout) and checkout at 390×844; then the list with an item nothing can place (its unknown row, the
+// resolver note) and the Picker, Settings and Lists sheets; the project page at 390 and 1440, full height.
 // Targets: text ≥ 4.5:1 (≥ 3:1 at 24 px, or 18.66 px bold); icon glyphs in controls and focus rings ≥ 3:1.
 //
 // Method. Text: its colour (with its alpha and every ancestor's opacity) against the background sampled
@@ -258,6 +259,32 @@ try {
   await page.waitForTimeout(600);
   all.push(...(await measure(page, "checkout")));
   await ctx.close();
+
+  // ---- the sheets, and a list with an unknown item (no model answers here, so it stays unknown)
+  const sctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
+  const sp = await sctx.newPage();
+  sp.on("pageerror", (e) => errors.push(e.message));
+  await sp.goto(`${BASE}/`, { waitUntil: "load" });
+  await sp.waitForFunction(() => !!window.__grosherIndex, null, { timeout: 120_000 });
+  await sp.evaluate(() => document.fonts.ready);
+  const add = sp.getByLabel(/add items/i);
+  await add.fill("Greek yogurt, Bananas, Qwzx polish");
+  await add.press("Enter");
+  const where = sp.getByRole("button", { name: /tell me where/i }).first();
+  await where.waitFor({ timeout: 90_000 });
+  await sp.waitForTimeout(600);
+  all.push(...(await measure(sp, "list unknown")));
+  const sheet = async (open, name) => {
+    await open.click();
+    await sp.waitForTimeout(700);
+    all.push(...(await measure(sp, name)));
+    await sp.getByRole("button", { name: /^close$/i }).first().click();
+    await sp.waitForTimeout(500);
+  };
+  await sheet(where, "picker sheet");
+  await sheet(sp.getByRole("button", { name: /^settings$/i }), "settings");
+  await sheet(sp.getByRole("button", { name: /^lists$/i }).first(), "lists sheet");
+  await sctx.close();
 
   // ---- the project page at 390 and 1440, full height, motion reduced (the video and the token rest)
   // (a browser without the software-WebGL flags: with them Chromium cannot capture a page this tall)

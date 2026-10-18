@@ -118,6 +118,8 @@ let chosenStep = null;
   await ctx.addInitScript(clockShim);
   const page = await ctx.newPage();
   await openTrip(page);
+  // the list was typed from the keyboard: drop the input's focus ring before the still
+  await page.evaluate(() => document.activeElement instanceof HTMLElement && document.activeElement.blur());
   await page.waitForTimeout(400);
   await page.screenshot({ path: join(TMP, "list.png") });
 
