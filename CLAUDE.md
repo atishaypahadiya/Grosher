@@ -49,6 +49,7 @@ npm run eval:everyday -w @grosher/stores     # the blind 150-item fixture, offli
 npm run gen:textures -w @grosher/stores  # regenerate the placeholder textures + textures.json
 cd packages/core && node --test test/resolution-fixture.test.ts   # prints the per-layer hit-rate tables
 npm run dev -w @grosher/resolver         # wrangler dev on :8787 (anthropic provider only; needs .dev.vars)
+npm run chain:status -w @grosher/resolver   # the Mac → worker chain, one ✓ / ✗ line per link with the fix
 ```
 
 Web tests run in jsdom, where WebGL does not exist, so the trip screen under test always uses the flat
@@ -197,7 +198,7 @@ tags}`; the department comes from the category.
 - `worker` (production): the worker in `apps/resolver` at `workerUrl` (dev: `/api`, proxied to `wrangler
   dev` on :8787); the request is `{items, categories: {id, name}[]}` (caps: 48 KB body, 40 items, 400
   categories). The worker's `PROVIDER` var picks its upstream: `ollama` forwards the same batch to the
-  Mac's model through a Cloudflare Tunnel (`OLLAMA_UPSTREAM` + `OLLAMA_TOKEN` secrets, 25 s timeout), or
+  Mac's model through Tailscale Funnel and the gate (`OLLAMA_UPSTREAM` + `OLLAMA_TOKEN` secrets, 25 s timeout), or
   `anthropic` makes one Claude call (`claude-haiku-5-5`, effort low, strict tool output in the same terse
   schema). Both return the parsed rows; when the upstream is unreachable, misconfigured or rate-limited the
   worker still answers 200 with every item unknown and `degraded: true`, and the client treats that like an
@@ -211,37 +212,59 @@ No key ever ships in the client: `apps/web/test/bundle.test.ts` builds the app a
 
 **Worker deploy** (`apps/resolver`, `wrangler.toml` is committed: `PROVIDER = "ollama"`, `OLLAMA_MODEL`,
 `ALLOWED_ORIGIN`, the `[[unsafe.bindings]]` rate limiter at 30 calls per IP per minute; secrets stay in the
-CLI). Ollama has no auth, so the tunnel points at the gate, not at :11434:
+CLI). The chain is worker → Tailscale Funnel (`https://<machine>.<tailnet>.ts.net`, a stable hostname) →
+the gate on 127.0.0.1:11435 → Ollama on :11434. Ollama has no auth, so the Funnel points at the gate, never
+at :11434. Setup, once:
 
 ```bash
-# on the Mac, two long-running processes
-OLLAMA_TOKEN=$(openssl rand -hex 24); echo $OLLAMA_TOKEN      # keep it: the worker gets the same value
-OLLAMA_TOKEN=$OLLAMA_TOKEN npm run gate -w @grosher/resolver   # scripts/ollama-gate.mjs on 127.0.0.1:11435 → localhost:11434
-cloudflared tunnel --url http://localhost:11435                # quick tunnel: prints https://<words>.trycloudflare.com
+# token: owner-only file, never in a plist, an env file or the repo
+mkdir -p ~/.config/grosher && chmod 700 ~/.config/grosher
+umask 077; openssl rand -hex 24 | tr -d '\n' > ~/.config/grosher/ollama-token
 
-# once, from apps/resolver
+# Tailscale (the Mac app, logged in); Funnel enabled for the tailnet in the admin console (HTTPS + funnel attr)
+tailscale funnel --bg 11435                 # persists in tailscaled across reboots; `tailscale funnel status` shows the URL
+
+# LaunchAgents: dev.grosher.ollama (setenv, open the app, warm qwen3:8b) + dev.grosher.gate (KeepAlive)
+npm run chain:install -w @grosher/resolver  # stops a hand-run gate on :11435 first; --uninstall removes both
+
+# the worker, from apps/resolver
 npx wrangler login
-npx wrangler secret put OLLAMA_UPSTREAM     # paste the tunnel URL
-npx wrangler secret put OLLAMA_TOKEN        # paste the token
+npx wrangler secret put OLLAMA_UPSTREAM     # paste https://<machine>.<tailnet>.ts.net
+npx wrangler secret put OLLAMA_TOKEN        # paste the token file's contents
 npm run deploy -w @grosher/resolver         # prints https://grosher-resolver.<account>.workers.dev → VITE_RESOLVER_URL on Pages
+
+npm run chain:status -w @grosher/resolver   # ✓ / ✗ per link, with the fix
 ```
 
-**Resolver uptime.** The deployed resolver answers only while three processes are running on the Mac:
-Ollama (`ollama serve` or the menu-bar app, with `qwen3:8b` pulled; the app's warm-up keeps it loaded for
-24 h), the gate (`OLLAMA_TOKEN=… npm run gate -w @grosher/resolver`), and the tunnel (`cloudflared tunnel
---url http://localhost:11435`, or the named tunnel). If any of the three is down, or the Mac sleeps, the
-worker answers `degraded: true`, the installed app shows "Resolver offline · unknown items need a tap", and
-everything the catalog and memory can place still works. Lid closed = no resolver: keep the Mac awake
-(`caffeinate -s`) or run the three under launchd.
+**Resolver uptime.** Nothing is started by hand; after a reboot and login the chain comes back on its own:
 
-A quick tunnel gets a new URL every start; for a stable hostname make a named tunnel (`cloudflared tunnel
-create grosher`, route a DNS name to it, `ingress` → `http://localhost:11435`) and put that hostname in
-`OLLAMA_UPSTREAM` once. The gate only passes `POST /api/chat` and `GET /api/ps` with the exact bearer token
+| Link | Started by | Notes |
+| --- | --- | --- |
+| Ollama | `~/Library/LaunchAgents/dev.grosher.ollama.plist` → `apps/resolver/scripts/ollama-login.sh` at login | `launchctl setenv OLLAMA_HOST=0.0.0.0 OLLAMA_ORIGINS=* OLLAMA_KEEP_ALIVE=24h` (setenv does not survive a reboot, hence every login), then `open -ga Ollama` (an app already running on localhost only is restarted to read them), waits for `/api/version`, sends one 1-token `qwen3:8b` chat so the first real request is warm. Log `~/Library/Logs/grosher-ollama.log`. |
+| Gate | `~/Library/LaunchAgents/dev.grosher.gate.plist` | `RunAtLoad`, `KeepAlive`, `ThrottleInterval` 5: killed, it is back in under a second (measured 0.3 s). Node by its absolute PATH name (`/opt/homebrew/bin/node`, not the Cellar path). Token from `OLLAMA_TOKEN_FILE` (`~/.config/grosher/ollama-token`; the gate refuses a file others can read). Log `~/Library/Logs/grosher-gate.log`, one timestamped line per request. |
+| Funnel | tailscaled (the Tailscale app at login) | `tailscale funnel --bg` is stored in the node's serve config. |
+| Worker | Cloudflare | `/health` probes the chain, see below. |
+
+`npm run chain:status -w @grosher/resolver` prints one line each: Ollama up, model loaded, gate up (200 with
+the token, 401 without), Funnel live (a public `POST /api/chat` without the token returns 401; the hostname is
+resolved through 1.1.1.1 so the request comes back in through Tailscale's ingress, not over MagicDNS) and the
+worker's `/health`; each ✗ carries its fix, and the exit code is 1. If the Mac sleeps the worker answers
+`degraded: true`, the installed app shows "Resolver offline · unknown items need a tap", and everything the
+catalog and memory can place still works. Lid closed = no resolver: keep the Mac awake (`caffeinate -s`).
+`OLLAMA_HOST=0.0.0.0` also exposes the unauthenticated Ollama on the LAN (for the phone's dev path); only
+the gate is on the Funnel.
+
+The gate only passes `POST /api/chat` and `GET /api/ps` with the exact bearer token
 (constant-time compare, 64 KB bodies); everything else is 404 / 401. Set `ALLOWED_ORIGIN` in `wrangler.toml`
 to the Pages origin before deploying for real (the `*` is for local dev only; the worker returns 403 to any
 other origin once it is set). For Claude instead: `PROVIDER = "anthropic"` and `npx wrangler secret put
 ANTHROPIC_API_KEY` (`cp .dev.vars.example .dev.vars` for `wrangler dev`). Payload caps: 8 KB body, 40 items ×
-60 chars, 24 departments. Upstream error text never reaches the client; `/health` reports the provider.
+60 chars, 24 departments. Upstream error text never reaches the client. `GET /health` probes the upstream:
+for `ollama` one authenticated `GET /api/ps` through the Funnel and the gate (4 s timeout), 200
+`{ok, provider, upstream: "ok", ms, model, modelLoaded}` or 503 `{ok: false, degraded: true, reason}` with a
+fixed reason (not configured, timeout, unreachable, the gate rejected the token, Ollama down behind the gate,
+the gate down behind the Funnel: the gate marks its own answers with `x-grosher-gate`, so a 502 without it is
+Tailscale's); `anthropic` is not probed (a probe would be a paid call). It shares the per-IP limiter.
 `npx wrangler deploy --dry-run --outdir /tmp/w` validates the bundle without logging in.
 
 **Fixtures** (`packages/core/test/fixtures/`): `resolution.json` is the tuned set, 60 items (20 exact,
@@ -538,7 +561,7 @@ on soil). Check with `npm run build && npx vite preview`, load once, go offline,
 | Environment variables | `VITE_RESOLVER_PROVIDER=worker`, `VITE_RESOLVER_URL=https://grosher-resolver.atishaypahadiya3.workers.dev` |
 
 Live: the app at `https://grosher.pages.dev`, the worker at `https://grosher-resolver.atishaypahadiya3.workers.dev`
-(ollama upstream through the tunnel and gate), installed on an iPhone and verified offline on 17 Oct 2026.
+(ollama upstream through Tailscale Funnel and the gate), installed on an iPhone and verified offline on 17 Oct 2026.
 
 Pages runs `npm clean-install` itself before the build command. `apps/web/public/_headers` ships with the
 build: `sw.js`, `registerSW.js`, the manifest and the HTML are `no-cache` so a deploy reaches installed apps

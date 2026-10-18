@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { classifierFor, createApp } from "../src/index.ts";
 import { buildTool, classify, type Guess } from "../src/classify.ts";
-import { classifyOllama } from "../src/ollama.ts";
+import { classifyOllama, probeOllama } from "../src/ollama.ts";
 
 describe("resolver worker", () => {
   test("POST /resolve validates and returns the classifier's guesses", async () => {
@@ -70,12 +70,45 @@ describe("resolver worker", () => {
     expect(res.status).toBe(200);
     expect(((await res.json()) as { degraded?: boolean }).degraded).toBe(true);
     const health = await app.request("/health", {}, { PROVIDER: "ollama" });
-    expect(await health.json()).toEqual({ ok: true, provider: "ollama" });
+    expect(health.status).toBe(503);
+    expect(await health.json()).toEqual({ ok: false, provider: "ollama", degraded: true, reason: "OLLAMA_UPSTREAM or OLLAMA_TOKEN not set" });
     // upstream 502 / non-JSON content reject (→ degraded at the route)
     const bad = (async () => new Response("nope", { status: 502 })) as typeof fetch;
     await expect(classifyOllama({ url: "https://t", token: "x" }, { items: ["a"], categories: [{ id: "dairy", name: "Dairy" }] }, bad)).rejects.toThrow(/502/);
     const prose = (async () => new Response(JSON.stringify({ message: { content: "sure thing" } }))) as typeof fetch;
     await expect(classifyOllama({ url: "https://t", token: "x" }, { items: ["a"], categories: [{ id: "dairy", name: "Dairy" }] }, prose)).rejects.toThrow(/not JSON/);
+  });
+
+  test("/health probes the upstream through the gate and degrades with a fixed reason", async () => {
+    const env = { PROVIDER: "ollama", OLLAMA_UPSTREAM: "https://mac.example.ts.net/", OLLAMA_TOKEN: "t0k", OLLAMA_MODEL: "qwen3:8b" };
+    let seen: { url: string; auth: string } | null = null;
+    const up = (async (url: RequestInfo | URL, init?: RequestInit) => {
+      seen = { url: String(url), auth: (init?.headers as Record<string, string>).authorization };
+      return new Response(JSON.stringify({ models: [{ name: "qwen3:8b", model: "qwen3:8b" }] }));
+    }) as typeof fetch;
+    const ok = await createApp(undefined, up).request("/health", {}, env);
+    expect(ok.status).toBe(200);
+    expect(await ok.json()).toMatchObject({ ok: true, provider: "ollama", upstream: "ok", model: "qwen3:8b", modelLoaded: true });
+    expect(seen).toEqual({ url: "https://mac.example.ts.net/api/ps", auth: "Bearer t0k" });
+    const status = (code: number, headers: Record<string, string> = {}) => (async () => new Response("secret upstream text", { status: code, headers })) as typeof fetch;
+    const reason = async (f: typeof fetch) => {
+      const res = await createApp(undefined, f).request("/health", {}, env);
+      expect(res.status).toBe(503);
+      const text = await res.text();
+      expect(text).not.toMatch(/secret upstream text/);
+      return (JSON.parse(text) as { reason: string }).reason;
+    };
+    expect(await reason(status(401))).toMatch(/token/);
+    expect(await reason(status(502, { "x-grosher-gate": "1" }))).toMatch(/Ollama is not answering/);
+    expect(await reason(status(502))).toMatch(/gate is not answering/);
+    expect(await reason(status(404))).toMatch(/not point at the gate/);
+    expect(await reason((async () => Promise.reject(new TypeError("fetch failed"))) as typeof fetch)).toMatch(/unreachable/);
+    const slow = (async () => Promise.reject(Object.assign(new Error("t"), { name: "TimeoutError" }))) as typeof fetch;
+    expect(await reason(slow)).toMatch(/timed out/);
+    // the model not resident is still healthy, and says so
+    expect(await probeOllama({ url: "https://m", token: "t" }, (async () => new Response(JSON.stringify({ models: [] }))) as typeof fetch)).toMatchObject({ ok: true, modelLoaded: false });
+    // anthropic is not probed (a probe would be a paid call)
+    expect(await (await createApp().request("/health", {}, { ANTHROPIC_API_KEY: "x" })).json()).toEqual({ ok: true, provider: "anthropic", upstream: "not probed" });
   });
 
   test("classify maps the tool call back onto the items, drops unknown departments, bands confidence", async () => {

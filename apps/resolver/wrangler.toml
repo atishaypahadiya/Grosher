@@ -4,8 +4,8 @@ compatibility_date = "2025-09-01"
 compatibility_flags = ["nodejs_compat"]
 
 # Secrets are never vars; set them with the CLI after `npx wrangler login`:
-#   npx wrangler secret put OLLAMA_UPSTREAM     the tunnel URL to the Mac's gate (https://….trycloudflare.com or a named tunnel hostname)
-#   npx wrangler secret put OLLAMA_TOKEN        the same value the gate runs with (OLLAMA_TOKEN=… npm run gate)
+#   npx wrangler secret put OLLAMA_UPSTREAM     the Mac's Tailscale Funnel URL (https://<machine>.<tailnet>.ts.net → the gate on :11435)
+#   npx wrangler secret put OLLAMA_TOKEN        the gate's token (~/.config/grosher/ollama-token)
 #   npx wrangler secret put ANTHROPIC_API_KEY   only when PROVIDER = "anthropic"
 # In production set ALLOWED_ORIGIN to the web app's exact origin (the Pages URL); "*" is for local dev only.
 [vars]

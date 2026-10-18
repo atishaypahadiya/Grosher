@@ -549,10 +549,10 @@ td .num { font-size: 17px; }
       </li>
       <li class="card decision">
         <span class="eyebrow">Resolver</span>
-        <h3>A local model behind a tunnel and a token gate</h3>
+        <h3>A local model behind a Funnel and a token gate</h3>
         <dl>
           <div><dt>Problem</dt><dd>The installed app is HTTPS and cannot call a plain-HTTP model on the LAN, and no key may ship to the phone.</dd></div>
-          <div><dt>Choice</dt><dd>A Cloudflare Worker forwards to Ollama on my Mac through a Cloudflare Tunnel and a bearer-token gate. Secrets live only in the Worker.</dd></div>
+          <div><dt>Choice</dt><dd>A Cloudflare Worker forwards to Ollama on my Mac through Tailscale Funnel and a bearer-token gate, kept up across reboots by two LaunchAgents. Secrets live only in the Worker.</dd></div>
         </dl>
         <div class="result">
           <span class="eyebrow">Result</span>
@@ -603,7 +603,7 @@ td .num { font-size: 17px; }
     </div>
     <!-- components: apps/web/vite.config.ts (service worker), apps/web/src/lib/db.ts (IndexedDB), apps/web/src/lib/indexWorker.ts, apps/web/src/map3d/; apps/resolver/src/index.ts (origin check, rate limit); apps/resolver/scripts/ollama-gate.mjs; CLAUDE.md "Worker deploy" -->
     <figure class="card arch sect-body" aria-labelledby="arch-cap">
-      <figcaption id="arch-cap" class="sr-only">Architecture. Inside a dashed offline boundary, the iPhone runs the installed PWA with a service worker, IndexedDB, an index worker and three.js; it loads once from Cloudflare Pages over HTTPS. For items it cannot place, the PWA calls a Cloudflare Worker with an origin check and a rate limit, which goes through a Cloudflare Tunnel to a token gate and Ollama running qwen3:8b on the Mac.</figcaption>
+      <figcaption id="arch-cap" class="sr-only">Architecture. Inside a dashed offline boundary, the iPhone runs the installed PWA with a service worker, IndexedDB, an index worker and three.js; it loads once from Cloudflare Pages over HTTPS. For items it cannot place, the PWA calls a Cloudflare Worker with an origin check and a rate limit, which goes through Tailscale Funnel to a token gate and Ollama running qwen3:8b on the Mac.</figcaption>
       <!-- wide (≥ 1000 px) -->
       <svg class="wide" viewBox="0 0 1080 430" role="img" aria-labelledby="arch-cap">
         <defs><marker id="arr2" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L8 4L0 8z" fill="rgba(255,255,255,.85)"/></marker></defs>
@@ -639,8 +639,8 @@ td .num { font-size: 17px; }
         <text x="535" y="313" font-size="12" text-anchor="middle" fill-opacity=".85">rate limit · size caps</text>
         <path d="M632 290H668" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.2" marker-end="url(#arr2)"/>
         <rect class="box" x="672" y="262" width="150" height="56" rx="22"/>
-        <text x="747" y="286" font-size="15" font-weight="500" text-anchor="middle">Cloudflare</text>
-        <text x="747" y="304" font-size="15" font-weight="500" text-anchor="middle">Tunnel</text>
+        <text x="747" y="286" font-size="15" font-weight="500" text-anchor="middle">Tailscale</text>
+        <text x="747" y="304" font-size="15" font-weight="500" text-anchor="middle">Funnel</text>
         <path d="M824 290H862" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.2" marker-end="url(#arr2)"/>
         <!-- the mac -->
         <rect x="866" y="168" width="200" height="248" rx="26" fill="none" stroke="rgba(255,255,255,.45)"/>
@@ -682,7 +682,7 @@ td .num { font-size: 17px; }
         <text x="180" y="590" font-size="11.5" text-anchor="middle" fill-opacity=".85">origin check · rate limit · size caps</text>
         <path d="M180 620V646" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.2" marker-end="url(#arr3)"/>
         <rect class="box" x="90" y="650" width="180" height="44" rx="22"/>
-        <text x="180" y="677" font-size="15" font-weight="500" text-anchor="middle">Cloudflare Tunnel</text>
+        <text x="180" y="677" font-size="15" font-weight="500" text-anchor="middle">Tailscale Funnel</text>
         <path d="M180 696V722" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.2" marker-end="url(#arr3)"/>
         <rect x="8" y="726" width="344" height="88" rx="24" fill="none" stroke="rgba(255,255,255,.45)"/>
         <text x="24" y="746" font-size="11" font-weight="500" letter-spacing="1.4" fill-opacity=".85">MY MAC</text>
@@ -697,7 +697,7 @@ td .num { font-size: 17px; }
       <ul class="arch-notes">
         <li><strong>Offline by default.</strong> After one visit the app, the map, the catalog and its index are on the phone; a trip needs no network.</li>
         <li><strong>One way out.</strong> Only an item the catalog, your memory and the aisle signs cannot place goes to the model, in one batch per list.</li>
-        <li><strong>Nothing secret on the phone.</strong> The Worker holds the tunnel URL and the token; the gate passes two routes and nothing else.</li>
+        <li><strong>Nothing secret on the phone.</strong> The Worker holds the Funnel URL and the token; the gate passes two routes and nothing else.</li>
       </ul>
     </figure>
   </div>
@@ -913,7 +913,7 @@ td .num { font-size: 17px; }
     </div>
     <ul class="card limits sect-body">
       <li><strong>A generated layout</strong><span>The Demo Supercenter is generated; real aisles replace it after the Story Rd survey.</span></li>
-      <li><strong>The resolver needs my laptop awake</strong><span>The model runs on my Mac behind a tunnel and a token gate. When it sleeps, unknown items wait for a tap; everything the catalog and memory can place still works.</span></li>
+      <li><strong>The resolver needs my laptop awake</strong><span>The model runs on my Mac behind Tailscale Funnel and a token gate. When it sleeps, unknown items wait for a tap; everything the catalog and memory can place still works.</span></li>
       <li><strong>iOS standalone voice is unverified</strong><span>Hold-to-speak is hidden in home-screen mode until it is tested on a device; keyboard dictation covers it.</span></li>
       <li><strong>Tap to advance, no live dot</strong><span>Position moves when you tap Got it or Not here; there is no indoor positioning yet.</span></li>
       <li><strong>One store</strong><span>The app knows one map today.</span></li>

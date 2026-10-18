@@ -78,7 +78,8 @@ npm run bench               # the table above
 For the language-model layer, install [Ollama](https://ollama.com), `ollama pull qwen3:8b`, and start it with
 `OLLAMA_ORIGINS` allowing the app's origin. The phone uses the Mac's address from `apps/web/.env.local`
 (`VITE_OLLAMA_URL=http://192.168.1.20:11434`) while on the same Wi-Fi, or, installed, the Cloudflare worker in
-`apps/resolver` that reaches the same model through a tunnel. Without any of it the app still works: items the
+`apps/resolver` that reaches the same model through Tailscale Funnel and a token gate (setup and the
+LaunchAgents that keep it up across reboots: `apps/resolver/README.md`, `npm run chain:status -w @grosher/resolver`). Without any of it the app still works: items the
 catalog and your memory cannot place ask for one tap.
 
 ## Map a store

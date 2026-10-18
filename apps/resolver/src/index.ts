@@ -1,16 +1,19 @@
 // POST /resolve  {items: string[], categories: {id, name}[]} → {results: Guess[], degraded?: true}
 // Two upstreams, chosen by the PROVIDER var: "ollama" forwards to the Mac's
-// model through its tunnel (OLLAMA_UPSTREAM + OLLAMA_TOKEN secrets),
+// model through Tailscale Funnel and the gate (OLLAMA_UPSTREAM + OLLAMA_TOKEN secrets),
 // "anthropic" asks Claude (ANTHROPIC_API_KEY secret). Secrets live in the
 // worker's store (wrangler secret put …); the web app only ever sees this
 // endpoint. When the upstream is unreachable the answer is still 200: every
 // item unknown and `degraded: true`, never an error.
+// GET /health probes the upstream (ollama: one authenticated GET /api/ps
+// through the gate, 4 s) and answers 503 `degraded` with a fixed reason
+// when it fails.
 
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import Anthropic from "@anthropic-ai/sdk";
 import { classify, type ClassifyRequest, type Guess } from "./classify.ts";
-import { classifyOllama } from "./ollama.ts";
+import { classifyOllama, probeOllama } from "./ollama.ts";
 
 export type Provider = "anthropic" | "ollama";
 
@@ -18,7 +21,7 @@ export interface Env {
   /** which upstream answers; wrangler.toml sets "ollama" */
   PROVIDER?: Provider | string;
   ANTHROPIC_API_KEY?: string;
-  /** ollama: the tunnel URL to the Mac (secret) and the shared bearer token the gate checks (secret) */
+  /** ollama: the Funnel URL of the Mac's gate (secret) and the shared bearer token the gate checks (secret) */
   OLLAMA_UPSTREAM?: string;
   OLLAMA_TOKEN?: string;
   OLLAMA_MODEL?: string;
@@ -55,11 +58,26 @@ export function classifierFor(env: Env | undefined, fetchImpl: typeof fetch = fe
 
 const unknownRows = (items: string[]): Guess[] => items.map((item) => ({ item, category: null, confidence: 0 }));
 
-/** The app, with the classifier injectable for tests. */
-export function createApp(classifier?: Classifier) {
+/** The app, with the classifier and the health probe's fetch injectable for tests. */
+export function createApp(classifier?: Classifier, fetchImpl: typeof fetch = (...a) => fetch(...a)) {
   const app = new Hono<{ Bindings: Env }>();
-  app.use("*", async (c, next) => cors({ origin: c.env?.ALLOWED_ORIGIN ?? "*", allowMethods: ["POST", "OPTIONS"] })(c, next));
-  app.get("/health", (c) => c.json({ ok: true, provider: providerOf(c.env) }));
+  app.use("*", async (c, next) => cors({ origin: c.env?.ALLOWED_ORIGIN ?? "*", allowMethods: ["GET", "POST", "OPTIONS"] })(c, next));
+  app.get("/health", async (c) => {
+    const provider = providerOf(c.env);
+    // each call reaches the Mac, so it shares the per-IP limit (its own bucket)
+    if (c.env?.RATE_LIMITER) {
+      const { success } = await c.env.RATE_LIMITER.limit({ key: `health:${c.req.header("cf-connecting-ip") ?? "unknown"}` });
+      if (!success) return c.json({ error: "too many requests" }, 429);
+    }
+    const degraded = (reason: string) => c.json({ ok: false, provider, degraded: true, reason }, 503);
+    if (provider === "anthropic") return c.env?.ANTHROPIC_API_KEY ? c.json({ ok: true, provider, upstream: "not probed" }) : degraded("ANTHROPIC_API_KEY not set");
+    const url = c.env?.OLLAMA_UPSTREAM;
+    const token = c.env?.OLLAMA_TOKEN;
+    if (!url || !token) return degraded("OLLAMA_UPSTREAM or OLLAMA_TOKEN not set");
+    const model = c.env?.OLLAMA_MODEL || "qwen3:8b";
+    const p = await probeOllama({ url, token, model }, fetchImpl);
+    return p.ok ? c.json({ ok: true, provider, upstream: "ok", ms: p.ms, model, modelLoaded: p.modelLoaded }) : degraded(p.reason);
+  });
   app.post("/resolve", async (c) => {
     // origin: when an exact origin is configured, browsers must send it
     const allowed = c.env?.ALLOWED_ORIGIN ?? "*";
