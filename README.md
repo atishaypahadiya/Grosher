@@ -84,7 +84,13 @@ catalog and your memory cannot place ask for one tap.
 
 ## Map a store
 
-Open `#/edit` on a desktop. Add a floor-plan photo as the underlay and scale it to a known distance; tap along
+**One walk:** open `#/survey` on the phone. Calibrate once ("Walk 10 m"), then in the store tap Entrance and,
+per aisle, Sign photo → Start → walk → End; pin the landmarks (dairy wall, checkout lanes, exit). Steps come from
+the accelerometer, directions from the compass, and the aisle signs are read by a vision model on the Mac
+(`ollama pull qwen2.5vl:7b`) in the background. "Build draft map" gives aisles at their lengths and spacing, the
+signs' categories on them, and the doors; AirDrop the survey file to the Mac and fix the draft in the editor.
+
+**By hand:** open `#/edit` on a desktop. Add a floor-plan photo as the underlay and scale it to a known distance; tap along
 each walkable corridor (taps snap, loops close); mark the entrance, exit and checkout lanes; draw the shelf
 blocks and give each a department and an aisle sign; drop locations on the corridor beside the shelves and list
 the items that live there; one straight-on photo per department for the 3D textures; Validate until it is clean;

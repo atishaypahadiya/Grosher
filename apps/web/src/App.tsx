@@ -6,6 +6,8 @@ import { ListScreen } from "./components/ListScreen.tsx";
 import { TripScreen } from "./components/TripScreen.tsx";
 import { CheckoutScreen } from "./components/CheckoutScreen.tsx";
 import { EditorScreen } from "./editor/EditorScreen.tsx";
+import { SurveyScreen } from "./survey/SurveyScreen.tsx";
+import { storeParam, surveyedBundle } from "./survey/surveyed.ts";
 import { useResolution } from "./lib/useResolution.ts";
 import { toStop } from "@grosher/core";
 import { PickerSheet } from "./components/PickerSheet.tsx";
@@ -69,6 +71,8 @@ export function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [doneRecord?.id, historyState.loaded]);
   const [flat, setFlat] = useState<boolean>(() => load<boolean>(FLAT_KEY, false));
+  // bumped when a survey re-derives the draft being edited: the editor remounts on the new draft
+  const [editorEpoch, setEditorEpoch] = useState(0);
   useEffect(() => save(FLAT_KEY, flat), [flat]);
   const [paused, setPaused] = useState(false);
 
@@ -131,10 +135,26 @@ export function App() {
   // the error plate's own check (scripts/boot-resilience.mjs): a render error on purpose
   if (hash === "#/__crash") throw new Error("Crash test (#/__crash)");
 
+  if (hash.startsWith("#/survey")) {
+    return (
+      <SurveyScreen
+        bundle={bundle}
+        onExit={() => {
+          location.hash = "";
+        }}
+      />
+    );
+  }
+
   if (hash.startsWith("#/edit")) {
+    // a surveyed store's draft, else the package (an unknown store id falls back to it)
+    const sid = storeParam(hash);
+    const edited = (sid && sid !== bundle.store.storeId && surveyedBundle(bundle, sid)) || bundle;
     return (
       <EditorScreen
-        bundle={bundle}
+        key={`${edited.store.storeId}:${editorEpoch}`}
+        bundle={edited}
+        onRebuilt={() => setEditorEpoch((n) => n + 1)}
         focus={parseEditorFocus(hash)}
         onExit={() => {
           location.hash = "";

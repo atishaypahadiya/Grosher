@@ -61,7 +61,8 @@ export const SCHEMAS: Schema[] = [
     valid: (x) => isObj(x) && (x.flag === null || x.flag === undefined || (isObj(x.flag) && isStr(x.flag.id) && isNum(x.flag.date) && strArr(x.flag.items) && isNum(x.flag.misses) && (x.flag.aisle === null || isStr(x.flag.aisle)))) && (x.dismissedId === null || x.dismissedId === undefined || isStr(x.dismissedId)),
   },
   {
-    match: (k) => k.startsWith("grosher.editor."),
+    // an editor draft, and the draft a survey built (what that editor resets to)
+    match: (k) => k.startsWith("grosher.editor.") || k.startsWith("grosher.surveydraft."),
     version: 1,
     migrations: [(x) => x],
     valid: (d) => isObj(d) && isObj(d.store) && Array.isArray(d.store.nodes) && Array.isArray(d.store.edges) && Array.isArray(d.store.locations) && Array.isArray(d.catalog),
@@ -75,6 +76,8 @@ export const SCHEMAS: Schema[] = [
     valid: (x) => isObj(x) && Array.isArray(x.pending) && Array.isArray(x.llm) && Array.isArray(x.memory),
   },
   { match: (k) => k.startsWith("index:"), version: 1, migrations: [(x) => x], valid: (x) => x === null || (isObj(x) && isStr(x.hash) && isObj(x.parts)) },
+  { match: (k) => k === "grosher.calibration", version: 1, migrations: [(x) => x], valid: (x) => isObj(x) && isNum(x.paceMps) && isNum(x.distanceM) && (x.strideM === null || isNum(x.strideM)) },
+  { match: (k) => k === "grosher.survey.active", version: 1, migrations: [(x) => x], valid: (x) => x === null || isStr(x) },
   { match: (k) => k.startsWith("survey:"), version: 1, migrations: [(x) => x], valid: (x) => x === null || (isObj(x) && x.format === "grosher.survey") },
   { match: (k) => k.startsWith("survey-photo:"), version: 1, migrations: [(x) => x], valid: (x) => x === null || isObj(x) },
 ];

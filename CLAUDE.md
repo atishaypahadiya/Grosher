@@ -51,6 +51,7 @@ cd packages/core && node --test test/resolution-fixture.test.ts   # prints the p
 npm run dev -w @grosher/resolver         # wrangler dev on :8787 (anthropic provider only; needs .dev.vars)
 npm run chain:status -w @grosher/resolver   # the Mac → worker chain, one ✓ / ✗ line per link with the fix
 cd apps/web && node scripts/boot-resilience.mjs     # stale worker + old state + a deploy → the app renders (CI runs it)
+cd apps/web && node scripts/survey-flow.mjs http://localhost:4173 --shots /tmp/s   # survey mode end to end, mocked sensors (CI runs it)
 ```
 
 Web tests run in jsdom, where WebGL does not exist, so the trip screen under test always uses the flat
@@ -505,6 +506,65 @@ to package" (Chrome / Edge only: File System Access API) opens a directory picke
 Elsewhere, "Export JSON" downloads the same files to copy in by hand. "Import JSON" accepts a store, a
 catalog, or a `{store, catalog}` bundle. "Reset draft to the package" discards local edits.
 
+### Survey mode (`apps/web/src/survey`, route `#/survey`, phone first)
+
+Map a real store (Walmart Story Rd #5435 is the default) in one walk; the draft map comes out of the
+survey, and the editor fixes it on the Mac.
+
+- **Calibrate** once ("Walk 10 m", Start / Stop): stride = 10 / steps, pace = 10 / seconds, saved per phone
+  in `grosher.calibration`, with the walk's raw accelerometer samples (`trace`: a real trace can become a
+  detector fixture). **Walk:** Entrance (origin (0, 0); its compass heading is the reference axis, "into
+  the store", up on the map); per aisle Sign photo → Start → walk → End, quick tags (aisle number on a big
+  numpad, End cap, One side only) on the aisle being walked or the last one; Pin (Produce, Dairy wall,
+  Meat, Frozen, Bakery, Deli, Pharmacy, Checkout lane, Exit, Custom); Undo reverses exactly the last tap
+  (`SurveyAction`: an event, a photo, a tag change; event ids are made before the update so updaters stay
+  pure). Finish and Build save at once; otherwise the survey autosaves 600 ms behind the taps.
+- **Sensors** (`sensors.ts`, `steps.ts`): `requestSensors()` inside the tap (iOS asks for motion and
+  orientation then); steps from the magnitude of `accelerationIncludingGravity`: low-pass 4 Hz, minus a
+  0.4 Hz baseline, peaks above max(0.3 m/s², 1.6 × the high-frequency noise RMS, 0.4 × the running step
+  peak), ≥ 250 ms and ≥ 60% of the recent interval apart, re-armed below the baseline, and only in rhythm (a
+  peak counts with a neighbour within 1.5 s: a lone bump while standing is not a step). Heading:
+  `webkitCompassHeading` (iOS) or `deviceorientationabsolute` alpha, ≤ 2 Hz, circular mean per leg. No
+  accelerometer sample within 2.5 s of starting: the survey is timed (`motion: false`), every leg seconds ×
+  pace. **Fixtures** `test/fixtures/motion/*.json` are SYNTHETIC (`scripts/gen-motion-fixtures.mjs`, a
+  seeded walking model): six named traces were the tuning set and must be exact; eight `heldout-*` traces
+  (own seeds, random cadence 1.4–2.1 Hz, amplitude, noise, tilt, 30–60 Hz) were never tuned against:
+  156 of 160 steps, the miss is heldout-3 (fast walking, 2.06 Hz, sampled at 30 Hz: 14 of 18). Add real
+  phone traces as `recorded-*.json` (the calibration walk's `trace`).
+- **The survey file** (`model.ts`, versioned `{format: "grosher.survey", version: 1}`): raw `steps` (every
+  step's time), `headings` ([time, degrees]), `events` (the taps), `photos` (by id with status and reading),
+  the calibration; derived metres are never stored, always recomputed. In IndexedDB as `survey:<storeId>`,
+  photos as `survey-photo:<id>` (≤ 1024 px JPEG, q .82). Export = one JSON with the photos inline as data:
+  URLs, through the share sheet where there is one (AirDrop to the Mac) or a download; Import on any
+  browser.
+- **Signs** (`signQueue.ts`): capture never waits; photos queue and are read one at a time whenever online
+  (5 s backoff doubling to 5 min, at once on `online`), with a per-photo status in the list. The reader
+  (`signReaderFor` in `lib/resolver.ts`) is the worker's `POST /sign` (→ Funnel → gate → Ollama
+  `qwen2.5vl:7b`, `OLLAMA_VISION_MODEL`) or, on the dev path, Ollama's `/api/chat` directly with the
+  settings' "Sign model". Prompt, schema and parser are in `@grosher/core` (`resolve/sign.ts`), and
+  `matchSign()` runs the words through the category layer (a sign line or its fragments, "&" "/" "·",
+  generic words like "Foods" dropped) to categories at .6–.79, the aisle number off the sign, sign-group
+  headings, the unmatched rest. Measured on this Mac: 22 s a sign warm, 62 s cold (the 6 GB model loading),
+  24 s through the deployed worker; `ollama pull qwen2.5vl:7b` (6 GB) once. The gate's body cap is 2 MB.
+- **Derivation** (`derive.ts`, pure): legs between taps → metres (steps × stride, or seconds × pace) and a
+  direction relative to the reference heading, squared to the nearest right angle within 30° (else kept and
+  reported); dead reckoning gives every tap a point. `buildDraft` → the editor's `Draft`: taps as nodes
+  (merged within 0.8 m), the walk as edges, aisle ends on one line chained into cross aisles, shelf blocks
+  either side of each aisle (one side when tagged; up to 1.2 m, half the gap to the next parallel aisle;
+  dropped and reported when a walked leg crosses one), the sign's categories as locations along the aisle
+  (left / right in turn) with the reference categories re-homed onto them, an end cap location, pins as
+  nodes (Checkout lane → checkout, Exit → exit, departments → their label anchor). The built draft is
+  `grosher.surveydraft.<storeId>` (what the editor's Reset returns to) and the working copy
+  `grosher.editor.<storeId>`; `#/edit?store=<storeId>` opens it (`surveyed.ts`), and the inspector's Survey
+  panel re-derives with a corrected stride (asks first: it replaces the edits) or exports the file.
+- **Tests:** `test/survey-steps.test.ts`, `test/survey-derive.test.ts` (a simulated walk: lengths, spacing,
+  snapping, timing fallback, re-derive, undo, a draft that validates and routes),
+  `packages/core/test/sign.test.ts`, the worker's `/sign` tests, and `node scripts/survey-flow.mjs <base>
+  [--shots dir]` (CI): Playwright with the page clock faked and the sensors mocked (`survey-driver.mjs`, also
+  used by the contrast gate for all eleven survey screens): calibrate, three aisles with sign photos taken
+  offline, pins, an undo, back online, build, export, the editor at 1440, and the file imported into a fresh
+  browser. Sign photo fixtures: `test/fixtures/signs/` (rendered, not photographed).
+
 ### Project page (`apps/web/public/project/`, served at `/project/`)
 
 A static write-up, no React: `index.html` with its CSS inline (nothing render-blocking), `project.js` for the
@@ -654,6 +714,10 @@ the precache filled, manifest with name / icons 192 + 512 + maskable / `standalo
   packages (Node runs them directly).
 
 ## How to map a new store
+
+The quick way is **survey mode** (`#/survey` on the phone, see above): one walk gives a draft with aisles,
+spacing, sign categories, doors and landmarks; open it on the Mac (`#/edit?store=<id>`, or import the
+survey file there) and continue from step 1 below to fix it by hand. The full manual way:
 
 1. **Underlay.** Open `#/edit`, select tool, "Add image" with a floor-plan photo or sketch. Unlock it, drag
    to position, scroll or pinch to scale until a known distance (a 10 m scale bar, aisle spacing) matches;

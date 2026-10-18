@@ -9,7 +9,7 @@
 // degrades to "unknown" and shows a one-line note. A worker answer flagged
 // `degraded` (its upstream was down) throws too, so nothing is cached.
 
-import { llmMaxTokens, llmResultSchema, llmSystemPrompt, llmUserMessage, parseLlmResults, type LlmCategoryOption, type LlmGuess, type LlmWire } from "@grosher/core";
+import { llmMaxTokens, llmResultSchema, llmSystemPrompt, llmUserMessage, parseLlmResults, parseSignWords, SIGN_MAX_TOKENS, SIGN_PROMPT, SIGN_SCHEMA, type LlmCategoryOption, type LlmGuess, type LlmWire } from "@grosher/core";
 import { DEFAULT_SETTINGS, loadSettings, OLLAMA_DEFAULT_MODEL, type ProviderName, type ResolverSettings } from "./settings.ts";
 
 export { OLLAMA_DEFAULT_MODEL, type ProviderName };
@@ -157,6 +157,57 @@ export function workerProvider(fetchImpl: typeof fetch = fetch, url: string = RE
 /** the provider the settings name, pointed at their URL and model */
 export function providerFor(s: ResolverSettings, fetchImpl: typeof fetch = fetch): LlmProvider {
   return s.provider === "worker" ? workerProvider(fetchImpl, s.workerUrl) : ollamaProvider(fetchImpl, OLLAMA_TIMEOUT_MS, OLLAMA_COLD_TIMEOUT_MS, { url: s.ollamaUrl, model: s.model });
+}
+
+// ---------------------------------------------------------------- aisle signs (survey mode)
+
+/** a vision model reading one sign, a cold load of ~6 GB included */
+export const SIGN_TIMEOUT_MS = 120_000;
+
+export interface SignReader {
+  name: ProviderName;
+  /** one 1024 px JPEG (base64, no data: prefix) → the sign's lines; rejects on any failure, the queue retries */
+  read(imageB64: string): Promise<string[]>;
+}
+
+export function signReaderFor(s: ResolverSettings, fetchImpl: typeof fetch = fetch): SignReader {
+  const timed = async (url: string, body: unknown) => {
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), SIGN_TIMEOUT_MS);
+    try {
+      const res = await fetchImpl(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body), signal: ctl.signal });
+      if (!res.ok) throw new Error(`sign reader ${res.status}`);
+      return await res.json();
+    } finally {
+      clearTimeout(timer);
+    }
+  };
+  if (s.provider === "worker") {
+    const base = s.workerUrl.replace(/\/$/, "");
+    return {
+      name: "worker",
+      async read(image) {
+        const body = (await timed(`${base}/sign`, { image })) as { words?: string[]; degraded?: boolean };
+        if (body.degraded) throw new Error("the Mac's model is not answering");
+        return parseSignWords(body);
+      },
+    };
+  }
+  const base = s.ollamaUrl.replace(/\/$/, "");
+  return {
+    name: "ollama",
+    async read(image) {
+      const body = (await timed(`${base}/api/chat`, {
+        model: s.visionModel || "qwen2.5vl:7b",
+        stream: false,
+        keep_alive: "30m",
+        format: SIGN_SCHEMA,
+        options: { temperature: 0, num_predict: SIGN_MAX_TOKENS },
+        messages: [{ role: "user", content: SIGN_PROMPT, images: [image] }],
+      })) as { message?: { content?: string } };
+      return parseSignWords(body.message?.content ?? "");
+    },
+  };
 }
 
 export function defaultProvider(): LlmProvider {

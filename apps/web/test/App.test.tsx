@@ -243,7 +243,8 @@ describe("settings", () => {
     fireEvent.click(screen.getAllByRole("button", { name: /^settings$/i })[0]);
     const dialog = screen.getByRole("dialog", { name: /settings/i });
     expect(within(dialog).getByRole("radio", { name: /local ollama/i }).getAttribute("aria-checked")).toBe("true");
-    expect(within(dialog).getByLabelText(/model/i)).toBeTruthy();
+    expect(within(dialog).getByLabelText(/^model$/i)).toBeTruthy();
+    expect(within(dialog).getByLabelText(/sign model/i)).toBeTruthy();
     fireEvent.click(within(dialog).getByRole("radio", { name: /worker/i }));
     const url = within(dialog).getByLabelText(/resolver url/i) as HTMLInputElement;
     fireEvent.change(url, { target: { value: "https://r.example/" } });

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { ollamaProvider, OLLAMA_DEFAULT_MODEL, OLLAMA_MODEL, PROVIDER, providerFor, toGuessMap, workerProvider } from "../src/lib/resolver.ts";
+import { ollamaProvider, OLLAMA_DEFAULT_MODEL, OLLAMA_MODEL, PROVIDER, providerFor, signReaderFor, toGuessMap, workerProvider } from "../src/lib/resolver.ts";
 
 // a developer's .env.local may override the model and the URL; the tests respect it
 const MODEL = (import.meta.env as Record<string, string | undefined>).VITE_OLLAMA_MODEL ?? OLLAMA_DEFAULT_MODEL;
@@ -115,13 +115,32 @@ describe("llm providers", () => {
       sent = { url: String(u), model: init?.body ? (JSON.parse(String(init.body)) as { model?: string }).model : undefined };
       return new Response(JSON.stringify({ message: { content: JSON.stringify({ results: [] }) }, results: [] }));
     }) as typeof fetch;
-    const o = providerFor({ provider: "ollama", ollamaUrl: "http://10.0.0.9:11434/", model: "qwen3:14b", workerUrl: "/api" }, fake);
+    const o = providerFor({ provider: "ollama", ollamaUrl: "http://10.0.0.9:11434/", model: "qwen3:14b", workerUrl: "/api", visionModel: "qwen2.5vl:7b" }, fake);
     expect(o.name).toBe("ollama");
     await o.classify(["a"], depts);
     expect(sent).toEqual({ url: "http://10.0.0.9:11434/api/chat", model: "qwen3:14b" });
-    const w = providerFor({ provider: "worker", ollamaUrl: "http://localhost:11434", model: "qwen3:8b", workerUrl: "https://r.example" }, fake);
+    const w = providerFor({ provider: "worker", ollamaUrl: "http://localhost:11434", model: "qwen3:8b", workerUrl: "https://r.example", visionModel: "qwen2.5vl:7b" }, fake);
     expect(w.name).toBe("worker");
     await w.classify(["a"], depts);
     expect(sent!.url).toBe("https://r.example/resolve");
+  });
+
+  test("signReaderFor: one photo to the vision model, direct or through the worker; degraded rejects", async () => {
+    const calls: { url: string; body: Record<string, unknown> }[] = [];
+    let reply: unknown = { message: { content: JSON.stringify({ words: ["Aisle 12", "Cereal"] }) } };
+    const fake = (async (u: RequestInfo | URL, init?: RequestInit) => {
+      calls.push({ url: String(u), body: JSON.parse(String(init?.body)) });
+      return new Response(JSON.stringify(reply));
+    }) as typeof fetch;
+    const base = { ollamaUrl: "http://10.0.0.9:11434", model: "qwen3:8b", workerUrl: "https://r.example/", visionModel: "qwen2.5vl:3b" };
+    expect(await signReaderFor({ ...base, provider: "ollama" }, fake).read("QUJD")).toEqual(["Aisle 12", "Cereal"]);
+    expect(calls[0].url).toBe("http://10.0.0.9:11434/api/chat");
+    expect(calls[0].body).toMatchObject({ model: "qwen2.5vl:3b", stream: false });
+    expect((calls[0].body.messages as { images: string[] }[])[0].images).toEqual(["QUJD"]);
+    reply = { words: ["Paper Towels"] };
+    expect(await signReaderFor({ ...base, provider: "worker" }, fake).read("QUJD")).toEqual(["Paper Towels"]);
+    expect(calls[1]).toEqual({ url: "https://r.example/sign", body: { image: "QUJD" } });
+    reply = { words: [], degraded: true };
+    await expect(signReaderFor({ ...base, provider: "worker" }, fake).read("QUJD")).rejects.toThrow(/not answering/);
   });
 });

@@ -61,6 +61,10 @@ export function SettingsSheet({ settings, onSave, onReset, onClose }: SettingsSh
               <span className="eyebrow">Model</span>
               <input type="text" autoCapitalize="off" autoCorrect="off" spellCheck={false} value={draft.model} onChange={(e) => set("model", e.target.value)} placeholder="qwen3:8b" />
             </label>
+            <label className="st-field">
+              <span className="eyebrow">Sign model (survey)</span>
+              <input type="text" autoCapitalize="off" autoCorrect="off" spellCheck={false} value={draft.visionModel} onChange={(e) => set("visionModel", e.target.value)} placeholder="qwen2.5vl:7b" />
+            </label>
             {mixed && <p className="st-note warn">This page is https, so the browser blocks a plain-http Ollama on the LAN. Use the worker from the installed app.</p>}
           </>
         ) : (

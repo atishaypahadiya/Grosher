@@ -48,6 +48,8 @@ import { loadLists, mergeImported as mergeLists, saveLists, type List } from "..
 import { loadHistory, mergeImported as mergeHistory, saveHistory, type TripRecord } from "../lib/history.ts";
 import type { ItemMemory } from "@grosher/core";
 import type { Personal } from "./io.ts";
+import { EditorSurveyPanel } from "../survey/EditorSurveyPanel.tsx";
+import { demoSupercenter } from "@grosher/stores";
 
 type Tool = "select" | "corridor" | "fixture" | "location" | "doors" | "category" | "texture" | "measure";
 const TOOLS: { id: Tool; label: string; icon: ReactNode }[] = [
@@ -77,7 +79,7 @@ interface Layers {
 
 const draftKey = (storeId: string) => `grosher.editor.${storeId}`;
 
-export function EditorScreen({ bundle, onExit, focus = null }: { bundle: StoreBundle; onExit: () => void; focus?: EditorFocus | null }) {
+export function EditorScreen({ bundle, onExit, focus = null, onRebuilt }: { bundle: StoreBundle; onExit: () => void; focus?: EditorFocus | null; onRebuilt?: () => void }) {
   // a "possibly reset" review: the aisle in question is highlighted and its items listed until closed
   const [focusOpen, setFocusOpen] = useState(!!focus);
   const focusFixtures = useMemo(() => (focus?.aisle ? (bundle.store.fixtures ?? []).filter((f) => f.aisle === focus.aisle) : []), [bundle.store.fixtures, focus?.aisle]);
@@ -329,6 +331,9 @@ export function EditorScreen({ bundle, onExit, focus = null }: { bundle: StoreBu
         <div className="ed-stats">
           {s.nodes} nodes · {s.edges} edges · {s.locations} locations · {s.textures} textures · {s.unreachable} unreachable · {s.categories} categories
         </div>
+        <a className="pill-s" href="#/survey">
+          Survey
+        </a>
         <button type="button" className="pill-s" onClick={() => importRef.current?.click()}>
           Import JSON
         </button>
@@ -500,6 +505,7 @@ export function EditorScreen({ bundle, onExit, focus = null }: { bundle: StoreBu
           setIssues(null);
         }}
       >
+        <EditorSurveyPanel bundle={bundle} reference={{ categories: demoSupercenter.categories, departments: demoSupercenter.store.departments ?? [] }} onRebuilt={onRebuilt} />
         <ToolOptions
           tool={tool}
           draft={draft}

@@ -23,6 +23,8 @@
 // are the plate's, whatever the scene does.
 
 import { chromium } from "playwright";
+import { fileURLToPath } from "node:url";
+import { driveSurvey, prepare } from "./survey-driver.mjs";
 import { writeFileSync } from "node:fs";
 
 const BASE = (process.argv[2] ?? "http://localhost:4173").replace(/\/$/, "");
@@ -290,6 +292,19 @@ try {
   await sp.evaluate(() => document.fonts.ready);
   all.push(...(await measure(sp, "error plate")));
   await sctx.close();
+
+  // ---- survey mode (the cream screens) at 390×844, walked with a mocked sensor stream (survey-driver.mjs)
+  const vctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
+  const vp = await vctx.newPage();
+  vp.on("pageerror", (e) => errors.push(e.message));
+  await prepare(vp, { signs: [["12", "Cereal", "Breakfast", "Coffee", "Tea"], ["7", "International", "Indian", "Foods", "Atta & Rice"]] });
+  await driveSurvey(vp, {
+    base: BASE,
+    fixtures: fileURLToPath(new URL("../test/fixtures/signs", import.meta.url)),
+    goOffline: (off) => vctx.setOffline(off),
+    onScreen: async (name) => all.push(...(await measure(vp, `survey ${name}`))),
+  });
+  await vctx.close();
 
   // ---- the project page at 390 and 1440, full height, motion reduced (the video and the token rest)
   // (a browser without the software-WebGL flags: with them Chromium cannot capture a page this tall)
