@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   check:
-    name: typecheck · test · build · perf gate
+    name: typecheck · test · build · perf gate · contrast gate
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -60,3 +60,10 @@ jobs:
           npx vite preview --port 4173 --strictPort &
           for i in $(seq 1 40); do curl -sf http://localhost:4173/ > /dev/null && break; sleep 0.5; done
           node scripts/perf-gate.mjs http://localhost:4173
+
+      - name: Contrast gate (text ≥ 4.5:1, focus rings and icons ≥ 3:1)
+        working-directory: apps/web
+        run: |
+          curl -sf http://localhost:4173/ > /dev/null || (npx vite preview --port 4173 --strictPort &)
+          for i in $(seq 1 40); do curl -sf http://localhost:4173/ > /dev/null && break; sleep 0.5; done
+          node scripts/contrast-gate.mjs http://localhost:4173 --report

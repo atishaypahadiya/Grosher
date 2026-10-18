@@ -35,7 +35,13 @@ Blooms (position absolute, `border-radius:50%`, `filter: blur(24–40px)`): crea
 
 - On green regions: white `#FFFFFF`; muted `rgba(255,255,255,.85)`; eyebrow `rgba(255,255,255,.8)`.
 - On the orange regions (haze, apricot, the mango hand-off: the top of List, Checkout and the Trip header, the project page's hero and the top of its app section): `--ink-warm` `#2A0F06`, warm brown-black, never soil green; muted `--ink-warm-muted` `rgba(42,15,6,.72)`. Controls there (the list's ghost pills, the add pill's `+`, text, placeholder and mic glyph, the Trip header pills) take it too; voice-entry interim words are warm ink with a 2px lime underline (lime text cannot be read on orange).
-- Measured on the production build at 390×844 (text colour against the pixels behind it): every text on an orange slice is ≥ 4.5:1; the lowest in the app is the list header's eyebrow at 4.99, on the project page the app section's eyebrow at 4.55 (1440).
+- Targets, everywhere: text ≥ 4.5:1 (≥ 3:1 at 24px+, or 18.66px bold); focus rings and the glyphs of icon-only controls ≥ 3:1. Measured against the pixels actually behind each element on the production build by `apps/web/scripts/contrast-gate.mjs`, which CI runs on every push (list, trip, checkout at 390×844; the project page at 390 and 1440, full height) and which fails under target. The 3D map's own labels move with the scene and are reported, not gated.
+- Location chips on the list are quiet labels: no border, a soil fill `rgba(15,42,26,.34)` a shade darker than the card, solid white text (the likely band's 80% opacity and the amber guess text both stay ≥ 5.4:1).
+- The Trip sheet's white glass sits on a soil tint (`rgba(255,255,255,.1)` over `rgba(15,42,26,.34)`) and its secondary pills on `rgba(15,42,26,.3)`, so the muted lines, the lime eyebrow and Not here hold ≥ 4.5:1 over the bright scene.
+
+### Focus
+
+One ring for every control, set globally on `:focus-visible` and never per component: 2px `--ink-warm` against the control (`box-shadow: 0 0 0 2px`), then 2px lime outside it (`outline`, offset 2px). On orange the warm ink carries the contrast, on green the lime does, so one tone is ≥ 3:1 on any ground. It replaces a control's own shadow (glow, ring) while focused, which is why the soil ring on lime controls is drawn inset.
 - Rule: pick ink by the region's luminance, never by component. Contrast ≥ 4.5:1 for body, ≥ 3:1 at 24px+.
 
 ### Accent and surfaces
@@ -46,7 +52,7 @@ Blooms (position absolute, `border-radius:50%`, `filter: blur(24–40px)`): crea
 | `--glass` | `rgba(255,255,255,.14)` fill · `1px solid rgba(255,255,255,.28)` · `backdrop-filter: blur(18px) saturate(140%)` |
 | `--glass-strong` | same with fill `.20` (editor pills on cream use `rgba(255,255,255,.7)`) |
 | `--glass-deep-warm` | `rgba(15,42,26,.56)` fill, same border and blur: content cards that start on the warm half (the list sheet, the share card, the reset banner), so their white ink stays ≥ 4.5:1 over mango; `.58` in the share-card export (no blur) |
-| `--ring-soil` | `0 0 0 1.5px --soil`: any lime control on an orange or cream ground (the listening mic, the project page's hero button), as the editor's lime dots have |
+| `--ring-soil` | `inset 0 0 0 1.5px --soil`: any lime control on an orange or cream ground (the listening mic, the project page's hero button), as the editor's lime dots have; inset, so the focus ring lands outside it on the ground |
 | `--glass-deep` | `rgba(15,42,26,.22)` fill · `1px solid rgba(255,255,255,.28)` · same blur. Every card that holds content: share card, stat tiles, list sheet, "make the map better" rows. Eyebrows inside it are white 85%. White glass stays for pills, inputs, header controls and the Trip bottom sheet. |
 | `--hairline` | `rgba(255,255,255,.18)` row dividers inside glass; `.25` section rules |
 | Editor ground | `#F4F1E6` chrome, `#EDE9DB` canvas with 24px dot grid `rgba(15,42,26,.12)` |

@@ -34,7 +34,8 @@
   --glow-button: 0 0 24px rgba(212, 255, 74, 0.45);
   --glow-dot: 0 0 18px rgba(212, 255, 74, 0.8);
   /* lime on orange or cream gets a soil ring so it reads against a light ground (as the editor's dots do) */
-  --ring-soil: 0 0 0 1.5px var(--soil);
+  /* (inset, inside the control's edge: the focus ring then lands outside it, on the ground, and reads as a change) */
+  --ring-soil: inset 0 0 0 1.5px var(--soil);
 
   --status-guess: #F6D28C;
   --status-nothere: #F2B5B0;
@@ -79,7 +80,11 @@ body {
 }
 button, input, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; touch-action: manipulation; }
-:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
+/* Focus: one adaptive two-tone ring for every control (DESIGN.md §2 "Focus"): 2 px of warm ink against the
+   control, then 2 px of lime outside it. On orange the warm ink carries the contrast, on green the lime
+   does, so one of the two is ≥ 3:1 on any ground. !important because components draw their own shadows
+   (glows, rings), which the ring replaces while focused. */
+:focus-visible { outline: 2px solid var(--lime) !important; outline-offset: 2px !important; box-shadow: 0 0 0 2px var(--ink-warm) !important; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
@@ -201,7 +206,9 @@ button { cursor: pointer; touch-action: manipulation; }
 .row-item .name { font-weight: 400; font-size: 16px; }
 .row-item .sub { display: block; font-size: 12px; color: var(--ink-muted); margin-top: 2px; }
 .row-main { background: none; border: 0; padding: 0; text-align: left; color: inherit; flex: 1; min-width: 0; }
-.chip { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 999px; background: rgba(255, 255, 255, 0.16); font-size: 13px; white-space: nowrap; }
+/* a location chip is a quiet label, not a button: no border, a soil fill a shade darker than its card, solid
+   white text (≥ 4.5:1 on the list card even at the likely band's 80%) */
+.chip { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 999px; background: rgba(15, 42, 26, 0.34); color: #FFFFFF; font-size: 13px; white-space: nowrap; }
 .chip .dot { width: 9px; height: 9px; border-radius: 50%; background: rgba(255, 255, 255, 0.7); flex: none; }
 .chip.ghost { background: transparent; border: 1px solid var(--glass-border); }
 .chip.pending { opacity: 0.5; min-width: 36px; justify-content: center; }
@@ -370,6 +377,10 @@ button { cursor: pointer; touch-action: manipulation; }
 .seg { flex: 1; height: 3px; border-radius: 2px; background: rgba(255, 255, 255, 0.3); }
 .seg.done { background: #FFFFFF; }
 .seg.current { background: var(--lime); box-shadow: var(--glow-dot); }
+/* the trip sheet's white glass sits on a soil tint so its muted lines, its lime eyebrow and the secondary
+   pills hold 4.5:1 over the bright scene; the pills inside take a darker fill of their own */
+.trip-sheet.glass { background: linear-gradient(rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.1)), rgba(15, 42, 26, 0.34); }
+.trip-sheet .pill:not(.lime) { background: rgba(15, 42, 26, 0.3); }
 .trip-sheet { position: absolute; left: 12px; right: 12px; bottom: calc(12px + var(--safe-bottom)); padding: 18px 20px 20px; z-index: 3; }
 .trip-row { display: flex; justify-content: space-between; gap: 14px; align-items: flex-start; margin-top: 4px; }
 .trip-where { margin: 4px 0 0; font-size: 14px; }

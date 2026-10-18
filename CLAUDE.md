@@ -33,6 +33,7 @@ npm install                              # once, at the root
 npm test                                 # core (node --test), stores (node --test), web (vitest)
 npm run typecheck                        # tsc --noEmit in every workspace
 npm run dev                              # Vite dev server for apps/web, http://localhost:5173 (host: true for phones)
+cd apps/web && node scripts/contrast-gate.mjs http://localhost:4173 --report   # contrast gate against vite preview (CI runs it)
 npm run bench                            # core: route vs. list-order baseline, 5–30 stops, with each row's saved p10–p90, then a 14-stop range on its own seed
 
 cd packages/core && node --test --test-name-pattern="reroute" test/solver.test.ts     # one core test
@@ -543,7 +544,8 @@ on their next open; `/assets/*`, `/fonts/*` and the Workbox runtime are hashed a
 `Permissions-Policy` allows the microphone for voice entry. No `_redirects`: routes are hash-based and
 navigations fall back to `index.html` through the service worker. The build also fails on any `sk-ant` string
 (`bundle.test.ts`), and CI's perf gate runs on every push (`.github/workflows/ci.yml`,
-`apps/web/scripts/perf-gate.mjs`: three framings of the 3D view within 70 draw calls and 12,000 instances).
+`apps/web/scripts/perf-gate.mjs`: three framings of the 3D view within 70 draw calls and 12,000 instances),
+followed by the contrast gate (`apps/web/scripts/contrast-gate.mjs`).
 `apps/web/.env.local` is git-ignored (it was tracked once): a LAN Ollama address there would otherwise bake
 into the deployed bundle.
 
@@ -572,8 +574,10 @@ the precache filled, manifest with name / icons 192 + 512 + maskable / `standalo
   `--lime-green` name, moss `#86B84A`). Text on it is `--ink-warm` `#2A0F06` (muted `rgba(42,15,6,.72)`),
   never soil green and never white; white stays on green. Content cards that start on it use
   `--glass-deep-warm` (.56) so their white ink holds 4.5:1; lime on orange or cream gets `--ring-soil`.
-  Re-measure text against the pixels behind it after any ground change (the lowest on orange was 4.99 in
-  the app, 4.55 on the project page).
+  Focus is one global two-tone ring (`:focus-visible`: 2 px warm ink inside, 2 px lime outside), never per
+  component. `apps/web/scripts/contrast-gate.mjs` measures text (≥ 4.5:1), icon glyphs and focus rings
+  (≥ 3:1) against the pixels behind them on list, trip, checkout and the project page; CI fails under
+  target, so run it after any colour, glass or ground change.
 - Outfit for words, Doto for every number that matters. No emoji, no Inter / Roboto, no drop shadows (glows
   and blur only).
 - Only two labels on the map: the next stop and the checkout callout. Markers and labels never scale with zoom.

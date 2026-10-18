@@ -12,6 +12,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "perf-gate": "node scripts/perf-gate.mjs",
+    "contrast-gate": "node scripts/contrast-gate.mjs",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },

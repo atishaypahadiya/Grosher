@@ -24,7 +24,7 @@
   --lime: #D4FF4A; --guess: #F6D28C;
   --ink: #FFFFFF; --ink-muted: rgba(255,255,255,.85); --soil-muted: rgba(15,42,26,.72);
   --ink-warm: #2A0F06; --ink-warm-muted: rgba(42,15,6,.72); /* ink on the orange slices */
-  --ring-soil: 0 0 0 1.5px var(--soil); /* lime on a light ground */
+  --ring-soil: inset 0 0 0 1.5px var(--soil); /* lime on a light ground; inset, so the focus ring outside it reads as a change */
   --glass: rgba(255,255,255,.14); --glass-deep: rgba(15,42,26,.22); --glass-border: rgba(255,255,255,.28);
   --hairline: rgba(255,255,255,.18); --rule: rgba(255,255,255,.25);
   --blur: blur(18px) saturate(140%);
@@ -46,7 +46,7 @@ h1, h2, h3 { margin: 0; font-weight: 300; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .skip { position: absolute; left: 12px; top: -60px; z-index: 10; padding: 10px 16px; border-radius: 999px; background: var(--soil); color: #fff; text-decoration: none; font-weight: 500; }
 .skip:focus { top: 12px; }
-:focus-visible { outline: 2px solid var(--lime); outline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--lime) !important; outline-offset: 2px !important; box-shadow: 0 0 0 2px var(--ink-warm) !important; } /* the app's two-tone ring: warm ink inside, lime outside */
 .wrap { position: relative; z-index: 1; max-width: calc(var(--max) + 2 * var(--gutter)); margin: 0 auto; padding-inline: var(--gutter); }
 .prose-w { max-width: var(--prose); }
 
