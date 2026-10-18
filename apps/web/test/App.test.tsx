@@ -32,7 +32,7 @@ describe("list screen", () => {
     expect(rows[1].getAttribute("data-source")).toBe("fuzzy"); // egs → Eggs
     expect(within(rows[1]).getByText(/^Eggs$/)).toBeTruthy();
     expect(rows[2].getAttribute("data-source")).toBe("unknown");
-    expect(within(rows[2]).getByText(/not placed yet/i, { selector: ".sub" })).toBeTruthy();
+    expect(within(rows[2]).getByText(/needs a place/i, { selector: ".sub" })).toBeTruthy();
     expect(screen.getByRole("button", { name: /route 2 items/i })).toBeTruthy();
   });
 

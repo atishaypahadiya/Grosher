@@ -82,6 +82,11 @@ Read `src/types.ts`, then `graph.ts`, then `solver.ts`.
   three starts keep the 12-stop gap to exact under 10% (one start sat at 16.8%). The end cost picks the best
   checkout lane. `routeForOrder` scores a fixed order (the "vs. your list in order" baseline); `reroute`
   re-solves the remaining stops from the current node.
+- **Never throws on a location.** `Router.placeable(stops)` keeps each stop's locations the map has and
+  leaves out a stop with none (warned on the console); `solve`, `reroute` and `routeForOrder` route the rest
+  and list the left-out stop ids in `Route.unplaced`. The trip (`lib/trip.ts` `routed()`) moves those stops
+  from `remaining` to `unplaced` (checkout asks "Where did you find …?"), at start, Got it, Skip, add and
+  restore; the progress strip counts only the routed ones.
 - Constraints are penalty metres (`DEFAULT_WEIGHTS`): ambient-after-cold 60/stop, heavy-late 4/position,
   fragile-early 3/position, produce-after-fragile 15/stop. A new penalty must depend only on (stop being
   added, set already visited, position) or Held–Karp stops being exact. Add it in `prepare()`'s `penalty`
@@ -100,7 +105,7 @@ a weaker hit falls through to the next layer, and the llm layer is last so its g
 | d | `fuzzy` | trigram Dice and Damerau–Levenshtein over the item labels, threshold .72; token containment only when the query is the shorter side ("yogurt" ⊂ "greek yogurt", never "oat milk" → "milk") | .6–.95 |
 | e | `category` (fuzzy) | a near-identical spelling of a category label, threshold .9 ("birthday card" must not become cakes) | .6–.79 |
 | f | `llm` | the model picked a category id from the store's list → that category's slot (a department-id fallback keeps the old mocks working) | .30–.49 (the guess band; the wire's .5–.7 mapped down) |
-| g | `unknown` | no location; the row offers "Tell me where" | 0 |
+| g | `unknown` | no location; the row says "Needs a place" and offers "Tell me where" | 0 |
 
 The item labels live in a `CandidateIndex` (exact forms by text, trigram postings for the fuzzy shortlist,
 word postings for token containment), stored as flat typed-array postings (CSR) plus the form strings: the
@@ -115,6 +120,22 @@ cold (924 in the worker) and 141 ms warm (59 in the worker). Until it lands the 
 base rows, the pending rows and the signs (`ResolveContext.index` is the prebuilt index, searched before
 `catalog`'s own small one), and the model's batch waits. Where there is no Worker (jsdom) the build is
 synchronous. Categories have the same index, built on the main thread (298 rows).
+
+**Every answer is checked against the active map** (`ResolveContext.locations`, the store's location ids;
+core's `onMap()` wraps every layer): a location the map does not have is dropped; an answer left with none
+is re-placed through the category its shelf name or canonical name names (`categoryLayer`, exact), else it
+does not count and the item falls through, ending as unknown ("Needs a place"). So no stale id reaches the
+solver or storage. The model never names locations: it picks a category id from the store's list, enforced
+by the schema's enum and by `parseLlmResults` (anything else is null); the app maps the category to its slot.
+**Saved state on load** (`revalidateLearning` in `lib/learning.ts`, every load, logged when it changes
+anything): pending catalog entries at locations the map lacks are re-placed by category or emptied (kept,
+they ask); memory rows are re-placed by category at guess confidence (≤ .49) or kept as they are (they
+resolve as "Needs a place"); model answers naming a category the store lacks are dropped so the item is
+asked again; lists (names) are never touched. Why: on 16 Oct the model picked a *department* and the app
+cached that department's first location (oat milk → `DAIRY-8`, map v2); map v3 (17 Oct, `81b01d5`) renamed
+every location (`DAIRY-L1`…), and a confirmed (≥ .6) stale entry that answered before the full index was in
+made the solver throw at startup ("stop llm:oatmilk: unknown location DAIRY-8"). `test/stale-locations.test.tsx`
+and boot-resilience G / H keep it fixed.
 
 `text.ts` holds normalisation and similarity; `index.ts` the layers, the index, `pendingEntry()` (an llm
 result as a catalog entry with `source: "llm"` so it resolves offline next time) and the memory rules;
@@ -650,7 +671,8 @@ wrong shape threw in the first render, and the old worker served its cached shel
   that answers missing files with `index.html` as Pages does, and six cases: legacy worker + old-format
   state + an evicted entry chunk → deploy → the new build renders (measured 5.8 s, unaided); this worker's
   next open after a deploy; a missing lazy chunk (one reload); a chunk that keeps failing (one reload, then
-  the flat map); a render error (the plate, Reset exports then clears); no first render (the plate at 8 s).
+  the flat map); a render error (the plate, Reset exports then clears); no first render (the plate at 8 s), and two stale-map cases: a saved answer at a location the map lost (boots, "Needs a
+place", the route covers the rest) and a map change under a trip in progress (it resumes without that stop).
 
 ### Deploy: Cloudflare Pages (web) + Worker (resolver)
 

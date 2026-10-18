@@ -89,3 +89,27 @@ test("reroute from a mid-trip position with an added item", () => {
   assert.equal(r.order.length, remaining.length);
   assert.equal(r.legs[0].path[0], doneLeg.nodeId);
 });
+
+test("a stop whose locations are not on this map is left out, never thrown on; the rest is routed", () => {
+  const store = demoSupercenter.store;
+  const router = new Router(new WalkGraph(store));
+  const real = store.locations.slice(0, 3).map((l, i) => ({ id: `s${i}`, name: `S${i}`, locationIds: [l.id] }));
+  const stale = { id: "llm:oatmilk", name: "Oat Milk", locationIds: ["DAIRY-8"] }; // a v2 location, gone in v3
+  const mixed = { id: "mixed", name: "Mixed", locationIds: ["GONE-1", store.locations[5].id] };
+  const warn = console.warn;
+  const warned: string[] = [];
+  console.warn = (m: string) => warned.push(m);
+  try {
+    const r = router.solve({ stops: [...real, stale, mixed] });
+    assert.deepEqual(r.unplaced, ["llm:oatmilk"]);
+    assert.deepEqual([...r.order].sort(), ["mixed", "s0", "s1", "s2"]);
+    assert.equal(r.legs.find((l) => l.stopId === "mixed")?.locationId, store.locations[5].id);
+    assert.match(warned[0], /DAIRY-8/);
+    // only unplaceable stops: an empty route, still no throw
+    assert.deepEqual(router.solve({ stops: [stale] }).unplaced, ["llm:oatmilk"]);
+    assert.ok(Number.isFinite(router.routeForOrder([...real, stale]).distanceM));
+    assert.ok(Number.isFinite(router.reroute([stale, real[0]], store.entranceId).distanceM));
+  } finally {
+    console.warn = warn;
+  }
+});

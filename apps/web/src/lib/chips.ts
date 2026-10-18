@@ -24,7 +24,7 @@ export interface Chip {
 /** "A1 · dry goods", "Dairy · last", "A6 or endcap", "Bakery". */
 export function chipFor(store: StoreGraph, stop: Stop): Chip {
   const locs = stop.locationIds.map((id) => store.locations.find((l) => l.id === id)).filter((l): l is ShelfLocation => !!l);
-  if (locs.length === 0) return { text: "Not placed yet" };
+  if (locs.length === 0) return { text: "Needs a place" };
   const first = locs[0];
   const dept = locationDepartment(store, first);
   const label = (loc: ShelfLocation) => (AISLE.test(loc.aisle) ? loc.aisle.toUpperCase() : titleCase(locationDepartment(store, loc)?.name ?? loc.aisle));

@@ -9,7 +9,7 @@ import { categoryCandidates, confirmMemory, confirmed, demoteMemory, missed, nor
 import { buildCandidateIndex } from "./indexer.ts";
 import { departmentLocations, llmOptions, type StoreBundle } from "@grosher/stores";
 import { defaultProvider, fetchGuesses, type LlmProvider } from "./resolver.ts";
-import { EMPTY_LEARNING, loadLearning, mergedCatalog, saveLearning, type Learning } from "./learning.ts";
+import { EMPTY_LEARNING, loadLearning, mergedCatalog, revalidateLearning, saveLearning, type Learning } from "./learning.ts";
 
 export const RESOLVE_DEBOUNCE_MS = 150;
 /** the LLM batch waits for the list to go idle; never per keystroke */
@@ -72,11 +72,16 @@ export function useResolution(bundle: StoreBundle, items: string[], provider?: L
   const [warming, setWarming] = useState(false);
   const [offline, setOffline] = useState(false);
 
+  // the active map's locations: every answer is checked against them (core's onMap), saved ones on load
+  const locationSet = useMemo(() => new Set(store.locations.map((l) => l.id)), [store]);
   useEffect(() => {
     let live = true;
     setLoaded(false);
-    loadLearning(storeId).then((l) => {
+    loadLearning(storeId).then((saved) => {
       if (!live) return;
+      // saved locations against this map: an older map's ids are re-placed by category or left to ask
+      const { learning: l, report, changed } = revalidateLearning(saved, { locations: locationSet, categories, departments: (store.departments ?? []).map((d) => d.id) });
+      if (changed) console.warn(`[resolve] saved state checked against map v${store.version}:`, report);
       setLearning(l);
       setLoaded(true);
     });
@@ -102,7 +107,7 @@ export function useResolution(bundle: StoreBundle, items: string[], provider?: L
   const [results, setResults] = useState<ResolveResult[]>([]);
   const itemsKey = items.join("\n");
   useEffect(() => {
-    const run = () => setResults(resolveList(items, { catalog: own, index: full?.index, categories, departments: store.departments, departmentLocations: deptLocs, memory: learning.memory, llm: llmMap }));
+    const run = () => setResults(resolveList(items, { catalog: own, index: full?.index, categories, departments: store.departments, departmentLocations: deptLocs, locations: locationSet, memory: learning.memory, llm: llmMap }));
     const id = setTimeout(run, RESOLVE_DEBOUNCE_MS);
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -126,7 +131,7 @@ export function useResolution(bundle: StoreBundle, items: string[], provider?: L
         setLearning((l) => {
           const llm = new Map(l.llm);
           for (const k of keys) llm.set(k, guesses.get(k) ?? null);
-          const ctx = { catalog: mergedCatalog(bundle.catalog, l.pending), index: full?.index, categories, departments: store.departments, departmentLocations: deptLocs, memory: l.memory, llm };
+          const ctx = { catalog: mergedCatalog(bundle.catalog, l.pending), index: full?.index, categories, departments: store.departments, departmentLocations: deptLocs, locations: locationSet, memory: l.memory, llm };
           const pending = [...l.pending];
           for (const r of resolveList(unknown, ctx)) {
             const p = pendingEntry(r);

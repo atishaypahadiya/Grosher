@@ -26,20 +26,34 @@ export interface TripState {
   unplaced: string[];
 }
 
+/**
+ * Route `remaining` from `from`. A stop the map cannot place (its locations are not on this map: a saved
+ * answer from an older one) leaves `remaining` for `unplaced`, so the trip routes everything else, never
+ * waits on it, and checkout asks where it was.
+ */
+function routed(router: Router, remaining: Stop[], from: string, unplaced: string[]): { remaining: Stop[]; route: Route; unplaced: string[] } {
+  const route = router.reroute(remaining, from);
+  if (!route.unplaced?.length) return { remaining, route, unplaced };
+  const out = new Set(route.unplaced);
+  const names = remaining.filter((s) => out.has(s.id)).map((s) => s.name);
+  return { remaining: remaining.filter((s) => !out.has(s.id)), route, unplaced: [...unplaced, ...names.filter((n) => !unplaced.includes(n))] };
+}
+
 export function startTrip(router: Router, stops: Stop[], unplaced: string[] = []): TripState {
   const positionNodeId = router.graph.store.entranceId;
+  const r = routed(router, stops, positionNodeId, unplaced);
   return {
     original: stops,
-    remaining: stops,
+    remaining: r.remaining,
     got: [],
     skipped: [],
     positionNodeId,
     walkedM: 0,
-    route: router.solve({ stops }),
+    route: r.route,
     startedAt: Date.now(),
     visited: [positionNodeId],
     doneNodeIds: [],
-    unplaced,
+    unplaced: r.unplaced,
   };
 }
 
@@ -58,17 +72,16 @@ export function gotIt(router: Router, t: TripState): TripState {
   const leg = nextLeg(t);
   const stop = nextStop(t);
   if (!leg || !stop) return t;
-  const remaining = t.remaining.filter((s) => s.id !== stop.id);
+  const r = routed(router, t.remaining.filter((s) => s.id !== stop.id), leg.nodeId, t.unplaced);
   return {
     ...t,
-    remaining,
+    ...r,
     got: [...t.got, stop],
     positionNodeId: leg.nodeId,
     walkedM: t.walkedM + leg.distanceM,
-    route: router.reroute(remaining, leg.nodeId),
     visited: [...t.visited, ...leg.path.slice(1)],
     doneNodeIds: [...t.doneNodeIds, leg.nodeId],
-    doneAt: remaining.length === 0 ? Date.now() : t.doneAt,
+    doneAt: r.remaining.length === 0 ? Date.now() : t.doneAt,
   };
 }
 
@@ -76,21 +89,20 @@ export function gotIt(router: Router, t: TripState): TripState {
 export function skipStop(router: Router, t: TripState): TripState {
   const stop = nextStop(t);
   if (!stop) return t;
-  const remaining = t.remaining.filter((s) => s.id !== stop.id);
+  const r = routed(router, t.remaining.filter((s) => s.id !== stop.id), t.positionNodeId, t.unplaced);
   return {
     ...t,
-    remaining,
+    ...r,
     skipped: [...t.skipped, stop],
-    route: router.reroute(remaining, t.positionNodeId),
-    doneAt: remaining.length === 0 ? Date.now() : t.doneAt,
+    doneAt: r.remaining.length === 0 ? Date.now() : t.doneAt,
   };
 }
 
 export function addItem(router: Router, t: TripState, stop: Stop): TripState {
   if (t.remaining.some((s) => s.id === stop.id) || t.got.some((s) => s.id === stop.id)) return t;
-  const remaining = [...t.remaining, stop];
   const original = t.original.some((s) => s.id === stop.id) ? t.original : [...t.original, stop];
-  return { ...t, original, remaining, route: router.reroute(remaining, t.positionNodeId), doneAt: undefined };
+  const r = routed(router, [...t.remaining, stop], t.positionNodeId, t.unplaced);
+  return { ...t, ...r, original, doneAt: r.remaining.length === 0 ? (t.doneAt ?? Date.now()) : undefined };
 }
 
 export const elapsedMs = (t: TripState, now = Date.now()) => (t.doneAt ?? now) - t.startedAt;
@@ -165,21 +177,21 @@ export function fromSnapshot(router: Router, catalog: Stop[], snap: TripSnapshot
   const byId = new Map(catalog.map((s) => [s.id, s]));
   const pick = (ids: string[]) => ids.flatMap((id) => (byId.has(id) ? [byId.get(id)!] : []));
   if (!router.graph.nodes.has(snap.positionNodeId)) return null;
-  const remaining = pick(snap.remaining);
   try {
+    const r = routed(router, pick(snap.remaining), snap.positionNodeId, snap.unplaced ?? []);
     return {
       original: pick(snap.original),
-      remaining,
+      remaining: r.remaining,
       got: pick(snap.got),
       skipped: pick(snap.skipped),
       positionNodeId: snap.positionNodeId,
       walkedM: snap.walkedM,
-      route: router.reroute(remaining, snap.positionNodeId),
+      route: r.route,
       startedAt: snap.startedAt ?? Date.now(),
       doneAt: snap.doneAt,
       visited: snap.visited ?? [snap.positionNodeId],
       doneNodeIds: snap.doneNodeIds ?? [],
-      unplaced: snap.unplaced ?? [],
+      unplaced: r.unplaced,
     };
   } catch {
     return null;

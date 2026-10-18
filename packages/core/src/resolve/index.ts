@@ -126,6 +126,12 @@ export interface ResolveContext {
   /** ms epoch for time decay (confidence.ts); default Date.now() */
   now?: number;
   /**
+   * The active store's location ids. When given, every answer is checked against it: a location the map does
+   * not have (a cached answer from an older map) is dropped; an answer left with none is re-placed through
+   * its category when one names it, else it does not count, and the item ends as unknown ("ask").
+   */
+  locations?: ReadonlySet<string>;
+  /**
    * A prebuilt index over a larger catalog (the app's 47,000-row file, built in a worker) searched before
    * `catalog`'s own index; `catalog` then holds only the rows that change (base rows, pending entries).
    */
@@ -554,17 +560,18 @@ export function resolveItem(query: string, ctx: ResolveContext, own = candidates
   // before it is a fuzzy "strawberry bagel"); then fuzzy items, a near-identical category spelling, and
   // the model last.
   const sameItem = (a: ResolveResult, b: ResolveResult) => normalize(a.canonicalName) === normalize(b.canonicalName) || a.locationIds[0] === b.locationIds[0];
+  const valid = (r: ResolveResult | null) => onMap(r, ctx, catCands, now);
   const layers: (() => ResolveResult | null)[] = [
     () => {
-      const ex = exactLayer(query, cands, now);
-      const mem = ex && memoryLayer(query, ctx.memory, now);
+      const ex = valid(exactLayer(query, cands, now));
+      const mem = ex && valid(memoryLayer(query, ctx.memory, now));
       return mem && mem.confidence >= FALLTHROUGH && sameItem(mem, ex) ? mem : ex;
     },
-    () => memoryLayer(query, ctx.memory, now),
-    () => categoryLayer(query, catCands, now, "exact"),
-    () => fuzzyLayer(query, cands, threshold, now),
-    () => categoryLayer(query, catCands, now, "fuzzy"),
-    () => llmLayer(query, ctx),
+    () => valid(memoryLayer(query, ctx.memory, now)),
+    () => valid(categoryLayer(query, catCands, now, "exact")),
+    () => valid(fuzzyLayer(query, cands, threshold, now)),
+    () => valid(categoryLayer(query, catCands, now, "fuzzy")),
+    () => valid(llmLayer(query, ctx)),
   ];
   let weak: ResolveResult | null = null;
   for (const layer of layers) {
@@ -585,6 +592,26 @@ export function resolveItem(query: string, ctx: ResolveContext, own = candidates
     department: weak?.department,
     subcategory: weak?.subcategory,
   });
+}
+
+/**
+ * An answer against the active map (ctx.locations): its locations the map has; with none left, the
+ * location of the category its shelf name names (a cached guess from an older map keeps its aisle), else
+ * null, so the item falls through and, with nothing else, asks. Never an unknown location out of here.
+ */
+export function onMap(r: ResolveResult | null, ctx: ResolveContext, catCands: CandidateIndex, now = Date.now()): ResolveResult | null {
+  if (!r || !ctx.locations) return r;
+  const known = r.locationIds.filter((l) => ctx.locations!.has(l));
+  // (an answer with no location at all, a saved guess emptied by a map change, is no answer either)
+  if (known.length && known.length === r.locationIds.length) return r;
+  if (known.length) return { ...r, locationIds: known };
+  for (const name of [r.subcategory, r.canonicalName]) {
+    if (!name) continue;
+    const cat = categoryLayer(name, catCands, now, "exact");
+    const loc = cat?.locationIds.filter((l) => ctx.locations!.has(l)) ?? [];
+    if (loc.length) return { ...r, locationIds: loc, confidence: Math.min(r.confidence, cat!.confidence) };
+  }
+  return null;
 }
 
 export function resolveList(queries: string[], ctx: ResolveContext): ResolveResult[] {

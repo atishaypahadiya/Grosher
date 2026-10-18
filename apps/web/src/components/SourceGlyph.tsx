@@ -7,7 +7,7 @@ const TITLES: Record<ResolveSource, string> = {
   memory: "You found it here before",
   category: "The aisle sign says so",
   llm: "A guess from the model",
-  unknown: "Not placed yet",
+  unknown: "Needs a place",
 };
 
 export function SourceGlyph({ source }: { source: ResolveSource }) {

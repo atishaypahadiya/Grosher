@@ -61,23 +61,40 @@ export class Router {
     return this.from(a).dist.get(b) ?? Infinity;
   }
 
+  /**
+   * The stops this store can route: each keeps only the locations the map has; a stop left with none (a
+   * location from an older map, a cached guess) is left out and reported, never thrown on.
+   */
+  placeable(stops: Stop[]): { stops: Stop[]; unplaced: Stop[] } {
+    const out: Stop[] = [];
+    const unplaced: Stop[] = [];
+    for (const s of stops) {
+      const known = s.locationIds.filter((l) => this.graph.locationNode.has(l));
+      if (!known.length) unplaced.push(s);
+      else out.push(known.length === s.locationIds.length ? s : { ...s, locationIds: known });
+    }
+    if (unplaced.length) console.warn(`[route] left out ${unplaced.length} stop(s) with no location on this map: ${unplaced.map((s) => `${s.id} (${s.locationIds.join(", ") || "none"})`).join("; ")}`);
+    return { stops: out, unplaced };
+  }
+
   solve(input: SolveInput): Route {
     const t0 = performance.now();
     const store = this.graph.store;
     const start = input.fromNodeId ?? store.entranceId;
     const w: Weights = { ...DEFAULT_WEIGHTS, ...input.weights };
-    const stops = input.stops;
+    const { stops, unplaced } = this.placeable(input.stops);
+    const left = unplaced.map((s) => s.id);
 
     if (stops.length === 0) {
       const p = this.prepare(start, [], w);
-      return this.buildRoute(p, [], [], "empty", t0);
+      return { ...this.buildRoute(p, [], [], "empty", t0), unplaced: left };
     }
 
     const p = this.prepare(start, stops, w);
     const mode = input.mode ?? "auto";
     const exact = mode === "exact" || (mode === "auto" && stops.length <= EXACT_LIMIT);
     const { order, choice } = exact ? heldKarp(p) : heuristic(p);
-    return this.buildRoute(p, order, choice, exact ? "held-karp" : "heuristic", t0);
+    return { ...this.buildRoute(p, order, choice, exact ? "held-karp" : "heuristic", t0), unplaced: left };
   }
 
   /**
@@ -88,10 +105,11 @@ export class Router {
   routeForOrder(stops: Stop[], fromNodeId?: string, weights?: Partial<Weights>): Route {
     const t0 = performance.now();
     const start = fromNodeId ?? this.graph.store.entranceId;
-    const p = this.prepare(start, stops, { ...DEFAULT_WEIGHTS, ...weights });
-    const order = stops.map((_, i) => i);
+    const { stops: placed, unplaced } = this.placeable(stops);
+    const p = this.prepare(start, placed, { ...DEFAULT_WEIGHTS, ...weights });
+    const order = placed.map((_, i) => i);
     const { choice } = evaluateOrder(p, order);
-    return this.buildRoute(p, order, choice, "heuristic", t0);
+    return { ...this.buildRoute(p, order, choice, "heuristic", t0), unplaced: unplaced.map((s) => s.id) };
   }
 
   /** Reroute = solve the remaining stops from where the shopper is now. */

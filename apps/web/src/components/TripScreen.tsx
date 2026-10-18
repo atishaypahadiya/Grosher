@@ -68,7 +68,8 @@ export function TripScreen({ bundle, router, trip, flat, onFlatChange, onGotIt, 
   const leg = nextLeg(trip);
   const stop = nextStop(trip);
   const position = trip.got.length + trip.skipped.length + 1;
-  const total = trip.original.length;
+  // stops the map could not place left the route for the checkout question: not counted here
+  const total = trip.original.filter((s) => !trip.unplaced.includes(s.name)).length;
   const doneCount = trip.got.length + trip.skipped.length;
 
   const loc = leg ? store.locations.find((l) => l.id === leg.locationId) : undefined;

@@ -15,6 +15,9 @@
 //   D  a chunk that keeps failing → one reload, then the part's fallback (the 3D map → the flat map), no loop
 //   E  a render error → the plate; Reset local data downloads the lists, clears, and the app renders
 //   F  a first render that never comes → the plate at 8 s
+//   G  a saved answer at a location the map no longer has (the live bug: oat milk → DAIRY-8, confirmed on
+//      map v2) → the app boots, the stale item nothing names shows "Needs a place", the route covers the rest
+//   H  a map change under a trip in progress → the trip resumes without the removed location's stop
 //
 // Exit code 1 on any failure. CI runs it after the contrast gate.
 
@@ -277,6 +280,61 @@ try {
     const s = (Date.now() - t0) / 1000;
     check("F  boot watchdog: the plate after 8 s without a first render", plate && s >= 7.5 && s < 13, `${s.toFixed(1)} s`);
     await shot(page, "f-plate-watchdog");
+    await ctx.close();
+  }
+  // ---- G: a saved answer at a location the map no longer has
+  const stale = (name, id, extra = {}) => ({ id, name, locationIds: ["DAIRY-8"], source: "llm", department: "dairy", confirms: 2, misses: 0, confidence: 0.86, lastConfirmed: Date.now() - 86_400_000, ...extra });
+  const seedStale = (page, learning, list, trip) =>
+    page.evaluate(
+      async ([learning, list, trip]) => {
+        const db = await new Promise((r) => {
+          const q = indexedDB.open("grosher", 1);
+          q.onupgradeneeded = () => q.result.createObjectStore("kv");
+          q.onsuccess = () => r(q.result);
+        });
+        const tx = db.transaction("kv", "readwrite");
+        const kv = tx.objectStore("kv");
+        const now = Date.now();
+        kv.put(learning, "learning:demo-supercenter");
+        if (list) kv.put([{ id: "l_draft", name: "Draft", items: list, storeId: "demo-supercenter", createdAt: now, updatedAt: now, kind: "draft", usedAt: [] }], "lists:demo-supercenter");
+        kv.delete("index:demo-supercenter"); // the stale entry answers before the full index is in, as on the phone
+        await new Promise((r) => (tx.oncomplete = r));
+        db.close();
+        if (trip) localStorage.setItem("grosher.trip", JSON.stringify(trip));
+      },
+      [learning, list, trip],
+    );
+  {
+    deploy("new");
+    const { ctx, page } = await fresh();
+    await install(page);
+    await seedStale(page, { pending: [stale("Oat Milk", "llm:oatmilk", { subcategory: "plant milk" }), stale("Qwzx Gizmo", "llm:qwzxgizmo")], llm: [], memory: [] }, ["Oat milk", "Qwzx gizmo", "Bananas", "Bread"]);
+    await page.reload();
+    const ok = await rendered(page);
+    await page.getByText(/4 items · 3 placed/i).waitFor({ timeout: 30_000 }).catch(() => {});
+    const s = await page.evaluate(() => ({
+      plate: !!document.querySelector(".boot-fail"),
+      rows: Object.fromEntries([...document.querySelectorAll("li[data-source]")].map((r) => [r.querySelector(".name")?.textContent ?? r.textContent.slice(0, 20), { source: r.getAttribute("data-source"), sub: r.querySelector(".sub")?.textContent ?? "" }])),
+      route: [...document.querySelectorAll("button")].map((b) => b.textContent ?? "").find((t) => /^Route/.test(t)) ?? "",
+    }));
+    const gizmo = Object.entries(s.rows).find(([k]) => /qwzx/i.test(k))?.[1];
+    const oat = Object.entries(s.rows).find(([k]) => /oat milk/i.test(k))?.[1];
+    check("G  a saved answer at a location the map lost: boots, Needs a place, the route covers the rest", ok && !s.plate && gizmo?.source === "unknown" && /needs a place/i.test(gizmo.sub) && oat?.source !== "unknown" && /route 3 items/i.test(s.route), `oat milk ${oat?.source}, gizmo "${gizmo?.sub}", ${s.route.replace(/\s+/g, " ").slice(0, 20)}`);
+    await shot(page, "g-stale-location");
+    await ctx.close();
+  }
+
+  // ---- H: a map change under a trip in progress
+  {
+    deploy("new");
+    const { ctx, page } = await fresh();
+    await install(page);
+    const trip = { original: ["llm:qwzxgizmo", "milk", "bananas"], remaining: ["llm:qwzxgizmo", "milk", "bananas"], got: [], skipped: [], positionNodeId: "ENTRANCE", walkedM: 0, startedAt: Date.now() - 600_000 };
+    await seedStale(page, { pending: [stale("Qwzx Gizmo", "llm:qwzxgizmo")], llm: [], memory: [] }, null, trip);
+    await page.reload();
+    const resumed = await page.getByText(/next · 1 of 2/i).waitFor({ timeout: 60_000 }).then(() => true).catch(() => false);
+    const plate = await page.evaluate(() => !!document.querySelector(".boot-fail"));
+    check("H  a map change under a trip: it resumes, the removed location's stop left for checkout", resumed && !plate);
     await ctx.close();
   }
 } finally {

@@ -170,4 +170,6 @@ export interface Route {
   costM: number; // distance + penalty, what the solver minimized
   solver: "held-karp" | "heuristic" | "empty";
   solveMs: number;
+  /** stops left out because none of their locations exist on this map (never thrown on) */
+  unplaced?: string[];
 }

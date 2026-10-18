@@ -208,7 +208,7 @@ export function ListScreen({ store, items, results, plan, baselineM, usual, aski
                       {r && <SourceGlyph source={r.source} />}
                       {r?.canonicalName ?? name}
                     </span>
-                    {r && unknown && <span className="sub">{r.department ? `Not placed yet · probably ${r.department}` : "Not placed yet"}</span>}
+                    {r && unknown && <span className="sub">{r.department ? `Needs a place · probably ${r.department}` : "Needs a place"}</span>}
                   </button>
                   {suggestion && (
                     <button type="button" className="chip suggest" data-testid="suggest" onClick={() => onReplace?.(name, suggestion.text)}>
