@@ -1,5 +1,5 @@
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { App } from "../src/App.tsx";
 import { isIosStandalone, splitSpeech, speechSupported } from "../src/lib/speech.ts";
 import { dbClearMemoryFallback } from "../src/lib/db.ts";
@@ -81,6 +81,24 @@ describe("voice entry", () => {
     r.onend?.();
     expect(await screen.findByText(/microphone not allowed · type instead/i)).toBeTruthy();
     expect(screen.getByRole("button", { name: /hold to speak/i })).toBeTruthy();
+  });
+
+  test("iOS home-screen app: a hint instead of the mic; Try it here shows the mic on this phone", async () => {
+    const ua = vi.spyOn(navigator, "userAgent", "get").mockReturnValue("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15");
+    Object.defineProperty(navigator, "standalone", { value: true, configurable: true });
+    try {
+      expect(isIosStandalone()).toBe(true);
+      render(<App />);
+      expect(screen.queryByRole("button", { name: /hold to speak/i })).toBeNull();
+      const hint = screen.getByTestId("voice-hint");
+      expect(hint.textContent).toMatch(/voice works in safari, or use the keyboard mic/i);
+      fireEvent.click(within(hint).getByRole("button", { name: /try it here/i }));
+      expect(await screen.findByRole("button", { name: /hold to speak/i })).toBeTruthy();
+      expect(screen.queryByTestId("voice-hint")).toBeNull();
+    } finally {
+      ua.mockRestore();
+      delete (navigator as unknown as { standalone?: boolean }).standalone;
+    }
   });
 
   test("the mic hides in iOS standalone mode and when the API is missing", () => {

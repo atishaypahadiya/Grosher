@@ -530,7 +530,9 @@ export function llmLayer(query: string, ctx: ResolveContext): ResolveResult | nu
   const guess = ctx.llm?.get(normalize(query));
   if (!guess) return null;
   const cat = ctx.categories?.find((c) => c.id === guess.category);
-  const locs = cat ? [cat.locationId] : (ctx.departmentLocations?.[guess.category] ?? []).slice(0, MAX_LLM_LOCATIONS);
+  // a department id (answers from before the categories, the old mocks) places only in a store without
+  // categories: with them, an aisle picked by department is a guess about nothing ("sunglasses" → dry goods)
+  const locs = cat ? [cat.locationId] : ctx.categories?.length ? [] : (ctx.departmentLocations?.[guess.category] ?? []).slice(0, MAX_LLM_LOCATIONS);
   if (!locs.length) return null;
   return result(query, {
     locationIds: locs,
@@ -577,11 +579,11 @@ export function resolveItem(query: string, ctx: ResolveContext, own = candidates
   for (const layer of layers) {
     const r = layer();
     if (!r) continue;
-    if (r.confidence >= FALLTHROUGH) return r;
+    if (r.confidence >= FALLTHROUGH) return withStorage(r, ctx);
     if (!weak || r.confidence > weak.confidence) weak = r;
   }
   // The llm layer is last: a weak guess from it still beats "unknown" (the UI shows it as a guess).
-  if (weak?.source === "llm") return weak;
+  if (weak?.source === "llm") return withStorage(weak, ctx);
   // nothing confident: an unknown, but keep the best weak guess's name so the UI can show it
   return result(query, {
     locationIds: [],
@@ -612,6 +614,29 @@ export function onMap(r: ResolveResult | null, ctx: ResolveContext, catCands: Ca
     if (loc.length) return { ...r, locationIds: loc, confidence: Math.min(r.confidence, cat!.confidence) };
   }
   return null;
+}
+
+const COLD: ItemTag[] = ["chilled", "frozen"];
+const STORAGE_CACHE = new WeakMap<Category[], Map<string, ItemTag[]>>();
+
+/**
+ * Chilled and frozen describe the shelf, not the words: they come from the category at the answer's first
+ * location (shelf-stable oat milk in the drinks aisle is ambient, oat milk in the dairy case is chilled),
+ * whatever the catalog row, the model or an old cached answer said. Other tags (heavy, fragile, produce)
+ * stay. A location with no category keeps the answer's own.
+ */
+export function withStorage(r: ResolveResult, ctx: ResolveContext): ResolveResult {
+  if (!ctx.categories?.length || !r.locationIds.length) return r;
+  let byLoc = STORAGE_CACHE.get(ctx.categories);
+  if (!byLoc) {
+    byLoc = new Map();
+    for (const c of ctx.categories) if (!byLoc.has(c.locationId)) byLoc.set(c.locationId, (c.tags ?? []).filter((t) => COLD.includes(t)));
+    STORAGE_CACHE.set(ctx.categories, byLoc);
+  }
+  const cold = byLoc.get(r.locationIds[0]);
+  if (!cold) return r;
+  const tags = [...r.tags.filter((t) => !COLD.includes(t)), ...cold];
+  return tags.length === r.tags.length && tags.every((t, i) => t === r.tags[i]) ? r : { ...r, tags };
 }
 
 export function resolveList(queries: string[], ctx: ResolveContext): ResolveResult[] {

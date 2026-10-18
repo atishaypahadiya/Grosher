@@ -275,7 +275,18 @@ button { cursor: pointer; touch-action: manipulation; }
 .usual-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 16px; margin: 8px 0 4px; border-radius: 18px; background: var(--glass-deep); border: 1px solid var(--glass-border); }
 .chip.action { min-height: 36px; }
 
-.cta-wrap { position: fixed; left: 50%; transform: translateX(-50%); width: 100%; max-width: var(--column); bottom: 0; z-index: 5; padding: 12px var(--gutter) calc(10px + var(--safe-bottom)); display: grid; gap: 8px; justify-items: center; }
+/* the list's footer: the CTA and its hint on one plate (the ground's deep green, fading in over its top 28px)
+   across the full width, so a row scrolling under it is covered, never overprinted; the list pads its bottom
+   by the footer's measured height (--footer-h, ListScreen) so the last row scrolls fully clear */
+.cta-wrap {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
+  padding: 28px max(var(--gutter), calc((100vw - var(--column)) / 2 + var(--gutter))) calc(10px + var(--safe-bottom));
+  display: grid; gap: 8px; justify-items: center;
+  background: linear-gradient(180deg, rgba(24, 77, 46, 0) 0, rgba(24, 77, 46, 0.97) 28px, var(--deep) 100%);
+}
+.list-page { padding-bottom: calc(var(--footer-h, 160px) + 16px); }
+.voice-hint { margin: 6px 4px 0; font-size: 13px; }
+.voice-hint button { background: none; border: 0; padding: 0 2px; font: inherit; color: inherit; text-decoration: underline; cursor: pointer; }
 .cta {
   width: 100%;
   display: flex;

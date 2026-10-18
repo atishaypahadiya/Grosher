@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, test } from "vitest";
 import { load } from "../src/lib/storage.ts";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { App } from "../src/App.tsx";
-import { dbClearMemoryFallback } from "../src/lib/db.ts";
-import { saveLearning } from "../src/lib/learning.ts";
+import { dbClearMemoryFallback, dbGet } from "../src/lib/db.ts";
+import { saveLearning, type Learning } from "../src/lib/learning.ts";
 
 beforeEach(() => {
   localStorage.clear();
@@ -64,6 +64,20 @@ describe("list screen", () => {
 });
 
 describe("trip mode", () => {
+  test("checking off a model guess moves the guess up its ladder; it writes no memory, so never \"yours\"", async () => {
+    render(<App />);
+    add("zorbo milk");
+    const row = () => within(screen.getByRole("list")).getAllByRole("listitem")[0];
+    await waitFor(() => expect(row().getAttribute("data-source")).toBe("llm"), { timeout: 10_000 });
+    fireEvent.click(await findButton(/route 1 item/i));
+    fireEvent.click(screen.getByRole("button", { name: /got it/i }));
+    await waitFor(async () => {
+      const l = await dbGet<Learning | null>("learning:demo-supercenter", null);
+      expect(l?.pending.find((p) => /zorbo/i.test(p.name))?.confirms).toBe(1);
+      expect(l?.memory.some((m) => /zorbo/i.test(m.name))).toBe(false);
+    });
+  });
+
   test("list in, route, check off, reroute, checkout card, share and usual trip", async () => {
     render(<App />);
     add("bread, milk, bananas, ice cream, unicorn");

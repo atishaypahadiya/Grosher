@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ClipboardEvent, type FormEvent } from
 import { band, suggestFromMemory, type ItemMemory, type ResolveResult, type Route, type StoreGraph } from "@grosher/core";
 import { BAND_OPACITY, chipForResult } from "../lib/chips.ts";
 import { minutesNum } from "../lib/format.ts";
-import { listen, speechSupported, type SpeechStop } from "../lib/speech.ts";
+import { listen, speechSupported, tryVoiceHere, voiceHint, type SpeechStop } from "../lib/speech.ts";
 import { Num } from "./Num.tsx";
 import { SourceGlyph } from "./SourceGlyph.tsx";
 import { IconArrowRight, IconChevronDown, IconClose, IconGear, IconMic, IconPlus } from "./Icons.tsx";
@@ -51,6 +51,18 @@ export function ListScreen({ store, items, results, plan, baselineM, usual, aski
   const [micNote, setMicNote] = useState<string | null>(null);
   const stopRef = useRef<() => void>(() => {});
   useEffect(() => () => stopRef.current(), []);
+  // the footer's height pads the list, so the last row scrolls clear of it (safe area and hint included)
+  const pageRef = useRef<HTMLElement>(null);
+  const footerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const footer = footerRef.current;
+    const page = pageRef.current;
+    if (!footer || !page || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => page.style.setProperty("--footer-h", `${Math.ceil(footer.getBoundingClientRect().height)}px`));
+    ro.observe(footer);
+    return () => ro.disconnect();
+  }, []);
+  const [voice, setVoice] = useState(voiceHint);
 
   const byQuery = new Map(results.map((r) => [r.query, r]));
   // results lag the items by a debounce: count only rows that are still on the list
@@ -94,7 +106,7 @@ export function ListScreen({ store, items, results, plan, baselineM, usual, aski
   const savedPct = plan && baselineM > 0 ? Math.round((1 - plan.distanceM / baselineM) * 100) : 0;
 
   return (
-    <main className="screen page list-page">
+    <main className="screen page list-page" ref={pageRef}>
       <header className="list-head on-haze">
         <div>
           <span className="eyebrow">{store.name ?? "Store"}</span>
@@ -151,6 +163,25 @@ export function ListScreen({ store, items, results, plan, baselineM, usual, aski
         )}
       </form>
       {hint && <p className="caption-line muted on-haze">{hint}</p>}
+      {voice && (
+        <p className="caption-line muted on-haze voice-hint" data-testid="voice-hint">
+          Voice works in Safari, or use the keyboard mic.
+          {voice.canTry && (
+            <>
+              {" "}
+              <button
+                type="button"
+                onClick={() => {
+                  tryVoiceHere();
+                  setVoice(null);
+                }}
+              >
+                Try it here
+              </button>
+            </>
+          )}
+        </p>
+      )}
       {micNote && <p className="caption-line offline-note on-haze">{micNote}</p>}
       {listening && <p className="caption-line muted on-haze" data-testid="listening">Listening… release to add</p>}
 
@@ -248,7 +279,7 @@ export function ListScreen({ store, items, results, plan, baselineM, usual, aski
         <a href="/project/">About</a>
       </p>
 
-      <div className="cta-wrap">
+      <div className="cta-wrap" ref={footerRef}>
         <button type="button" className="cta" onClick={onRoute} disabled={!resume && (!plan || placed === 0)}>
           <span className="label">
             {resume ? `Resume trip · ${resume.remaining} left` : `Route ${placed} ${placed === 1 ? "item" : "items"}`}

@@ -176,7 +176,8 @@ export function App() {
           onGotIt={() => {
             const leg = trip.route.legs[0];
             const stop = trip.remaining.find((s) => s.id === leg?.stopId);
-            if (stop && leg?.locationId) res.gotIt(stop.name, leg.locationId, stop.tags, stop.query);
+            // a model guess checked off moves up its own ladder; it is not the shopper placing it ("yours")
+            if (stop && leg?.locationId) res.gotIt(stop.name, leg.locationId, stop.tags, stop.query, stop.source === "llm");
             setTrip(gotIt(router, trip));
           }}
           onSkip={() => {

@@ -14,7 +14,7 @@ const locations = new Set(STORE.locations.map((l) => l.id));
 
 // as the phone stored them: bare (pre-envelope) values, locations from map v2
 const oatMilk = { id: "llm:oatmilk", name: "Oat Milk", locationIds: ["DAIRY-8"], source: "llm", department: "dairy", subcategory: "plant milk", confidence: 0.86, confirms: 2, misses: 0, lastConfirmed: Date.now() - 86_400_000 }; // confirmed twice, as on the phone
-const gizmo = { id: "llm:qwzxgizmo", name: "Qwzx Gizmo", locationIds: ["DAIRY-8"], source: "llm", department: "dairy", confidence: 0.4, confirms: 0, misses: 0 };
+const gizmo = { id: "llm:qwzxgizmo", name: "Qwzx Gizmo", locationIds: ["DAIRY-8"], source: "llm", department: "dairy", confidence: 0.86, confirms: 2, misses: 0 };
 const paneerMemory = { name: "Paneer", locationId: "DAIRY-11", confirms: 2, confidence: 0.86, tags: [], typedForms: ["paneer"], lastUsed: 1, lastConfirmed: 1 };
 
 beforeEach(() => {
@@ -30,8 +30,26 @@ const add = (text: string) => {
 };
 
 describe("saved locations from an older map", () => {
+  test("answers from the department prompt are asked again; a memory one Got it made of a guess goes with them", () => {
+    const sunglasses = { id: "llm:sunglasses", name: "Sunglasses", locationIds: ["A5-L11"], source: "llm", department: "dry", confidence: 0.58, confirms: 1, misses: 0 };
+    const saved = {
+      pending: [sunglasses, oatMilk],
+      memory: [{ name: "Sunglasses", locationId: "A5-L11", confirms: 1, confidence: 0.8, tags: [], typedForms: ["sunglasses"], lastUsed: 1, lastConfirmed: 1 }, paneerMemory],
+      llm: [["sunglasses", { category: "dry", confidence: 0.6 }]],
+    } as unknown as Learning;
+    const { learning, report } = revalidateLearning(saved, { locations, categories: demoSupercenter.categories, departments: (STORE.departments ?? []).map((d) => d.id) });
+    expect(report.guessesRequeued).toEqual(["Sunglasses"]); // oat milk was confirmed twice: it stays
+    expect(report.memoryFromGuess).toEqual(["Sunglasses"]);
+    expect(learning.pending.map((p) => p.id)).toEqual(["llm:oatmilk"]);
+    expect(learning.memory.map((m) => m.name)).toEqual(["Paneer"]);
+    expect(learning.llm).toEqual([]);
+    expect(learning.llmVersion).toBe(2);
+    // a second load changes nothing
+    expect(revalidateLearning(learning, { locations, categories: demoSupercenter.categories }).changed).toBe(false);
+  });
+
   test("revalidation: re-placed by category where one names it, else asks; nothing deleted", () => {
-    const saved: Learning = { pending: [oatMilk, gizmo] as Learning["pending"], memory: [paneerMemory, { ...paneerMemory, name: "Qwzx Gadget", typedForms: [] }] as Learning["memory"], llm: [["oat milk", { category: "dairy", confidence: 0.6 }], ["old thing", { category: "a-category-v3-lacks", confidence: 0.6 }]] };
+    const saved: Learning = { pending: [oatMilk, gizmo] as Learning["pending"], memory: [paneerMemory, { ...paneerMemory, name: "Qwzx Gadget", typedForms: [] }] as Learning["memory"], llm: [["oat milk", { category: "milk-alternatives", confidence: 0.6 }], ["old thing", { category: "a-category-v3-lacks", confidence: 0.6 }]], llmVersion: 2 };
     const { learning, report, changed } = revalidateLearning(saved, { locations, categories: demoSupercenter.categories, departments: (STORE.departments ?? []).map((d) => d.id) });
     expect(changed).toBe(true);
     expect(learning.pending.find((p) => p.id === "llm:oatmilk")?.locationIds).toEqual(["DAIRY-L5"]); // Milk alternatives

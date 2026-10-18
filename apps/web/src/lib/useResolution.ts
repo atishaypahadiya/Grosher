@@ -27,7 +27,8 @@ export interface ResolutionState {
   offline: boolean; // the last llm request failed
   /** the provider's one-line note for the header when offline */
   offlineNote: string;
-  gotIt: (name: string, locationId: string, tags?: ItemTag[], typed?: string) => void;
+  /** guess: a model guess checked off on the trip (its own ladder, no memory row) */
+  gotIt: (name: string, locationId: string, tags?: ItemTag[], typed?: string, guess?: boolean) => void;
   notHere: (name: string) => void;
   /** `name` is the canonical name, `typed` what the shopper wrote */
   place: (name: string, locationId: string, tags?: ItemTag[], promote?: boolean, typed?: string) => void;
@@ -156,9 +157,15 @@ export function useResolution(bundle: StoreBundle, items: string[], provider?: L
     const key = normalize(name);
     return pending.map((p) => (normalize(p.name) === key ? fn(p) : p));
   };
-  const gotIt = useCallback((name: string, locationId: string, tags?: ItemTag[], typed?: string) => {
+  /**
+   * "Got it" / "It's here". On the trip, for a stop the model guessed (`guess`), it moves that guess up its own
+   * ladder (guess → likely → confirmed) and writes no memory: tapping Got it to move on is not the shopper
+   * saying where the item lives, and a memory row would read "yours" at once. The picker's "It's here", and
+   * Got it on anything else, are the shopper's own word: memory.
+   */
+  const gotIt = useCallback((name: string, locationId: string, tags?: ItemTag[], typed?: string, guess = false) => {
     const now = Date.now();
-    setLearning((l) => ({ ...l, memory: confirmMemory(l.memory, name, locationId, now, tags, typed), pending: touchPending(l.pending, name, (p) => confirmed(p, now)) }));
+    setLearning((l) => ({ ...l, memory: guess ? l.memory : confirmMemory(l.memory, name, locationId, now, tags, typed), pending: touchPending(l.pending, name, (p) => confirmed(p, now)) }));
   }, []);
   const notHere = useCallback((name: string) => {
     const now = Date.now();

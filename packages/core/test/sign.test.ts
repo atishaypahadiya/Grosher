@@ -38,3 +38,19 @@ test("fragments and the model's answer", () => {
   assert.throws(() => parseSignWords("I see a sign"), /not JSON/);
   assert.throws(() => parseSignWords({ text: "x" }), /no words/);
 });
+
+test("cold comes from the shelf's category, not the answer: shelf-stable oat milk is ambient, the dairy case chilled", async () => {
+  const { resolveItem, withStorage } = await import("../src/index.ts");
+  // a name only the model places: it picks the shelf-stable milk category and says chilled
+  const ctx = { catalog: [], categories, llm: new Map([["zorbo oat drink", { category: "shelf-milk", confidence: 0.68, tags: ["chilled" as const] }]]), locations: new Set(categories.map((c) => c.locationId)) };
+  const shelf = resolveItem("zorbo oat drink", ctx);
+  assert.equal(shelf.locationIds[0], "A17-R11");
+  assert.deepEqual(shelf.tags, []); // the model said chilled; the drinks aisle is ambient
+  // "oat milk" itself: the Milk alternatives sign names it, the dairy case, chilled
+  assert.deepEqual(resolveItem("oat milk", ctx).tags, ["chilled"]);
+  const base = { query: "oat milk", confidence: 0.9, source: "exact" as const, canonicalName: "Oat milk", tags: ["fragile" as const] };
+  assert.deepEqual(withStorage({ ...base, locationIds: ["DAIRY-L5"] }, ctx).tags, ["fragile", "chilled"]);
+  // a department id answer places nothing in a store with categories (it used to land in dry goods)
+  const dept = resolveItem("sunglasses", { ...ctx, llm: new Map([["sunglasses", { category: "dry", confidence: 0.6 }]]), departmentLocations: { dry: ["A1-L1"] } });
+  assert.equal(dept.source, "unknown");
+});

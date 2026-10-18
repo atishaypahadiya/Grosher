@@ -127,6 +127,16 @@ is re-placed through the category its shelf name or canonical name names (`categ
 does not count and the item falls through, ending as unknown ("Needs a place"). So no stale id reaches the
 solver or storage. The model never names locations: it picks a category id from the store's list, enforced
 by the schema's enum and by `parseLlmResults` (anything else is null); the app maps the category to its slot.
+**Cold comes from the shelf** (`withStorage` in core, on every answer): chilled / frozen are the
+category's at the answer's first location, whatever the catalog row, the model or a cached answer said
+(shelf-stable oat milk in A17 drinks is ambient, oat milk in the dairy case chilled); heavy / fragile /
+produce stay. That is what the chip's "· last" and the cold-last penalty read. **A department id answer
+places nothing** in a store with categories (it used to land non-grocery items in dry goods); the prompt
+says null when no listed category fits (measured: sunglasses, a phone charger, motor oil, a birthday card,
+flip flops → null; gochujang, furikake, kombucha, dashi still placed). **Answer versions**
+(`LLM_ANSWERS_VERSION` in `llmPrompt.ts`, stored as `Learning.llmVersion`): 1 = department ids, 2 =
+category ids or null; on load, model guesses saved under an older version and confirmed at most once are
+asked again (with the memory row one Got it made of such a guess), twice-confirmed ones stay.
 **Saved state on load** (`revalidateLearning` in `lib/learning.ts`, every load, logged when it changes
 anything): pending catalog entries at locations the map lacks are re-placed by category or emptied (kept,
 they ask); memory rows are re-placed by category at guess confidence (≤ .49) or kept as they are (they
@@ -147,7 +157,11 @@ fallback): pending catalog entries, the llm answer cache (including "not placeab
 re-resolves 150 ms after any change; once the list has been idle 1.5 s, unknowns that were never asked go to
 the LLM provider in one batch.
 Learning loop: "Got it" → `confirmMemory` (the confirm rule below) on the memory row and on a matching
-pending catalog entry; "Not here" → `demoteMemory` (the miss rule; below .6 the next trip re-asks);
+pending catalog entry, except on the trip for a stop the **model guessed** (`stop.source === "llm"`): that
+moves only the pending guess up its ladder and writes no memory row, because tapping Got it to move on is
+not the shopper saying where the item lives, and a memory row reads "yours" at once (how "Sunglasses ·
+A5 · yours" happened). "Yours" therefore only comes from the shopper's own word: the picker ("It's here",
+a shelf tapped), checkout's "Pick aisle", or Got it on an answer that was not a model guess; "Not here" → `demoteMemory` (the miss rule; below .6 the next trip re-asks);
 "Tell me where" / "Pick aisle" → `placeMemory` (.9), and from the checkout screen also a confirmed catalog
 entry (`source: "memory"`). The picker opens with the map's current guess pre-highlighted and a one-tap
 "It's here" that confirms it (Got it rules), so confirming is faster than correcting.
@@ -344,9 +358,11 @@ the in-memory fallback of `lib/db.ts` where IndexedDB is blocked.
 warm ink with a lime underline, each final result (a pause) is split on "and", "then", commas and semicolons and added as items.
 Permission denial shows "Microphone not allowed · type instead"; other failures "Voice entry stopped · type
 instead"; never an error state. Caveats: the mic is hidden when the API is missing, and hidden in **iOS
-standalone (home-screen) mode** by default because WebKit's recogniser has been reported not to start
-there; that is unverified on a device from this machine, and `VITE_SPEECH_STANDALONE=1` shows the mic for
-testing it. Keyboard dictation covers voice entry wherever the mic is hidden. Headless Chromium exposes a
+standalone (home-screen) mode** by our own rule (`isIosStandalone`, not a missing API: the constructor may
+well exist there), because WebKit's recogniser has been reported not to start in home-screen apps; that is
+unverified on a device. In its place the list shows "Voice works in Safari, or use the keyboard mic." and,
+when the recogniser exists, **Try it here**, which shows the mic on that phone from then on
+(`grosher.voice.standalone`); `VITE_SPEECH_STANDALONE=1` shows it for every build. Keyboard dictation covers voice entry wherever the mic is hidden. Headless Chromium exposes a
 native `SpeechRecognition`, so a test double must replace both names (the Vitest setup and the Playwright
 scripts do).
 
@@ -437,6 +453,12 @@ Screens are state-driven in `App.tsx`: list → trip → checkout, plus `#/edit`
 host rewrite, deliberately not done yet). The ground gradient and blooms sit behind every phone screen in a
 centred 430px column.
 
+- The list's footer (`.cta-wrap`): the Route CTA and its "% shorter" line on one full-width plate (the
+  ground's deep green, fading in over its top 28 px), and the list pads its bottom by the footer's measured
+  height (`--footer-h`, a ResizeObserver), so rows pass under it covered and the last one scrolls clear. The
+  contrast gate checks it on a 14-item list at the top and scrolled to the end: no two text runs from
+  different blocks overlap, no list text shows through the plate (rows tinted magenta, the plate sampled),
+  the last row ends above the footer.
 - `components/ListScreen` shows the resolved rows (`useResolution`): a source glyph per row (exact check,
   fuzzy wave, memory clock, llm star, unknown mark), chip opacity = confidence, llm guesses in the amber
   guess colour ("probably A4 · cereal"), brand suggestion chips, "Tell me where" opening `PickerSheet` (the

@@ -220,6 +220,60 @@ async function measure(page, name) {
   return rows;
 }
 
+/**
+ * The list's layout at this scroll: no two visible text runs overlap, no list text shows through the
+ * footer's solid plate (rows tinted magenta, the plate below its fade sampled), and, scrolled to the end,
+ * the last row clears the footer. Failures go into `layout`.
+ */
+const layout = [];
+async function layoutChecks(page, name) {
+  const geo = await page.evaluate(() => {
+    const runs = [];
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    for (let n; (n = walker.nextNode()); ) {
+      const el = n.parentElement;
+      if (!n.textContent.trim() || !el || !el.checkVisibility({ visibilityProperty: true, opacityProperty: true }) || el.closest(".sr-only")) continue;
+      const range = document.createRange();
+      range.selectNodeContents(n);
+      for (const r of range.getClientRects()) {
+        if (r.width < 2 || r.height < 2 || r.bottom <= 0 || r.top >= innerHeight) continue;
+        const hit = document.elementFromPoint((r.left + r.right) / 2, (r.top + r.bottom) / 2);
+        // the block the run is set in: lines of one heading or paragraph may touch (tight display leading)
+        let block = el;
+        while (block.parentElement && getComputedStyle(block).display.startsWith("inline")) block = block.parentElement;
+        if (hit && (el.contains(hit) || hit.contains(el))) runs.push({ text: n.textContent.trim().slice(0, 30), box: [r.left, r.top, r.right, r.bottom], block });
+      }
+    }
+    const overlaps = [];
+    for (let i = 0; i < runs.length; i++)
+      for (let j = i + 1; j < runs.length; j++) {
+        if (runs[i].block === runs[j].block) continue;
+        const [a, b] = [runs[i].box, runs[j].box];
+        const w = Math.min(a[2], b[2]) - Math.max(a[0], b[0]);
+        const h = Math.min(a[3], b[3]) - Math.max(a[1], b[1]);
+        if (w > 2 && h > 2) overlaps.push(`"${runs[i].text}" × "${runs[j].text}"`);
+      }
+    const footer = document.querySelector(".cta-wrap")?.getBoundingClientRect();
+    const rows = [...document.querySelectorAll(".list-sheet li")];
+    const last = rows.at(-1)?.getBoundingClientRect();
+    const atEnd = Math.ceil(scrollY + innerHeight) >= document.documentElement.scrollHeight - 1;
+    return { overlaps, footer: footer && [footer.left, footer.top, footer.right, footer.bottom], lastBottom: last?.bottom ?? null, atEnd, rows: rows.length };
+  });
+  for (const o of geo.overlaps) layout.push(`${name}: text overlaps ${o}`);
+  if (geo.atEnd && geo.lastBottom !== null && geo.footer && geo.lastBottom > geo.footer[1] + 0.5) layout.push(`${name}: the last row ends ${Math.round(geo.lastBottom - geo.footer[1])}px under the footer`);
+  // bleed: list text in magenta, the footer below its 28px fade must hold none of it
+  if (geo.footer) {
+    const shot = await withStyle(page, ".list-sheet, .list-sheet *{color:#ff00ff!important;-webkit-text-fill-color:#ff00ff!important}", () => page.screenshot());
+    const dpr = await page.evaluate(() => devicePixelRatio);
+    const box = [geo.footer[0], geo.footer[1] + 28, geo.footer[2], geo.footer[3]].map((v) => v * dpr);
+    const [p] = await pixels(shot, [box]);
+    const px = p ? triples(p.px) : [];
+    const magenta = px.filter(([r, g, b]) => r > 150 && b > 150 && g < 110).length;
+    if (magenta > 8) layout.push(`${name}: ${magenta} pixels of list text show through the footer plate`);
+  }
+  console.log(`layout ${name.padEnd(18)} ${geo.rows} rows · ${geo.overlaps.length} overlaps${geo.atEnd ? ` · last row ${geo.lastBottom !== null && geo.footer ? Math.round(geo.footer[1] - geo.lastBottom) : "?"}px clear of the footer` : ""}`);
+}
+
 const all = [];
 const errors = [];
 try {
@@ -236,6 +290,13 @@ try {
   await page.getByText(/14 items · 14 placed/i).waitFor({ timeout: 60_000 });
   await page.waitForTimeout(400);
   all.push(...(await measure(page, "list")));
+  // the 14-item list's layout, at the top and scrolled to the end
+  await layoutChecks(page, "list 14 top");
+  await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
+  await page.waitForTimeout(300);
+  await layoutChecks(page, "list 14 end");
+  all.push(...(await measure(page, "list 14 end")));
+  await page.evaluate(() => scrollTo(0, 0));
   await page.getByRole("button", { name: /route 14 items/i }).click();
   await page.getByTestId("map3d").waitFor({ timeout: 120_000 });
   const settle = async () => {
@@ -340,6 +401,11 @@ for (const screen of [...new Set(all.map((r) => r.screen))]) {
 }
 if (JSON_OUT) writeFileSync(JSON_OUT, JSON.stringify(all, null, 1));
 if (errors.length) console.log(`page errors: ${errors.join(" | ")}`);
+if (layout.length) {
+  console.log(`\nFAIL: layout`);
+  for (const l of layout) console.log(`  ${l}`);
+  process.exit(1);
+}
 if (fails.length) {
   console.log(`\nFAIL: ${fails.length} below target`);
   for (const r of fails) console.log(`  ${r.screen}: ${fmt(r)}`);

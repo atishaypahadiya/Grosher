@@ -8,6 +8,12 @@
 
 import type { ItemTag } from "../types.ts";
 
+/**
+ * What a stored model answer means. 1: a department id (until 17 Oct 2026); 2: one of the store's category
+ * ids, or null when none fits. The app re-asks answers saved under an older version.
+ */
+export const LLM_ANSWERS_VERSION = 2;
+
 export const LLM_TAGS: readonly ItemTag[] = ["frozen", "chilled", "heavy", "fragile", "produce"];
 
 /** what the provider needs to know about a category: its id and the name on the sign */
@@ -18,7 +24,7 @@ export interface LlmCategoryOption {
 
 export const LLM_RULES = `Classify grocery list items by the shelf category they are found in at this store.
 Reply with JSON only: {"results":[{"name":"<item as given>","cat":"<category id or null>","sub":"<shelf category, 3 words max>","conf":<0..1>,"tags":[]}]}.
-cat must be one of the category ids listed; null for things this store does not sell.
+cat must be one of the category ids listed; null for things this store does not sell, and null when no listed category is a good fit (never the nearest aisle by default).
 conf: 0.9 obvious, 0.6 could be two places, 0.3 guessing.
 tags, usually empty: frozen (freezer case), chilled (fridge), heavy (over 3 kg), fragile (eggs, chips, glass), produce (fresh fruit or veg).`;
 

@@ -7,6 +7,8 @@
 // is verified on a device, the mic is hidden in that context and keyboard
 // dictation carries voice entry. VITE_SPEECH_STANDALONE=1 shows it anyway.
 
+import { load, save } from "./storage.ts";
+
 interface ResultLike {
   isFinal: boolean;
   0: { transcript: string };
@@ -37,10 +39,26 @@ export function isIosStandalone(): boolean {
   return ios && standalone;
 }
 
+/** set by "Try it here" on the standalone hint: this phone shows the mic in the home-screen app too */
+export const VOICE_TRY_KEY = "grosher.voice.standalone";
+
 export function speechSupported(): boolean {
   if (!ctor()) return false;
   const allowStandalone = (import.meta.env as Record<string, string | undefined>).VITE_SPEECH_STANDALONE === "1";
-  return allowStandalone || !isIosStandalone();
+  return allowStandalone || load<boolean>(VOICE_TRY_KEY, false) || !isIosStandalone();
+}
+
+/**
+ * The mic hidden in the iOS home-screen app (our rule above, not a missing API): a one-line hint instead of
+ * nothing. `canTry` when the recogniser exists there, so the shopper can try it on this phone.
+ */
+export function voiceHint(): { canTry: boolean } | null {
+  if (speechSupported() || !isIosStandalone()) return null;
+  return { canTry: !!ctor() };
+}
+
+export function tryVoiceHere() {
+  save(VOICE_TRY_KEY, true);
 }
 
 /** "milk and eggs, two lemons" → ["milk", "eggs", "two lemons"] */
