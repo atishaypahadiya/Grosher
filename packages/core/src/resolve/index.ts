@@ -18,6 +18,7 @@ import { confirmed, decayed, missed } from "../confidence.ts";
 
 export { normalize, stripQuantity, singularize, similarity, forms } from "./text.ts";
 export * from "./llmPrompt.ts";
+export * from "./sign.ts";
 
 export type ResolveSource = "exact" | "fuzzy" | "memory" | "category" | "llm" | "unknown";
 

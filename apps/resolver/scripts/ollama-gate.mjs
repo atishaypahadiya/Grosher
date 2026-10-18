@@ -9,7 +9,8 @@
 // The token comes from OLLAMA_TOKEN if set, else from the file at
 // OLLAMA_TOKEN_FILE (default ~/.config/grosher/ollama-token), which must be
 // readable by its owner only. Only POST /api/chat and GET /api/ps pass, with
-// the exact token, bodies capped at 64 KB. Everything else is 404 / 401.
+// the exact token, bodies capped at 2 MB (a survey's sign photo is a 1024 px
+// JPEG, ~0.5 MB as base64). Everything else is 404 / 401.
 // Node ≥ 22, no dependencies.
 
 import { createServer } from "node:http";
@@ -21,7 +22,7 @@ import { join } from "node:path";
 const PORT = Number(process.env.GATE_PORT ?? 11435);
 const UPSTREAM = (process.env.OLLAMA_URL ?? "http://localhost:11434").replace(/\/$/, "");
 const TOKEN_FILE = process.env.OLLAMA_TOKEN_FILE ?? join(homedir(), ".config/grosher/ollama-token");
-const MAX_BODY = 64 * 1024;
+const MAX_BODY = 2 * 1024 * 1024;
 const ALLOWED = new Set(["POST /api/chat", "GET /api/ps"]);
 const log = (...a) => console.log(new Date().toISOString(), ...a);
 const fail = (...a) => console.error(new Date().toISOString(), ...a);

@@ -4,7 +4,7 @@
 // front of Ollama). Same prompt, schema and parser as the web client's
 // direct provider, so the rows are identical whichever path answered.
 
-import { llmMaxTokens, llmResultSchema, llmSystemPrompt, llmUserMessage, parseLlmResults } from "@grosher/core";
+import { llmMaxTokens, llmResultSchema, llmSystemPrompt, llmUserMessage, parseLlmResults, parseSignWords, SIGN_DEFAULT_MODEL, SIGN_MAX_TOKENS, SIGN_PROMPT, SIGN_SCHEMA } from "@grosher/core";
 import type { ClassifyRequest, Guess } from "./classify.ts";
 
 export const OLLAMA_DEFAULT_MODEL = "qwen3:8b";
@@ -51,6 +51,32 @@ export async function classifyOllama(up: OllamaUpstream, req: ClassifyRequest, f
     throw new Error("ollama upstream: response is not JSON");
   }
   return parseLlmResults(raw, items, ids);
+}
+
+/** a vision model reading one 1024 px sign: a cold load (~6 GB) plus the read fits, a hung Mac does not */
+export const SIGN_TIMEOUT_MS = 90_000;
+/** the vision model stays loaded through a survey walk, not all day beside the text model */
+export const SIGN_KEEP_ALIVE = "30m";
+
+/** One aisle-sign photo (base64 JPEG, no data: prefix) → the lines printed on it. Rejects on any failure. */
+export async function readSignOllama(up: OllamaUpstream, imageB64: string, fetchImpl: typeof fetch = fetch): Promise<string[]> {
+  const res = await fetchImpl(`${up.url.replace(/\/$/, "")}/api/chat`, {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: `Bearer ${up.token}` },
+    signal: AbortSignal.timeout(SIGN_TIMEOUT_MS),
+    body: JSON.stringify({
+      model: up.model || SIGN_DEFAULT_MODEL,
+      stream: false,
+      keep_alive: SIGN_KEEP_ALIVE,
+      format: SIGN_SCHEMA,
+      options: { temperature: 0, num_predict: SIGN_MAX_TOKENS },
+      messages: [{ role: "user", content: SIGN_PROMPT, images: [imageB64] }],
+    }),
+  });
+  if (!res.ok) throw new Error(`ollama upstream ${res.status}`);
+  const body = (await res.json()) as { message?: { content?: string } };
+  if (typeof body.message?.content !== "string") throw new Error("ollama upstream: no message content");
+  return parseSignWords(body.message.content);
 }
 
 /** /health's probe: one authenticated GET /api/ps through the Funnel and the gate, short so a monitor is not kept waiting */

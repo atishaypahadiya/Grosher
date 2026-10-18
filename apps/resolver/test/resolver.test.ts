@@ -111,6 +111,26 @@ describe("resolver worker", () => {
     expect(await (await createApp().request("/health", {}, { ANTHROPIC_API_KEY: "x" })).json()).toEqual({ ok: true, provider: "anthropic", upstream: "not probed" });
   });
 
+  test("POST /sign: one photo to the vision model through the gate; degraded, never an error", async () => {
+    const env = { PROVIDER: "ollama", OLLAMA_UPSTREAM: "https://mac.example.ts.net", OLLAMA_TOKEN: "t0k", OLLAMA_VISION_MODEL: "qwen2.5vl:7b" };
+    const image = "A".repeat(400);
+    let sent: Record<string, unknown> | null = null;
+    const up = (async (_url: RequestInfo | URL, init?: RequestInit) => {
+      sent = JSON.parse(String(init?.body));
+      return new Response(JSON.stringify({ message: { content: JSON.stringify({ words: ["Aisle 12", "Cereal", "Coffee"] }) } }));
+    }) as typeof fetch;
+    const post = (app: ReturnType<typeof createApp>, body: unknown, e: object = env) => app.request("/sign", { method: "POST", body: JSON.stringify(body) }, e);
+    const ok = await post(createApp(undefined, up), { image });
+    expect(await ok.json()).toEqual({ words: ["Aisle 12", "Cereal", "Coffee"] });
+    expect(sent).toMatchObject({ model: "qwen2.5vl:7b", stream: false, format: { required: ["words"] } });
+    expect((sent!.messages as { images: string[] }[])[0].images).toEqual([image]);
+    expect((await post(createApp(undefined, up), { image: "data:image/jpeg;base64,xx" })).status).toBe(400);
+    expect((await post(createApp(undefined, up), { image: "A".repeat(1_600_000) })).status).toBe(413);
+    const down = (async () => new Response("boom", { status: 502 })) as typeof fetch;
+    expect(await (await post(createApp(undefined, down), { image })).json()).toEqual({ words: [], degraded: true });
+    expect(await (await post(createApp(undefined, up), { image }, { PROVIDER: "anthropic", ANTHROPIC_API_KEY: "x" })).json()).toEqual({ words: [], degraded: true });
+  });
+
   test("classify maps the tool call back onto the items, drops unknown departments, bands confidence", async () => {
     const fake = {
       messages: {

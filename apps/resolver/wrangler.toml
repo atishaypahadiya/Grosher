@@ -11,6 +11,8 @@ compatibility_flags = ["nodejs_compat"]
 [vars]
 PROVIDER = "ollama"
 OLLAMA_MODEL = "qwen3:8b"
+# survey mode's aisle signs (POST /sign); on the Mac: ollama pull qwen2.5vl:7b
+OLLAMA_VISION_MODEL = "qwen2.5vl:7b"
 ALLOWED_ORIGIN = "*"
 
 # Per-IP rate limit: 30 resolve calls per minute. Each call is one Claude request.

@@ -1,4 +1,6 @@
 // POST /resolve  {items: string[], categories: {id, name}[]} → {results: Guess[], degraded?: true}
+// POST /sign     {image: base64 JPEG} → {words: string[], degraded?: true}  (survey mode's aisle signs,
+//                read by the vision model OLLAMA_VISION_MODEL on the Mac; ollama provider only)
 // Two upstreams, chosen by the PROVIDER var: "ollama" forwards to the Mac's
 // model through Tailscale Funnel and the gate (OLLAMA_UPSTREAM + OLLAMA_TOKEN secrets),
 // "anthropic" asks Claude (ANTHROPIC_API_KEY secret). Secrets live in the
@@ -9,11 +11,11 @@
 // through the gate, 4 s) and answers 503 `degraded` with a fixed reason
 // when it fails.
 
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
 import Anthropic from "@anthropic-ai/sdk";
 import { classify, type ClassifyRequest, type Guess } from "./classify.ts";
-import { classifyOllama, probeOllama } from "./ollama.ts";
+import { classifyOllama, probeOllama, readSignOllama } from "./ollama.ts";
 
 export type Provider = "anthropic" | "ollama";
 
@@ -25,6 +27,8 @@ export interface Env {
   OLLAMA_UPSTREAM?: string;
   OLLAMA_TOKEN?: string;
   OLLAMA_MODEL?: string;
+  /** the vision model that reads aisle signs (default qwen2.5vl:7b) */
+  OLLAMA_VISION_MODEL?: string;
   /** exact origin of the web app in production ("https://grosher.app"); "*" only in dev */
   ALLOWED_ORIGIN?: string;
   /** optional Cloudflare rate-limit binding (wrangler.toml [[unsafe.bindings]]); keyed by client IP */
@@ -38,6 +42,8 @@ export const MAX_ITEM_CHARS = 60;
 export const MAX_CATEGORIES = 400;
 export const MAX_CATEGORY_CHARS = 48;
 export const MAX_BODY_BYTES = 48 * 1024;
+/** one sign photo: 1024 px JPEG, base64 (the app sends ~150–400 KB) */
+export const MAX_SIGN_BYTES = 1_500_000;
 
 export type Classifier = (req: ClassifyRequest) => Promise<Guess[]>;
 
@@ -57,6 +63,17 @@ export function classifierFor(env: Env | undefined, fetchImpl: typeof fetch = fe
 }
 
 const unknownRows = (items: string[]): Guess[] => items.map((item) => ({ item, category: null, confidence: 0 }));
+
+/** origin (when an exact one is configured, browsers must send it) and the per-IP rate limit; a Response when refused */
+async function guard(c: Context<{ Bindings: Env }>): Promise<Response | null> {
+  const allowed = c.env?.ALLOWED_ORIGIN ?? "*";
+  if (allowed !== "*" && c.req.header("origin") !== allowed) return c.json({ error: "forbidden" }, 403);
+  if (c.env?.RATE_LIMITER) {
+    const { success } = await c.env.RATE_LIMITER.limit({ key: c.req.header("cf-connecting-ip") ?? "unknown" });
+    if (!success) return c.json({ error: "too many requests" }, 429);
+  }
+  return null;
+}
 
 /** The app, with the classifier and the health probe's fetch injectable for tests. */
 export function createApp(classifier?: Classifier, fetchImpl: typeof fetch = (...a) => fetch(...a)) {
@@ -78,17 +95,33 @@ export function createApp(classifier?: Classifier, fetchImpl: typeof fetch = (..
     const p = await probeOllama({ url, token, model }, fetchImpl);
     return p.ok ? c.json({ ok: true, provider, upstream: "ok", ms: p.ms, model, modelLoaded: p.modelLoaded }) : degraded(p.reason);
   });
-  app.post("/resolve", async (c) => {
-    // origin: when an exact origin is configured, browsers must send it
-    const allowed = c.env?.ALLOWED_ORIGIN ?? "*";
-    const origin = c.req.header("origin");
-    if (allowed !== "*" && origin !== allowed) return c.json({ error: "forbidden" }, 403);
-    // rate limit per client IP when the binding exists
-    const ip = c.req.header("cf-connecting-ip") ?? "unknown";
-    if (c.env?.RATE_LIMITER) {
-      const { success } = await c.env.RATE_LIMITER.limit({ key: ip });
-      if (!success) return c.json({ error: "too many requests" }, 429);
+  app.post("/sign", async (c) => {
+    const denied = await guard(c);
+    if (denied) return denied;
+    if (Number(c.req.header("content-length") ?? 0) > MAX_SIGN_BYTES) return c.json({ error: "body too large" }, 413);
+    let image: unknown;
+    try {
+      const text = await c.req.text();
+      if (text.length > MAX_SIGN_BYTES) return c.json({ error: "body too large" }, 413);
+      image = (JSON.parse(text) as { image?: unknown }).image;
+    } catch {
+      return c.json({ error: "body must be JSON" }, 400);
     }
+    if (typeof image !== "string" || image.length < 100 || !/^[A-Za-z0-9+/]+={0,2}$/.test(image)) return c.json({ error: "image must be base64 JPEG" }, 400);
+    const url = c.env?.OLLAMA_UPSTREAM;
+    const token = c.env?.OLLAMA_TOKEN;
+    try {
+      if (providerOf(c.env) !== "ollama" || !url || !token) throw new Error("sign reading needs the ollama upstream");
+      return c.json({ words: await readSignOllama({ url, token, model: c.env?.OLLAMA_VISION_MODEL }, image, fetchImpl) });
+    } catch (e) {
+      // like /resolve: the app queues the photo and retries; the upstream's text stays here
+      console.error("sign degraded", e instanceof Error ? e.message : e);
+      return c.json({ words: [], degraded: true });
+    }
+  });
+  app.post("/resolve", async (c) => {
+    const denied = await guard(c);
+    if (denied) return denied;
     const len = Number(c.req.header("content-length") ?? 0);
     if (len > MAX_BODY_BYTES) return c.json({ error: "body too large" }, 413);
     let body: Partial<ClassifyRequest>;
