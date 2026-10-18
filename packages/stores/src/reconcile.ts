@@ -2,7 +2,7 @@
 // Used by the seed, the Instacart import and the merge; see CLAUDE.md,
 // "Store data".
 
-import { normalize, singularize, type Category, type ItemTag, type Stop } from "@grosher/core";
+import { isStorageTag, normalize, singularize, type Category, type ItemTag, type Stop } from "@grosher/core";
 
 /** the dedupe key, the resolver's own normalisation: lowercase, punctuation out, every word singular */
 export const catalogKey = (s: string) => singularize(normalize(s));
@@ -86,9 +86,9 @@ export function reconcile(items: Stop[], cats: Category[]): { relocated: number;
       item.locationIds = after;
     } else item.locationIds = before;
     // frozen / chilled are properties of the shelf: keep them only when a kept shelf has them
-    if (item.tags?.some((t) => t === "frozen" || t === "chilled")) {
+    if (item.tags?.some(isStorageTag)) {
       const shelfTags = new Set(item.locationIds.flatMap((l) => catByLoc.get(l)?.tags ?? []));
-      const tags = item.tags.filter((t) => (t !== "frozen" && t !== "chilled") || shelfTags.has(t));
+      const tags = item.tags.filter((t) => !isStorageTag(t) || shelfTags.has(t));
       item.tags = tags.length ? tags : undefined;
     }
     if (item.aliases?.length) {

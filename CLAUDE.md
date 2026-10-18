@@ -87,7 +87,8 @@ Read `src/types.ts`, then `graph.ts`, then `solver.ts`.
   and list the left-out stop ids in `Route.unplaced`. The trip (`lib/trip.ts` `routed()`) moves those stops
   from `remaining` to `unplaced` (checkout asks "Where did you find …?"), at start, Got it, Skip, add and
   restore; the progress strip counts only the routed ones.
-- Constraints are penalty metres (`DEFAULT_WEIGHTS`): ambient-after-cold 60/stop, heavy-late 4/position,
+- Constraints are penalty metres (`DEFAULT_WEIGHTS`): ambient-after-cold 60/stop (cold = any storage tag:
+  chilled, frozen or hot, `STORAGE_TAGS`), heavy-late 4/position,
   fragile-early 3/position, produce-after-fragile 15/stop. A new penalty must depend only on (stop being
   added, set already visited, position) or Held–Karp stops being exact. Add it in `prepare()`'s `penalty`
   closure and extend the brute-force comparison test. Bitmasks cap stops at 31 (heuristic) and 20 (exact).
@@ -127,15 +128,19 @@ is re-placed through the category its shelf name or canonical name names (`categ
 does not count and the item falls through, ending as unknown ("Needs a place"). So no stale id reaches the
 solver or storage. The model never names locations: it picks a category id from the store's list, enforced
 by the schema's enum and by `parseLlmResults` (anything else is null); the app maps the category to its slot.
-**Cold comes from the shelf**, never from the item's words, its aisle or its department: chilled /
-frozen are the storage of the category at the item's location. Every shelf location carries its
+**Storage comes from the shelf**, never from the item's words, its aisle or its department: chilled /
+frozen / hot (`STORAGE_TAGS` in core types, one list every reader uses) are the storage of the category at
+the item's location; all three are picked late (the cold-last penalty) and read "· last" on the chip. The
+deli's hot case (`rotisserie`, Rotisserie chicken & hot food) is the demo's one hot category, pinned with
+the cold set in the test; the trip sheet says "hot, so it's near the end". Every shelf location carries its
 category's tags (`gen-demo` writes `tags` on all 298, `[]` for ambient; survey drafts copy them), and three
 readers use them: `withStorage` in core on every answer, `Router.placeable` (so the cold-last penalty sees
 the shelf's storage even for a restored trip's or a catalog row's stale tags), and the list chip's "· last".
 Heavy / fragile / produce stay the item's. The demo's cold set is pinned in `packages/core/test/storage.test.ts`
-(62 categories: the dairy case, A18–A21 freezers, A22 cheese and chilled dips, meat, deli cold cases, cut
-fruit and cut vegetables); shelf-stable milk and plant milk (A17), every drink, coconut and evaporated
-milk and shelf-stable creamer are ambient, and rotisserie / hot food is not cold. **A department id answer
+(62 cold categories: the dairy case, A18–A21 freezers, A22 cheese and chilled dips, meat, deli cold cases,
+cut fruit and cut vegetables; 1 hot: rotisserie); shelf-stable milk and plant milk (A17), every drink,
+coconut and evaporated milk, shelf-stable creamer, and salads & greens, mushrooms and fresh herbs are
+ambient. **A department id answer
 places nothing** in a store with categories (it used to land non-grocery items in dry goods); the prompt
 says null when no listed category fits (measured: sunglasses, a phone charger, motor oil, a birthday card,
 flip flops → null; gochujang, furikake, kombucha, dashi still placed). **Answer versions**

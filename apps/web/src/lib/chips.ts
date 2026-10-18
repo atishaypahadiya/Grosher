@@ -1,6 +1,6 @@
 // Row chips on the List screen: where an item lives, in the store's words.
 
-import { band, type Band, type Department, type ResolveResult, type ShelfLocation, type Stop, type StoreGraph } from "@grosher/core";
+import { band, isStorageTag, type Band, type Department, type ResolveResult, type ShelfLocation, type Stop, type StoreGraph } from "@grosher/core";
 
 /** How a band reads on a chip: confirmed full, likely 80%, a guess is amber text ("probably …") at full opacity. */
 export const BAND_OPACITY: Record<Band, number> = { confirmed: 1, likely: 0.8, guess: 1 };
@@ -36,7 +36,7 @@ export function chipFor(store: StoreGraph, stop: Stop): Chip {
   // "last" (cold, picked late) is the shelf's storage: its location's tags (the category's), never the
   // aisle's or the department's; a location without a tags array leaves it to the item's own tags
   const storage = first.tags ?? stop.tags ?? [];
-  if (storage.some((t) => t === "frozen" || t === "chilled")) text += " · last";
+  if (storage.some(isStorageTag)) text += " · last";
   return { text, color: dept?.color };
 }
 

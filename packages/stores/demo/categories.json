@@ -5571,6 +5571,9 @@
     ],
     "locationId": "DELI-L1",
     "department": "deli",
+    "tags": [
+      "hot"
+    ],
     "aliases": [
       "rotisserie chicken",
       "hot chicken",

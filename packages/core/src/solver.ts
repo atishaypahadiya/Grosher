@@ -14,7 +14,7 @@
 //                      optimally for each order by a layered shortest path
 
 import { WalkGraph } from "./graph.ts";
-import { DEFAULT_WEIGHTS, type Route, type RouteLeg, type ShelfLocation, type Stop, type Weights } from "./types.ts";
+import { DEFAULT_WEIGHTS, isStorageTag, STORAGE_TAGS, type Route, type RouteLeg, type ShelfLocation, type Stop, type Weights } from "./types.ts";
 
 export const EXACT_LIMIT = 13;
 
@@ -85,8 +85,8 @@ export class Router {
   private storage(s: Stop): Stop {
     const loc = this.locById.get(s.locationIds[0]);
     if (!loc?.tags) return s;
-    const cold = loc.tags.filter((t) => t === "chilled" || t === "frozen");
-    const tags = [...(s.tags ?? []).filter((t) => t !== "chilled" && t !== "frozen"), ...cold];
+    const cold = loc.tags.filter(isStorageTag);
+    const tags = [...(s.tags ?? []).filter((t) => !isStorageTag(t)), ...cold];
     const same = tags.length === (s.tags ?? []).length && tags.every((t) => s.tags!.includes(t));
     return same ? s : { ...s, tags };
   }
@@ -183,10 +183,10 @@ export class Router {
     let coldMask = 0;
     let fragileMask = 0;
     stops.forEach((s, i) => {
-      if (has(s, "frozen", "chilled")) coldMask |= 1 << i;
+      if (has(s, ...STORAGE_TAGS)) coldMask |= 1 << i;
       if (has(s, "fragile")) fragileMask |= 1 << i;
     });
-    const isCold = stops.map((s) => has(s, "frozen", "chilled"));
+    const isCold = stops.map((s) => has(s, ...STORAGE_TAGS));
     const isHeavy = stops.map((s) => has(s, "heavy"));
     const isFragile = stops.map((s) => has(s, "fragile"));
     const isProduce = stops.map((s) => has(s, "produce"));

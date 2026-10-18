@@ -12,7 +12,7 @@
 // tried; the llm layer is last, so its guess stands even when weak. Pure: no
 // I/O, no async. The app owns fetching and caching.
 
-import type { Category, Department, ItemTag, Stop } from "../types.ts";
+import { STORAGE_TAGS, type Category, type Department, type ItemTag, type Stop } from "../types.ts";
 import { damerauLevenshtein, forms, normalize, similarity, singularize, trigramCounts } from "./text.ts";
 import { confirmed, decayed, missed } from "../confidence.ts";
 
@@ -616,7 +616,7 @@ export function onMap(r: ResolveResult | null, ctx: ResolveContext, catCands: Ca
   return null;
 }
 
-const COLD: ItemTag[] = ["chilled", "frozen"];
+const COLD: readonly ItemTag[] = STORAGE_TAGS;
 const STORAGE_CACHE = new WeakMap<Category[], Map<string, ItemTag[]>>();
 
 /**

@@ -75,7 +75,7 @@ export function TripScreen({ bundle, router, trip, flat, onFlatChange, onGotIt, 
   const loc = leg ? store.locations.find((l) => l.id === leg.locationId) : undefined;
   const dept = locationDepartment(store, loc);
   const tags = stop?.tags ?? [];
-  const hint = tags.includes("frozen") || tags.includes("chilled") ? " · cold, so it's near the end" : tags.includes("heavy") ? " · heavy, so it's early" : "";
+  const hint = tags.includes("hot") ? " · hot, so it's near the end" : tags.includes("frozen") || tags.includes("chilled") ? " · cold, so it's near the end" : tags.includes("heavy") ? " · heavy, so it's early" : "";
   const locationLine = leg ? `${describeLocation(store, leg.locationId)}${hint}` : "";
 
   const remainingM = trip.route.legs.reduce((s, l) => s + l.distanceM, 0);

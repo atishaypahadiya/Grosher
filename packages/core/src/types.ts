@@ -25,7 +25,15 @@ export interface GraphEdge {
   oneWay?: boolean; // e.g. entrance turnstiles
 }
 
-export type ItemTag = "frozen" | "chilled" | "heavy" | "fragile" | "produce";
+export type ItemTag = "frozen" | "chilled" | "hot" | "heavy" | "fragile" | "produce";
+
+/**
+ * Storage: how the shelf keeps an item (the fridge, the freezer, the deli's hot case). A property of the
+ * shelf, never of the item's words, its aisle or its department; all three are picked late (the cold-last
+ * penalty) and show "· last" on the list chip.
+ */
+export const STORAGE_TAGS: readonly ItemTag[] = ["chilled", "frozen", "hot"];
+export const isStorageTag = (t: ItemTag) => STORAGE_TAGS.includes(t);
 
 /** Walmart store zones: grocery, market/deli, general merchandise, bakery, front end. */
 export type StoreZone = "GR" | "MD" | "GM" | "BK" | "FT";

@@ -7,7 +7,7 @@ import { categoriesAt, itemsAt, type Draft, type Issue, type Selection } from ".
 import type { TextureFile } from "./io.ts";
 import { IconCheck } from "../components/Icons.tsx";
 
-const TAGS: ItemTag[] = ["chilled", "frozen", "heavy", "fragile", "produce"];
+const TAGS: ItemTag[] = ["chilled", "frozen", "hot", "heavy", "fragile", "produce"];
 const ZONES: { id: StoreZone; label: string }[] = [
   { id: "GR", label: "GR · grocery" },
   { id: "MD", label: "MD · market / deli" },

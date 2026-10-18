@@ -5,13 +5,27 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { demoSupercenter } from "@grosher/stores";
-import { Router, WalkGraph, tagsForDepartment, type Stop } from "../src/index.ts";
+import { Router, STORAGE_TAGS, WalkGraph, tagsForDepartment, type Stop } from "../src/index.ts";
 
 const { store, categories } = demoSupercenter;
 const isCold = (tags: readonly string[] | undefined) => (tags ?? []).some((t) => t === "chilled" || t === "frozen");
 
 // the categories the demo treats as cold, spelled out: a change here is a decision, not a side effect
 const COLD = ["bacon-sausage", "beef", "block-specialty-cheese", "butter-margarine", "chicken", "cream-creamer", "cut-fruit-juice", "cut-vegetables", "dairy-free-cheese", "deli-cheese", "deli-meat", "eggs", "frozen-appetizers", "frozen-bowls-indian", "frozen-bread-dough", "frozen-breakfast", "frozen-chicken", "frozen-desserts", "frozen-dinners", "frozen-fruit", "frozen-fruit-bars", "frozen-indian-breads", "frozen-international", "frozen-meat", "frozen-pasta-entrees", "frozen-pizza", "frozen-potatoes", "frozen-rice-grains", "frozen-sandwiches", "frozen-seafood", "frozen-turkey-ham", "frozen-vegetables", "frozen-veggie-protein", "halal-meat", "hot-dogs", "hummus-dips", "ice", "ice-cream", "ice-cream-bars", "kombucha-probiotic", "liquid-egg", "lunch-meat", "lunchables-snack-kits", "marinated-meat", "milk", "milk-alternatives", "paneer-indian-dairy", "party-trays", "plant-protein", "pork", "prepared-salads", "pudding-jello", "refrigerated-dough", "refrigerated-juice", "refrigerated-pasta", "seafood", "sherbet-sorbet", "shredded-cheese", "sour-cream-dips", "turkey-lamb", "whipped-cream", "yogurt"];
+
+// the deli's hot case: picked late like cold food
+const HOT = ["rotisserie"];
+const isHot = (tags: readonly string[] | undefined) => (tags ?? []).includes("hot");
+
+test("the hot categories are exactly the deli's hot case; storage is chilled, frozen or hot", () => {
+  assert.deepEqual(categories.filter((c) => isHot(c.tags)).map((c) => c.id).sort(), HOT);
+  assert.deepEqual([...STORAGE_TAGS].sort(), ["chilled", "frozen", "hot"]);
+  // no category is both hot and cold
+  for (const c of categories) assert.ok(!(isHot(c.tags) && isCold(c.tags)), c.id);
+  // greens, mushrooms and herbs stay ambient (no storage tag)
+  const byId = new Map(categories.map((c) => [c.id, c]));
+  for (const id of ["salad-greens", "mushrooms-sprouts", "fresh-herbs"]) assert.ok(!(byId.get(id)!.tags ?? []).some((t) => STORAGE_TAGS.includes(t)), id);
+});
 
 test("the cold categories are exactly the fridge and freezer ones", () => {
   assert.deepEqual(categories.filter((c) => isCold(c.tags)).map((c) => c.id).sort(), COLD);
@@ -30,6 +44,7 @@ test("every shelf carries its category's storage, so the map and the categories 
     const loc = locs.get(c.locationId)!;
     assert.ok(Array.isArray(loc.tags), `${loc.id} has a tags array`);
     assert.equal(isCold(loc.tags), isCold(c.tags), `${loc.id} (${c.name})`);
+    assert.equal(isHot(loc.tags), isHot(c.tags), `${loc.id} (${c.name}) hot`);
   }
 });
 
@@ -45,6 +60,13 @@ test("the solver takes cold from the shelf: a stop tagged chilled on an ambient 
   assert.equal(router.routeForOrder([shelfOat, chips]).penaltyM, 0);
   // the real cold item first, an ambient one after: penalised
   assert.ok(router.routeForOrder([caseOat, chips]).penaltyM > 0);
+  // hot food the same: the rotisserie shelf makes a stop hot whatever its own tags, and it routes late
+  const chicken: Stop = { id: "chicken", name: "Rotisserie chicken", locationIds: [categories.find((c) => c.id === "rotisserie")!.locationId] };
+  assert.deepEqual(router.placeable([chicken]).stops[0].tags, ["hot"]);
+  assert.ok(router.routeForOrder([chicken, chips]).penaltyM > 0);
+  assert.equal(router.routeForOrder([chips, chicken]).penaltyM, 0);
+  const plan = router.solve({ stops: [chicken, chips] });
+  assert.deepEqual(plan.order, ["chips", "chicken"]);
 });
 
 test("a department never implies cold (a model answer with no tags of its own)", () => {

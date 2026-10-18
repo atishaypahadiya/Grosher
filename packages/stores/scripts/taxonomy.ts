@@ -96,8 +96,8 @@ export const TAXONOMY: TaxAisle[] = [
     sign: "Deli · Rotisserie · Prepared",
     department: "deli",
     left: [
-      // hot-held, not refrigerated: no cold tag (the cold-last rule is about the fridge and the freezer)
-      c("rotisserie", "Rotisserie chicken & hot food", ["rotisserie chicken", "hot chicken", "fried chicken"]),
+      // the deli's hot case: picked late like cold food, so it is still hot at the till
+      c("rotisserie", "Rotisserie chicken & hot food", ["rotisserie chicken", "hot chicken", "fried chicken"], ["hot"]),
       c("deli-meat", "Sliced deli meat", ["turkey slices", "ham slices", "salami", "lunch meat"], ["chilled"]),
       c("deli-cheese", "Deli cheese", ["sliced cheese", "cheese block from deli"], ["chilled"]),
       c("prepared-salads", "Prepared salads & sides", ["potato salad", "coleslaw", "macaroni salad"], ["chilled"]),

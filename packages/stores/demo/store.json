@@ -4150,7 +4150,9 @@
       "edgeId": "e92",
       "offsetM": 14.7,
       "shelf": 3,
-      "tags": []
+      "tags": [
+        "hot"
+      ]
     },
     {
       "id": "DELI-L3",
