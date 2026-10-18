@@ -52,9 +52,13 @@ npm run chain:status -w @grosher/resolver     # one ✓ / ✗ line per link, wit
 
 `chain:install` writes two agents to `~/Library/LaunchAgents`:
 
-- `dev.grosher.ollama` runs `scripts/ollama-login.sh` at login: `launchctl setenv` OLLAMA_HOST=0.0.0.0,
-  OLLAMA_ORIGINS=*, OLLAMA_KEEP_ALIVE=24h, then opens the Ollama menu-bar app (which reads launchd's environment),
-  waits for it and sends one 1-token `qwen3:8b` request so the first real one is warm.
+- `dev.grosher.ollama` runs `scripts/ollama-login.sh` at login: `launchctl setenv` OLLAMA_HOST=127.0.0.1 (the
+  gate is Ollama's only client), OLLAMA_KEEP_ALIVE=24h, OLLAMA_MAX_LOADED_MODELS=2 (qwen3:8b and qwen2.5vl:7b
+  stay loaded together), `unsetenv` OLLAMA_ORIGINS, then opens the Ollama menu-bar app (which reads launchd's
+  environment; a server already running with other settings is restarted), waits for it and sends one 1-token
+  `qwen3:8b` request so the first real one is warm. The app's own **Settings → Expose Ollama to the network**
+  must stay off: it overrides OLLAMA_HOST with 0.0.0.0 and OLLAMA_ORIGINS with `*` (the script logs a warning
+  and `chain:status` fails the Ollama line if anything listens beyond loopback).
   Log: `~/Library/Logs/grosher-ollama.log`.
 - `dev.grosher.gate` runs the gate with node's absolute path (launchd has no PATH), `RunAtLoad` and `KeepAlive`;
   the token comes from `OLLAMA_TOKEN_FILE`, and the gate refuses a file anyone else can read.

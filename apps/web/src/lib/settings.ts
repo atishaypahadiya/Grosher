@@ -2,7 +2,7 @@
 // screen): which LLM provider answers, where it is, which model. Stored in
 // localStorage; the defaults come from the VITE_ variables at build time.
 //
-//   ollama  straight to an Ollama over http (dev: the Mac on the same Wi-Fi).
+//   ollama  straight to an Ollama over http (dev: localhost on the Mac; Ollama listens on loopback only).
 //           An installed app served over https cannot call plain http, so
 //           this is a development path.
 //   worker  the Cloudflare worker (apps/resolver), which reaches the Mac's

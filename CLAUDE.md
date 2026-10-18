@@ -190,13 +190,12 @@ tags}`; the department comes from the category.
   each call `/api/ps` is checked, and if the model is not resident that one call gets a 60 s timeout and the
   header says "warming up the local model…". In dev every call logs `[resolve] …` with load, prompt-eval and
   generation timings to the console. Measured on an M-series Mac with qwen3:8b: ~2.7 s generation for 5
-  items, ~5 s from typing to placed rows. Setup on the Mac: `ollama pull qwen3:8b`, and start Ollama with
-  `OLLAMA_ORIGINS` allowing the app's origin (`OLLAMA_ORIGINS="http://localhost:5173,http://192.168.1.20:5173"
-  ollama serve`, or `launchctl setenv OLLAMA_ORIGINS "*"` for the menu-bar app), or the browser's preflight
-  is refused. For the phone, put the Mac's LAN address in `apps/web/.env.local`
-  (`VITE_OLLAMA_URL=http://192.168.1.20:11434`); the phone resolves only while on the same Wi-Fi as the Mac,
-  and only from a page served over plain http: the installed app (https) cannot fetch an http Ollama (mixed
-  content; the sheet says so), which is what the worker path is for.
+  items, ~5 s from typing to placed rows. Setup on the Mac: `ollama pull qwen3:8b`; the dev server
+  on the Mac calls `http://localhost:11434` (`VITE_OLLAMA_URL`), which Ollama's default origins allow
+  (`http://localhost:*`, `http://127.0.0.1:*`), so no `OLLAMA_ORIGINS`. Ollama listens on loopback only (see
+  "Resolver uptime"), so this path works on the Mac and nowhere else: a phone, on the Wi-Fi or installed, uses
+  the worker. Keep `VITE_OLLAMA_MODEL` on qwen3:8b: a third model resident evicts one of the two the chain
+  keeps loaded.
 - `worker` (production): the worker in `apps/resolver` at `workerUrl` (dev: `/api`, proxied to `wrangler
   dev` on :8787); the request is `{items, categories: {id, name}[]}` (caps: 48 KB body, 40 items, 400
   categories). The worker's `PROVIDER` var picks its upstream: `ollama` forwards the same batch to the
@@ -235,14 +234,14 @@ npx wrangler secret put OLLAMA_UPSTREAM     # paste https://<machine>.<tailnet>.
 npx wrangler secret put OLLAMA_TOKEN        # paste the token file's contents
 npm run deploy -w @grosher/resolver         # prints https://grosher-resolver.<account>.workers.dev → VITE_RESOLVER_URL on Pages
 
-npm run chain:status -w @grosher/resolver   # ✓ / ✗ per link, with the fix
+npm run chain:status -w @grosher/resolver   # ✓ / ✗ per link, with the fix (Ollama must be on loopback only)
 ```
 
 **Resolver uptime.** Nothing is started by hand; after a reboot and login the chain comes back on its own:
 
 | Link | Started by | Notes |
 | --- | --- | --- |
-| Ollama | `~/Library/LaunchAgents/dev.grosher.ollama.plist` → `apps/resolver/scripts/ollama-login.sh` at login | `launchctl setenv OLLAMA_HOST=0.0.0.0 OLLAMA_ORIGINS=* OLLAMA_KEEP_ALIVE=24h` (setenv does not survive a reboot, hence every login), then `open -ga Ollama` (an app already running on localhost only is restarted to read them), waits for `/api/version`, sends one 1-token `qwen3:8b` chat so the first real request is warm. Log `~/Library/Logs/grosher-ollama.log`. |
+| Ollama | `~/Library/LaunchAgents/dev.grosher.ollama.plist` → `apps/resolver/scripts/ollama-login.sh` at login | `launchctl setenv OLLAMA_HOST=127.0.0.1 OLLAMA_KEEP_ALIVE=24h OLLAMA_MAX_LOADED_MODELS=2`, `unsetenv OLLAMA_ORIGINS` (setenv does not survive a reboot, hence every login), then `open -ga Ollama` (a server running with other settings, listening beyond loopback or with a different environment, is restarted to read them), waits for `/api/version`, sends one 1-token `qwen3:8b` chat so the first real request is warm. Log `~/Library/Logs/grosher-ollama.log`. |
 | Gate | `~/Library/LaunchAgents/dev.grosher.gate.plist` | `RunAtLoad`, `KeepAlive`, `ThrottleInterval` 5: killed, it is back in under a second (measured 0.3 s). Node by its absolute PATH name (`/opt/homebrew/bin/node`, not the Cellar path). Token from `OLLAMA_TOKEN_FILE` (`~/.config/grosher/ollama-token`; the gate refuses a file others can read). Log `~/Library/Logs/grosher-gate.log`, one timestamped line per request. |
 | Funnel | tailscaled (the Tailscale app at login) | `tailscale funnel --bg` is stored in the node's serve config. |
 | Worker | Cloudflare | `/health` probes the chain, see below. |
@@ -253,8 +252,16 @@ resolved through 1.1.1.1 so the request comes back in through Tailscale's ingres
 worker's `/health`; each ✗ carries its fix, and the exit code is 1. If the Mac sleeps the worker answers
 `degraded: true`, the installed app shows "Resolver offline · unknown items need a tap", and everything the
 catalog and memory can place still works. Lid closed = no resolver: keep the Mac awake (`caffeinate -s`).
-`OLLAMA_HOST=0.0.0.0` also exposes the unauthenticated Ollama on the LAN (for the phone's dev path); only
-the gate is on the Funnel.
+**Ollama is loopback only** (`OLLAMA_HOST=127.0.0.1`): the gate is its one client, nothing on the LAN or the
+tailnet reaches :11434 (it has no auth), and no other device can load a model into the Mac's memory; only
+the gate is on the Funnel. The Ollama app's **Settings → Expose Ollama to the network** must stay off: it
+overrides `OLLAMA_HOST` with 0.0.0.0 and `OLLAMA_ORIGINS` with `*` whatever launchd says (it was on, in the
+app's `~/Library/Application Support/Ollama/db.sqlite` `settings.expose`, and is now off); the login script
+logs a warning and `chain:status` fails if anything listens beyond loopback. **Two models resident**
+(`OLLAMA_MAX_LOADED_MODELS=2`): on this 24 GB Mac Ollama's Metal budget is 17.8 GiB; qwen3:8b loads at 6.1 GB
+and qwen2.5vl:7b at 8.0 GB (4096 context), 14.1 GB together, so a survey's sign reads leave the resolver
+model loaded (measured: both resident after a read). A third model (another client, a dev server set to
+qwen3:14b at 10 GB) would evict the least recently used one: keep the dev server on qwen3:8b.
 
 The gate only passes `POST /api/chat` and `GET /api/ps` with the exact bearer token
 (constant-time compare, 64 KB bodies); everything else is 404 / 401. Set `ALLOWED_ORIGIN` in `wrangler.toml`
@@ -669,7 +676,7 @@ navigations fall back to `index.html` through the service worker. The build also
 (`bundle.test.ts`), and CI's perf gate runs on every push (`.github/workflows/ci.yml`,
 `apps/web/scripts/perf-gate.mjs`: three framings of the 3D view within 70 draw calls and 12,000 instances),
 followed by the contrast gate (`apps/web/scripts/contrast-gate.mjs`) and the boot-resilience test.
-`apps/web/.env.local` is git-ignored (it was tracked once): a LAN Ollama address there would otherwise bake
+`apps/web/.env.local` is git-ignored (it was tracked once): a local Ollama address there would otherwise bake
 into the deployed bundle.
 
 **Checking the production build as an installed PWA over HTTPS** (Chromium only registers a service worker

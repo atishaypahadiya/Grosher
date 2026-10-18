@@ -14,7 +14,7 @@ export interface SettingsSheetProps {
 }
 
 const PROVIDERS: { id: ProviderName; label: string; note: string }[] = [
-  { id: "ollama", label: "Local Ollama", note: "Straight to the Mac over plain http: for development on the same Wi-Fi. OLLAMA_ORIGINS must allow this origin." },
+  { id: "ollama", label: "Local Ollama", note: "Straight to Ollama on this Mac (localhost): for development on the Mac. Ollama listens on the Mac only, so a phone uses the worker." },
   { id: "worker", label: "Worker", note: "Through the Cloudflare worker, which reaches the Mac's model over its tunnel. Works from the installed app." },
 ];
 

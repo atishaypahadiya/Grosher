@@ -1,7 +1,8 @@
 // Installs the two LaunchAgents that keep the Mac side of the resolver chain up across reboots:
 //
-//   dev.grosher.ollama  at login: launchctl setenv OLLAMA_HOST / OLLAMA_ORIGINS / OLLAMA_KEEP_ALIVE, open the
-//                       Ollama menu-bar app, wait for it, warm qwen3:8b (scripts/ollama-login.sh)
+//   dev.grosher.ollama  at login: launchctl setenv OLLAMA_HOST=127.0.0.1 / OLLAMA_KEEP_ALIVE / OLLAMA_MAX_LOADED_MODELS
+//                       (OLLAMA_ORIGINS unset), open the Ollama menu-bar app, wait for it, warm qwen3:8b
+//                       (scripts/ollama-login.sh)
 //   dev.grosher.gate    scripts/ollama-gate.mjs on 127.0.0.1:11435, KeepAlive, token from
 //                       ~/.config/grosher/ollama-token (chmod 600; never in the plist or the repo)
 //
