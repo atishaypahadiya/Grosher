@@ -348,8 +348,9 @@ export function buildDraft(s: Survey, d: Derived, ref: { categories: Category[];
       const bay = Math.max(1, Math.ceil(along / BAY_M));
       let id = `${a.code}-${side}${bay}`;
       while (locations.some((l) => l.id === id)) id += "x";
-      locations.push({ id, aisle: a.code, side, bay: String(bay), zone: "GR", edgeId, offsetM: round2(forward ? along : len - along) });
       const c = refById.get(m.categoryId)!;
+      // the shelf's storage is its category's (chilled / frozen drive "last" and the cold-last rule)
+      locations.push({ id, aisle: a.code, side, bay: String(bay), zone: "GR", edgeId, offsetM: round2(forward ? along : len - along), tags: c.tags ?? [] });
       categories.push({ ...c, aisle: a.code, side, bays: [bay, bay], locationId: id });
     });
     if (a.endcap) locations.push({ id: `${a.code}-E`, aisle: a.code, side: "E", bay: "100", zone: "GR", edgeId, offsetM: forward ? 0 : round2(len) });

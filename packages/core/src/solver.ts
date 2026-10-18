@@ -14,7 +14,7 @@
 //                      optimally for each order by a layered shortest path
 
 import { WalkGraph } from "./graph.ts";
-import { DEFAULT_WEIGHTS, type Route, type RouteLeg, type Stop, type Weights } from "./types.ts";
+import { DEFAULT_WEIGHTS, type Route, type RouteLeg, type ShelfLocation, type Stop, type Weights } from "./types.ts";
 
 export const EXACT_LIMIT = 13;
 
@@ -71,10 +71,28 @@ export class Router {
     for (const s of stops) {
       const known = s.locationIds.filter((l) => this.graph.locationNode.has(l));
       if (!known.length) unplaced.push(s);
-      else out.push(known.length === s.locationIds.length ? s : { ...s, locationIds: known });
+      else out.push(this.storage(known.length === s.locationIds.length ? s : { ...s, locationIds: known }));
     }
     if (unplaced.length) console.warn(`[route] left out ${unplaced.length} stop(s) with no location on this map: ${unplaced.map((s) => `${s.id} (${s.locationIds.join(", ") || "none"})`).join("; ")}`);
     return { stops: out, unplaced };
+  }
+
+  /**
+   * Cold is the shelf's storage: chilled / frozen come from the tags of the stop's first location (its
+   * category's, in a generated or surveyed map), never from the item's words, its department or its aisle;
+   * a location with no tags array says nothing and the stop keeps its own.
+   */
+  private storage(s: Stop): Stop {
+    const loc = this.locById.get(s.locationIds[0]);
+    if (!loc?.tags) return s;
+    const cold = loc.tags.filter((t) => t === "chilled" || t === "frozen");
+    const tags = [...(s.tags ?? []).filter((t) => t !== "chilled" && t !== "frozen"), ...cold];
+    const same = tags.length === (s.tags ?? []).length && tags.every((t) => s.tags!.includes(t));
+    return same ? s : { ...s, tags };
+  }
+  private _locById: Map<string, ShelfLocation> | null = null;
+  private get locById(): Map<string, ShelfLocation> {
+    return (this._locById ??= new Map(this.graph.store.locations.map((l) => [l.id, l])));
   }
 
   solve(input: SolveInput): Route {

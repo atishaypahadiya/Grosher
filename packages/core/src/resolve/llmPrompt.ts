@@ -69,15 +69,13 @@ export function llmResultSchema(categoryIds: string[]) {
 /** Output-token ceiling for a list: ~45 per item plus the envelope (measured ~28 per item with tags). */
 export const llmMaxTokens = (itemCount: number) => Math.min(4096, 32 + 45 * itemCount);
 
-/** Handling tags implied by a department, for a category that carries none. */
+/**
+ * Handling tags implied by a department, for a category that carries none. Never chilled or frozen: storage
+ * is the shelf's (the category at the item's location, see withStorage), not the department's: a dairy
+ * department also stocks shelf-stable milk, a deli hot food.
+ */
 export function tagsForDepartment(dept: string | undefined): ItemTag[] {
   switch (dept) {
-    case "dairy":
-    case "meat":
-    case "deli":
-      return ["chilled"];
-    case "frozen":
-      return ["frozen"];
     case "produce":
       return ["produce"];
     case "bakery":

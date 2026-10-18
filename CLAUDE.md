@@ -127,10 +127,15 @@ is re-placed through the category its shelf name or canonical name names (`categ
 does not count and the item falls through, ending as unknown ("Needs a place"). So no stale id reaches the
 solver or storage. The model never names locations: it picks a category id from the store's list, enforced
 by the schema's enum and by `parseLlmResults` (anything else is null); the app maps the category to its slot.
-**Cold comes from the shelf** (`withStorage` in core, on every answer): chilled / frozen are the
-category's at the answer's first location, whatever the catalog row, the model or a cached answer said
-(shelf-stable oat milk in A17 drinks is ambient, oat milk in the dairy case chilled); heavy / fragile /
-produce stay. That is what the chip's "· last" and the cold-last penalty read. **A department id answer
+**Cold comes from the shelf**, never from the item's words, its aisle or its department: chilled /
+frozen are the storage of the category at the item's location. Every shelf location carries its
+category's tags (`gen-demo` writes `tags` on all 298, `[]` for ambient; survey drafts copy them), and three
+readers use them: `withStorage` in core on every answer, `Router.placeable` (so the cold-last penalty sees
+the shelf's storage even for a restored trip's or a catalog row's stale tags), and the list chip's "· last".
+Heavy / fragile / produce stay the item's. The demo's cold set is pinned in `packages/core/test/storage.test.ts`
+(62 categories: the dairy case, A18–A21 freezers, A22 cheese and chilled dips, meat, deli cold cases, cut
+fruit and cut vegetables); shelf-stable milk and plant milk (A17), every drink, coconut and evaporated
+milk and shelf-stable creamer are ambient, and rotisserie / hot food is not cold. **A department id answer
 places nothing** in a store with categories (it used to land non-grocery items in dry goods); the prompt
 says null when no listed category fits (measured: sunglasses, a phone charger, motor oil, a birthday card,
 flip flops → null; gochujang, furikake, kombucha, dashi still placed). **Answer versions**
@@ -239,8 +244,8 @@ tags}`; the department comes from the category.
   schema). Both return the parsed rows; when the upstream is unreachable, misconfigured or rate-limited the
   worker still answers 200 with every item unknown and `degraded: true`, and the client treats that like an
   outage (note in the header, nothing cached). `tags[]` in the schema comes from the fixed set; when the
-  model gives none, tags are derived from the department (dairy / meat → chilled, frozen → frozen,
-  produce → produce, bakery → fragile).
+  model gives none, the department implies handling only (produce → produce, bakery → fragile), never
+  chilled or frozen: storage is the shelf's (below).
 
 Any provider failure (unreachable, timeout, bad JSON) leaves the items unknown and shows the provider's
 one-line note in the list header ("Local model offline · unknown items need a tap"). Never an error state.

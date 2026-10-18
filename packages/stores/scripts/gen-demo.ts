@@ -161,7 +161,7 @@ function build(): Built {
       const [b0, b1] = ranges[k];
       const { edgeId, offsetM } = at((b0 + b1) / 2, bayCount);
       const locationId = `${tax.aisle}-${side}${b0}`;
-      locations.push({ id: locationId, aisle: tax.aisle, side, edgeId, offsetM: Math.round(offsetM * 10) / 10, shelf: 1 + (shelfSeq++ % 3), tags: cat.tags });
+      locations.push({ id: locationId, aisle: tax.aisle, side, edgeId, offsetM: Math.round(offsetM * 10) / 10, shelf: 1 + (shelfSeq++ % 3), tags: cat.tags ?? [] });
       categories.push({ id: cat.id, name: cat.name, group: tax.sign, aisle: tax.aisle, side, bays: [b0, b1], locationId, department: tax.department, tags: cat.tags, aliases: cat.aliases });
     });
   };

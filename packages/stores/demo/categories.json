@@ -5548,7 +5548,8 @@
     "locationId": "PRODUCE-R24",
     "department": "produce",
     "tags": [
-      "produce"
+      "produce",
+      "chilled"
     ],
     "aliases": [
       "baby carrots",
@@ -5570,9 +5571,6 @@
     ],
     "locationId": "DELI-L1",
     "department": "deli",
-    "tags": [
-      "chilled"
-    ],
     "aliases": [
       "rotisserie chicken",
       "hot chicken",

@@ -51,7 +51,8 @@ export const TAXONOMY: TaxAisle[] = [
       c("fresh-herbs", "Fresh herbs", ["cilantro", "coriander leaves", "mint", "curry leaves", "parsley", "basil"], ["produce", "fragile"]),
       c("mushrooms-sprouts", "Mushrooms & sprouts", ["mushroom", "bean sprouts"], ["produce"]),
       c("cut-fruit-juice", "Cut fruit & fresh juice", ["fruit cup", "cold pressed juice"], ["chilled", "fragile"]),
-      c("cut-vegetables", "Cut vegetables & stir-fry mixes", ["baby carrots", "celery sticks", "stir fry mix", "coleslaw mix", "riced cauliflower fresh"], ["produce"]),
+      // cut produce is refrigerated (food safety), like the cut fruit beside it
+      c("cut-vegetables", "Cut vegetables & stir-fry mixes", ["baby carrots", "celery sticks", "stir fry mix", "coleslaw mix", "riced cauliflower fresh"], ["produce", "chilled"]),
     ],
   },
   {
@@ -95,7 +96,8 @@ export const TAXONOMY: TaxAisle[] = [
     sign: "Deli · Rotisserie · Prepared",
     department: "deli",
     left: [
-      c("rotisserie", "Rotisserie chicken & hot food", ["rotisserie chicken", "hot chicken", "fried chicken"], ["chilled"]),
+      // hot-held, not refrigerated: no cold tag (the cold-last rule is about the fridge and the freezer)
+      c("rotisserie", "Rotisserie chicken & hot food", ["rotisserie chicken", "hot chicken", "fried chicken"]),
       c("deli-meat", "Sliced deli meat", ["turkey slices", "ham slices", "salami", "lunch meat"], ["chilled"]),
       c("deli-cheese", "Deli cheese", ["sliced cheese", "cheese block from deli"], ["chilled"]),
       c("prepared-salads", "Prepared salads & sides", ["potato salad", "coleslaw", "macaroni salad"], ["chilled"]),

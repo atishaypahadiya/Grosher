@@ -33,7 +33,10 @@ export function chipFor(store: StoreGraph, stop: Stop): Chip {
   const second = locs.slice(1).map(label).find((l) => l.toLowerCase() !== text.toLowerCase());
   if (second) text = `${text} or ${second.toLowerCase()}`;
   else if (AISLE.test(first.aisle) && dept) text = `${text} · ${dept.name.toLowerCase()}`;
-  if ((stop.tags ?? []).some((t) => t === "frozen" || t === "chilled")) text += " · last";
+  // "last" (cold, picked late) is the shelf's storage: its location's tags (the category's), never the
+  // aisle's or the department's; a location without a tags array leaves it to the item's own tags
+  const storage = first.tags ?? stop.tags ?? [];
+  if (storage.some((t) => t === "frozen" || t === "chilled")) text += " · last";
   return { text, color: dept?.color };
 }
 
