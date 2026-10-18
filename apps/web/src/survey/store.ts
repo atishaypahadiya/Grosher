@@ -68,7 +68,9 @@ export async function importSurvey(file: File): Promise<Survey> {
   const { survey, photoData } = parseSurveyFile(JSON.parse(await file.text()));
   for (const [id, url] of Object.entries(photoData)) {
     const p = survey.photos.find((x) => x.id === id);
-    await savePhoto(id, { blob: await fromDataUrl(url), w: p?.w ?? 0, h: p?.h ?? 0 });
+    // only photos the survey lists, only as image data (fromDataUrl refuses anything else)
+    if (!p || typeof url !== "string") continue;
+    await savePhoto(id, { blob: fromDataUrl(url), w: p.w, h: p.h });
   }
   await saveSurvey(survey);
   return survey;

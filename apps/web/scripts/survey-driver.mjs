@@ -81,6 +81,9 @@ export async function driveSurvey(page, { base, fixtures, onScreen = async () =>
   await button(page, "Stop").click();
   await onScreen("calibrated");
   await button(page, "Save").click();
+  // the "Stride saved" notice times out (3.5 s) before the next screen, so nothing is measured mid-removal
+  await page.clock.runFor(4000);
+  await page.locator(".sv-notice").waitFor({ state: "detached", timeout: 5000 }).catch(() => {});
 
   // start: stand in the entrance facing in
   await button(page, "Start survey").click();

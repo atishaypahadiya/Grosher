@@ -50,6 +50,16 @@ export function toDataUrl(blob: Blob): Promise<string> {
   });
 }
 
-export async function fromDataUrl(url: string): Promise<Blob> {
-  return (await fetch(url)).blob();
+/** a photo in an imported survey file: a base64 JPEG / PNG / WebP data: URL, nothing else (never fetched) */
+const PHOTO_DATA_URL = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/]+={0,2})$/;
+/** ~4 MB of base64: a 1024 px JPEG is a tenth of that */
+export const MAX_PHOTO_DATA_URL = 4_000_000;
+
+export function fromDataUrl(url: string): Blob {
+  const m = url.length <= MAX_PHOTO_DATA_URL ? PHOTO_DATA_URL.exec(url) : null;
+  if (!m) throw new Error("A photo in the survey file is not an image.");
+  const bin = atob(m[2]);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new Blob([bytes], { type: m[1] });
 }

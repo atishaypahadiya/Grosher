@@ -155,3 +155,13 @@ describe("survey derivation", () => {
     expect(() => parseSurveyFile({ format: "other" })).toThrow(/Not a Grosher survey/);
   });
 });
+
+describe("survey file photos", () => {
+  test("only base64 image data: URLs are accepted, decoded without a fetch", async () => {
+    const { fromDataUrl } = await import("../src/survey/photos.ts");
+    const blob = fromDataUrl("data:image/jpeg;base64,/9j/4AAQ");
+    expect(blob.type).toBe("image/jpeg");
+    expect(blob.size).toBe(6);
+    for (const bad of ["http://192.168.1.1/admin", "https://example.com/x.jpg", "data:text/html;base64,PGgxPg==", "data:image/svg+xml;base64,PHN2Zz4=", "blob:https://grosher.pages.dev/abc"]) expect(() => fromDataUrl(bad)).toThrow(/not an image/);
+  });
+});
