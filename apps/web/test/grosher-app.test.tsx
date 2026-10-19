@@ -46,7 +46,8 @@ describe("Grosher, the default store", () => {
     const chip = (name: RegExp) => within(screen.getByRole("list")).getAllByText(name)[0].closest("li")!.textContent ?? "";
     expect(chip(/sushi platter/i)).toMatch(/Sushi · last/);
     expect(chip(/ice cream/i)).toMatch(/Frozen · last/);
-    expect(chip(/red wine/i)).toMatch(/A12 · beer & wine/);
+    // the sign answers first ("A12 · Red wine"); the catalog's own row, once the full catalog is in, names the shelf
+    await waitFor(() => expect(chip(/red wine/i)).toMatch(/A12 · beer & wine/), { timeout: 10_000 });
     expect(chip(/bouquet/i)).toMatch(/Floral/);
     expect(screen.getByRole("button", { name: /route 9 items/i })).toBeTruthy();
   });
