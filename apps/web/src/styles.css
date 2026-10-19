@@ -648,6 +648,6 @@ a.pill-s { text-decoration: none; }
 .flat-shelf img { display: block; width: 100%; height: auto; }
 .flat-shelf figcaption { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; color: #fff; font-weight: 500; }
 .closeup-back-inline { background: transparent; border-color: rgba(255, 255, 255, 0.4); color: #fff; min-height: 36px; }
-.debug-perf { position: absolute; right: var(--gutter); top: calc(max(58px, env(safe-area-inset-top)) + 80px); z-index: 4; margin: 0; padding: 8px 10px; border-radius: 12px; background: var(--plate); border: 1px solid rgba(255, 255, 255, 0.22); color: #fff; font: 500 11px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre; pointer-events: none; }
+.debug-perf { position: absolute; right: var(--gutter); top: calc(max(58px, env(safe-area-inset-top)) + 136px); /* under the back pill, never over it */ z-index: 4; margin: 0; padding: 8px 10px; border-radius: 12px; background: var(--plate); border: 1px solid rgba(255, 255, 255, 0.22); color: #fff; font: 500 11px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre; pointer-events: none; }
 .is-closeup .trip-head .pill { background: var(--plate); border-color: rgba(255, 255, 255, 0.22); color: #fff; }
 .is-closeup .trip-head .trip-store { color: #fff; }
