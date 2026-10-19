@@ -214,6 +214,9 @@ export function OverlayProjector({ items, registry, safe }: { items: OverlayItem
     const fixed: FixedLabel[] = [];
     const stops: StopInput[] = [];
     const obstacles: Box[] = [];
+    // numbered dots (later stops) and the lime dot of the next stop, for the overlap pass below
+    const dots: { el: HTMLElement; x: number; y: number; origin: boolean }[] = [];
+    const limes: { x: number; y: number }[] = [];
     for (const it of items) {
       const el = registry.get(it.key);
       if (!el) continue;
@@ -236,6 +239,7 @@ export function OverlayProjector({ items, registry, safe }: { items: OverlayItem
         el.style.visibility = "visible";
         p.dot.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) translate(-50%, -50%)`;
         p.dot.style.visibility = onScreen ? "" : "hidden"; // behind the camera the projection is mirrored
+        if (onScreen) dots.push({ el: p.dot, x, y, origin: true });
         stops.push({ key: it.key, point: { x, y }, behind: !onScreen, card: p.cardSize, chip: p.chipSize });
         continue;
       }
@@ -247,16 +251,30 @@ export function OverlayProjector({ items, registry, safe }: { items: OverlayItem
       }
       el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
       el.style.visibility = onScreen ? "visible" : "hidden";
+      if (onScreen && it.className === "m-stop") dots.push({ el, x, y, origin: false });
       if (!it.card) continue;
       if (it.card === "marker") {
         // the 8 px lime dot and the 46 px leader above it (styles.css .m-next, .m-leader)
-        if (onScreen) obstacles.push({ x0: x - 5, x1: x + 5, y0: y - 58, y1: y + 5 });
+        if (onScreen) {
+          obstacles.push({ x0: x - 5, x1: x + 5, y0: y - 58, y1: y + 5 });
+          limes.push({ x, y });
+        }
         continue;
       }
       const w = el.offsetWidth || 160;
       const h = el.offsetHeight || 48;
       const box = !onScreen ? null : it.card === "next" ? { x0: x - w / 2, x1: x + w / 2, y0: y - h, y1: y } : { x0: x - w / 2, x1: x + w / 2, y0: y, y1: y + h };
       fixed.push({ key: it.key, box });
+    }
+    // a later stop at nearly the same spot as the next one (two shelves facing across an aisle) would put its
+    // white-on-soil number on the lime dot: slide it sideways until the two clear by 2 px (13 px dot, 8 px lime)
+    for (const d of dots) {
+      for (const m of limes) {
+        const dx = d.x - m.x;
+        if (Math.abs(dx) >= 12.5 || Math.abs(d.y - m.y) >= 12.5) continue;
+        const nx = m.x + (dx < 0 ? -1 : 1) * 12.5;
+        d.el.style.transform = d.origin ? `translate(${nx.toFixed(1)}px, ${d.y.toFixed(1)}px) translate(-50%, -50%)` : `translate(${nx.toFixed(1)}px, ${d.y.toFixed(1)}px)`;
+      }
     }
     for (const pl of planCards({ area, fixed, stops, obstacles, lift: CARD_LIFT })) {
       const el = registry.get(pl.key);

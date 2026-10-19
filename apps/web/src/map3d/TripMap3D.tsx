@@ -45,6 +45,12 @@ export function footprintOf(store: StoreGraph) {
     y0 = Math.min(y0, n.y);
     y1 = Math.max(y1, n.y);
   }
+  for (const [x, y] of store.outline ?? []) {
+    x0 = Math.min(x0, x);
+    x1 = Math.max(x1, x);
+    y0 = Math.min(y0, y);
+    y1 = Math.max(y1, y);
+  }
   for (const f of store.fixtures ?? []) {
     const b = fixtureBox(f);
     x0 = Math.min(x0, b.cx - b.w / 2);

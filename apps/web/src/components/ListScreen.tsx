@@ -109,14 +109,14 @@ export function ListScreen({ store, items, results, plan, baselineM, usual, aski
     <main className="screen page list-page" ref={pageRef}>
       <header className="list-head on-haze">
         <div>
-          <span className="eyebrow">{store.name ?? "Store"}</span>
-          <h1 className="heading">{store.address ?? store.storeId}</h1>
+          <span className="eyebrow">{store.address ?? "Store"}</span>
+          <h1 className="heading">{store.name ?? store.storeId}</h1>
         </div>
         <div className="row">
           <button type="button" className="pill soil-ghost" onClick={onOpenLists}>
             Lists
           </button>
-          <button type="button" className="pill soil-ghost" onClick={() => setHint("One store so far: the demo Supercenter.")}>
+          <button type="button" className="pill soil-ghost" onClick={() => setHint("One store so far: Grosher.")}>
             Change
           </button>
           {onOpenSettings && (

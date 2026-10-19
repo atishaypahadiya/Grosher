@@ -6,6 +6,8 @@ import type { Department, Fixture, FixtureKind, ShelfLocation, StoreGraph } from
 
 export const BAY_M = 1.22; // a standard 4 ft bay
 export const DECK_M = 0.15; // base deck height
+export const SERVICE_DECK_M = 0.85; // a service case's display deck, under the glass
+export const COFFIN_DECK_M = 0.55; // the floor of a coffin freezer's tub
 
 export interface FixtureParams {
   kind: FixtureKind;
@@ -24,6 +26,7 @@ export interface FixtureParams {
 }
 
 export function fixtureKindOf(f: Fixture, departments: Department[] | undefined): FixtureKind {
+  if (f.fixtureKind) return f.fixtureKind;
   // a counter is a counter whatever department staffs it (the pharmacy counter, a deli counter)
   if (f.kind === "counter" || f.kind === "selfcheckout" || f.kind === "service") return "counter";
   const dept = departments?.find((x) => x.id === f.department);
@@ -34,7 +37,9 @@ export function fixtureKindOf(f: Fixture, departments: Department[] | undefined)
 export function defaultShelves(kind: FixtureKind): number {
   if (kind === "coldcase") return 4;
   if (kind === "produce" || kind === "bakery") return 3;
-  if (kind === "counter") return 1;
+  if (kind === "counter" || kind === "coffin") return 1;
+  if (kind === "servicecase") return 2;
+  if (kind === "bins") return 4;
   return 5;
 }
 
@@ -51,7 +56,7 @@ export function fixtureParams(f: Fixture, departments: Department[] | undefined)
   const length = vertical ? d : w;
   const width = vertical ? w : d;
   const kind = fixtureKindOf(f, departments);
-  const height = f.height ?? (kind === "counter" ? 1.0 : kind === "bakery" ? 0.95 : kind === "produce" ? 1.1 : 1.8);
+  const height = f.height ?? (kind === "counter" ? 1.0 : kind === "bakery" ? 0.95 : kind === "produce" ? 1.1 : kind === "servicecase" ? 1.35 : kind === "coffin" ? 0.9 : kind === "bins" ? 1.9 : 1.8);
   return {
     kind,
     bays: f.bays ?? Math.max(1, Math.round(length / BAY_M)),
@@ -146,6 +151,8 @@ export function shelfHeight(p: FixtureParams, shelf: number): number {
   const s = Math.max(0, Math.min(n - 1, shelf));
   if (p.kind === "produce") return 0.35 + (s * (p.height - 0.35)) / n;
   if (p.kind === "bakery" || p.kind === "counter") return p.height * 0.6;
+  if (p.kind === "servicecase") return SERVICE_DECK_M + s * 0.2;
+  if (p.kind === "coffin") return COFFIN_DECK_M;
   return DECK_M + (s * (p.height - DECK_M - 0.1)) / n;
 }
 

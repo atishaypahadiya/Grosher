@@ -5,9 +5,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## What Grosher is
 
 Grocery navigation: a shopping list in, the shortest walk through the store out, with live reroute as
-items are checked off. One store map exists, a synthetic Walmart-style Supercenter in `packages/stores/demo`
-(30 aisles, 298 shelf categories, a 47,000-item catalog from the Instacart 2017 product list plus a seeded
-remainder) that resolves most everyday items at aisle precision without a survey. Real stores get surveyed with the built-in map editor. `DESIGN.md` is the visual contract; its boards are in
+items are checked off. The app opens **Grosher**, our own designed Whole Foods-style market in
+`packages/stores/grosher` (`design/store-grosher.md` is its spec; 85 × 70 m with a cut corner, produce under a
+skylight, bulk, 10 centre aisles, beer and wine, the service counters and dairy on the far east wall, frozen,
+a food hall, 324 shelf categories). The synthetic Walmart-style Supercenter in `packages/stores/demo` (30
+aisles, 298 categories) is kept for the tests and as the Walmart reference taxonomy a Walmart survey matches
+its signs against; the app never offers it. Both share one 47,000-item catalog (the Instacart 2017 product
+list plus a seeded remainder), which resolves most everyday items at aisle precision without a survey. Real stores get surveyed with the built-in map editor. `DESIGN.md` is the visual contract; its boards are in
 `design/boards/`. The boards win on feel, `DESIGN.md` wins on numbers. The boards predate the "Papaya" warm
 half and are kept as drawn: for colour, ink and plates `DESIGN.md` is the reference, and the README shows
 screenshots of the app as built (`apps/web/public/project/img/`), not the boards.
@@ -17,7 +21,7 @@ screenshots of the app as built (`apps/web/public/project/img/`), not the boards
 ```
 package.json          npm workspaces: packages/*, apps/*. Root scripts: test, typecheck, bench, dev.
 packages/core         @grosher/core  routing engine + item resolution. Zero deps, no build step, Node ≥ 22.18 runs the .ts.
-packages/stores       @grosher/stores store data: demo/{store,catalog}.json, demo/textures/, departments,
+packages/stores       @grosher/stores store data: grosher/ (the default store), demo/{store,catalog}.json, demo/textures/, departments,
                       slots, geometry validation, generator scripts.
 apps/web              @grosher/web   Vite + React 19 + TypeScript PWA: list, 3D trip, checkout, editor.
 apps/resolver         @grosher/resolver optional Cloudflare Worker (Hono) that asks Claude for departments.
@@ -42,10 +46,12 @@ cd packages/core && node --test --test-name-pattern="reroute" test/solver.test.t
 cd apps/web && npx vitest run test/trip.test.ts                                      # one web file
 cd apps/web && npm run build && npx vite preview                                     # production build + SW
 npm run gen:demo -w @grosher/stores      # regenerate demo/store.json, categories.json and the base catalog rows from scripts/taxonomy.ts
+npm run gen:grosher -w @grosher/stores   # regenerate grosher/{store,categories,catalog.base,rehome,lists}.json + finish textures (run after gen:demo or a demo catalog change)
+cd packages/stores && UPDATE_SNAPSHOTS=1 node --test test/grosher.test.ts   # after a deliberate Grosher map edit: rewrite the hero-route snapshot
 npm run import:instacart -w @grosher/stores  # products.csv → catalog.instacart.json through aisle-map.json (needs the CSVs)
 npm run seed:catalog -w @grosher/stores      # fill catalog.seeded.json from the local model, resumable (--only a,b · --redo · --reconcile [--file])
 npm run merge:catalog -w @grosher/stores     # base + import + seeded → catalog.json, reconciled, sources in the header
-npm run eval:everyday -w @grosher/stores     # the blind 150-item fixture, offline and with the model (--catalog f [--catalog g] · --offline)
+npm run eval:everyday -w @grosher/stores     # the blind 150-item fixture, offline and with the model (--catalog f [--catalog g] · --offline · --store grosher)
 npm run gen:textures -w @grosher/stores  # regenerate the placeholder textures + textures.json
 cd packages/core && node --test test/resolution-fixture.test.ts   # prints the per-layer hit-rate tables
 npm run dev -w @grosher/resolver         # wrangler dev on :8787 (anthropic provider only; needs .dev.vars)
@@ -68,7 +74,9 @@ Read `src/types.ts`, then `graph.ts`, then `solver.ts`.
   `fixtures` (polygons with height, department, aisle sign, and `bays` / `shelves` / `depth`) and
   `departments` (color, texture file, `fixtureKind`: gondola, coldcase, produce, bakery, counter).
   A `Stop` is a list item resolved to one or more candidate locations plus tags
-  (`frozen|chilled|heavy|fragile|produce`).
+  (`frozen|chilled|hot|heavy|fragile|produce`). Rendering-only: `outline` (the building's wall, Grosher's cut
+  corner), `skylights` (daylight in 3D), a department's `finish` (wood / stainless), a fixture's own
+  `fixtureKind` (the cold-beer doors in the beer aisle), and the kinds `servicecase`, `coffin`, `bins`.
 - `WalkGraph` splits each edge at its shelf locations into virtual `loc:<id>` nodes and runs heap Dijkstra;
   `Router` caches one single-source run per node.
 - `Router.solve({stops, fromNodeId?, weights?, mode?})`: up to `EXACT_LIMIT` (13) stops → Held–Karp over
@@ -378,6 +386,47 @@ scripts do).
 
 ## Store data (`packages/stores`)
 
+**Grosher** (`scripts/gen-grosher.ts` from `scripts/grosher-taxonomy.ts`; spec `design/store-grosher.md`, its "As
+built" section has every refinement) is the default store (`DEFAULT_STORE`, `STORES[0]`). 115 nodes, 159 edges,
+122 fixtures, 324 locations and categories. The walk graph is built from corridor centrelines (every crossing a
+node, every corridor split there): the west walkway (x 12), produce and bulk aisles, the north walkway, aisles
+1–10 (runs east–west at 3.1 m pitch, 2.0 m clear, end caps both ends), the cross aisle (x 52.5), beer / wine /
+spirits aisles 11–13, the east walkway in front of the counters (x 73.5), the frozen walkway and frozen aisle
+(the runs break once, at x 42.8), the food hall walkway and the café / food hall / bakery aisle, five spurs
+into the pharmacy and body care runs. Eight staffed lanes, express and self-checkout (`LANE1`…`LANE8`,
+`EXPRESS`, `SELF`) are one-way west onto the front walkway, which runs down to the exit; the solver ends at
+whichever is cheapest (every hero list: self-checkout, the southernmost). Locations sit on the corridor in
+front of each face, one per category at the centre of its bay run; ids are `A4-L3` on the centre aisles and
+`<FACE>-<bay>` elsewhere (`DAIRY-8` is a real Grosher bay; saved state is per store, so the demo's old ids
+never meet it). Departments are one per sign or counter ("A4 · world foods", "Sushi · last") and carry a
+`finish` (wood / stainless) for the 3D material. Storage (pinned in `test/grosher.test.ts`): hot = rotisserie,
+hot bar, soups; 40 chilled (the fresh counters, dairy, cheese, deli, cut fruit and vegetables, sushi, the salad
+bar, cold beer); 25 frozen; beer, wine, the café, greens, herbs and mushrooms ambient.
+- **Catalog carry-over** (`src/carry.ts`): Grosher's full catalog is the demo's `catalog.json` moved onto
+  Grosher's shelves at load time through the shared category ids (the 7 MB file ships once), plus
+  `grosher/rehome.json` (964 rows the Walmart taxonomy had to shelve wrong: Instacart's beer, wine and spirits
+  were on the bar mixers, its flowers among the batteries, prepared sushi in party trays; name rules in
+  `REHOME`, the product's own words only) and 71 base rows (`catalog.base.json`: the demo's 30 with their
+  stable ids, then Grosher's own for bulk, flowers, cookware, the food hall and café, fresh green chilies and
+  papad, which win an exact tie because they come first). `CATEGORY_PATCHES` adds or removes aliases on reused
+  categories for Grosher only ("green chilies" is produce here).
+- **Hero lists** (`grosher/lists.json`, `bundle.lists`): four demo lists as a person would jot them. The app
+  offers them once per browser as saved lists (`offerShipped`, `grosher.offered.<storeId>`; a deleted one is
+  not offered again). `test/grosher.test.ts` resolves every item offline, solves each (Held–Karp, 0.1–2 ms),
+  and compares items, order, lane and metres with `test/fixtures/grosher-hero-routes.json`, so a map edit
+  shows up as a diff. On 18 Oct 2026: dal-chawal 315 m vs 445 in list order, weekly staples 387 vs 513,
+  Friday night 292 vs 523, pharmacy run 256 vs 331. The existing heavy-early penalty makes weekly staples
+  start in aisle 8 (dish soap, paper towels): 387 m against 359 with cold-last alone.
+- **Resolver on Grosher** (`eval:everyday --store grosher`; the blind fixture's demo aisles are translated to
+  the Grosher aisles holding their categories): 99% offline (149 / 150) against the demo's 98%. The
+  new-shelves set (`test/fixtures/grosher-new-shelves.json`, 33 things Walmart grocery had no shelf for, NOT
+  blind) is 29 / 33 offline and 32 / 33 with qwen3:8b on Grosher, 1 / 33 on the demo (sunglasses, nowhere in
+  either).
+- **What still depends on the demo Supercenter:** the catalog file and its categories (the carry-over), the
+  demo department textures Grosher's products sample, survey mode and the surveyed editor (the Walmart
+  reference taxonomy), most unit tests and `npm run bench`, the stale-location tests, and the project page's
+  captures and numbers (`capture-project.mjs` would now run on Grosher; not re-shot).
+
 **The demo Supercenter** (`scripts/gen-demo.ts`, 100 nodes, 151 edges, 65 fixtures, 298 locations) mirrors
 a Walmart grocery side plus the near general-merchandise aisles: produce wall by the entrance (right), deli
 and bakery on the left wall, meat & seafood and dairy on the back wall, 30 aisles numbered from the produce
@@ -685,6 +734,10 @@ wrong shape threw in the first render, and the old worker served its cached shel
   (`grosher.quarantine.<key>.<time>` / `quarantine:<key>:<time>`, at most 8 kept) and the reader gets its
   fallback; lists and history keep their good rows. A new persisted key gets a schema in `SCHEMAS`; a shape
   change bumps its version with a migration. Read storage only through `load` / `dbGet`, never raw.
+  **Everything a store owns is keyed by its id**: `lists:` / `history:` / `learning:` / `index:<storeId>`,
+  `grosher.trip.<storeId>`, `grosher.notes.<storeId>`, `grosher.reset.<storeId>`, `grosher.offered.<storeId>`,
+  `grosher.editor.<storeId>` (the bare `grosher.trip` / `grosher.notes` are the demo Supercenter's from before
+  Grosher, never read now). A device that used the demo keeps its data; Grosher starts clean beside it.
 - **The boot guard** is inline in `index.html` (between `<!-- boot-guard -->` markers, so it works when no
   chunk loads): the error plate ("Something went wrong", the error and three frames, Reload, Reset local
   data, the build id; soil plate on the ground, passes the contrast gate), the 8 s watchdog (the plate
@@ -704,7 +757,10 @@ wrong shape threw in the first render, and the old worker served its cached shel
   state + an evicted entry chunk → deploy → the new build renders (measured 5.8 s, unaided); this worker's
   next open after a deploy; a missing lazy chunk (one reload); a chunk that keeps failing (one reload, then
   the flat map); a render error (the plate, Reset exports then clears); no first render (the plate at 8 s), and two stale-map cases: a saved answer at a location the map lost (boots, "Needs a
-place", the route covers the rest) and a map change under a trip in progress (it resumes without that stop).
+place", the route covers the rest) and a map change under a trip in progress (it resumes without that stop),
+and a device with the demo Supercenter's data opening Grosher (clean, hero lists offered, the demo's data
+untouched, its paused trip not resumed). It seeds Grosher's keys and aborts every resolver request (none runs
+in CI; a local build may point at this Mac's Ollama), so it reads the same everywhere.
 
 ### Deploy: Cloudflare Pages (web) + Worker (resolver)
 

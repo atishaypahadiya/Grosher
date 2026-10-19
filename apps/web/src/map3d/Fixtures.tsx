@@ -1,8 +1,11 @@
 // Fixtures: detailed geometry per department fixture kind (gondola, cold
-// case, produce table, bakery table, counter), merged per department into
-// one opaque mesh (department texture on the visible faces), one glass
-// mesh, one frame mesh and one glow mesh where the kind needs them, plus
-// one hull outline per department and one atlas mesh for the aisle signs.
+// case, produce table, bakery table, counter, service case, coffin, bins),
+// merged per department into one opaque mesh (department texture on the
+// visible faces), one glass mesh, one frame mesh and one glow mesh where the
+// kind needs them, plus one hull outline batch and one atlas mesh for the
+// aisle signs. A department with a finish (Grosher: wood, stainless) is
+// merged with every other department of that finish instead, its body in the
+// finish's material and its uprights and rails in black steel under wood.
 // The next stop's slot is lit separately (LitSlot).
 
 import { useMemo } from "react";
@@ -20,6 +23,10 @@ const EDGE_WHITE = new LineBasicMaterial({ color: "#FFFFFF", transparent: true, 
 const GLASS = new MeshStandardMaterial({ color: "#E8F4F6", transparent: true, opacity: 0.32, roughness: 0.08, metalness: 0.05, depthWrite: false });
 const FRAME = new MeshStandardMaterial({ color: "#F3F7F7", roughness: 0.6 });
 const GLOW = new MeshStandardMaterial({ color: "#F4FBFC", emissive: new Color("#DDF2F5"), emissiveIntensity: 0.45, roughness: 1 });
+// black steel: the uprights, end panels and rails of the wood-finish fixtures
+const STEEL = new MeshStandardMaterial({ color: "#2A2824", roughness: 0.45, metalness: 0.35 });
+const FINISH_FILE = { wood: "wood.jpg", stainless: "stainless.jpg" } as const;
+type Finish = keyof typeof FINISH_FILE;
 
 function hullGeometry(b: Box) {
   const g = new BoxGeometry(b.w, b.h, b.d);
@@ -51,19 +58,21 @@ interface Built {
 
 export function Fixtures({ store, textureUrl, repeatMeters = 2, nodes, fromEntrance }: FixturesProps) {
   const departments = useMemo(() => store.departments ?? [], [store]);
-  const withTexture = useMemo(() => departments.filter((d) => d.texture), [departments]);
-  const textures = useLoader(TextureLoader, withTexture.map((d) => textureUrl(d.texture!)));
+  const withTexture = useMemo(() => departments.filter((d) => d.texture && !d.finish), [departments]);
+  const finishes = useMemo(() => [...new Set(departments.flatMap((d) => (d.finish ? [d.finish] : [])))], [departments]);
+  const textures = useLoader(TextureLoader, [...withTexture.map((d) => textureUrl(d.texture!)), ...finishes.map((f) => textureUrl(FINISH_FILE[f]))]);
   const textureFor = useMemo(() => {
     const m = new Map<string, Texture>();
-    withTexture.forEach((d, i) => {
+    const keys = [...withTexture.map((d) => d.id), ...finishes.map((f) => `finish:${f}`)];
+    keys.forEach((key, i) => {
       const t = textures[i];
       t.wrapS = t.wrapT = RepeatWrapping;
       t.colorSpace = SRGBColorSpace;
       t.anisotropy = 4;
-      m.set(d.id, t);
+      m.set(key, t);
     });
     return m;
-  }, [withTexture, textures]);
+  }, [withTexture, finishes, textures]);
 
   // Every fixture's detailed parts, once per store.
   const built = useMemo<Built[]>(() => {
@@ -87,31 +96,41 @@ export function Fixtures({ store, textureUrl, repeatMeters = 2, nodes, fromEntra
     const map = dept ? textureFor.get(dept.id) ?? null : null;
     return new MeshStandardMaterial({ map, color: dept ? (map ? tint(dept.color) : new Color(dept.color)) : new Color("#DCE3D4"), roughness: 0.85, metalness: 0 });
   };
+  const finishMaterial = (finish: Finish) =>
+    // no environment map in this scene, so metalness would only darken the steel: stainless reads by its pale
+    // brushed texture and a low roughness instead
+    new MeshStandardMaterial({ map: textureFor.get(`finish:${finish}`) ?? null, color: "#FFFFFF", roughness: finish === "wood" ? 0.75 : 0.3, metalness: 0 });
 
-  // Merged per department.
+  // Merged per department, or per finish for departments that have one.
   const groups = useMemo(() => {
-    const byDept = new Map<string, Built[]>();
+    const byKey = new Map<string, Built[]>();
     for (const b of built) {
-      const key = b.f.department ?? "_none";
-      byDept.set(key, [...(byDept.get(key) ?? []), b]);
+      const finish = departments.find((d) => d.id === b.f.department)?.finish;
+      const key = finish ? `finish:${finish}` : b.f.department ?? "_none";
+      byKey.set(key, [...(byKey.get(key) ?? []), b]);
     }
-    const out: { key: string; opaque: Mesh | null; glass: Mesh | null; frame: Mesh | null; glow: Mesh | null }[] = [];
-    for (const [key, list] of byDept) {
-      const dept = departments.find((d) => d.id === key);
+    const out: { key: string; opaque: Mesh | null; trim: Mesh | null; glass: Mesh | null; frame: Mesh | null; glow: Mesh | null }[] = [];
+    for (const [key, list] of byKey) {
+      const finish = key.startsWith("finish:") ? (key.slice(7) as Finish) : null;
+      const dept = finish ? undefined : departments.find((d) => d.id === key);
       const parts = emptyParts();
       for (const b of list) {
         parts.opaque.push(...b.parts.opaque);
+        // steel trim is its own mesh only under wood; everywhere else it is part of the body
+        (finish === "wood" ? parts.trim : parts.opaque).push(...b.parts.trim);
         parts.glass.push(...b.parts.glass);
         parts.frame.push(...b.parts.frame);
         parts.glow.push(...b.parts.glow);
       }
       const opaque = merge(parts.opaque);
+      const trim = merge(parts.trim);
       const glass = merge(parts.glass);
       const frame = merge(parts.frame);
       const glow = merge(parts.glow);
       out.push({
         key,
-        opaque: opaque ? new Mesh(opaque, materialFor(dept)) : null,
+        opaque: opaque ? new Mesh(opaque, finish ? finishMaterial(finish) : materialFor(dept)) : null,
+        trim: trim ? new Mesh(trim, STEEL) : null,
         glass: glass ? new Mesh(glass, GLASS) : null,
         frame: frame ? new Mesh(frame, FRAME) : null,
         glow: glow ? new Mesh(glow, GLOW) : null,
@@ -157,6 +176,7 @@ export function Fixtures({ store, textureUrl, repeatMeters = 2, nodes, fromEntra
       {groups.map((g) => (
         <group key={g.key}>
           {g.opaque && <primitive object={g.opaque} />}
+          {g.trim && <primitive object={g.trim} />}
           {g.glow && <primitive object={g.glow} />}
           {g.frame && <primitive object={g.frame} />}
           {g.glass && <primitive object={g.glass} />}

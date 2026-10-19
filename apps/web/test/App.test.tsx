@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, test } from "vitest";
 import { load } from "../src/lib/storage.ts";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { App } from "../src/App.tsx";
+import { demoSupercenter } from "@grosher/stores";
 import { dbClearMemoryFallback, dbGet } from "../src/lib/db.ts";
 import { saveLearning, type Learning } from "../src/lib/learning.ts";
 
@@ -21,7 +22,7 @@ const findButton = (re: RegExp) => screen.findByRole("button", { name: re }, { t
 
 describe("list screen", () => {
   test("resolves typed and comma-separated items with a source glyph, flags unknown ones", async () => {
-    render(<App />);
+    render(<App bundle={demoSupercenter} />);
     add("milk");
     add("egs, unicorn");
     expect(await find(/3 items · 2 placed/i)).toBeTruthy();
@@ -37,7 +38,7 @@ describe("list screen", () => {
   });
 
   test("an unknown item the resolver can place becomes an amber guess with its department", async () => {
-    render(<App />);
+    render(<App bundle={demoSupercenter} />);
     add("zorbo milk");
     expect(await find(/probably/i, )).toBeTruthy();
     const row = within(screen.getByRole("list")).getAllByRole("listitem")[0];
@@ -47,7 +48,7 @@ describe("list screen", () => {
   });
 
   test("Tell me where opens the picker; Remove drops a row", async () => {
-    render(<App />);
+    render(<App bundle={demoSupercenter} />);
     add("milk, unicorn");
     fireEvent.click(await findButton(/tell me where/i));
     expect(screen.getByRole("dialog", { name: /where is unicorn/i })).toBeTruthy();
@@ -58,14 +59,14 @@ describe("list screen", () => {
   });
 
   test("empty list shows the disabled call to action", () => {
-    render(<App />);
+    render(<App bundle={demoSupercenter} />);
     expect((screen.getByRole("button", { name: /route 0 items/i }) as HTMLButtonElement).disabled).toBe(true);
   });
 });
 
 describe("trip mode", () => {
   test("checking off a model guess moves the guess up its ladder; it writes no memory, so never \"yours\"", async () => {
-    render(<App />);
+    render(<App bundle={demoSupercenter} />);
     add("zorbo milk");
     const row = () => within(screen.getByRole("list")).getAllByRole("listitem")[0];
     await waitFor(() => expect(row().getAttribute("data-source")).toBe("llm"), { timeout: 10_000 });
@@ -79,7 +80,7 @@ describe("trip mode", () => {
   });
 
   test("list in, route, check off, reroute, checkout card, share and usual trip", async () => {
-    render(<App />);
+    render(<App bundle={demoSupercenter} />);
     add("bread, milk, bananas, ice cream, unicorn");
     fireEvent.click(await findButton(/route 4 items/i));
 
@@ -122,7 +123,7 @@ describe("trip mode", () => {
     fireEvent.click(screen.getByRole("button", { name: /save as usual trip/i }));
     expect(screen.getByRole("button", { name: /saved as usual/i })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /^close$/i }));
-    expect(localStorage.getItem("grosher.trip")).toBeNull();
+    expect(localStorage.getItem("grosher.trip.demo-supercenter")).toBeNull();
 
     // the usual trip was saved from the bought items; load it from the Lists sheet, replacing the draft
     fireEvent.click((await screen.findAllByRole("button", { name: /^lists$/i }))[0]);
@@ -135,7 +136,7 @@ describe("trip mode", () => {
   });
 
   test("progress strip, back pauses, the list resumes", async () => {
-    render(<App />);
+    render(<App bundle={demoSupercenter} />);
     add("milk, eggs, bread");
     fireEvent.click(await findButton(/route 3 items/i));
     const bar = screen.getByRole("progressbar");
@@ -151,12 +152,12 @@ describe("trip mode", () => {
   });
 
   test("a trip survives a reload", async () => {
-    const { unmount } = render(<App />);
+    const { unmount } = render(<App bundle={demoSupercenter} />);
     add("milk, eggs");
     fireEvent.click(await findButton(/route 2 items/i));
     fireEvent.click(screen.getByRole("button", { name: /got it/i }));
     unmount();
-    render(<App />);
+    render(<App bundle={demoSupercenter} />);
     expect(await find(/next · 2 of 2/i)).toBeTruthy();
   });
 });
@@ -164,7 +165,7 @@ describe("trip mode", () => {
 describe("editor", () => {
   test("#/edit opens the editor with stats, tools, layers and the inspector", () => {
     location.hash = "#/edit";
-    render(<App />);
+    render(<App bundle={demoSupercenter} />);
     expect(screen.getByText(/nodes · .* edges · .* locations · 13 textures · 0 unreachable/i)).toBeTruthy();
     expect(screen.getByRole("button", { name: /shelf location/i })).toBeTruthy();
     expect(screen.getByRole("button", { name: /preview in 3d/i })).toBeTruthy();
@@ -185,7 +186,7 @@ describe("history", () => {
       while (screen.queryByRole("button", { name: /got it/i })) fireEvent.click(screen.getByRole("button", { name: /got it/i }));
       await find(/trip done/i);
     };
-    render(<App />);
+    render(<App bundle={demoSupercenter} />);
     await run("milk, eggs");
     expect(screen.queryByTestId("vs-last")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: /^close$/i }));
@@ -211,7 +212,7 @@ describe("history", () => {
 
 describe("brand memory", () => {
   test("a confirmed full form is offered when a shorter form is typed; tapping accepts it", async () => {
-    render(<App />);
+    render(<App bundle={demoSupercenter} />);
     add("Chobani greek yogurt");
     fireEvent.click(await findButton(/route 1 item/i));
     fireEvent.click(screen.getByRole("button", { name: /got it/i }));
@@ -231,7 +232,7 @@ describe("brand memory", () => {
 
 describe("usual-trip prediction", () => {
   test("with an empty draft and a usual trip, the list offers today's usual trip; Load fills the draft", async () => {
-    render(<App />);
+    render(<App bundle={demoSupercenter} />);
     add("milk, eggs, bread");
     fireEvent.click(await findButton(/route 3 items/i));
     while (screen.queryByRole("button", { name: /got it/i })) fireEvent.click(screen.getByRole("button", { name: /got it/i }));
@@ -253,7 +254,7 @@ describe("usual-trip prediction", () => {
 
 describe("settings", () => {
   test("the gear opens the resolver settings; switching to the worker is saved per device", async () => {
-    render(<App />);
+    render(<App bundle={demoSupercenter} />);
     fireEvent.click(screen.getAllByRole("button", { name: /^settings$/i })[0]);
     const dialog = screen.getByRole("dialog", { name: /settings/i });
     expect(within(dialog).getByRole("radio", { name: /local ollama/i }).getAttribute("aria-checked")).toBe("true");
@@ -278,7 +279,7 @@ describe("confidence bands", () => {
   test("the list shows all three bands; the trip sheet flags a guess; a missed guess is asked about at checkout", async () => {
     // ghee: a memory row at .65 → likely; milk: catalog → confirmed; zorbo milk: llm → guess
     await saveLearning("demo-supercenter", { pending: [], llm: [], memory: [{ name: "ghee", locationId: "A7-L11", confidence: 0.65, confirms: 1, lastConfirmed: Date.now() }] });
-    render(<App />);
+    render(<App bundle={demoSupercenter} />);
     add("milk, ghee, zorbo milk");
     const list = screen.getByRole("list");
     await waitFor(() => expect(within(list).getAllByRole("listitem").map((li) => li.getAttribute("data-band"))).toEqual(["confirmed", "likely", "guess"]), { timeout: 10_000 });
@@ -303,7 +304,7 @@ describe("reset banner", () => {
 
   test("a flagged store shows the banner; Dismiss hides it until a new flag; Review opens the editor on the aisle", () => {
     localStorage.setItem("grosher.reset.demo-supercenter", JSON.stringify({ flag, dismissedId: null }));
-    const { unmount } = render(<App />);
+    const { unmount } = render(<App bundle={demoSupercenter} />);
     const banner = screen.getByTestId("reset-banner");
     expect(banner.textContent).toMatch(/Demo Supercenter may have moved things · 4 misses on Thursday/);
     fireEvent.click(within(banner).getByRole("button", { name: /review/i }));
@@ -311,7 +312,7 @@ describe("reset banner", () => {
     unmount();
     location.hash = "";
     localStorage.setItem("grosher.reset.demo-supercenter", JSON.stringify({ flag, dismissedId: null }));
-    render(<App />);
+    render(<App bundle={demoSupercenter} />);
     fireEvent.click(within(screen.getByTestId("reset-banner")).getByRole("button", { name: /dismiss/i }));
     expect(screen.queryByTestId("reset-banner")).toBeNull();
     expect(load<{ dismissedId: string }>("grosher.reset.demo-supercenter", { dismissedId: "" }).dismissedId).toBe("t_9");
@@ -320,7 +321,7 @@ describe("reset banner", () => {
   test("the editor opened from the banner highlights the aisle and lists the items", () => {
     location.hash = "#/edit?aisle=A4&items=Paneer%2CGhee&misses=4&date=0";
     try {
-      render(<App />);
+      render(<App bundle={demoSupercenter} />);
       const panel = screen.getByTestId("ed-focus");
       expect(panel.textContent).toMatch(/Possibly reset · A4/);
       expect(within(panel).getByText("Paneer")).toBeTruthy();
@@ -335,7 +336,7 @@ describe("reset banner", () => {
   });
 
   test("a finished trip with enough misses raises the flag", async () => {
-    render(<App />);
+    render(<App bundle={demoSupercenter} />);
     add("milk, bananas, rice, ice cream");
     fireEvent.click(await findButton(/route 4 items/i));
     fireEvent.click(screen.getByRole("button", { name: /not here/i }));
@@ -348,7 +349,7 @@ describe("reset banner", () => {
 
 describe("picker on the guess", () => {
   test("Tell me where opens on the map's guess; It's here confirms in one tap; an unknown has no guess", async () => {
-    render(<App />);
+    render(<App bundle={demoSupercenter} />);
     add("zorbo milk, unicorn");
     const list = screen.getByRole("list");
     await waitFor(() => expect(within(list).getAllByRole("listitem")[0].getAttribute("data-band")).toBe("guess"), { timeout: 10_000 });
@@ -365,7 +366,6 @@ describe("picker on the guess", () => {
     void guessLoc;
     // the picker for a placed item is reached from the trip's checkout ("Pick aisle"); exercise the component contract here
     const { PickerSheet } = await import("../src/components/PickerSheet.tsx");
-    const { demoSupercenter } = await import("@grosher/stores");
     let confirmedAt: string | null = null;
     let picked: string | null = null;
     const { unmount } = render(<PickerSheet store={demoSupercenter.store} itemName="Zorbo milk" guessLocationId="DAIRY-L5" onConfirm={(id) => (confirmedAt = id)} onPick={(id) => (picked = id)} onClose={() => {}} />);
@@ -378,7 +378,7 @@ describe("picker on the guess", () => {
   });
 
   test("Pick aisle at checkout opens on the guess and It's here confirms the memory", async () => {
-    render(<App />);
+    render(<App bundle={demoSupercenter} />);
     add("zorbo milk, milk");
     await waitFor(() => expect(within(screen.getByRole("list")).getAllByRole("listitem")[0].getAttribute("data-band")).toBe("guess"), { timeout: 10_000 });
     fireEvent.click(await findButton(/route 2 items/i));
@@ -403,7 +403,7 @@ describe("editor categories", () => {
   test("the Categories layer labels every slot, the tool picks a category, Validate reports the counts", async () => {
     location.hash = "#/edit";
     try {
-      render(<App />);
+      render(<App bundle={demoSupercenter} />);
       await screen.findByText(/map v/i);
       expect(screen.getByText(/298 categories/)).toBeTruthy();
       fireEvent.click(screen.getByRole("button", { name: /^categories$/i }));

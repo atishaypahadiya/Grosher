@@ -5,7 +5,7 @@ import { Suspense, useEffect, useMemo, useRef, useState, type RefObject } from "
 import { useFrame, useThree } from "@react-three/fiber";
 import { Line } from "@react-three/drei";
 import { EffectComposer, SelectiveBloom } from "@react-three/postprocessing";
-import { CanvasTexture, SRGBColorSpace, type DirectionalLight, type HemisphereLight, type Mesh, type Object3D } from "three";
+import { BufferGeometry, CanvasTexture, Float32BufferAttribute, LineBasicMaterial, LineSegments, Object3D, Shape, ShapeGeometry, SRGBColorSpace, type DirectionalLight, type HemisphereLight, type Mesh } from "three";
 import type { SelectiveBloomEffect } from "postprocessing";
 import type { GraphNode, StoreGraph } from "@grosher/core";
 import { Fixtures } from "./Fixtures.tsx";
@@ -64,6 +64,86 @@ function Background() {
   return null;
 }
 
+/** The floor and its edge follow the building's outline (Grosher's cut corner) when the store has one. */
+function floorShape(outline: [number, number][]) {
+  // the floor lies in x / −y before the −90° turn about x, so map y becomes −y here
+  const shape = new Shape(outline.map(([x, y]) => ({ x, y: -y }) as never));
+  return new ShapeGeometry(shape);
+}
+
+/**
+ * Daylight through the roof: each skylight's frame (rim and mullions every ~4 m) overhead in one line batch,
+ * a faint glazing pane, a pool of light on the floor under it and white spots on the zone's fixtures; the
+ * rest of the store stays under the warm light. One store-wide line batch and two planes per skylight.
+ */
+function Skylights({ store }: { store: StoreGraph }) {
+  const lights = store.skylights ?? [];
+  const frame = useMemo(() => {
+    const pts: number[] = [];
+    for (const s of lights) {
+      const h = s.height ?? 6;
+      const xs = s.polygon.map((p) => p[0]);
+      const ys = s.polygon.map((p) => p[1]);
+      const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+      const seg = (ax: number, ay: number, bx: number, by: number) => pts.push(ax, h, ay, bx, h, by);
+      seg(x0, y0, x1, y0);
+      seg(x1, y0, x1, y1);
+      seg(x1, y1, x0, y1);
+      seg(x0, y1, x0, y0);
+      const n = Math.max(1, Math.round((x1 - x0) / 4));
+      for (let i = 1; i < n; i++) seg(x0 + ((x1 - x0) * i) / n, y0, x0 + ((x1 - x0) * i) / n, y1);
+      seg(x0, (y0 + y1) / 2, x1, (y0 + y1) / 2);
+    }
+    const g = new BufferGeometry();
+    g.setAttribute("position", new Float32BufferAttribute(pts, 3));
+    return new LineSegments(g, new LineBasicMaterial({ color: "#FFFFFF", transparent: true, opacity: 0.85 }));
+  }, [lights]);
+  const spots = useMemo(
+    () =>
+      lights.flatMap((s) => {
+        const xs = s.polygon.map((p) => p[0]);
+        const ys = s.polygon.map((p) => p[1]);
+        const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+        const n = Math.max(1, Math.round((x1 - x0) / (y1 - y0)));
+        return Array.from({ length: n }, (_, i) => {
+          const target = new Object3D();
+          target.position.set(x0 + ((x1 - x0) * (i + 0.5)) / n, 0, (y0 + y1) / 2);
+          return { key: `${s.id}-${i}`, target, reach: Math.hypot((x1 - x0) / n, y1 - y0) / 2 };
+        });
+      }),
+    [lights],
+  );
+  if (!lights.length) return null;
+  return (
+    <group name="skylights">
+      <primitive object={frame} />
+      {lights.map((s) => {
+        const xs = s.polygon.map((p) => p[0]);
+        const ys = s.polygon.map((p) => p[1]);
+        const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+        return (
+          <group key={s.id}>
+            <mesh rotation-x={-Math.PI / 2} position={[(x0 + x1) / 2, s.height ?? 6, (y0 + y1) / 2]}>
+              <planeGeometry args={[x1 - x0, y1 - y0]} />
+              <meshBasicMaterial color="#FFFFFF" transparent opacity={0.07} depthWrite={false} />
+            </mesh>
+            <mesh rotation-x={-Math.PI / 2} position={[(x0 + x1) / 2, 0.015, (y0 + y1) / 2]}>
+              <planeGeometry args={[x1 - x0, y1 - y0]} />
+              <meshBasicMaterial color="#FFFFFF" transparent opacity={0.16} depthWrite={false} />
+            </mesh>
+          </group>
+        );
+      })}
+      {spots.map((sp) => (
+        <group key={sp.key}>
+          <primitive object={sp.target} />
+          <spotLight position={[sp.target.position.x, 16, sp.target.position.z]} target={sp.target} angle={Math.atan(sp.reach / 16) * 1.15} penumbra={0.7} intensity={1.1} decay={0} distance={0} color="#FFFFFF" />
+        </group>
+      ))}
+    </group>
+  );
+}
+
 export interface SceneProps {
   store: StoreGraph;
   textureUrl: (file: string) => string;
@@ -100,7 +180,12 @@ export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, fo
   const selection = useMemo(() => [litMesh, glowLine].filter((o): o is Object3D => !!o), [litMesh, glowLine]);
   const hemi = useRef<HemisphereLight>(null);
   const sun = useRef<DirectionalLight>(null);
+  const outline = store.outline;
+  const floor = useMemo(() => (outline ? floorShape(outline) : null), [outline]);
+  // a store with daylight is otherwise lit warm, like track lighting
+  const daylit = !!store.skylights?.length;
   const edge = useMemo<[number, number, number][]>(() => {
+    if (outline) return [...outline, outline[0]].map(([x, y]) => [x, 0.01, y]);
     const { x, z, w, d } = footprint;
     return [
       [x - w / 2, 0.01, z - d / 2],
@@ -109,7 +194,7 @@ export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, fo
       [x - w / 2, 0.01, z + d / 2],
       [x - w / 2, 0.01, z - d / 2],
     ];
-  }, [footprint]);
+  }, [footprint, outline]);
 
   return (
     <>
@@ -117,12 +202,19 @@ export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, fo
       {/* ~12% haze at 60 m, ~30% at 100 m: with the CSS overlay the next stop never loses more than 40% */}
       <fogExp2 attach="fog" args={[HAZE, 0.006]} />
       <hemisphereLight ref={hemi} args={[HAZE, DEEP, 0.9]} />
-      <directionalLight ref={sun} position={[-20, 30, 40]} intensity={0.5} />
+      <directionalLight ref={sun} position={[-20, 30, 40]} intensity={daylit ? 0.6 : 0.5} color={daylit ? "#FFD9B0" : "#FFFFFF"} />
 
-      <mesh rotation-x={-Math.PI / 2} position={[footprint.x, 0, footprint.z]} name="floor">
-        <planeGeometry args={[footprint.w, footprint.d]} />
-        <meshBasicMaterial color="#FFFFFF" transparent opacity={0.08} />
-      </mesh>
+      {floor ? (
+        <mesh rotation-x={-Math.PI / 2} geometry={floor} name="floor">
+          <meshBasicMaterial color="#FFFFFF" transparent opacity={0.08} />
+        </mesh>
+      ) : (
+        <mesh rotation-x={-Math.PI / 2} position={[footprint.x, 0, footprint.z]} name="floor">
+          <planeGeometry args={[footprint.w, footprint.d]} />
+          <meshBasicMaterial color="#FFFFFF" transparent opacity={0.08} />
+        </mesh>
+      )}
+      <Skylights store={store} />
       <Line points={edge} color="#FFFFFF" transparent opacity={0.3} lineWidth={1} />
 
       <Suspense fallback={null}>

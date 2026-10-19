@@ -1,0 +1,8069 @@
+{
+  "storeId": "grosher",
+  "version": 1,
+  "name": "Grosher",
+  "address": "Demo market",
+  "nodes": [
+    {
+      "id": "J1-6",
+      "x": 1,
+      "y": 6,
+      "type": "junction"
+    },
+    {
+      "id": "J12-6",
+      "x": 12,
+      "y": 6,
+      "type": "junction"
+    },
+    {
+      "id": "J12-3.5",
+      "x": 12,
+      "y": 3.5,
+      "type": "junction"
+    },
+    {
+      "id": "J12-8.3",
+      "x": 12,
+      "y": 8.3,
+      "type": "junction"
+    },
+    {
+      "id": "J12-14.2",
+      "x": 12,
+      "y": 14.2,
+      "type": "junction"
+    },
+    {
+      "id": "J12-15",
+      "x": 12,
+      "y": 15,
+      "type": "junction"
+    },
+    {
+      "id": "J12-17.9",
+      "x": 12,
+      "y": 17.9,
+      "type": "junction"
+    },
+    {
+      "id": "J12-18.7",
+      "x": 12,
+      "y": 18.7,
+      "type": "junction"
+    },
+    {
+      "id": "J12-21",
+      "x": 12,
+      "y": 21,
+      "type": "junction"
+    },
+    {
+      "id": "J12-22.4",
+      "x": 12,
+      "y": 22.4,
+      "type": "junction"
+    },
+    {
+      "id": "J12-24.1",
+      "x": 12,
+      "y": 24.1,
+      "type": "junction"
+    },
+    {
+      "id": "J12-26.1",
+      "x": 12,
+      "y": 26.1,
+      "type": "junction"
+    },
+    {
+      "id": "J12-27.2",
+      "x": 12,
+      "y": 27.2,
+      "type": "junction"
+    },
+    {
+      "id": "J12-29.8",
+      "x": 12,
+      "y": 29.8,
+      "type": "junction"
+    },
+    {
+      "id": "J12-30.3",
+      "x": 12,
+      "y": 30.3,
+      "type": "junction"
+    },
+    {
+      "id": "J12-33.4",
+      "x": 12,
+      "y": 33.4,
+      "type": "junction"
+    },
+    {
+      "id": "J12-36.5",
+      "x": 12,
+      "y": 36.5,
+      "type": "junction"
+    },
+    {
+      "id": "J12-39.6",
+      "x": 12,
+      "y": 39.6,
+      "type": "junction"
+    },
+    {
+      "id": "J12-42.7",
+      "x": 12,
+      "y": 42.7,
+      "type": "junction"
+    },
+    {
+      "id": "J12-45.8",
+      "x": 12,
+      "y": 45.8,
+      "type": "junction"
+    },
+    {
+      "id": "J12-49.4",
+      "x": 12,
+      "y": 49.4,
+      "type": "junction"
+    },
+    {
+      "id": "J12-53.5",
+      "x": 12,
+      "y": 53.5,
+      "type": "junction"
+    },
+    {
+      "id": "J12-58.3",
+      "x": 12,
+      "y": 58.3,
+      "type": "junction"
+    },
+    {
+      "id": "J12-64.6",
+      "x": 12,
+      "y": 64.6,
+      "type": "junction"
+    },
+    {
+      "id": "J21.3-3.5",
+      "x": 21.3,
+      "y": 3.5,
+      "type": "junction"
+    },
+    {
+      "id": "J29.7-3.5",
+      "x": 29.7,
+      "y": 3.5,
+      "type": "junction"
+    },
+    {
+      "id": "J38.1-3.5",
+      "x": 38.1,
+      "y": 3.5,
+      "type": "junction"
+    },
+    {
+      "id": "J47-3.5",
+      "x": 47,
+      "y": 3.5,
+      "type": "junction"
+    },
+    {
+      "id": "J69-3.5",
+      "x": 69,
+      "y": 3.5,
+      "type": "junction"
+    },
+    {
+      "id": "J21.3-8.3",
+      "x": 21.3,
+      "y": 8.3,
+      "type": "junction"
+    },
+    {
+      "id": "J29.7-8.3",
+      "x": 29.7,
+      "y": 8.3,
+      "type": "junction"
+    },
+    {
+      "id": "J38.1-8.3",
+      "x": 38.1,
+      "y": 8.3,
+      "type": "junction"
+    },
+    {
+      "id": "J47-8.3",
+      "x": 47,
+      "y": 8.3,
+      "type": "junction"
+    },
+    {
+      "id": "J69-8.3",
+      "x": 69,
+      "y": 8.3,
+      "type": "junction"
+    },
+    {
+      "id": "J21.3-14.2",
+      "x": 21.3,
+      "y": 14.2,
+      "type": "junction"
+    },
+    {
+      "id": "J29.7-14.2",
+      "x": 29.7,
+      "y": 14.2,
+      "type": "junction"
+    },
+    {
+      "id": "J38.1-14.2",
+      "x": 38.1,
+      "y": 14.2,
+      "type": "junction"
+    },
+    {
+      "id": "J47-14.2",
+      "x": 47,
+      "y": 14.2,
+      "type": "junction"
+    },
+    {
+      "id": "J69-14.2",
+      "x": 69,
+      "y": 14.2,
+      "type": "junction"
+    },
+    {
+      "id": "J52.5-14.2",
+      "x": 52.5,
+      "y": 14.2,
+      "type": "junction"
+    },
+    {
+      "id": "J73.5-14.2",
+      "x": 73.5,
+      "y": 14.2,
+      "type": "junction"
+    },
+    {
+      "id": "J52.5-17.9",
+      "x": 52.5,
+      "y": 17.9,
+      "type": "junction"
+    },
+    {
+      "id": "J52.5-21",
+      "x": 52.5,
+      "y": 21,
+      "type": "junction"
+    },
+    {
+      "id": "J52.5-24.1",
+      "x": 52.5,
+      "y": 24.1,
+      "type": "junction"
+    },
+    {
+      "id": "J52.5-27.2",
+      "x": 52.5,
+      "y": 27.2,
+      "type": "junction"
+    },
+    {
+      "id": "J52.5-30.3",
+      "x": 52.5,
+      "y": 30.3,
+      "type": "junction"
+    },
+    {
+      "id": "J52.5-33.4",
+      "x": 52.5,
+      "y": 33.4,
+      "type": "junction"
+    },
+    {
+      "id": "J52.5-36.5",
+      "x": 52.5,
+      "y": 36.5,
+      "type": "junction"
+    },
+    {
+      "id": "J52.5-39.6",
+      "x": 52.5,
+      "y": 39.6,
+      "type": "junction"
+    },
+    {
+      "id": "J52.5-42.7",
+      "x": 52.5,
+      "y": 42.7,
+      "type": "junction"
+    },
+    {
+      "id": "J52.5-45.8",
+      "x": 52.5,
+      "y": 45.8,
+      "type": "junction"
+    },
+    {
+      "id": "J52.5-19.2",
+      "x": 52.5,
+      "y": 19.2,
+      "type": "junction"
+    },
+    {
+      "id": "J52.5-22.5",
+      "x": 52.5,
+      "y": 22.5,
+      "type": "junction"
+    },
+    {
+      "id": "J52.5-25.8",
+      "x": 52.5,
+      "y": 25.8,
+      "type": "junction"
+    },
+    {
+      "id": "J52.5-30",
+      "x": 52.5,
+      "y": 30,
+      "type": "junction"
+    },
+    {
+      "id": "J52.5-49.4",
+      "x": 52.5,
+      "y": 49.4,
+      "type": "junction"
+    },
+    {
+      "id": "J73.5-19.2",
+      "x": 73.5,
+      "y": 19.2,
+      "type": "junction"
+    },
+    {
+      "id": "J73.5-22.5",
+      "x": 73.5,
+      "y": 22.5,
+      "type": "junction"
+    },
+    {
+      "id": "J73.5-25.8",
+      "x": 73.5,
+      "y": 25.8,
+      "type": "junction"
+    },
+    {
+      "id": "J73.5-30",
+      "x": 73.5,
+      "y": 30,
+      "type": "junction"
+    },
+    {
+      "id": "J73.5-49.4",
+      "x": 73.5,
+      "y": 49.4,
+      "type": "junction"
+    },
+    {
+      "id": "J73.5-53.5",
+      "x": 73.5,
+      "y": 53.5,
+      "type": "junction"
+    },
+    {
+      "id": "J73.5-58.3",
+      "x": 73.5,
+      "y": 58.3,
+      "type": "junction"
+    },
+    {
+      "id": "J73.5-64.6",
+      "x": 73.5,
+      "y": 64.6,
+      "type": "junction"
+    },
+    {
+      "id": "J42.8-49.4",
+      "x": 42.8,
+      "y": 49.4,
+      "type": "junction"
+    },
+    {
+      "id": "J42.8-53.5",
+      "x": 42.8,
+      "y": 53.5,
+      "type": "junction"
+    },
+    {
+      "id": "J42.8-58.3",
+      "x": 42.8,
+      "y": 58.3,
+      "type": "junction"
+    },
+    {
+      "id": "J21.7-58.3",
+      "x": 21.7,
+      "y": 58.3,
+      "type": "junction"
+    },
+    {
+      "id": "J34-58.3",
+      "x": 34,
+      "y": 58.3,
+      "type": "junction"
+    },
+    {
+      "id": "J46-58.3",
+      "x": 46,
+      "y": 58.3,
+      "type": "junction"
+    },
+    {
+      "id": "J54.2-58.3",
+      "x": 54.2,
+      "y": 58.3,
+      "type": "junction"
+    },
+    {
+      "id": "J60.5-58.3",
+      "x": 60.5,
+      "y": 58.3,
+      "type": "junction"
+    },
+    {
+      "id": "J21.7-64.6",
+      "x": 21.7,
+      "y": 64.6,
+      "type": "junction"
+    },
+    {
+      "id": "J34-64.6",
+      "x": 34,
+      "y": 64.6,
+      "type": "junction"
+    },
+    {
+      "id": "J46-64.6",
+      "x": 46,
+      "y": 64.6,
+      "type": "junction"
+    },
+    {
+      "id": "J54.2-64.6",
+      "x": 54.2,
+      "y": 64.6,
+      "type": "junction"
+    },
+    {
+      "id": "J60.5-64.6",
+      "x": 60.5,
+      "y": 64.6,
+      "type": "junction"
+    },
+    {
+      "id": "J3.4-15",
+      "x": 3.4,
+      "y": 15,
+      "type": "junction"
+    },
+    {
+      "id": "J4-18.7",
+      "x": 4,
+      "y": 18.7,
+      "type": "junction"
+    },
+    {
+      "id": "J4-22.4",
+      "x": 4,
+      "y": 22.4,
+      "type": "junction"
+    },
+    {
+      "id": "J4-26.1",
+      "x": 4,
+      "y": 26.1,
+      "type": "junction"
+    },
+    {
+      "id": "J4-29.8",
+      "x": 4,
+      "y": 29.8,
+      "type": "junction"
+    },
+    {
+      "id": "J2.2-32.15",
+      "x": 2.2,
+      "y": 32.15,
+      "type": "junction"
+    },
+    {
+      "id": "J2.2-64",
+      "x": 2.2,
+      "y": 64,
+      "type": "junction"
+    },
+    {
+      "id": "ENTRANCE",
+      "x": 0,
+      "y": 6,
+      "type": "entrance"
+    },
+    {
+      "id": "EXIT",
+      "x": 0,
+      "y": 64,
+      "type": "exit"
+    },
+    {
+      "id": "J12-32.15",
+      "x": 12,
+      "y": 32.15,
+      "type": "junction"
+    },
+    {
+      "id": "LANE1",
+      "x": 6.5,
+      "y": 32.15,
+      "type": "checkout"
+    },
+    {
+      "id": "J12-33.75",
+      "x": 12,
+      "y": 33.75,
+      "type": "junction"
+    },
+    {
+      "id": "LANE2",
+      "x": 6.5,
+      "y": 33.75,
+      "type": "checkout"
+    },
+    {
+      "id": "J2.2-33.75",
+      "x": 2.2,
+      "y": 33.75,
+      "type": "junction"
+    },
+    {
+      "id": "J12-35.35",
+      "x": 12,
+      "y": 35.35,
+      "type": "junction"
+    },
+    {
+      "id": "LANE3",
+      "x": 6.5,
+      "y": 35.35,
+      "type": "checkout"
+    },
+    {
+      "id": "J2.2-35.35",
+      "x": 2.2,
+      "y": 35.35,
+      "type": "junction"
+    },
+    {
+      "id": "J12-36.95",
+      "x": 12,
+      "y": 36.95,
+      "type": "junction"
+    },
+    {
+      "id": "LANE4",
+      "x": 6.5,
+      "y": 36.95,
+      "type": "checkout"
+    },
+    {
+      "id": "J2.2-36.95",
+      "x": 2.2,
+      "y": 36.95,
+      "type": "junction"
+    },
+    {
+      "id": "J12-38.55",
+      "x": 12,
+      "y": 38.55,
+      "type": "junction"
+    },
+    {
+      "id": "LANE5",
+      "x": 6.5,
+      "y": 38.55,
+      "type": "checkout"
+    },
+    {
+      "id": "J2.2-38.55",
+      "x": 2.2,
+      "y": 38.55,
+      "type": "junction"
+    },
+    {
+      "id": "J12-40.15",
+      "x": 12,
+      "y": 40.15,
+      "type": "junction"
+    },
+    {
+      "id": "LANE6",
+      "x": 6.5,
+      "y": 40.15,
+      "type": "checkout"
+    },
+    {
+      "id": "J2.2-40.15",
+      "x": 2.2,
+      "y": 40.15,
+      "type": "junction"
+    },
+    {
+      "id": "J12-41.75",
+      "x": 12,
+      "y": 41.75,
+      "type": "junction"
+    },
+    {
+      "id": "LANE7",
+      "x": 6.5,
+      "y": 41.75,
+      "type": "checkout"
+    },
+    {
+      "id": "J2.2-41.75",
+      "x": 2.2,
+      "y": 41.75,
+      "type": "junction"
+    },
+    {
+      "id": "J12-43.35",
+      "x": 12,
+      "y": 43.35,
+      "type": "junction"
+    },
+    {
+      "id": "LANE8",
+      "x": 6.5,
+      "y": 43.35,
+      "type": "checkout"
+    },
+    {
+      "id": "J2.2-43.35",
+      "x": 2.2,
+      "y": 43.35,
+      "type": "junction"
+    },
+    {
+      "id": "J12-44.95",
+      "x": 12,
+      "y": 44.95,
+      "type": "junction"
+    },
+    {
+      "id": "EXPRESS",
+      "x": 6.5,
+      "y": 44.95,
+      "type": "checkout"
+    },
+    {
+      "id": "J2.2-44.95",
+      "x": 2.2,
+      "y": 44.95,
+      "type": "junction"
+    },
+    {
+      "id": "J12-46.85",
+      "x": 12,
+      "y": 46.85,
+      "type": "junction"
+    },
+    {
+      "id": "SELF",
+      "x": 6.5,
+      "y": 46.85,
+      "type": "checkout"
+    },
+    {
+      "id": "J2.2-46.85",
+      "x": 2.2,
+      "y": 46.85,
+      "type": "junction"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e0",
+      "from": "J1-6",
+      "to": "J12-6"
+    },
+    {
+      "id": "e1",
+      "from": "J12-3.5",
+      "to": "J12-6"
+    },
+    {
+      "id": "e2",
+      "from": "J12-6",
+      "to": "J12-8.3"
+    },
+    {
+      "id": "e3",
+      "from": "J12-8.3",
+      "to": "J12-14.2"
+    },
+    {
+      "id": "e4",
+      "from": "J12-14.2",
+      "to": "J12-15"
+    },
+    {
+      "id": "e5",
+      "from": "J12-15",
+      "to": "J12-17.9"
+    },
+    {
+      "id": "e6",
+      "from": "J12-17.9",
+      "to": "J12-18.7"
+    },
+    {
+      "id": "e7",
+      "from": "J12-18.7",
+      "to": "J12-21"
+    },
+    {
+      "id": "e8",
+      "from": "J12-21",
+      "to": "J12-22.4"
+    },
+    {
+      "id": "e9",
+      "from": "J12-22.4",
+      "to": "J12-24.1"
+    },
+    {
+      "id": "e10",
+      "from": "J12-24.1",
+      "to": "J12-26.1"
+    },
+    {
+      "id": "e11",
+      "from": "J12-26.1",
+      "to": "J12-27.2"
+    },
+    {
+      "id": "e12",
+      "from": "J12-27.2",
+      "to": "J12-29.8"
+    },
+    {
+      "id": "e13",
+      "from": "J12-29.8",
+      "to": "J12-30.3"
+    },
+    {
+      "id": "e14",
+      "from": "J12-30.3",
+      "to": "J12-32.15"
+    },
+    {
+      "id": "e15",
+      "from": "J12-32.15",
+      "to": "J12-33.4"
+    },
+    {
+      "id": "e16",
+      "from": "J12-33.4",
+      "to": "J12-33.75"
+    },
+    {
+      "id": "e17",
+      "from": "J12-33.75",
+      "to": "J12-35.35"
+    },
+    {
+      "id": "e18",
+      "from": "J12-35.35",
+      "to": "J12-36.5"
+    },
+    {
+      "id": "e19",
+      "from": "J12-36.5",
+      "to": "J12-36.95"
+    },
+    {
+      "id": "e20",
+      "from": "J12-36.95",
+      "to": "J12-38.55"
+    },
+    {
+      "id": "e21",
+      "from": "J12-38.55",
+      "to": "J12-39.6"
+    },
+    {
+      "id": "e22",
+      "from": "J12-39.6",
+      "to": "J12-40.15"
+    },
+    {
+      "id": "e23",
+      "from": "J12-40.15",
+      "to": "J12-41.75"
+    },
+    {
+      "id": "e24",
+      "from": "J12-41.75",
+      "to": "J12-42.7"
+    },
+    {
+      "id": "e25",
+      "from": "J12-42.7",
+      "to": "J12-43.35"
+    },
+    {
+      "id": "e26",
+      "from": "J12-43.35",
+      "to": "J12-44.95"
+    },
+    {
+      "id": "e27",
+      "from": "J12-44.95",
+      "to": "J12-45.8"
+    },
+    {
+      "id": "e28",
+      "from": "J12-45.8",
+      "to": "J12-46.85"
+    },
+    {
+      "id": "e29",
+      "from": "J12-46.85",
+      "to": "J12-49.4"
+    },
+    {
+      "id": "e30",
+      "from": "J12-49.4",
+      "to": "J12-53.5"
+    },
+    {
+      "id": "e31",
+      "from": "J12-53.5",
+      "to": "J12-58.3"
+    },
+    {
+      "id": "e32",
+      "from": "J12-58.3",
+      "to": "J12-64.6"
+    },
+    {
+      "id": "e33",
+      "from": "J12-3.5",
+      "to": "J21.3-3.5"
+    },
+    {
+      "id": "e34",
+      "from": "J21.3-3.5",
+      "to": "J29.7-3.5"
+    },
+    {
+      "id": "e35",
+      "from": "J29.7-3.5",
+      "to": "J38.1-3.5"
+    },
+    {
+      "id": "e36",
+      "from": "J38.1-3.5",
+      "to": "J47-3.5"
+    },
+    {
+      "id": "e37",
+      "from": "J47-3.5",
+      "to": "J69-3.5"
+    },
+    {
+      "id": "e38",
+      "from": "J12-8.3",
+      "to": "J21.3-8.3"
+    },
+    {
+      "id": "e39",
+      "from": "J21.3-8.3",
+      "to": "J29.7-8.3"
+    },
+    {
+      "id": "e40",
+      "from": "J29.7-8.3",
+      "to": "J38.1-8.3"
+    },
+    {
+      "id": "e41",
+      "from": "J38.1-8.3",
+      "to": "J47-8.3"
+    },
+    {
+      "id": "e42",
+      "from": "J47-8.3",
+      "to": "J69-8.3"
+    },
+    {
+      "id": "e43",
+      "from": "J21.3-3.5",
+      "to": "J21.3-8.3"
+    },
+    {
+      "id": "e44",
+      "from": "J21.3-8.3",
+      "to": "J21.3-14.2"
+    },
+    {
+      "id": "e45",
+      "from": "J29.7-3.5",
+      "to": "J29.7-8.3"
+    },
+    {
+      "id": "e46",
+      "from": "J29.7-8.3",
+      "to": "J29.7-14.2"
+    },
+    {
+      "id": "e47",
+      "from": "J38.1-3.5",
+      "to": "J38.1-8.3"
+    },
+    {
+      "id": "e48",
+      "from": "J38.1-8.3",
+      "to": "J38.1-14.2"
+    },
+    {
+      "id": "e49",
+      "from": "J47-3.5",
+      "to": "J47-8.3"
+    },
+    {
+      "id": "e50",
+      "from": "J47-8.3",
+      "to": "J47-14.2"
+    },
+    {
+      "id": "e51",
+      "from": "J69-3.5",
+      "to": "J69-8.3"
+    },
+    {
+      "id": "e52",
+      "from": "J69-8.3",
+      "to": "J69-14.2"
+    },
+    {
+      "id": "e53",
+      "from": "J12-14.2",
+      "to": "J21.3-14.2"
+    },
+    {
+      "id": "e54",
+      "from": "J21.3-14.2",
+      "to": "J29.7-14.2"
+    },
+    {
+      "id": "e55",
+      "from": "J29.7-14.2",
+      "to": "J38.1-14.2"
+    },
+    {
+      "id": "e56",
+      "from": "J38.1-14.2",
+      "to": "J47-14.2"
+    },
+    {
+      "id": "e57",
+      "from": "J47-14.2",
+      "to": "J52.5-14.2"
+    },
+    {
+      "id": "e58",
+      "from": "J52.5-14.2",
+      "to": "J69-14.2"
+    },
+    {
+      "id": "e59",
+      "from": "J69-14.2",
+      "to": "J73.5-14.2"
+    },
+    {
+      "id": "e60",
+      "from": "J12-17.9",
+      "to": "J52.5-17.9"
+    },
+    {
+      "id": "e61",
+      "from": "J12-21",
+      "to": "J52.5-21"
+    },
+    {
+      "id": "e62",
+      "from": "J12-24.1",
+      "to": "J52.5-24.1"
+    },
+    {
+      "id": "e63",
+      "from": "J12-27.2",
+      "to": "J52.5-27.2"
+    },
+    {
+      "id": "e64",
+      "from": "J12-30.3",
+      "to": "J52.5-30.3"
+    },
+    {
+      "id": "e65",
+      "from": "J12-33.4",
+      "to": "J52.5-33.4"
+    },
+    {
+      "id": "e66",
+      "from": "J12-36.5",
+      "to": "J52.5-36.5"
+    },
+    {
+      "id": "e67",
+      "from": "J12-39.6",
+      "to": "J52.5-39.6"
+    },
+    {
+      "id": "e68",
+      "from": "J12-42.7",
+      "to": "J52.5-42.7"
+    },
+    {
+      "id": "e69",
+      "from": "J12-45.8",
+      "to": "J52.5-45.8"
+    },
+    {
+      "id": "e70",
+      "from": "J52.5-14.2",
+      "to": "J52.5-17.9"
+    },
+    {
+      "id": "e71",
+      "from": "J52.5-17.9",
+      "to": "J52.5-19.2"
+    },
+    {
+      "id": "e72",
+      "from": "J52.5-19.2",
+      "to": "J52.5-21"
+    },
+    {
+      "id": "e73",
+      "from": "J52.5-21",
+      "to": "J52.5-22.5"
+    },
+    {
+      "id": "e74",
+      "from": "J52.5-22.5",
+      "to": "J52.5-24.1"
+    },
+    {
+      "id": "e75",
+      "from": "J52.5-24.1",
+      "to": "J52.5-25.8"
+    },
+    {
+      "id": "e76",
+      "from": "J52.5-25.8",
+      "to": "J52.5-27.2"
+    },
+    {
+      "id": "e77",
+      "from": "J52.5-27.2",
+      "to": "J52.5-30"
+    },
+    {
+      "id": "e78",
+      "from": "J52.5-30",
+      "to": "J52.5-30.3"
+    },
+    {
+      "id": "e79",
+      "from": "J52.5-30.3",
+      "to": "J52.5-33.4"
+    },
+    {
+      "id": "e80",
+      "from": "J52.5-33.4",
+      "to": "J52.5-36.5"
+    },
+    {
+      "id": "e81",
+      "from": "J52.5-36.5",
+      "to": "J52.5-39.6"
+    },
+    {
+      "id": "e82",
+      "from": "J52.5-39.6",
+      "to": "J52.5-42.7"
+    },
+    {
+      "id": "e83",
+      "from": "J52.5-42.7",
+      "to": "J52.5-45.8"
+    },
+    {
+      "id": "e84",
+      "from": "J52.5-45.8",
+      "to": "J52.5-49.4"
+    },
+    {
+      "id": "e85",
+      "from": "J52.5-19.2",
+      "to": "J73.5-19.2"
+    },
+    {
+      "id": "e86",
+      "from": "J52.5-22.5",
+      "to": "J73.5-22.5"
+    },
+    {
+      "id": "e87",
+      "from": "J52.5-25.8",
+      "to": "J73.5-25.8"
+    },
+    {
+      "id": "e88",
+      "from": "J52.5-30",
+      "to": "J73.5-30"
+    },
+    {
+      "id": "e89",
+      "from": "J73.5-14.2",
+      "to": "J73.5-19.2"
+    },
+    {
+      "id": "e90",
+      "from": "J73.5-19.2",
+      "to": "J73.5-22.5"
+    },
+    {
+      "id": "e91",
+      "from": "J73.5-22.5",
+      "to": "J73.5-25.8"
+    },
+    {
+      "id": "e92",
+      "from": "J73.5-25.8",
+      "to": "J73.5-30"
+    },
+    {
+      "id": "e93",
+      "from": "J73.5-30",
+      "to": "J73.5-49.4"
+    },
+    {
+      "id": "e94",
+      "from": "J73.5-49.4",
+      "to": "J73.5-53.5"
+    },
+    {
+      "id": "e95",
+      "from": "J73.5-53.5",
+      "to": "J73.5-58.3"
+    },
+    {
+      "id": "e96",
+      "from": "J73.5-58.3",
+      "to": "J73.5-64.6"
+    },
+    {
+      "id": "e97",
+      "from": "J12-49.4",
+      "to": "J42.8-49.4"
+    },
+    {
+      "id": "e98",
+      "from": "J42.8-49.4",
+      "to": "J52.5-49.4"
+    },
+    {
+      "id": "e99",
+      "from": "J52.5-49.4",
+      "to": "J73.5-49.4"
+    },
+    {
+      "id": "e100",
+      "from": "J12-53.5",
+      "to": "J42.8-53.5"
+    },
+    {
+      "id": "e101",
+      "from": "J42.8-53.5",
+      "to": "J73.5-53.5"
+    },
+    {
+      "id": "e102",
+      "from": "J42.8-49.4",
+      "to": "J42.8-53.5"
+    },
+    {
+      "id": "e103",
+      "from": "J42.8-53.5",
+      "to": "J42.8-58.3"
+    },
+    {
+      "id": "e104",
+      "from": "J12-58.3",
+      "to": "J21.7-58.3"
+    },
+    {
+      "id": "e105",
+      "from": "J21.7-58.3",
+      "to": "J34-58.3"
+    },
+    {
+      "id": "e106",
+      "from": "J34-58.3",
+      "to": "J42.8-58.3"
+    },
+    {
+      "id": "e107",
+      "from": "J42.8-58.3",
+      "to": "J46-58.3"
+    },
+    {
+      "id": "e108",
+      "from": "J46-58.3",
+      "to": "J54.2-58.3"
+    },
+    {
+      "id": "e109",
+      "from": "J54.2-58.3",
+      "to": "J60.5-58.3"
+    },
+    {
+      "id": "e110",
+      "from": "J60.5-58.3",
+      "to": "J73.5-58.3"
+    },
+    {
+      "id": "e111",
+      "from": "J12-64.6",
+      "to": "J21.7-64.6"
+    },
+    {
+      "id": "e112",
+      "from": "J21.7-64.6",
+      "to": "J34-64.6"
+    },
+    {
+      "id": "e113",
+      "from": "J34-64.6",
+      "to": "J46-64.6"
+    },
+    {
+      "id": "e114",
+      "from": "J46-64.6",
+      "to": "J54.2-64.6"
+    },
+    {
+      "id": "e115",
+      "from": "J54.2-64.6",
+      "to": "J60.5-64.6"
+    },
+    {
+      "id": "e116",
+      "from": "J60.5-64.6",
+      "to": "J73.5-64.6"
+    },
+    {
+      "id": "e117",
+      "from": "J21.7-58.3",
+      "to": "J21.7-64.6"
+    },
+    {
+      "id": "e118",
+      "from": "J34-58.3",
+      "to": "J34-64.6"
+    },
+    {
+      "id": "e119",
+      "from": "J46-58.3",
+      "to": "J46-64.6"
+    },
+    {
+      "id": "e120",
+      "from": "J54.2-58.3",
+      "to": "J54.2-64.6"
+    },
+    {
+      "id": "e121",
+      "from": "J60.5-58.3",
+      "to": "J60.5-64.6"
+    },
+    {
+      "id": "e122",
+      "from": "J3.4-15",
+      "to": "J12-15"
+    },
+    {
+      "id": "e123",
+      "from": "J4-18.7",
+      "to": "J12-18.7"
+    },
+    {
+      "id": "e124",
+      "from": "J4-22.4",
+      "to": "J12-22.4"
+    },
+    {
+      "id": "e125",
+      "from": "J4-26.1",
+      "to": "J12-26.1"
+    },
+    {
+      "id": "e126",
+      "from": "J4-29.8",
+      "to": "J12-29.8"
+    },
+    {
+      "id": "e127",
+      "from": "J2.2-32.15",
+      "to": "J2.2-33.75"
+    },
+    {
+      "id": "e128",
+      "from": "J2.2-33.75",
+      "to": "J2.2-35.35"
+    },
+    {
+      "id": "e129",
+      "from": "J2.2-35.35",
+      "to": "J2.2-36.95"
+    },
+    {
+      "id": "e130",
+      "from": "J2.2-36.95",
+      "to": "J2.2-38.55"
+    },
+    {
+      "id": "e131",
+      "from": "J2.2-38.55",
+      "to": "J2.2-40.15"
+    },
+    {
+      "id": "e132",
+      "from": "J2.2-40.15",
+      "to": "J2.2-41.75"
+    },
+    {
+      "id": "e133",
+      "from": "J2.2-41.75",
+      "to": "J2.2-43.35"
+    },
+    {
+      "id": "e134",
+      "from": "J2.2-43.35",
+      "to": "J2.2-44.95"
+    },
+    {
+      "id": "e135",
+      "from": "J2.2-44.95",
+      "to": "J2.2-46.85"
+    },
+    {
+      "id": "e136",
+      "from": "J2.2-46.85",
+      "to": "J2.2-64"
+    },
+    {
+      "id": "e137",
+      "from": "ENTRANCE",
+      "to": "J1-6",
+      "oneWay": true
+    },
+    {
+      "id": "e138",
+      "from": "J2.2-64",
+      "to": "EXIT",
+      "oneWay": true
+    },
+    {
+      "id": "e139",
+      "from": "J12-32.15",
+      "to": "LANE1",
+      "oneWay": true
+    },
+    {
+      "id": "e140",
+      "from": "LANE1",
+      "to": "J2.2-32.15",
+      "oneWay": true
+    },
+    {
+      "id": "e141",
+      "from": "J12-33.75",
+      "to": "LANE2",
+      "oneWay": true
+    },
+    {
+      "id": "e142",
+      "from": "LANE2",
+      "to": "J2.2-33.75",
+      "oneWay": true
+    },
+    {
+      "id": "e143",
+      "from": "J12-35.35",
+      "to": "LANE3",
+      "oneWay": true
+    },
+    {
+      "id": "e144",
+      "from": "LANE3",
+      "to": "J2.2-35.35",
+      "oneWay": true
+    },
+    {
+      "id": "e145",
+      "from": "J12-36.95",
+      "to": "LANE4",
+      "oneWay": true
+    },
+    {
+      "id": "e146",
+      "from": "LANE4",
+      "to": "J2.2-36.95",
+      "oneWay": true
+    },
+    {
+      "id": "e147",
+      "from": "J12-38.55",
+      "to": "LANE5",
+      "oneWay": true
+    },
+    {
+      "id": "e148",
+      "from": "LANE5",
+      "to": "J2.2-38.55",
+      "oneWay": true
+    },
+    {
+      "id": "e149",
+      "from": "J12-40.15",
+      "to": "LANE6",
+      "oneWay": true
+    },
+    {
+      "id": "e150",
+      "from": "LANE6",
+      "to": "J2.2-40.15",
+      "oneWay": true
+    },
+    {
+      "id": "e151",
+      "from": "J12-41.75",
+      "to": "LANE7",
+      "oneWay": true
+    },
+    {
+      "id": "e152",
+      "from": "LANE7",
+      "to": "J2.2-41.75",
+      "oneWay": true
+    },
+    {
+      "id": "e153",
+      "from": "J12-43.35",
+      "to": "LANE8",
+      "oneWay": true
+    },
+    {
+      "id": "e154",
+      "from": "LANE8",
+      "to": "J2.2-43.35",
+      "oneWay": true
+    },
+    {
+      "id": "e155",
+      "from": "J12-44.95",
+      "to": "EXPRESS",
+      "oneWay": true
+    },
+    {
+      "id": "e156",
+      "from": "EXPRESS",
+      "to": "J2.2-44.95",
+      "oneWay": true
+    },
+    {
+      "id": "e157",
+      "from": "J12-46.85",
+      "to": "SELF",
+      "oneWay": true
+    },
+    {
+      "id": "e158",
+      "from": "SELF",
+      "to": "J2.2-46.85",
+      "oneWay": true
+    }
+  ],
+  "locations": [
+    {
+      "id": "A1-L1",
+      "aisle": "A1",
+      "side": "L",
+      "edgeId": "e60",
+      "offsetM": 5.14,
+      "shelf": 1,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A1-L4",
+      "aisle": "A1",
+      "side": "L",
+      "edgeId": "e60",
+      "offsetM": 8.83,
+      "shelf": 2,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A1-L7",
+      "aisle": "A1",
+      "side": "L",
+      "edgeId": "e60",
+      "offsetM": 12.51,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A1-L10",
+      "aisle": "A1",
+      "side": "L",
+      "edgeId": "e60",
+      "offsetM": 16.2,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A1-L13",
+      "aisle": "A1",
+      "side": "L",
+      "edgeId": "e60",
+      "offsetM": 20.5,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "A1-L17",
+      "aisle": "A1",
+      "side": "L",
+      "edgeId": "e60",
+      "offsetM": 24.8,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A1-L20",
+      "aisle": "A1",
+      "side": "L",
+      "edgeId": "e60",
+      "offsetM": 28.49,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A1-L23",
+      "aisle": "A1",
+      "side": "L",
+      "edgeId": "e60",
+      "offsetM": 32.17,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "A1-L26",
+      "aisle": "A1",
+      "side": "L",
+      "edgeId": "e60",
+      "offsetM": 35.86,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A1-R1",
+      "aisle": "A1",
+      "side": "R",
+      "edgeId": "e60",
+      "offsetM": 4.53,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A1-R3",
+      "aisle": "A1",
+      "side": "R",
+      "edgeId": "e60",
+      "offsetM": 7.6,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "A1-R6",
+      "aisle": "A1",
+      "side": "R",
+      "edgeId": "e60",
+      "offsetM": 10.67,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A1-R8",
+      "aisle": "A1",
+      "side": "R",
+      "edgeId": "e60",
+      "offsetM": 13.13,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A1-R10",
+      "aisle": "A1",
+      "side": "R",
+      "edgeId": "e60",
+      "offsetM": 16.2,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "A1-R13",
+      "aisle": "A1",
+      "side": "R",
+      "edgeId": "e60",
+      "offsetM": 19.27,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A1-R15",
+      "aisle": "A1",
+      "side": "R",
+      "edgeId": "e60",
+      "offsetM": 21.73,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A1-R17",
+      "aisle": "A1",
+      "side": "R",
+      "edgeId": "e60",
+      "offsetM": 24.8,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "A1-R20",
+      "aisle": "A1",
+      "side": "R",
+      "edgeId": "e60",
+      "offsetM": 27.87,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A1-R22",
+      "aisle": "A1",
+      "side": "R",
+      "edgeId": "e60",
+      "offsetM": 30.33,
+      "shelf": 1,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A1-R24",
+      "aisle": "A1",
+      "side": "R",
+      "edgeId": "e60",
+      "offsetM": 33.4,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "A1-R27",
+      "aisle": "A1",
+      "side": "R",
+      "edgeId": "e60",
+      "offsetM": 36.47,
+      "shelf": 3,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A2-L1",
+      "aisle": "A2",
+      "side": "L",
+      "edgeId": "e61",
+      "offsetM": 4.53,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A2-L3",
+      "aisle": "A2",
+      "side": "L",
+      "edgeId": "e61",
+      "offsetM": 6.99,
+      "shelf": 2,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A2-L5",
+      "aisle": "A2",
+      "side": "L",
+      "edgeId": "e61",
+      "offsetM": 9.44,
+      "shelf": 3,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A2-L7",
+      "aisle": "A2",
+      "side": "L",
+      "edgeId": "e61",
+      "offsetM": 12.51,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A2-L10",
+      "aisle": "A2",
+      "side": "L",
+      "edgeId": "e61",
+      "offsetM": 15.59,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "A2-L12",
+      "aisle": "A2",
+      "side": "L",
+      "edgeId": "e61",
+      "offsetM": 18.04,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A2-L14",
+      "aisle": "A2",
+      "side": "L",
+      "edgeId": "e61",
+      "offsetM": 20.5,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A2-L16",
+      "aisle": "A2",
+      "side": "L",
+      "edgeId": "e61",
+      "offsetM": 22.96,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "A2-L18",
+      "aisle": "A2",
+      "side": "L",
+      "edgeId": "e61",
+      "offsetM": 25.41,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A2-L20",
+      "aisle": "A2",
+      "side": "L",
+      "edgeId": "e61",
+      "offsetM": 28.49,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A2-L23",
+      "aisle": "A2",
+      "side": "L",
+      "edgeId": "e61",
+      "offsetM": 31.56,
+      "shelf": 2,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A2-L25",
+      "aisle": "A2",
+      "side": "L",
+      "edgeId": "e61",
+      "offsetM": 34.01,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A2-L27",
+      "aisle": "A2",
+      "side": "L",
+      "edgeId": "e61",
+      "offsetM": 36.47,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A2-R1",
+      "aisle": "A2",
+      "side": "R",
+      "edgeId": "e61",
+      "offsetM": 5.14,
+      "shelf": 2,
+      "tags": [
+        "heavy",
+        "fragile"
+      ]
+    },
+    {
+      "id": "A2-R4",
+      "aisle": "A2",
+      "side": "R",
+      "edgeId": "e61",
+      "offsetM": 8.83,
+      "shelf": 3,
+      "tags": [
+        "fragile",
+        "heavy"
+      ]
+    },
+    {
+      "id": "A2-R7",
+      "aisle": "A2",
+      "side": "R",
+      "edgeId": "e61",
+      "offsetM": 11.9,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A2-R9",
+      "aisle": "A2",
+      "side": "R",
+      "edgeId": "e61",
+      "offsetM": 14.97,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "A2-R12",
+      "aisle": "A2",
+      "side": "R",
+      "edgeId": "e61",
+      "offsetM": 18.66,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A2-R15",
+      "aisle": "A2",
+      "side": "R",
+      "edgeId": "e61",
+      "offsetM": 22.34,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A2-R18",
+      "aisle": "A2",
+      "side": "R",
+      "edgeId": "e61",
+      "offsetM": 26.03,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "A2-R21",
+      "aisle": "A2",
+      "side": "R",
+      "edgeId": "e61",
+      "offsetM": 29.1,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A2-R23",
+      "aisle": "A2",
+      "side": "R",
+      "edgeId": "e61",
+      "offsetM": 32.17,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A2-R26",
+      "aisle": "A2",
+      "side": "R",
+      "edgeId": "e61",
+      "offsetM": 35.86,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "A3-L1",
+      "aisle": "A3",
+      "side": "L",
+      "edgeId": "e62",
+      "offsetM": 5.76,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A3-L5",
+      "aisle": "A3",
+      "side": "L",
+      "edgeId": "e62",
+      "offsetM": 10.67,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A3-L9",
+      "aisle": "A3",
+      "side": "L",
+      "edgeId": "e62",
+      "offsetM": 15.59,
+      "shelf": 2,
+      "tags": [
+        "fragile",
+        "heavy"
+      ]
+    },
+    {
+      "id": "A3-L13",
+      "aisle": "A3",
+      "side": "L",
+      "edgeId": "e62",
+      "offsetM": 20.5,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A3-L17",
+      "aisle": "A3",
+      "side": "L",
+      "edgeId": "e62",
+      "offsetM": 25.41,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A3-L21",
+      "aisle": "A3",
+      "side": "L",
+      "edgeId": "e62",
+      "offsetM": 30.33,
+      "shelf": 2,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A3-L25",
+      "aisle": "A3",
+      "side": "L",
+      "edgeId": "e62",
+      "offsetM": 35.24,
+      "shelf": 3,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A3-R1",
+      "aisle": "A3",
+      "side": "R",
+      "edgeId": "e62",
+      "offsetM": 6.99,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A3-R7",
+      "aisle": "A3",
+      "side": "R",
+      "edgeId": "e62",
+      "offsetM": 13.74,
+      "shelf": 2,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A3-R12",
+      "aisle": "A3",
+      "side": "R",
+      "edgeId": "e62",
+      "offsetM": 20.5,
+      "shelf": 3,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A3-R18",
+      "aisle": "A3",
+      "side": "R",
+      "edgeId": "e62",
+      "offsetM": 27.26,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A3-R23",
+      "aisle": "A3",
+      "side": "R",
+      "edgeId": "e62",
+      "offsetM": 34.01,
+      "shelf": 2,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A4-L1",
+      "aisle": "A4",
+      "side": "L",
+      "edgeId": "e63",
+      "offsetM": 5.14,
+      "shelf": 3,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A4-L4",
+      "aisle": "A4",
+      "side": "L",
+      "edgeId": "e63",
+      "offsetM": 8.83,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A4-L7",
+      "aisle": "A4",
+      "side": "L",
+      "edgeId": "e63",
+      "offsetM": 11.9,
+      "shelf": 2,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A4-L9",
+      "aisle": "A4",
+      "side": "L",
+      "edgeId": "e63",
+      "offsetM": 14.97,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A4-L12",
+      "aisle": "A4",
+      "side": "L",
+      "edgeId": "e63",
+      "offsetM": 18.66,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A4-L15",
+      "aisle": "A4",
+      "side": "L",
+      "edgeId": "e63",
+      "offsetM": 22.34,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "A4-L18",
+      "aisle": "A4",
+      "side": "L",
+      "edgeId": "e63",
+      "offsetM": 26.03,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A4-L21",
+      "aisle": "A4",
+      "side": "L",
+      "edgeId": "e63",
+      "offsetM": 29.1,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A4-L23",
+      "aisle": "A4",
+      "side": "L",
+      "edgeId": "e63",
+      "offsetM": 32.17,
+      "shelf": 2,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A4-L26",
+      "aisle": "A4",
+      "side": "L",
+      "edgeId": "e63",
+      "offsetM": 35.86,
+      "shelf": 3,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A4-R1",
+      "aisle": "A4",
+      "side": "R",
+      "edgeId": "e63",
+      "offsetM": 4.53,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A4-R3",
+      "aisle": "A4",
+      "side": "R",
+      "edgeId": "e63",
+      "offsetM": 6.99,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "A4-R5",
+      "aisle": "A4",
+      "side": "R",
+      "edgeId": "e63",
+      "offsetM": 9.44,
+      "shelf": 3,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A4-R7",
+      "aisle": "A4",
+      "side": "R",
+      "edgeId": "e63",
+      "offsetM": 12.51,
+      "shelf": 1,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A4-R10",
+      "aisle": "A4",
+      "side": "R",
+      "edgeId": "e63",
+      "offsetM": 15.59,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "A4-R12",
+      "aisle": "A4",
+      "side": "R",
+      "edgeId": "e63",
+      "offsetM": 18.04,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A4-R14",
+      "aisle": "A4",
+      "side": "R",
+      "edgeId": "e63",
+      "offsetM": 20.5,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A4-R16",
+      "aisle": "A4",
+      "side": "R",
+      "edgeId": "e63",
+      "offsetM": 22.96,
+      "shelf": 2,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A4-R18",
+      "aisle": "A4",
+      "side": "R",
+      "edgeId": "e63",
+      "offsetM": 25.41,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A4-R20",
+      "aisle": "A4",
+      "side": "R",
+      "edgeId": "e63",
+      "offsetM": 28.49,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A4-R23",
+      "aisle": "A4",
+      "side": "R",
+      "edgeId": "e63",
+      "offsetM": 31.56,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "A4-R25",
+      "aisle": "A4",
+      "side": "R",
+      "edgeId": "e63",
+      "offsetM": 34.01,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A4-R27",
+      "aisle": "A4",
+      "side": "R",
+      "edgeId": "e63",
+      "offsetM": 36.47,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A5-L1",
+      "aisle": "A5",
+      "side": "L",
+      "edgeId": "e64",
+      "offsetM": 5.14,
+      "shelf": 2,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A5-L4",
+      "aisle": "A5",
+      "side": "L",
+      "edgeId": "e64",
+      "offsetM": 8.83,
+      "shelf": 3,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A5-L7",
+      "aisle": "A5",
+      "side": "L",
+      "edgeId": "e64",
+      "offsetM": 12.51,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A5-L10",
+      "aisle": "A5",
+      "side": "L",
+      "edgeId": "e64",
+      "offsetM": 16.2,
+      "shelf": 2,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A5-L13",
+      "aisle": "A5",
+      "side": "L",
+      "edgeId": "e64",
+      "offsetM": 20.5,
+      "shelf": 3,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A5-L17",
+      "aisle": "A5",
+      "side": "L",
+      "edgeId": "e64",
+      "offsetM": 24.8,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A5-L20",
+      "aisle": "A5",
+      "side": "L",
+      "edgeId": "e64",
+      "offsetM": 28.49,
+      "shelf": 2,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A5-L23",
+      "aisle": "A5",
+      "side": "L",
+      "edgeId": "e64",
+      "offsetM": 32.17,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A5-L26",
+      "aisle": "A5",
+      "side": "L",
+      "edgeId": "e64",
+      "offsetM": 35.86,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A5-R1",
+      "aisle": "A5",
+      "side": "R",
+      "edgeId": "e64",
+      "offsetM": 5.76,
+      "shelf": 2,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A5-R5",
+      "aisle": "A5",
+      "side": "R",
+      "edgeId": "e64",
+      "offsetM": 10.06,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A5-R8",
+      "aisle": "A5",
+      "side": "R",
+      "edgeId": "e64",
+      "offsetM": 14.36,
+      "shelf": 1,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A5-R12",
+      "aisle": "A5",
+      "side": "R",
+      "edgeId": "e64",
+      "offsetM": 18.66,
+      "shelf": 2,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A5-R15",
+      "aisle": "A5",
+      "side": "R",
+      "edgeId": "e64",
+      "offsetM": 22.96,
+      "shelf": 3,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A5-R19",
+      "aisle": "A5",
+      "side": "R",
+      "edgeId": "e64",
+      "offsetM": 27.26,
+      "shelf": 1,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A5-R22",
+      "aisle": "A5",
+      "side": "R",
+      "edgeId": "e64",
+      "offsetM": 31.56,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "A5-R26",
+      "aisle": "A5",
+      "side": "R",
+      "edgeId": "e64",
+      "offsetM": 35.86,
+      "shelf": 3,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A6-L1",
+      "aisle": "A6",
+      "side": "L",
+      "edgeId": "e65",
+      "offsetM": 4.53,
+      "shelf": 1,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A6-L3",
+      "aisle": "A6",
+      "side": "L",
+      "edgeId": "e65",
+      "offsetM": 6.99,
+      "shelf": 2,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A6-L5",
+      "aisle": "A6",
+      "side": "L",
+      "edgeId": "e65",
+      "offsetM": 9.44,
+      "shelf": 3,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A6-L7",
+      "aisle": "A6",
+      "side": "L",
+      "edgeId": "e65",
+      "offsetM": 11.29,
+      "shelf": 1,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A6-L8",
+      "aisle": "A6",
+      "side": "L",
+      "edgeId": "e65",
+      "offsetM": 13.13,
+      "shelf": 2,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A6-L10",
+      "aisle": "A6",
+      "side": "L",
+      "edgeId": "e65",
+      "offsetM": 15.59,
+      "shelf": 3,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A6-L12",
+      "aisle": "A6",
+      "side": "L",
+      "edgeId": "e65",
+      "offsetM": 18.04,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A6-L14",
+      "aisle": "A6",
+      "side": "L",
+      "edgeId": "e65",
+      "offsetM": 20.5,
+      "shelf": 2,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A6-L16",
+      "aisle": "A6",
+      "side": "L",
+      "edgeId": "e65",
+      "offsetM": 22.96,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A6-L18",
+      "aisle": "A6",
+      "side": "L",
+      "edgeId": "e65",
+      "offsetM": 25.41,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A6-L20",
+      "aisle": "A6",
+      "side": "L",
+      "edgeId": "e65",
+      "offsetM": 27.87,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "A6-L22",
+      "aisle": "A6",
+      "side": "L",
+      "edgeId": "e65",
+      "offsetM": 29.71,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A6-L23",
+      "aisle": "A6",
+      "side": "L",
+      "edgeId": "e65",
+      "offsetM": 31.56,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A6-L25",
+      "aisle": "A6",
+      "side": "L",
+      "edgeId": "e65",
+      "offsetM": 34.01,
+      "shelf": 2,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A6-L27",
+      "aisle": "A6",
+      "side": "L",
+      "edgeId": "e65",
+      "offsetM": 36.47,
+      "shelf": 3,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A6-R1",
+      "aisle": "A6",
+      "side": "R",
+      "edgeId": "e65",
+      "offsetM": 4.53,
+      "shelf": 1,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A6-R3",
+      "aisle": "A6",
+      "side": "R",
+      "edgeId": "e65",
+      "offsetM": 6.99,
+      "shelf": 2,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A6-R5",
+      "aisle": "A6",
+      "side": "R",
+      "edgeId": "e65",
+      "offsetM": 9.44,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A6-R7",
+      "aisle": "A6",
+      "side": "R",
+      "edgeId": "e65",
+      "offsetM": 11.29,
+      "shelf": 1,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "A6-R8",
+      "aisle": "A6",
+      "side": "R",
+      "edgeId": "e65",
+      "offsetM": 13.13,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "A6-R10",
+      "aisle": "A6",
+      "side": "R",
+      "edgeId": "e65",
+      "offsetM": 15.59,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A6-R12",
+      "aisle": "A6",
+      "side": "R",
+      "edgeId": "e65",
+      "offsetM": 18.04,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A6-R14",
+      "aisle": "A6",
+      "side": "R",
+      "edgeId": "e65",
+      "offsetM": 20.5,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "A6-R16",
+      "aisle": "A6",
+      "side": "R",
+      "edgeId": "e65",
+      "offsetM": 22.96,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A6-R18",
+      "aisle": "A6",
+      "side": "R",
+      "edgeId": "e65",
+      "offsetM": 25.41,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A6-R20",
+      "aisle": "A6",
+      "side": "R",
+      "edgeId": "e65",
+      "offsetM": 27.87,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "A6-R22",
+      "aisle": "A6",
+      "side": "R",
+      "edgeId": "e65",
+      "offsetM": 29.71,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A6-R23",
+      "aisle": "A6",
+      "side": "R",
+      "edgeId": "e65",
+      "offsetM": 31.56,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A6-R25",
+      "aisle": "A6",
+      "side": "R",
+      "edgeId": "e65",
+      "offsetM": 34.01,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "A6-R27",
+      "aisle": "A6",
+      "side": "R",
+      "edgeId": "e65",
+      "offsetM": 36.47,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A7-L1",
+      "aisle": "A7",
+      "side": "L",
+      "edgeId": "e66",
+      "offsetM": 5.76,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A7-L5",
+      "aisle": "A7",
+      "side": "L",
+      "edgeId": "e66",
+      "offsetM": 10.06,
+      "shelf": 2,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A7-L8",
+      "aisle": "A7",
+      "side": "L",
+      "edgeId": "e66",
+      "offsetM": 14.36,
+      "shelf": 3,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A7-L12",
+      "aisle": "A7",
+      "side": "L",
+      "edgeId": "e66",
+      "offsetM": 18.66,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A7-L15",
+      "aisle": "A7",
+      "side": "L",
+      "edgeId": "e66",
+      "offsetM": 22.96,
+      "shelf": 2,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A7-L19",
+      "aisle": "A7",
+      "side": "L",
+      "edgeId": "e66",
+      "offsetM": 27.26,
+      "shelf": 3,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A7-L22",
+      "aisle": "A7",
+      "side": "L",
+      "edgeId": "e66",
+      "offsetM": 31.56,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A7-L26",
+      "aisle": "A7",
+      "side": "L",
+      "edgeId": "e66",
+      "offsetM": 35.86,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "A7-R1",
+      "aisle": "A7",
+      "side": "R",
+      "edgeId": "e66",
+      "offsetM": 6.99,
+      "shelf": 3,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A7-R7",
+      "aisle": "A7",
+      "side": "R",
+      "edgeId": "e66",
+      "offsetM": 13.74,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A7-R12",
+      "aisle": "A7",
+      "side": "R",
+      "edgeId": "e66",
+      "offsetM": 20.5,
+      "shelf": 2,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A7-R18",
+      "aisle": "A7",
+      "side": "R",
+      "edgeId": "e66",
+      "offsetM": 27.26,
+      "shelf": 3,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A7-R23",
+      "aisle": "A7",
+      "side": "R",
+      "edgeId": "e66",
+      "offsetM": 34.01,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A8-L1",
+      "aisle": "A8",
+      "side": "L",
+      "edgeId": "e67",
+      "offsetM": 5.76,
+      "shelf": 2,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A8-L5",
+      "aisle": "A8",
+      "side": "L",
+      "edgeId": "e67",
+      "offsetM": 10.67,
+      "shelf": 3,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A8-L9",
+      "aisle": "A8",
+      "side": "L",
+      "edgeId": "e67",
+      "offsetM": 15.59,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A8-L13",
+      "aisle": "A8",
+      "side": "L",
+      "edgeId": "e67",
+      "offsetM": 20.5,
+      "shelf": 2,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A8-L17",
+      "aisle": "A8",
+      "side": "L",
+      "edgeId": "e67",
+      "offsetM": 25.41,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A8-L21",
+      "aisle": "A8",
+      "side": "L",
+      "edgeId": "e67",
+      "offsetM": 30.33,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A8-L25",
+      "aisle": "A8",
+      "side": "L",
+      "edgeId": "e67",
+      "offsetM": 35.24,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "A8-R1",
+      "aisle": "A8",
+      "side": "R",
+      "edgeId": "e67",
+      "offsetM": 5.14,
+      "shelf": 3,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A8-R4",
+      "aisle": "A8",
+      "side": "R",
+      "edgeId": "e67",
+      "offsetM": 8.21,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A8-R6",
+      "aisle": "A8",
+      "side": "R",
+      "edgeId": "e67",
+      "offsetM": 11.29,
+      "shelf": 2,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A8-R9",
+      "aisle": "A8",
+      "side": "R",
+      "edgeId": "e67",
+      "offsetM": 14.36,
+      "shelf": 3,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A8-R11",
+      "aisle": "A8",
+      "side": "R",
+      "edgeId": "e67",
+      "offsetM": 17.43,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A8-R14",
+      "aisle": "A8",
+      "side": "R",
+      "edgeId": "e67",
+      "offsetM": 20.5,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "A8-R16",
+      "aisle": "A8",
+      "side": "R",
+      "edgeId": "e67",
+      "offsetM": 23.57,
+      "shelf": 3,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A8-R19",
+      "aisle": "A8",
+      "side": "R",
+      "edgeId": "e67",
+      "offsetM": 26.64,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A8-R21",
+      "aisle": "A8",
+      "side": "R",
+      "edgeId": "e67",
+      "offsetM": 29.71,
+      "shelf": 2,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A8-R24",
+      "aisle": "A8",
+      "side": "R",
+      "edgeId": "e67",
+      "offsetM": 32.79,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A8-R26",
+      "aisle": "A8",
+      "side": "R",
+      "edgeId": "e67",
+      "offsetM": 35.86,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A9-L1",
+      "aisle": "A9",
+      "side": "L",
+      "edgeId": "e68",
+      "offsetM": 7.6,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "A9-L8",
+      "aisle": "A9",
+      "side": "L",
+      "edgeId": "e68",
+      "offsetM": 16.2,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A9-L15",
+      "aisle": "A9",
+      "side": "L",
+      "edgeId": "e68",
+      "offsetM": 24.8,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A9-L22",
+      "aisle": "A9",
+      "side": "L",
+      "edgeId": "e68",
+      "offsetM": 33.4,
+      "shelf": 2,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A9-R1",
+      "aisle": "A9",
+      "side": "R",
+      "edgeId": "e68",
+      "offsetM": 7.6,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A9-R8",
+      "aisle": "A9",
+      "side": "R",
+      "edgeId": "e68",
+      "offsetM": 16.2,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A9-R15",
+      "aisle": "A9",
+      "side": "R",
+      "edgeId": "e68",
+      "offsetM": 24.8,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "A9-R22",
+      "aisle": "A9",
+      "side": "R",
+      "edgeId": "e68",
+      "offsetM": 33.4,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A10-L1",
+      "aisle": "A10",
+      "side": "L",
+      "edgeId": "e69",
+      "offsetM": 5.76,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A10-L5",
+      "aisle": "A10",
+      "side": "L",
+      "edgeId": "e69",
+      "offsetM": 10.67,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "A10-L9",
+      "aisle": "A10",
+      "side": "L",
+      "edgeId": "e69",
+      "offsetM": 15.59,
+      "shelf": 3,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A10-L13",
+      "aisle": "A10",
+      "side": "L",
+      "edgeId": "e69",
+      "offsetM": 20.5,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A10-L17",
+      "aisle": "A10",
+      "side": "L",
+      "edgeId": "e69",
+      "offsetM": 25.41,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "A10-L21",
+      "aisle": "A10",
+      "side": "L",
+      "edgeId": "e69",
+      "offsetM": 30.33,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A10-L25",
+      "aisle": "A10",
+      "side": "L",
+      "edgeId": "e69",
+      "offsetM": 35.24,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A10-R1",
+      "aisle": "A10",
+      "side": "R",
+      "edgeId": "e69",
+      "offsetM": 5.76,
+      "shelf": 2,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A10-R5",
+      "aisle": "A10",
+      "side": "R",
+      "edgeId": "e69",
+      "offsetM": 10.67,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A10-R9",
+      "aisle": "A10",
+      "side": "R",
+      "edgeId": "e69",
+      "offsetM": 15.59,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A10-R13",
+      "aisle": "A10",
+      "side": "R",
+      "edgeId": "e69",
+      "offsetM": 20.5,
+      "shelf": 2,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A10-R17",
+      "aisle": "A10",
+      "side": "R",
+      "edgeId": "e69",
+      "offsetM": 25.41,
+      "shelf": 3,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "A10-R21",
+      "aisle": "A10",
+      "side": "R",
+      "edgeId": "e69",
+      "offsetM": 30.33,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A10-R25",
+      "aisle": "A10",
+      "side": "R",
+      "edgeId": "e69",
+      "offsetM": 35.24,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "A11-L1",
+      "aisle": "A11",
+      "side": "L",
+      "edgeId": "e85",
+      "offsetM": 10,
+      "shelf": 3,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "A11-R1",
+      "aisle": "A11",
+      "side": "R",
+      "edgeId": "e85",
+      "offsetM": 6.4,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A11-R7",
+      "aisle": "A11",
+      "side": "R",
+      "edgeId": "e85",
+      "offsetM": 13.6,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "A12-L1",
+      "aisle": "A12",
+      "side": "L",
+      "edgeId": "e86",
+      "offsetM": 6.4,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A12-L7",
+      "aisle": "A12",
+      "side": "L",
+      "edgeId": "e86",
+      "offsetM": 13.6,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "A12-R1",
+      "aisle": "A12",
+      "side": "R",
+      "edgeId": "e86",
+      "offsetM": 10,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "A13-L1",
+      "aisle": "A13",
+      "side": "L",
+      "edgeId": "e87",
+      "offsetM": 10,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "A13-R1",
+      "aisle": "A13",
+      "side": "R",
+      "edgeId": "e87",
+      "offsetM": 10,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "WINEBAR-1",
+      "aisle": "WINEBAR",
+      "side": "R",
+      "edgeId": "e82",
+      "offsetM": 0.9,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "PRODUCE-WALL-1",
+      "aisle": "PRODUCE",
+      "side": "L",
+      "edgeId": "e33",
+      "offsetM": 4.99,
+      "shelf": 3,
+      "tags": [
+        "produce"
+      ]
+    },
+    {
+      "id": "PRODUCE-WALL-7",
+      "aisle": "PRODUCE",
+      "side": "L",
+      "edgeId": "e34",
+      "offsetM": 2.44,
+      "shelf": 1,
+      "tags": [
+        "produce",
+        "fragile"
+      ]
+    },
+    {
+      "id": "PRODUCE-WALL-12",
+      "aisle": "PRODUCE",
+      "side": "L",
+      "edgeId": "e35",
+      "offsetM": 0.8,
+      "shelf": 2,
+      "tags": [
+        "produce"
+      ]
+    },
+    {
+      "id": "PRODUCE-WALL-18",
+      "aisle": "PRODUCE",
+      "side": "L",
+      "edgeId": "e35",
+      "offsetM": 7.56,
+      "shelf": 3,
+      "tags": [
+        "produce",
+        "chilled"
+      ]
+    },
+    {
+      "id": "PRODUCE-WALL-23",
+      "aisle": "PRODUCE",
+      "side": "L",
+      "edgeId": "e36",
+      "offsetM": 5.91,
+      "shelf": 1,
+      "tags": [
+        "chilled",
+        "fragile"
+      ]
+    },
+    {
+      "id": "PRODUCE-I1N-1",
+      "aisle": "PRODUCE",
+      "side": "R",
+      "edgeId": "e33",
+      "offsetM": 5.1,
+      "shelf": 2,
+      "tags": [
+        "produce"
+      ]
+    },
+    {
+      "id": "PRODUCE-I1S-1",
+      "aisle": "PRODUCE",
+      "side": "L",
+      "edgeId": "e38",
+      "offsetM": 5.1,
+      "shelf": 3,
+      "tags": [
+        "produce"
+      ]
+    },
+    {
+      "id": "PRODUCE-I2N-1",
+      "aisle": "PRODUCE",
+      "side": "R",
+      "edgeId": "e34",
+      "offsetM": 4.2,
+      "shelf": 1,
+      "tags": [
+        "produce",
+        "fragile"
+      ]
+    },
+    {
+      "id": "PRODUCE-I3N-1",
+      "aisle": "PRODUCE",
+      "side": "R",
+      "edgeId": "e35",
+      "offsetM": 4.2,
+      "shelf": 2,
+      "tags": [
+        "produce",
+        "heavy"
+      ]
+    },
+    {
+      "id": "PRODUCE-I4N-1",
+      "aisle": "PRODUCE",
+      "side": "R",
+      "edgeId": "e36",
+      "offsetM": 4.2,
+      "shelf": 3,
+      "tags": [
+        "produce"
+      ]
+    },
+    {
+      "id": "PRODUCE-I4S-1",
+      "aisle": "PRODUCE",
+      "side": "L",
+      "edgeId": "e41",
+      "offsetM": 4.2,
+      "shelf": 1,
+      "tags": [
+        "produce"
+      ]
+    },
+    {
+      "id": "PRODUCE-I5N-1",
+      "aisle": "PRODUCE",
+      "side": "R",
+      "edgeId": "e38",
+      "offsetM": 5.1,
+      "shelf": 2,
+      "tags": [
+        "produce"
+      ]
+    },
+    {
+      "id": "PRODUCE-I6N-1",
+      "aisle": "PRODUCE",
+      "side": "R",
+      "edgeId": "e39",
+      "offsetM": 4.2,
+      "shelf": 3,
+      "tags": [
+        "produce"
+      ]
+    },
+    {
+      "id": "PRODUCE-I7N-1",
+      "aisle": "PRODUCE",
+      "side": "R",
+      "edgeId": "e40",
+      "offsetM": 4.2,
+      "shelf": 1,
+      "tags": [
+        "produce",
+        "heavy"
+      ]
+    },
+    {
+      "id": "PRODUCE-I8N-1",
+      "aisle": "PRODUCE",
+      "side": "R",
+      "edgeId": "e41",
+      "offsetM": 4.2,
+      "shelf": 2,
+      "tags": [
+        "produce"
+      ]
+    },
+    {
+      "id": "BULK-WALL-1",
+      "aisle": "BULK",
+      "side": "L",
+      "edgeId": "e37",
+      "offsetM": 7.65,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "BULK-WALL-8",
+      "aisle": "BULK",
+      "side": "L",
+      "edgeId": "e37",
+      "offsetM": 16.35,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "BULK-ISLAND-N-1",
+      "aisle": "BULK",
+      "side": "R",
+      "edgeId": "e37",
+      "offsetM": 8.22,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "BULK-ISLAND-N-8",
+      "aisle": "BULK",
+      "side": "R",
+      "edgeId": "e37",
+      "offsetM": 16.42,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "BULK-ISLAND-S-1",
+      "aisle": "BULK",
+      "side": "L",
+      "edgeId": "e42",
+      "offsetM": 12,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "FLORAL-1",
+      "aisle": "FLORAL",
+      "side": "L",
+      "edgeId": "e0",
+      "offsetM": 4.07,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "FLORAL-4",
+      "aisle": "FLORAL",
+      "side": "L",
+      "edgeId": "e0",
+      "offsetM": 7.02,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "SERVICE-1",
+      "aisle": "SERVICE",
+      "side": "R",
+      "edgeId": "e0",
+      "offsetM": 5,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "RX-1",
+      "aisle": "PHARMACY",
+      "side": "E",
+      "edgeId": "e122",
+      "offsetM": 0.2,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "OTC1-N-1",
+      "aisle": "PHARMACY",
+      "side": "R",
+      "edgeId": "e122",
+      "offsetM": 1.51,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "OTC1-N-2",
+      "aisle": "PHARMACY",
+      "side": "R",
+      "edgeId": "e122",
+      "offsetM": 3.35,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "OTC1-N-4",
+      "aisle": "PHARMACY",
+      "side": "R",
+      "edgeId": "e122",
+      "offsetM": 5.19,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "OTC1-S-1",
+      "aisle": "PHARMACY",
+      "side": "L",
+      "edgeId": "e123",
+      "offsetM": 0.91,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "OTC1-S-2",
+      "aisle": "PHARMACY",
+      "side": "L",
+      "edgeId": "e123",
+      "offsetM": 2.14,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "OTC1-S-3",
+      "aisle": "PHARMACY",
+      "side": "L",
+      "edgeId": "e123",
+      "offsetM": 3.36,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "OTC1-S-4",
+      "aisle": "PHARMACY",
+      "side": "L",
+      "edgeId": "e123",
+      "offsetM": 4.59,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "OTC2-N-1",
+      "aisle": "PHARMACY",
+      "side": "R",
+      "edgeId": "e123",
+      "offsetM": 0.91,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "OTC2-N-2",
+      "aisle": "PHARMACY",
+      "side": "R",
+      "edgeId": "e123",
+      "offsetM": 2.14,
+      "shelf": 1,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "OTC2-N-3",
+      "aisle": "PHARMACY",
+      "side": "R",
+      "edgeId": "e123",
+      "offsetM": 3.36,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "OTC2-N-4",
+      "aisle": "PHARMACY",
+      "side": "R",
+      "edgeId": "e123",
+      "offsetM": 4.59,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "OTC2-S-1",
+      "aisle": "PHARMACY",
+      "side": "L",
+      "edgeId": "e124",
+      "offsetM": 0.91,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "OTC2-S-2",
+      "aisle": "PHARMACY",
+      "side": "L",
+      "edgeId": "e124",
+      "offsetM": 2.14,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "OTC2-S-3",
+      "aisle": "PHARMACY",
+      "side": "L",
+      "edgeId": "e124",
+      "offsetM": 3.36,
+      "shelf": 3,
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "OTC2-S-4",
+      "aisle": "PHARMACY",
+      "side": "L",
+      "edgeId": "e124",
+      "offsetM": 4.59,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "BODY1-N-1",
+      "aisle": "BODYCARE",
+      "side": "R",
+      "edgeId": "e124",
+      "offsetM": 0.91,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "BODY1-N-2",
+      "aisle": "BODYCARE",
+      "side": "R",
+      "edgeId": "e124",
+      "offsetM": 2.14,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "BODY1-N-3",
+      "aisle": "BODYCARE",
+      "side": "R",
+      "edgeId": "e124",
+      "offsetM": 3.36,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "BODY1-N-4",
+      "aisle": "BODYCARE",
+      "side": "R",
+      "edgeId": "e124",
+      "offsetM": 4.59,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "BODY1-S-1",
+      "aisle": "BODYCARE",
+      "side": "L",
+      "edgeId": "e125",
+      "offsetM": 0.91,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "BODY1-S-2",
+      "aisle": "BODYCARE",
+      "side": "L",
+      "edgeId": "e125",
+      "offsetM": 2.14,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "BODY1-S-3",
+      "aisle": "BODYCARE",
+      "side": "L",
+      "edgeId": "e125",
+      "offsetM": 3.36,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "BODY1-S-4",
+      "aisle": "BODYCARE",
+      "side": "L",
+      "edgeId": "e125",
+      "offsetM": 4.59,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "BODY2-N-1",
+      "aisle": "BODYCARE",
+      "side": "R",
+      "edgeId": "e125",
+      "offsetM": 0.91,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "BODY2-N-2",
+      "aisle": "BODYCARE",
+      "side": "R",
+      "edgeId": "e125",
+      "offsetM": 2.14,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "BODY2-N-3",
+      "aisle": "BODYCARE",
+      "side": "R",
+      "edgeId": "e125",
+      "offsetM": 3.36,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "BODY2-N-4",
+      "aisle": "BODYCARE",
+      "side": "R",
+      "edgeId": "e125",
+      "offsetM": 4.59,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "BODY2-S-1",
+      "aisle": "BODYCARE",
+      "side": "L",
+      "edgeId": "e126",
+      "offsetM": 0.79,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "BODY2-S-2",
+      "aisle": "BODYCARE",
+      "side": "L",
+      "edgeId": "e126",
+      "offsetM": 1.77,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "BODY2-S-3",
+      "aisle": "BODYCARE",
+      "side": "L",
+      "edgeId": "e126",
+      "offsetM": 2.75,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "BODY2-S-4",
+      "aisle": "BODYCARE",
+      "side": "L",
+      "edgeId": "e126",
+      "offsetM": 3.73,
+      "shelf": 2,
+      "tags": []
+    },
+    {
+      "id": "BODY2-S-5",
+      "aisle": "BODYCARE",
+      "side": "L",
+      "edgeId": "e126",
+      "offsetM": 4.71,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "SEAFOOD-1",
+      "aisle": "SEAFOOD",
+      "side": "R",
+      "edgeId": "e89",
+      "offsetM": 3.5,
+      "shelf": 1,
+      "tags": [
+        "chilled",
+        "fragile"
+      ]
+    },
+    {
+      "id": "MEAT-COUNTER-1",
+      "aisle": "MEAT",
+      "side": "R",
+      "edgeId": "e91",
+      "offsetM": 2.79,
+      "shelf": 2,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "MEAT-COUNTER-2",
+      "aisle": "MEAT",
+      "side": "R",
+      "edgeId": "e92",
+      "offsetM": 0.47,
+      "shelf": 3,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "MEAT-COUNTER-3",
+      "aisle": "MEAT",
+      "side": "R",
+      "edgeId": "e92",
+      "offsetM": 1.45,
+      "shelf": 1,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "MEAT-COUNTER-4",
+      "aisle": "MEAT",
+      "side": "R",
+      "edgeId": "e92",
+      "offsetM": 2.43,
+      "shelf": 2,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "MEAT-COUNTER-5",
+      "aisle": "MEAT",
+      "side": "R",
+      "edgeId": "e92",
+      "offsetM": 3.41,
+      "shelf": 3,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "MEAT-CASE-1",
+      "aisle": "MEAT",
+      "side": "R",
+      "edgeId": "e93",
+      "offsetM": 1.48,
+      "shelf": 1,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "MEAT-CASE-2",
+      "aisle": "MEAT",
+      "side": "R",
+      "edgeId": "e93",
+      "offsetM": 2.83,
+      "shelf": 2,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "MEAT-CASE-3",
+      "aisle": "MEAT",
+      "side": "R",
+      "edgeId": "e93",
+      "offsetM": 4.18,
+      "shelf": 3,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "MEAT-CASE-4",
+      "aisle": "MEAT",
+      "side": "R",
+      "edgeId": "e93",
+      "offsetM": 5.53,
+      "shelf": 1,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "DAIRY-1",
+      "aisle": "DAIRY",
+      "side": "R",
+      "edgeId": "e93",
+      "offsetM": 10.21,
+      "shelf": 2,
+      "tags": [
+        "chilled",
+        "heavy"
+      ]
+    },
+    {
+      "id": "DAIRY-2",
+      "aisle": "DAIRY",
+      "side": "R",
+      "edgeId": "e93",
+      "offsetM": 11.02,
+      "shelf": 3,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "DAIRY-3",
+      "aisle": "DAIRY",
+      "side": "R",
+      "edgeId": "e93",
+      "offsetM": 11.84,
+      "shelf": 1,
+      "tags": [
+        "chilled",
+        "fragile"
+      ]
+    },
+    {
+      "id": "DAIRY-4",
+      "aisle": "DAIRY",
+      "side": "R",
+      "edgeId": "e93",
+      "offsetM": 12.65,
+      "shelf": 2,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "DAIRY-5",
+      "aisle": "DAIRY",
+      "side": "R",
+      "edgeId": "e93",
+      "offsetM": 13.46,
+      "shelf": 3,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "DAIRY-6",
+      "aisle": "DAIRY",
+      "side": "R",
+      "edgeId": "e93",
+      "offsetM": 14.28,
+      "shelf": 1,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "DAIRY-7",
+      "aisle": "DAIRY",
+      "side": "R",
+      "edgeId": "e93",
+      "offsetM": 15.09,
+      "shelf": 2,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "DAIRY-8",
+      "aisle": "DAIRY",
+      "side": "R",
+      "edgeId": "e93",
+      "offsetM": 15.91,
+      "shelf": 3,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "DAIRY-9",
+      "aisle": "DAIRY",
+      "side": "R",
+      "edgeId": "e93",
+      "offsetM": 16.72,
+      "shelf": 1,
+      "tags": [
+        "chilled",
+        "heavy"
+      ]
+    },
+    {
+      "id": "DAIRY-10",
+      "aisle": "DAIRY",
+      "side": "R",
+      "edgeId": "e93",
+      "offsetM": 17.54,
+      "shelf": 2,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "DAIRY-11",
+      "aisle": "DAIRY",
+      "side": "R",
+      "edgeId": "e93",
+      "offsetM": 18.35,
+      "shelf": 3,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "DAIRY-12",
+      "aisle": "DAIRY",
+      "side": "R",
+      "edgeId": "e93",
+      "offsetM": 19.16,
+      "shelf": 1,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "DAIRY-13",
+      "aisle": "DAIRY",
+      "side": "R",
+      "edgeId": "e94",
+      "offsetM": 0.58,
+      "shelf": 2,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "DAIRY-14",
+      "aisle": "DAIRY",
+      "side": "R",
+      "edgeId": "e94",
+      "offsetM": 1.39,
+      "shelf": 3,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "CHEESE-COUNTER-1",
+      "aisle": "CHEESE",
+      "side": "R",
+      "edgeId": "e95",
+      "offsetM": 2.6,
+      "shelf": 1,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "CHEESE-COUNTER-3",
+      "aisle": "CHEESE",
+      "side": "R",
+      "edgeId": "e95",
+      "offsetM": 4.55,
+      "shelf": 2,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "CHEESE-CASE-1",
+      "aisle": "CHEESE",
+      "side": "R",
+      "edgeId": "e96",
+      "offsetM": 1.96,
+      "shelf": 3,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "CHEESE-CASE-2",
+      "aisle": "CHEESE",
+      "side": "R",
+      "edgeId": "e96",
+      "offsetM": 2.88,
+      "shelf": 1,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "CHEESE-CASE-3",
+      "aisle": "CHEESE",
+      "side": "R",
+      "edgeId": "e96",
+      "offsetM": 3.8,
+      "shelf": 2,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "CHEESE-CASE-4",
+      "aisle": "CHEESE",
+      "side": "R",
+      "edgeId": "e96",
+      "offsetM": 4.72,
+      "shelf": 3,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "CHEESE-CASE-5",
+      "aisle": "CHEESE",
+      "side": "R",
+      "edgeId": "e96",
+      "offsetM": 5.64,
+      "shelf": 1,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "FROZEN-A-N-1",
+      "aisle": "FROZEN",
+      "side": "R",
+      "edgeId": "e97",
+      "offsetM": 5.94,
+      "shelf": 2,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "FROZEN-A-N-7",
+      "aisle": "FROZEN",
+      "side": "R",
+      "edgeId": "e97",
+      "offsetM": 13.83,
+      "shelf": 3,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "FROZEN-A-N-14",
+      "aisle": "FROZEN",
+      "side": "R",
+      "edgeId": "e97",
+      "offsetM": 21.72,
+      "shelf": 1,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "FROZEN-A-N-20",
+      "aisle": "FROZEN",
+      "side": "R",
+      "edgeId": "e97",
+      "offsetM": 29,
+      "shelf": 2,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "FROZEN-A-N-26",
+      "aisle": "FROZEN",
+      "side": "R",
+      "edgeId": "e98",
+      "offsetM": 8.48,
+      "shelf": 3,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "FROZEN-A-N-32",
+      "aisle": "FROZEN",
+      "side": "R",
+      "edgeId": "e99",
+      "offsetM": 6.67,
+      "shelf": 1,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "FROZEN-A-N-39",
+      "aisle": "FROZEN",
+      "side": "R",
+      "edgeId": "e99",
+      "offsetM": 14.56,
+      "shelf": 2,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "FROZEN-A-S-1",
+      "aisle": "FROZEN",
+      "side": "L",
+      "edgeId": "e100",
+      "offsetM": 5.94,
+      "shelf": 3,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "FROZEN-A-S-7",
+      "aisle": "FROZEN",
+      "side": "L",
+      "edgeId": "e100",
+      "offsetM": 13.83,
+      "shelf": 1,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "FROZEN-A-S-14",
+      "aisle": "FROZEN",
+      "side": "L",
+      "edgeId": "e100",
+      "offsetM": 21.72,
+      "shelf": 2,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "FROZEN-A-S-20",
+      "aisle": "FROZEN",
+      "side": "L",
+      "edgeId": "e100",
+      "offsetM": 29,
+      "shelf": 3,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "FROZEN-A-S-26",
+      "aisle": "FROZEN",
+      "side": "L",
+      "edgeId": "e101",
+      "offsetM": 8.48,
+      "shelf": 1,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "FROZEN-A-S-32",
+      "aisle": "FROZEN",
+      "side": "L",
+      "edgeId": "e101",
+      "offsetM": 16.37,
+      "shelf": 2,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "FROZEN-A-S-39",
+      "aisle": "FROZEN",
+      "side": "L",
+      "edgeId": "e101",
+      "offsetM": 24.26,
+      "shelf": 3,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "FROZEN-B-N-1",
+      "aisle": "FROZEN",
+      "side": "R",
+      "edgeId": "e100",
+      "offsetM": 7.76,
+      "shelf": 1,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "FROZEN-B-N-10",
+      "aisle": "FROZEN",
+      "side": "R",
+      "edgeId": "e100",
+      "offsetM": 18.68,
+      "shelf": 2,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "FROZEN-B-N-19",
+      "aisle": "FROZEN",
+      "side": "R",
+      "edgeId": "e100",
+      "offsetM": 29,
+      "shelf": 3,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "FROZEN-B-N-27",
+      "aisle": "FROZEN",
+      "side": "R",
+      "edgeId": "e101",
+      "offsetM": 11.52,
+      "shelf": 1,
+      "tags": [
+        "frozen",
+        "heavy"
+      ]
+    },
+    {
+      "id": "FROZEN-B-N-36",
+      "aisle": "FROZEN",
+      "side": "R",
+      "edgeId": "e101",
+      "offsetM": 22.44,
+      "shelf": 2,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "FROZEN-B-S-1",
+      "aisle": "FROZEN",
+      "side": "L",
+      "edgeId": "e104",
+      "offsetM": 6.55,
+      "shelf": 3,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "FROZEN-B-S-8",
+      "aisle": "FROZEN",
+      "side": "L",
+      "edgeId": "e105",
+      "offsetM": 5.95,
+      "shelf": 1,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "FROZEN-B-S-16",
+      "aisle": "FROZEN",
+      "side": "L",
+      "edgeId": "e106",
+      "offsetM": 2.75,
+      "shelf": 2,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "FROZEN-B-S-23",
+      "aisle": "FROZEN",
+      "side": "L",
+      "edgeId": "e108",
+      "offsetM": 2.25,
+      "shelf": 3,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "FROZEN-B-S-30",
+      "aisle": "FROZEN",
+      "side": "L",
+      "edgeId": "e109",
+      "offsetM": 3.15,
+      "shelf": 1,
+      "tags": [
+        "frozen"
+      ]
+    },
+    {
+      "id": "FROZEN-B-S-38",
+      "aisle": "FROZEN",
+      "side": "L",
+      "edgeId": "e110",
+      "offsetM": 5.95,
+      "shelf": 2,
+      "tags": [
+        "frozen",
+        "heavy"
+      ]
+    },
+    {
+      "id": "CAFE-1",
+      "aisle": "CAFE",
+      "side": "R",
+      "edgeId": "e111",
+      "offsetM": 3.03,
+      "shelf": 3,
+      "tags": []
+    },
+    {
+      "id": "CAFE-4",
+      "aisle": "CAFE",
+      "side": "R",
+      "edgeId": "e111",
+      "offsetM": 6.48,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "HOTBAR-1",
+      "aisle": "HOTBAR",
+      "side": "L",
+      "edgeId": "e112",
+      "offsetM": 6.3,
+      "shelf": 2,
+      "tags": [
+        "hot"
+      ]
+    },
+    {
+      "id": "SALADBAR-1",
+      "aisle": "SALADBAR",
+      "side": "L",
+      "edgeId": "e113",
+      "offsetM": 6,
+      "shelf": 3,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "SOUPS-1",
+      "aisle": "SOUPS",
+      "side": "L",
+      "edgeId": "e114",
+      "offsetM": 4,
+      "shelf": 1,
+      "tags": [
+        "hot"
+      ]
+    },
+    {
+      "id": "ROTISSERIE-1",
+      "aisle": "ROTISSERIE",
+      "side": "R",
+      "edgeId": "e112",
+      "offsetM": 4.55,
+      "shelf": 2,
+      "tags": [
+        "hot"
+      ]
+    },
+    {
+      "id": "SUSHI-1",
+      "aisle": "SUSHI",
+      "side": "R",
+      "edgeId": "e112",
+      "offsetM": 12.3,
+      "shelf": 3,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "PIZZA-1",
+      "aisle": "PIZZA",
+      "side": "R",
+      "edgeId": "e113",
+      "offsetM": 7.75,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "DELI-1",
+      "aisle": "DELI",
+      "side": "R",
+      "edgeId": "e114",
+      "offsetM": 0.94,
+      "shelf": 2,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "DELI-2",
+      "aisle": "DELI",
+      "side": "R",
+      "edgeId": "e114",
+      "offsetM": 2.86,
+      "shelf": 3,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "DELI-4",
+      "aisle": "DELI",
+      "side": "R",
+      "edgeId": "e114",
+      "offsetM": 4.78,
+      "shelf": 1,
+      "tags": [
+        "chilled"
+      ]
+    },
+    {
+      "id": "DELI-5",
+      "aisle": "DELI",
+      "side": "R",
+      "edgeId": "e114",
+      "offsetM": 6.06,
+      "shelf": 2,
+      "tags": [
+        "chilled",
+        "fragile"
+      ]
+    },
+    {
+      "id": "BREAD-N-1",
+      "aisle": "BAKERY",
+      "side": "R",
+      "edgeId": "e110",
+      "offsetM": 2.47,
+      "shelf": 3,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "BREAD-N-3",
+      "aisle": "BAKERY",
+      "side": "R",
+      "edgeId": "e110",
+      "offsetM": 4.24,
+      "shelf": 1,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "BREAD-N-4",
+      "aisle": "BAKERY",
+      "side": "R",
+      "edgeId": "e110",
+      "offsetM": 6,
+      "shelf": 2,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "BREAD-N-6",
+      "aisle": "BAKERY",
+      "side": "R",
+      "edgeId": "e110",
+      "offsetM": 7.76,
+      "shelf": 3,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "BREAD-N-7",
+      "aisle": "BAKERY",
+      "side": "R",
+      "edgeId": "e110",
+      "offsetM": 9.53,
+      "shelf": 1,
+      "tags": []
+    },
+    {
+      "id": "BREAD-S-1",
+      "aisle": "BAKERY",
+      "side": "L",
+      "edgeId": "e116",
+      "offsetM": 3.06,
+      "shelf": 2,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "BREAD-S-4",
+      "aisle": "BAKERY",
+      "side": "L",
+      "edgeId": "e116",
+      "offsetM": 6,
+      "shelf": 3,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "BREAD-S-6",
+      "aisle": "BAKERY",
+      "side": "L",
+      "edgeId": "e116",
+      "offsetM": 8.94,
+      "shelf": 1,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "BAKERY-CASE-1",
+      "aisle": "BAKERY",
+      "side": "R",
+      "edgeId": "e116",
+      "offsetM": 2.47,
+      "shelf": 2,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "BAKERY-CASE-3",
+      "aisle": "BAKERY",
+      "side": "R",
+      "edgeId": "e116",
+      "offsetM": 4.83,
+      "shelf": 3,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "BAKERY-CASE-5",
+      "aisle": "BAKERY",
+      "side": "R",
+      "edgeId": "e116",
+      "offsetM": 7.18,
+      "shelf": 1,
+      "tags": [
+        "fragile"
+      ]
+    },
+    {
+      "id": "BAKERY-CASE-7",
+      "aisle": "BAKERY",
+      "side": "R",
+      "edgeId": "e116",
+      "offsetM": 9.53,
+      "shelf": 2,
+      "tags": [
+        "fragile"
+      ]
+    }
+  ],
+  "entranceId": "ENTRANCE",
+  "checkoutIds": [
+    "LANE1",
+    "LANE2",
+    "LANE3",
+    "LANE4",
+    "LANE5",
+    "LANE6",
+    "LANE7",
+    "LANE8",
+    "EXPRESS",
+    "SELF"
+  ],
+  "exitId": "EXIT",
+  "fixtures": [
+    {
+      "id": "f-run0",
+      "kind": "shelf",
+      "polygon": [
+        [
+          15,
+          15.8
+        ],
+        [
+          50,
+          15.8
+        ],
+        [
+          50,
+          16.9
+        ],
+        [
+          15,
+          16.9
+        ]
+      ],
+      "department": "breakfast",
+      "aisle": "A1"
+    },
+    {
+      "id": "f-run0-capW",
+      "kind": "shelf",
+      "polygon": [
+        [
+          14,
+          15.8
+        ],
+        [
+          15,
+          15.8
+        ],
+        [
+          15,
+          16.9
+        ],
+        [
+          14,
+          16.9
+        ]
+      ],
+      "department": "breakfast",
+      "bays": 1
+    },
+    {
+      "id": "f-run0-capE",
+      "kind": "shelf",
+      "polygon": [
+        [
+          50,
+          15.8
+        ],
+        [
+          51,
+          15.8
+        ],
+        [
+          51,
+          16.9
+        ],
+        [
+          50,
+          16.9
+        ]
+      ],
+      "department": "breakfast",
+      "bays": 1
+    },
+    {
+      "id": "f-run1-n",
+      "kind": "shelf",
+      "polygon": [
+        [
+          15,
+          18.9
+        ],
+        [
+          50,
+          18.9
+        ],
+        [
+          50,
+          19.45
+        ],
+        [
+          15,
+          19.45
+        ]
+      ],
+      "department": "breakfast",
+      "aisle": "A1"
+    },
+    {
+      "id": "f-run1-s",
+      "kind": "shelf",
+      "polygon": [
+        [
+          15,
+          19.45
+        ],
+        [
+          50,
+          19.45
+        ],
+        [
+          50,
+          20
+        ],
+        [
+          15,
+          20
+        ]
+      ],
+      "department": "baking",
+      "aisle": "A2"
+    },
+    {
+      "id": "f-run1-capW",
+      "kind": "shelf",
+      "polygon": [
+        [
+          14,
+          18.9
+        ],
+        [
+          15,
+          18.9
+        ],
+        [
+          15,
+          20
+        ],
+        [
+          14,
+          20
+        ]
+      ],
+      "department": "baking",
+      "bays": 1
+    },
+    {
+      "id": "f-run1-capE",
+      "kind": "shelf",
+      "polygon": [
+        [
+          50,
+          18.9
+        ],
+        [
+          51,
+          18.9
+        ],
+        [
+          51,
+          20
+        ],
+        [
+          50,
+          20
+        ]
+      ],
+      "department": "baking",
+      "bays": 1
+    },
+    {
+      "id": "f-run2-n",
+      "kind": "shelf",
+      "polygon": [
+        [
+          15,
+          22
+        ],
+        [
+          50,
+          22
+        ],
+        [
+          50,
+          22.55
+        ],
+        [
+          15,
+          22.55
+        ]
+      ],
+      "department": "baking",
+      "aisle": "A2"
+    },
+    {
+      "id": "f-run2-s",
+      "kind": "shelf",
+      "polygon": [
+        [
+          15,
+          22.55
+        ],
+        [
+          50,
+          22.55
+        ],
+        [
+          50,
+          23.1
+        ],
+        [
+          15,
+          23.1
+        ]
+      ],
+      "department": "pasta",
+      "aisle": "A3"
+    },
+    {
+      "id": "f-run2-capW",
+      "kind": "shelf",
+      "polygon": [
+        [
+          14,
+          22
+        ],
+        [
+          15,
+          22
+        ],
+        [
+          15,
+          23.1
+        ],
+        [
+          14,
+          23.1
+        ]
+      ],
+      "department": "pasta",
+      "bays": 1
+    },
+    {
+      "id": "f-run2-capE",
+      "kind": "shelf",
+      "polygon": [
+        [
+          50,
+          22
+        ],
+        [
+          51,
+          22
+        ],
+        [
+          51,
+          23.1
+        ],
+        [
+          50,
+          23.1
+        ]
+      ],
+      "department": "pasta",
+      "bays": 1
+    },
+    {
+      "id": "f-run3-n",
+      "kind": "shelf",
+      "polygon": [
+        [
+          15,
+          25.1
+        ],
+        [
+          50,
+          25.1
+        ],
+        [
+          50,
+          25.65
+        ],
+        [
+          15,
+          25.65
+        ]
+      ],
+      "department": "pasta",
+      "aisle": "A3"
+    },
+    {
+      "id": "f-run3-s",
+      "kind": "shelf",
+      "polygon": [
+        [
+          15,
+          25.65
+        ],
+        [
+          50,
+          25.65
+        ],
+        [
+          50,
+          26.2
+        ],
+        [
+          15,
+          26.2
+        ]
+      ],
+      "department": "world",
+      "aisle": "A4"
+    },
+    {
+      "id": "f-run3-capW",
+      "kind": "shelf",
+      "polygon": [
+        [
+          14,
+          25.1
+        ],
+        [
+          15,
+          25.1
+        ],
+        [
+          15,
+          26.2
+        ],
+        [
+          14,
+          26.2
+        ]
+      ],
+      "department": "world",
+      "bays": 1
+    },
+    {
+      "id": "f-run3-capE",
+      "kind": "shelf",
+      "polygon": [
+        [
+          50,
+          25.1
+        ],
+        [
+          51,
+          25.1
+        ],
+        [
+          51,
+          26.2
+        ],
+        [
+          50,
+          26.2
+        ]
+      ],
+      "department": "world",
+      "bays": 1
+    },
+    {
+      "id": "f-run4-n",
+      "kind": "shelf",
+      "polygon": [
+        [
+          15,
+          28.2
+        ],
+        [
+          50,
+          28.2
+        ],
+        [
+          50,
+          28.75
+        ],
+        [
+          15,
+          28.75
+        ]
+      ],
+      "department": "world",
+      "aisle": "A4"
+    },
+    {
+      "id": "f-run4-s",
+      "kind": "shelf",
+      "polygon": [
+        [
+          15,
+          28.75
+        ],
+        [
+          50,
+          28.75
+        ],
+        [
+          50,
+          29.3
+        ],
+        [
+          15,
+          29.3
+        ]
+      ],
+      "department": "canned",
+      "aisle": "A5"
+    },
+    {
+      "id": "f-run4-capW",
+      "kind": "shelf",
+      "polygon": [
+        [
+          14,
+          28.2
+        ],
+        [
+          15,
+          28.2
+        ],
+        [
+          15,
+          29.3
+        ],
+        [
+          14,
+          29.3
+        ]
+      ],
+      "department": "canned",
+      "bays": 1
+    },
+    {
+      "id": "f-run4-capE",
+      "kind": "shelf",
+      "polygon": [
+        [
+          50,
+          28.2
+        ],
+        [
+          51,
+          28.2
+        ],
+        [
+          51,
+          29.3
+        ],
+        [
+          50,
+          29.3
+        ]
+      ],
+      "department": "canned",
+      "bays": 1
+    },
+    {
+      "id": "f-run5-n",
+      "kind": "shelf",
+      "polygon": [
+        [
+          15,
+          31.3
+        ],
+        [
+          50,
+          31.3
+        ],
+        [
+          50,
+          31.85
+        ],
+        [
+          15,
+          31.85
+        ]
+      ],
+      "department": "canned",
+      "aisle": "A5"
+    },
+    {
+      "id": "f-run5-s",
+      "kind": "shelf",
+      "polygon": [
+        [
+          15,
+          31.85
+        ],
+        [
+          50,
+          31.85
+        ],
+        [
+          50,
+          32.4
+        ],
+        [
+          15,
+          32.4
+        ]
+      ],
+      "department": "snack",
+      "aisle": "A6"
+    },
+    {
+      "id": "f-run5-capW",
+      "kind": "shelf",
+      "polygon": [
+        [
+          14,
+          31.3
+        ],
+        [
+          15,
+          31.3
+        ],
+        [
+          15,
+          32.4
+        ],
+        [
+          14,
+          32.4
+        ]
+      ],
+      "department": "snack",
+      "bays": 1
+    },
+    {
+      "id": "f-run5-capE",
+      "kind": "shelf",
+      "polygon": [
+        [
+          50,
+          31.3
+        ],
+        [
+          51,
+          31.3
+        ],
+        [
+          51,
+          32.4
+        ],
+        [
+          50,
+          32.4
+        ]
+      ],
+      "department": "snack",
+      "bays": 1
+    },
+    {
+      "id": "f-run6-n",
+      "kind": "shelf",
+      "polygon": [
+        [
+          15,
+          34.4
+        ],
+        [
+          50,
+          34.4
+        ],
+        [
+          50,
+          34.95
+        ],
+        [
+          15,
+          34.95
+        ]
+      ],
+      "department": "snack",
+      "aisle": "A6"
+    },
+    {
+      "id": "f-run6-s",
+      "kind": "shelf",
+      "polygon": [
+        [
+          15,
+          34.95
+        ],
+        [
+          50,
+          34.95
+        ],
+        [
+          50,
+          35.5
+        ],
+        [
+          15,
+          35.5
+        ]
+      ],
+      "department": "drinks",
+      "aisle": "A7"
+    },
+    {
+      "id": "f-run6-capW",
+      "kind": "shelf",
+      "polygon": [
+        [
+          14,
+          34.4
+        ],
+        [
+          15,
+          34.4
+        ],
+        [
+          15,
+          35.5
+        ],
+        [
+          14,
+          35.5
+        ]
+      ],
+      "department": "drinks",
+      "bays": 1
+    },
+    {
+      "id": "f-run6-capE",
+      "kind": "shelf",
+      "polygon": [
+        [
+          50,
+          34.4
+        ],
+        [
+          51,
+          34.4
+        ],
+        [
+          51,
+          35.5
+        ],
+        [
+          50,
+          35.5
+        ]
+      ],
+      "department": "drinks",
+      "bays": 1
+    },
+    {
+      "id": "f-run7-n",
+      "kind": "shelf",
+      "polygon": [
+        [
+          15,
+          37.5
+        ],
+        [
+          50,
+          37.5
+        ],
+        [
+          50,
+          38.05
+        ],
+        [
+          15,
+          38.05
+        ]
+      ],
+      "department": "drinks",
+      "aisle": "A7"
+    },
+    {
+      "id": "f-run7-s",
+      "kind": "shelf",
+      "polygon": [
+        [
+          15,
+          38.05
+        ],
+        [
+          50,
+          38.05
+        ],
+        [
+          50,
+          38.6
+        ],
+        [
+          15,
+          38.6
+        ]
+      ],
+      "department": "household",
+      "aisle": "A8"
+    },
+    {
+      "id": "f-run7-capW",
+      "kind": "shelf",
+      "polygon": [
+        [
+          14,
+          37.5
+        ],
+        [
+          15,
+          37.5
+        ],
+        [
+          15,
+          38.6
+        ],
+        [
+          14,
+          38.6
+        ]
+      ],
+      "department": "household",
+      "bays": 1
+    },
+    {
+      "id": "f-run7-capE",
+      "kind": "shelf",
+      "polygon": [
+        [
+          50,
+          37.5
+        ],
+        [
+          51,
+          37.5
+        ],
+        [
+          51,
+          38.6
+        ],
+        [
+          50,
+          38.6
+        ]
+      ],
+      "department": "household",
+      "bays": 1
+    },
+    {
+      "id": "f-run8-n",
+      "kind": "shelf",
+      "polygon": [
+        [
+          15,
+          40.6
+        ],
+        [
+          50,
+          40.6
+        ],
+        [
+          50,
+          41.15
+        ],
+        [
+          15,
+          41.15
+        ]
+      ],
+      "department": "household",
+      "aisle": "A8"
+    },
+    {
+      "id": "f-run8-s",
+      "kind": "shelf",
+      "polygon": [
+        [
+          15,
+          41.15
+        ],
+        [
+          50,
+          41.15
+        ],
+        [
+          50,
+          41.7
+        ],
+        [
+          15,
+          41.7
+        ]
+      ],
+      "department": "kitchen",
+      "aisle": "A9"
+    },
+    {
+      "id": "f-run8-capW",
+      "kind": "shelf",
+      "polygon": [
+        [
+          14,
+          40.6
+        ],
+        [
+          15,
+          40.6
+        ],
+        [
+          15,
+          41.7
+        ],
+        [
+          14,
+          41.7
+        ]
+      ],
+      "department": "kitchen",
+      "bays": 1
+    },
+    {
+      "id": "f-run8-capE",
+      "kind": "shelf",
+      "polygon": [
+        [
+          50,
+          40.6
+        ],
+        [
+          51,
+          40.6
+        ],
+        [
+          51,
+          41.7
+        ],
+        [
+          50,
+          41.7
+        ]
+      ],
+      "department": "kitchen",
+      "bays": 1
+    },
+    {
+      "id": "f-run9-n",
+      "kind": "shelf",
+      "polygon": [
+        [
+          15,
+          43.7
+        ],
+        [
+          50,
+          43.7
+        ],
+        [
+          50,
+          44.25
+        ],
+        [
+          15,
+          44.25
+        ]
+      ],
+      "department": "kitchen",
+      "aisle": "A9"
+    },
+    {
+      "id": "f-run9-s",
+      "kind": "shelf",
+      "polygon": [
+        [
+          15,
+          44.25
+        ],
+        [
+          50,
+          44.25
+        ],
+        [
+          50,
+          44.8
+        ],
+        [
+          15,
+          44.8
+        ]
+      ],
+      "department": "babypet",
+      "aisle": "A10"
+    },
+    {
+      "id": "f-run9-capW",
+      "kind": "shelf",
+      "polygon": [
+        [
+          14,
+          43.7
+        ],
+        [
+          15,
+          43.7
+        ],
+        [
+          15,
+          44.8
+        ],
+        [
+          14,
+          44.8
+        ]
+      ],
+      "department": "babypet",
+      "bays": 1
+    },
+    {
+      "id": "f-run9-capE",
+      "kind": "shelf",
+      "polygon": [
+        [
+          50,
+          43.7
+        ],
+        [
+          51,
+          43.7
+        ],
+        [
+          51,
+          44.8
+        ],
+        [
+          50,
+          44.8
+        ]
+      ],
+      "department": "babypet",
+      "bays": 1
+    },
+    {
+      "id": "f-run10",
+      "kind": "shelf",
+      "polygon": [
+        [
+          15,
+          46.8
+        ],
+        [
+          50,
+          46.8
+        ],
+        [
+          50,
+          47.9
+        ],
+        [
+          15,
+          47.9
+        ]
+      ],
+      "department": "babypet",
+      "aisle": "A10"
+    },
+    {
+      "id": "f-run10-capW",
+      "kind": "shelf",
+      "polygon": [
+        [
+          14,
+          46.8
+        ],
+        [
+          15,
+          46.8
+        ],
+        [
+          15,
+          47.9
+        ],
+        [
+          14,
+          47.9
+        ]
+      ],
+      "department": "babypet",
+      "bays": 1
+    },
+    {
+      "id": "f-run10-capE",
+      "kind": "shelf",
+      "polygon": [
+        [
+          50,
+          46.8
+        ],
+        [
+          51,
+          46.8
+        ],
+        [
+          51,
+          47.9
+        ],
+        [
+          50,
+          47.9
+        ]
+      ],
+      "department": "babypet",
+      "bays": 1
+    },
+    {
+      "id": "f-bws0",
+      "kind": "shelf",
+      "polygon": [
+        [
+          55,
+          17
+        ],
+        [
+          70,
+          17
+        ],
+        [
+          70,
+          18.1
+        ],
+        [
+          55,
+          18.1
+        ]
+      ],
+      "department": "alcohol",
+      "aisle": "A11",
+      "fixtureKind": "coldcase"
+    },
+    {
+      "id": "f-bws0-capW",
+      "kind": "shelf",
+      "polygon": [
+        [
+          54,
+          17
+        ],
+        [
+          55,
+          17
+        ],
+        [
+          55,
+          18.1
+        ],
+        [
+          54,
+          18.1
+        ]
+      ],
+      "department": "alcohol",
+      "bays": 1
+    },
+    {
+      "id": "f-bws0-capE",
+      "kind": "shelf",
+      "polygon": [
+        [
+          70,
+          17
+        ],
+        [
+          71,
+          17
+        ],
+        [
+          71,
+          18.1
+        ],
+        [
+          70,
+          18.1
+        ]
+      ],
+      "department": "alcohol",
+      "bays": 1
+    },
+    {
+      "id": "f-bws1",
+      "kind": "shelf",
+      "polygon": [
+        [
+          55,
+          20.3
+        ],
+        [
+          70,
+          20.3
+        ],
+        [
+          70,
+          21.4
+        ],
+        [
+          55,
+          21.4
+        ]
+      ],
+      "department": "alcohol",
+      "aisle": "A12"
+    },
+    {
+      "id": "f-bws1-capW",
+      "kind": "shelf",
+      "polygon": [
+        [
+          54,
+          20.3
+        ],
+        [
+          55,
+          20.3
+        ],
+        [
+          55,
+          21.4
+        ],
+        [
+          54,
+          21.4
+        ]
+      ],
+      "department": "alcohol",
+      "bays": 1
+    },
+    {
+      "id": "f-bws1-capE",
+      "kind": "shelf",
+      "polygon": [
+        [
+          70,
+          20.3
+        ],
+        [
+          71,
+          20.3
+        ],
+        [
+          71,
+          21.4
+        ],
+        [
+          70,
+          21.4
+        ]
+      ],
+      "department": "alcohol",
+      "bays": 1
+    },
+    {
+      "id": "f-bws2",
+      "kind": "shelf",
+      "polygon": [
+        [
+          55,
+          23.6
+        ],
+        [
+          70,
+          23.6
+        ],
+        [
+          70,
+          24.7
+        ],
+        [
+          55,
+          24.7
+        ]
+      ],
+      "department": "alcohol",
+      "aisle": "A13"
+    },
+    {
+      "id": "f-bws2-capW",
+      "kind": "shelf",
+      "polygon": [
+        [
+          54,
+          23.6
+        ],
+        [
+          55,
+          23.6
+        ],
+        [
+          55,
+          24.7
+        ],
+        [
+          54,
+          24.7
+        ]
+      ],
+      "department": "alcohol",
+      "bays": 1
+    },
+    {
+      "id": "f-bws2-capE",
+      "kind": "shelf",
+      "polygon": [
+        [
+          70,
+          23.6
+        ],
+        [
+          71,
+          23.6
+        ],
+        [
+          71,
+          24.7
+        ],
+        [
+          70,
+          24.7
+        ]
+      ],
+      "department": "alcohol",
+      "bays": 1
+    },
+    {
+      "id": "f-bws3",
+      "kind": "shelf",
+      "polygon": [
+        [
+          55,
+          26.9
+        ],
+        [
+          70,
+          26.9
+        ],
+        [
+          70,
+          28
+        ],
+        [
+          55,
+          28
+        ]
+      ],
+      "department": "alcohol",
+      "aisle": "A13"
+    },
+    {
+      "id": "f-bws3-capW",
+      "kind": "shelf",
+      "polygon": [
+        [
+          54,
+          26.9
+        ],
+        [
+          55,
+          26.9
+        ],
+        [
+          55,
+          28
+        ],
+        [
+          54,
+          28
+        ]
+      ],
+      "department": "alcohol",
+      "bays": 1
+    },
+    {
+      "id": "f-bws3-capE",
+      "kind": "shelf",
+      "polygon": [
+        [
+          70,
+          26.9
+        ],
+        [
+          71,
+          26.9
+        ],
+        [
+          71,
+          28
+        ],
+        [
+          70,
+          28
+        ]
+      ],
+      "department": "alcohol",
+      "bays": 1
+    },
+    {
+      "id": "f-winebar-w",
+      "kind": "counter",
+      "polygon": [
+        [
+          55,
+          37
+        ],
+        [
+          55.8,
+          37
+        ],
+        [
+          55.8,
+          44
+        ],
+        [
+          55,
+          44
+        ]
+      ],
+      "department": "winebar",
+      "aisle": "WINEBAR",
+      "height": 1.1
+    },
+    {
+      "id": "f-winebar-n",
+      "kind": "counter",
+      "polygon": [
+        [
+          55.8,
+          37
+        ],
+        [
+          71,
+          37
+        ],
+        [
+          71,
+          37.8
+        ],
+        [
+          55.8,
+          37.8
+        ]
+      ],
+      "department": "winebar",
+      "height": 1.1
+    },
+    {
+      "id": "f-winebar-s",
+      "kind": "counter",
+      "polygon": [
+        [
+          55.8,
+          43.2
+        ],
+        [
+          71,
+          43.2
+        ],
+        [
+          71,
+          44
+        ],
+        [
+          55.8,
+          44
+        ]
+      ],
+      "department": "winebar",
+      "height": 1.1
+    },
+    {
+      "id": "f-winebar-e",
+      "kind": "counter",
+      "polygon": [
+        [
+          70.2,
+          37.8
+        ],
+        [
+          71,
+          37.8
+        ],
+        [
+          71,
+          43.2
+        ],
+        [
+          70.2,
+          43.2
+        ]
+      ],
+      "department": "winebar",
+      "height": 1.1
+    },
+    {
+      "id": "f-produce-wall",
+      "kind": "wall",
+      "polygon": [
+        [
+          13,
+          1
+        ],
+        [
+          48,
+          1
+        ],
+        [
+          48,
+          2.2
+        ],
+        [
+          13,
+          2.2
+        ]
+      ],
+      "department": "produce",
+      "aisle": "PRODUCE",
+      "fixtureKind": "gondola",
+      "height": 1.7,
+      "shelves": 4
+    },
+    {
+      "id": "f-island1",
+      "kind": "shelf",
+      "polygon": [
+        [
+          14,
+          4.8
+        ],
+        [
+          20.2,
+          4.8
+        ],
+        [
+          20.2,
+          7
+        ],
+        [
+          14,
+          7
+        ]
+      ],
+      "department": "produce",
+      "fixtureKind": "produce"
+    },
+    {
+      "id": "f-island2",
+      "kind": "shelf",
+      "polygon": [
+        [
+          22.4,
+          4.8
+        ],
+        [
+          28.6,
+          4.8
+        ],
+        [
+          28.6,
+          7
+        ],
+        [
+          22.4,
+          7
+        ]
+      ],
+      "department": "produce",
+      "fixtureKind": "produce"
+    },
+    {
+      "id": "f-island3",
+      "kind": "shelf",
+      "polygon": [
+        [
+          30.8,
+          4.8
+        ],
+        [
+          37,
+          4.8
+        ],
+        [
+          37,
+          7
+        ],
+        [
+          30.8,
+          7
+        ]
+      ],
+      "department": "produce",
+      "fixtureKind": "produce"
+    },
+    {
+      "id": "f-island4",
+      "kind": "shelf",
+      "polygon": [
+        [
+          39.2,
+          4.8
+        ],
+        [
+          45.4,
+          4.8
+        ],
+        [
+          45.4,
+          7
+        ],
+        [
+          39.2,
+          7
+        ]
+      ],
+      "department": "produce",
+      "fixtureKind": "produce"
+    },
+    {
+      "id": "f-island5",
+      "kind": "shelf",
+      "polygon": [
+        [
+          14,
+          9.6
+        ],
+        [
+          20.2,
+          9.6
+        ],
+        [
+          20.2,
+          11.8
+        ],
+        [
+          14,
+          11.8
+        ]
+      ],
+      "department": "produce",
+      "fixtureKind": "produce"
+    },
+    {
+      "id": "f-island6",
+      "kind": "shelf",
+      "polygon": [
+        [
+          22.4,
+          9.6
+        ],
+        [
+          28.6,
+          9.6
+        ],
+        [
+          28.6,
+          11.8
+        ],
+        [
+          22.4,
+          11.8
+        ]
+      ],
+      "department": "produce",
+      "fixtureKind": "produce"
+    },
+    {
+      "id": "f-island7",
+      "kind": "shelf",
+      "polygon": [
+        [
+          30.8,
+          9.6
+        ],
+        [
+          37,
+          9.6
+        ],
+        [
+          37,
+          11.8
+        ],
+        [
+          30.8,
+          11.8
+        ]
+      ],
+      "department": "produce",
+      "fixtureKind": "produce"
+    },
+    {
+      "id": "f-island8",
+      "kind": "shelf",
+      "polygon": [
+        [
+          39.2,
+          9.6
+        ],
+        [
+          45.4,
+          9.6
+        ],
+        [
+          45.4,
+          11.8
+        ],
+        [
+          39.2,
+          11.8
+        ]
+      ],
+      "department": "produce",
+      "fixtureKind": "produce"
+    },
+    {
+      "id": "f-bulk-wall",
+      "kind": "wall",
+      "polygon": [
+        [
+          50,
+          1
+        ],
+        [
+          68,
+          1
+        ],
+        [
+          68,
+          2.2
+        ],
+        [
+          50,
+          2.2
+        ]
+      ],
+      "department": "bulk",
+      "aisle": "BULK"
+    },
+    {
+      "id": "f-bulk-island",
+      "kind": "shelf",
+      "polygon": [
+        [
+          50.5,
+          4.8
+        ],
+        [
+          67.5,
+          4.8
+        ],
+        [
+          67.5,
+          6.8
+        ],
+        [
+          50.5,
+          6.8
+        ]
+      ],
+      "department": "bulk",
+      "height": 1.5
+    },
+    {
+      "id": "f-floral",
+      "kind": "shelf",
+      "polygon": [
+        [
+          3,
+          1.6
+        ],
+        [
+          9.5,
+          1.6
+        ],
+        [
+          9.5,
+          4.4
+        ],
+        [
+          3,
+          4.4
+        ]
+      ],
+      "department": "floral",
+      "aisle": "FLORAL",
+      "height": 1
+    },
+    {
+      "id": "f-service",
+      "kind": "counter",
+      "polygon": [
+        [
+          3,
+          7.6
+        ],
+        [
+          9,
+          7.6
+        ],
+        [
+          9,
+          8.6
+        ],
+        [
+          3,
+          8.6
+        ]
+      ],
+      "department": "service",
+      "aisle": "SERVICE",
+      "height": 1.1
+    },
+    {
+      "id": "f-rx",
+      "kind": "counter",
+      "polygon": [
+        [
+          1,
+          13.4
+        ],
+        [
+          2.6,
+          13.4
+        ],
+        [
+          2.6,
+          16.8
+        ],
+        [
+          1,
+          16.8
+        ]
+      ],
+      "department": "pharmacy",
+      "aisle": "PHARMACY",
+      "height": 1.1
+    },
+    {
+      "id": "f-otc1",
+      "kind": "shelf",
+      "polygon": [
+        [
+          4,
+          16.3
+        ],
+        [
+          9.5,
+          16.3
+        ],
+        [
+          9.5,
+          17.4
+        ],
+        [
+          4,
+          17.4
+        ]
+      ],
+      "department": "pharmacy",
+      "aisle": "PHARMACY",
+      "height": 1.6
+    },
+    {
+      "id": "f-otc2",
+      "kind": "shelf",
+      "polygon": [
+        [
+          4,
+          20
+        ],
+        [
+          9.5,
+          20
+        ],
+        [
+          9.5,
+          21.1
+        ],
+        [
+          4,
+          21.1
+        ]
+      ],
+      "department": "pharmacy",
+      "aisle": "PHARMACY",
+      "height": 1.6
+    },
+    {
+      "id": "f-body1",
+      "kind": "shelf",
+      "polygon": [
+        [
+          4,
+          23.7
+        ],
+        [
+          9.5,
+          23.7
+        ],
+        [
+          9.5,
+          24.8
+        ],
+        [
+          4,
+          24.8
+        ]
+      ],
+      "department": "bodycare",
+      "aisle": "BODYCARE",
+      "height": 1.6
+    },
+    {
+      "id": "f-body2",
+      "kind": "shelf",
+      "polygon": [
+        [
+          4,
+          27.4
+        ],
+        [
+          9.5,
+          27.4
+        ],
+        [
+          9.5,
+          28.5
+        ],
+        [
+          4,
+          28.5
+        ]
+      ],
+      "department": "bodycare",
+      "aisle": "BODYCARE",
+      "height": 1.6
+    },
+    {
+      "id": "f-lane1",
+      "kind": "counter",
+      "polygon": [
+        [
+          3.5,
+          31
+        ],
+        [
+          9.5,
+          31
+        ],
+        [
+          9.5,
+          31.7
+        ],
+        [
+          3.5,
+          31.7
+        ]
+      ],
+      "department": "checkout"
+    },
+    {
+      "id": "f-lane2",
+      "kind": "counter",
+      "polygon": [
+        [
+          3.5,
+          32.6
+        ],
+        [
+          9.5,
+          32.6
+        ],
+        [
+          9.5,
+          33.3
+        ],
+        [
+          3.5,
+          33.3
+        ]
+      ],
+      "department": "checkout"
+    },
+    {
+      "id": "f-lane3",
+      "kind": "counter",
+      "polygon": [
+        [
+          3.5,
+          34.2
+        ],
+        [
+          9.5,
+          34.2
+        ],
+        [
+          9.5,
+          34.9
+        ],
+        [
+          3.5,
+          34.9
+        ]
+      ],
+      "department": "checkout"
+    },
+    {
+      "id": "f-lane4",
+      "kind": "counter",
+      "polygon": [
+        [
+          3.5,
+          35.8
+        ],
+        [
+          9.5,
+          35.8
+        ],
+        [
+          9.5,
+          36.5
+        ],
+        [
+          3.5,
+          36.5
+        ]
+      ],
+      "department": "checkout"
+    },
+    {
+      "id": "f-lane5",
+      "kind": "counter",
+      "polygon": [
+        [
+          3.5,
+          37.4
+        ],
+        [
+          9.5,
+          37.4
+        ],
+        [
+          9.5,
+          38.1
+        ],
+        [
+          3.5,
+          38.1
+        ]
+      ],
+      "department": "checkout"
+    },
+    {
+      "id": "f-lane6",
+      "kind": "counter",
+      "polygon": [
+        [
+          3.5,
+          39
+        ],
+        [
+          9.5,
+          39
+        ],
+        [
+          9.5,
+          39.7
+        ],
+        [
+          3.5,
+          39.7
+        ]
+      ],
+      "department": "checkout"
+    },
+    {
+      "id": "f-lane7",
+      "kind": "counter",
+      "polygon": [
+        [
+          3.5,
+          40.6
+        ],
+        [
+          9.5,
+          40.6
+        ],
+        [
+          9.5,
+          41.3
+        ],
+        [
+          3.5,
+          41.3
+        ]
+      ],
+      "department": "checkout"
+    },
+    {
+      "id": "f-lane8",
+      "kind": "counter",
+      "polygon": [
+        [
+          3.5,
+          42.2
+        ],
+        [
+          9.5,
+          42.2
+        ],
+        [
+          9.5,
+          42.9
+        ],
+        [
+          3.5,
+          42.9
+        ]
+      ],
+      "department": "checkout"
+    },
+    {
+      "id": "f-lane9",
+      "kind": "counter",
+      "polygon": [
+        [
+          3.5,
+          43.8
+        ],
+        [
+          9.5,
+          43.8
+        ],
+        [
+          9.5,
+          44.5
+        ],
+        [
+          3.5,
+          44.5
+        ]
+      ],
+      "department": "checkout"
+    },
+    {
+      "id": "f-lane-end",
+      "kind": "counter",
+      "polygon": [
+        [
+          3.5,
+          45.4
+        ],
+        [
+          9.5,
+          45.4
+        ],
+        [
+          9.5,
+          46.1
+        ],
+        [
+          3.5,
+          46.1
+        ]
+      ],
+      "department": "checkout"
+    },
+    {
+      "id": "f-self1",
+      "kind": "selfcheckout",
+      "polygon": [
+        [
+          3.3,
+          47.6
+        ],
+        [
+          4.2,
+          47.6
+        ],
+        [
+          4.2,
+          48.4
+        ],
+        [
+          3.3,
+          48.4
+        ]
+      ],
+      "department": "checkout",
+      "height": 1.3
+    },
+    {
+      "id": "f-self2",
+      "kind": "selfcheckout",
+      "polygon": [
+        [
+          4.4,
+          47.6
+        ],
+        [
+          5.3,
+          47.6
+        ],
+        [
+          5.3,
+          48.4
+        ],
+        [
+          4.4,
+          48.4
+        ]
+      ],
+      "department": "checkout",
+      "height": 1.3
+    },
+    {
+      "id": "f-self3",
+      "kind": "selfcheckout",
+      "polygon": [
+        [
+          5.5,
+          47.6
+        ],
+        [
+          6.4,
+          47.6
+        ],
+        [
+          6.4,
+          48.4
+        ],
+        [
+          5.5,
+          48.4
+        ]
+      ],
+      "department": "checkout",
+      "height": 1.3
+    },
+    {
+      "id": "f-self4",
+      "kind": "selfcheckout",
+      "polygon": [
+        [
+          6.6,
+          47.6
+        ],
+        [
+          7.5,
+          47.6
+        ],
+        [
+          7.5,
+          48.4
+        ],
+        [
+          6.6,
+          48.4
+        ]
+      ],
+      "department": "checkout",
+      "height": 1.3
+    },
+    {
+      "id": "f-self5",
+      "kind": "selfcheckout",
+      "polygon": [
+        [
+          7.7,
+          47.6
+        ],
+        [
+          8.6,
+          47.6
+        ],
+        [
+          8.6,
+          48.4
+        ],
+        [
+          7.7,
+          48.4
+        ]
+      ],
+      "department": "checkout",
+      "height": 1.3
+    },
+    {
+      "id": "f-self6",
+      "kind": "selfcheckout",
+      "polygon": [
+        [
+          8.8,
+          47.6
+        ],
+        [
+          9.7,
+          47.6
+        ],
+        [
+          9.7,
+          48.4
+        ],
+        [
+          8.8,
+          48.4
+        ]
+      ],
+      "department": "checkout",
+      "height": 1.3
+    },
+    {
+      "id": "f-seat-w4-50.4",
+      "kind": "other",
+      "polygon": [
+        [
+          4,
+          50.4
+        ],
+        [
+          5.4,
+          50.4
+        ],
+        [
+          5.4,
+          51.6
+        ],
+        [
+          4,
+          51.6
+        ]
+      ],
+      "department": "seating",
+      "height": 0.75
+    },
+    {
+      "id": "f-seat-w7-50.4",
+      "kind": "other",
+      "polygon": [
+        [
+          7,
+          50.4
+        ],
+        [
+          8.4,
+          50.4
+        ],
+        [
+          8.4,
+          51.6
+        ],
+        [
+          7,
+          51.6
+        ]
+      ],
+      "department": "seating",
+      "height": 0.75
+    },
+    {
+      "id": "f-seat-w4-52.4",
+      "kind": "other",
+      "polygon": [
+        [
+          4,
+          52.4
+        ],
+        [
+          5.4,
+          52.4
+        ],
+        [
+          5.4,
+          53.6
+        ],
+        [
+          4,
+          53.6
+        ]
+      ],
+      "department": "seating",
+      "height": 0.75
+    },
+    {
+      "id": "f-seat-w7-52.4",
+      "kind": "other",
+      "polygon": [
+        [
+          7,
+          52.4
+        ],
+        [
+          8.4,
+          52.4
+        ],
+        [
+          8.4,
+          53.6
+        ],
+        [
+          7,
+          53.6
+        ]
+      ],
+      "department": "seating",
+      "height": 0.75
+    },
+    {
+      "id": "f-seat-w4-54.4",
+      "kind": "other",
+      "polygon": [
+        [
+          4,
+          54.4
+        ],
+        [
+          5.4,
+          54.4
+        ],
+        [
+          5.4,
+          55.6
+        ],
+        [
+          4,
+          55.6
+        ]
+      ],
+      "department": "seating",
+      "height": 0.75
+    },
+    {
+      "id": "f-seat-w7-54.4",
+      "kind": "other",
+      "polygon": [
+        [
+          7,
+          54.4
+        ],
+        [
+          8.4,
+          54.4
+        ],
+        [
+          8.4,
+          55.6
+        ],
+        [
+          7,
+          55.6
+        ]
+      ],
+      "department": "seating",
+      "height": 0.75
+    },
+    {
+      "id": "f-seafood",
+      "kind": "wall",
+      "polygon": [
+        [
+          76,
+          12.5
+        ],
+        [
+          77.4,
+          12.5
+        ],
+        [
+          77.4,
+          21.5
+        ],
+        [
+          76,
+          21.5
+        ]
+      ],
+      "department": "seafood",
+      "aisle": "SEAFOOD"
+    },
+    {
+      "id": "f-meat-counter",
+      "kind": "wall",
+      "polygon": [
+        [
+          76,
+          24.5
+        ],
+        [
+          77.4,
+          24.5
+        ],
+        [
+          77.4,
+          30
+        ],
+        [
+          76,
+          30
+        ]
+      ],
+      "department": "meat",
+      "aisle": "MEAT"
+    },
+    {
+      "id": "f-meat-case",
+      "kind": "wall",
+      "polygon": [
+        [
+          76,
+          30.5
+        ],
+        [
+          77.2,
+          30.5
+        ],
+        [
+          77.2,
+          36.5
+        ],
+        [
+          76,
+          36.5
+        ]
+      ],
+      "department": "meat",
+      "fixtureKind": "coldcase"
+    },
+    {
+      "id": "f-dairy",
+      "kind": "wall",
+      "polygon": [
+        [
+          76,
+          39.5
+        ],
+        [
+          77.2,
+          39.5
+        ],
+        [
+          77.2,
+          51.5
+        ],
+        [
+          76,
+          51.5
+        ]
+      ],
+      "department": "dairy",
+      "aisle": "DAIRY"
+    },
+    {
+      "id": "f-cheese-counter",
+      "kind": "wall",
+      "polygon": [
+        [
+          76,
+          54.5
+        ],
+        [
+          77.4,
+          54.5
+        ],
+        [
+          77.4,
+          59
+        ],
+        [
+          76,
+          59
+        ]
+      ],
+      "department": "cheese",
+      "aisle": "CHEESE"
+    },
+    {
+      "id": "f-cheese-case",
+      "kind": "wall",
+      "polygon": [
+        [
+          76,
+          59.5
+        ],
+        [
+          77.2,
+          59.5
+        ],
+        [
+          77.2,
+          65.5
+        ],
+        [
+          76,
+          65.5
+        ]
+      ],
+      "department": "cheese",
+      "fixtureKind": "coldcase"
+    },
+    {
+      "id": "f-frozen-doors1",
+      "kind": "shelf",
+      "polygon": [
+        [
+          14,
+          51
+        ],
+        [
+          41.6,
+          51
+        ],
+        [
+          41.6,
+          52.4
+        ],
+        [
+          14,
+          52.4
+        ]
+      ],
+      "department": "frozen",
+      "aisle": "FROZEN"
+    },
+    {
+      "id": "f-frozen-coffin1",
+      "kind": "shelf",
+      "polygon": [
+        [
+          14,
+          54.6
+        ],
+        [
+          41.6,
+          54.6
+        ],
+        [
+          41.6,
+          55.6
+        ],
+        [
+          14,
+          55.6
+        ]
+      ],
+      "department": "frozen",
+      "fixtureKind": "coffin"
+    },
+    {
+      "id": "f-frozen-doors2",
+      "kind": "shelf",
+      "polygon": [
+        [
+          44,
+          51
+        ],
+        [
+          71,
+          51
+        ],
+        [
+          71,
+          52.4
+        ],
+        [
+          44,
+          52.4
+        ]
+      ],
+      "department": "frozen",
+      "aisle": "FROZEN"
+    },
+    {
+      "id": "f-frozen-coffin2",
+      "kind": "shelf",
+      "polygon": [
+        [
+          44,
+          54.6
+        ],
+        [
+          71,
+          54.6
+        ],
+        [
+          71,
+          55.6
+        ],
+        [
+          44,
+          55.6
+        ]
+      ],
+      "department": "frozen",
+      "fixtureKind": "coffin"
+    },
+    {
+      "id": "f-cafe",
+      "kind": "wall",
+      "polygon": [
+        [
+          13,
+          65.8
+        ],
+        [
+          20.5,
+          65.8
+        ],
+        [
+          20.5,
+          67
+        ],
+        [
+          13,
+          67
+        ]
+      ],
+      "department": "cafe",
+      "aisle": "CAFE"
+    },
+    {
+      "id": "f-seat-13.5-61.4",
+      "kind": "other",
+      "polygon": [
+        [
+          13.5,
+          61.4
+        ],
+        [
+          15.1,
+          61.4
+        ],
+        [
+          15.1,
+          63
+        ],
+        [
+          13.5,
+          63
+        ]
+      ],
+      "department": "seating",
+      "height": 0.75
+    },
+    {
+      "id": "f-seat-16.5-61.4",
+      "kind": "other",
+      "polygon": [
+        [
+          16.5,
+          61.4
+        ],
+        [
+          18.1,
+          61.4
+        ],
+        [
+          18.1,
+          63
+        ],
+        [
+          16.5,
+          63
+        ]
+      ],
+      "department": "seating",
+      "height": 0.75
+    },
+    {
+      "id": "f-seat-55.2-61.6",
+      "kind": "other",
+      "polygon": [
+        [
+          55.2,
+          61.6
+        ],
+        [
+          56.8,
+          61.6
+        ],
+        [
+          56.8,
+          63.2
+        ],
+        [
+          55.2,
+          63.2
+        ]
+      ],
+      "department": "seating",
+      "height": 0.75
+    },
+    {
+      "id": "f-seat-57.9-61.6",
+      "kind": "other",
+      "polygon": [
+        [
+          57.9,
+          61.6
+        ],
+        [
+          59.5,
+          61.6
+        ],
+        [
+          59.5,
+          63.2
+        ],
+        [
+          57.9,
+          63.2
+        ]
+      ],
+      "department": "seating",
+      "height": 0.75
+    },
+    {
+      "id": "f-hotbar",
+      "kind": "shelf",
+      "polygon": [
+        [
+          23,
+          61.6
+        ],
+        [
+          33,
+          61.6
+        ],
+        [
+          33,
+          63.4
+        ],
+        [
+          23,
+          63.4
+        ]
+      ],
+      "department": "hotbar",
+      "aisle": "HOTBAR"
+    },
+    {
+      "id": "f-saladbar",
+      "kind": "shelf",
+      "polygon": [
+        [
+          35,
+          61.6
+        ],
+        [
+          45,
+          61.6
+        ],
+        [
+          45,
+          63.4
+        ],
+        [
+          35,
+          63.4
+        ]
+      ],
+      "department": "saladbar",
+      "aisle": "SALADBAR"
+    },
+    {
+      "id": "f-soups",
+      "kind": "shelf",
+      "polygon": [
+        [
+          47,
+          61.6
+        ],
+        [
+          53,
+          61.6
+        ],
+        [
+          53,
+          63.4
+        ],
+        [
+          47,
+          63.4
+        ]
+      ],
+      "department": "soups",
+      "aisle": "SOUPS"
+    },
+    {
+      "id": "f-rotisserie",
+      "kind": "wall",
+      "polygon": [
+        [
+          23,
+          65.8
+        ],
+        [
+          29.5,
+          65.8
+        ],
+        [
+          29.5,
+          67
+        ],
+        [
+          23,
+          67
+        ]
+      ],
+      "department": "rotisserie",
+      "aisle": "ROTISSERIE"
+    },
+    {
+      "id": "f-sushi",
+      "kind": "wall",
+      "polygon": [
+        [
+          30.5,
+          65.8
+        ],
+        [
+          37.5,
+          65.8
+        ],
+        [
+          37.5,
+          67
+        ],
+        [
+          30.5,
+          67
+        ]
+      ],
+      "department": "sushi",
+      "aisle": "SUSHI"
+    },
+    {
+      "id": "f-pizza",
+      "kind": "wall",
+      "polygon": [
+        [
+          38.5,
+          65.8
+        ],
+        [
+          45,
+          65.8
+        ],
+        [
+          45,
+          67
+        ],
+        [
+          38.5,
+          67
+        ]
+      ],
+      "department": "pizza",
+      "aisle": "PIZZA"
+    },
+    {
+      "id": "f-deli",
+      "kind": "wall",
+      "polygon": [
+        [
+          46,
+          65.8
+        ],
+        [
+          53,
+          65.8
+        ],
+        [
+          53,
+          67
+        ],
+        [
+          46,
+          67
+        ]
+      ],
+      "department": "deli",
+      "aisle": "DELI"
+    },
+    {
+      "id": "f-bread",
+      "kind": "shelf",
+      "polygon": [
+        [
+          61.5,
+          61
+        ],
+        [
+          71.5,
+          61
+        ],
+        [
+          71.5,
+          62
+        ],
+        [
+          61.5,
+          62
+        ]
+      ],
+      "department": "bakery",
+      "aisle": "BAKERY",
+      "fixtureKind": "gondola",
+      "height": 1.6
+    },
+    {
+      "id": "f-bakery-case",
+      "kind": "wall",
+      "polygon": [
+        [
+          61.5,
+          65.8
+        ],
+        [
+          71.5,
+          65.8
+        ],
+        [
+          71.5,
+          67
+        ],
+        [
+          61.5,
+          67
+        ]
+      ],
+      "department": "bakery",
+      "aisle": "BAKERY"
+    }
+  ],
+  "departments": [
+    {
+      "id": "produce",
+      "name": "Produce",
+      "color": "#6CB26A",
+      "texture": "produce.jpg",
+      "fixtureKind": "produce",
+      "finish": "stainless"
+    },
+    {
+      "id": "bulk",
+      "name": "Bulk",
+      "color": "#D9B98C",
+      "texture": "dry.jpg",
+      "fixtureKind": "bins",
+      "finish": "wood"
+    },
+    {
+      "id": "floral",
+      "name": "Floral",
+      "color": "#E9A6A0",
+      "texture": "produce.jpg",
+      "fixtureKind": "produce",
+      "finish": "wood"
+    },
+    {
+      "id": "service",
+      "name": "Customer service",
+      "color": "#D8D4CC",
+      "fixtureKind": "counter",
+      "finish": "wood"
+    },
+    {
+      "id": "pharmacy",
+      "name": "Pharmacy",
+      "color": "#CFE3DA",
+      "texture": "pharmacy.jpg",
+      "fixtureKind": "gondola",
+      "finish": "wood"
+    },
+    {
+      "id": "bodycare",
+      "name": "Body care",
+      "color": "#E8D2C4",
+      "texture": "baby.jpg",
+      "fixtureKind": "gondola",
+      "finish": "wood"
+    },
+    {
+      "id": "checkout",
+      "name": "Checkout",
+      "color": "#DCE3D4",
+      "fixtureKind": "counter",
+      "finish": "wood"
+    },
+    {
+      "id": "seating",
+      "name": "Seating",
+      "color": "#CDBFA8",
+      "fixtureKind": "bakery",
+      "finish": "wood"
+    },
+    {
+      "id": "seafood",
+      "name": "Seafood",
+      "color": "#E7C3B8",
+      "texture": "meat.jpg",
+      "fixtureKind": "servicecase",
+      "finish": "stainless"
+    },
+    {
+      "id": "meat",
+      "name": "Meat",
+      "color": "#E5A2A0",
+      "texture": "meat.jpg",
+      "fixtureKind": "servicecase",
+      "finish": "stainless"
+    },
+    {
+      "id": "dairy",
+      "name": "Dairy",
+      "color": "#F2EAD2",
+      "texture": "dairy.jpg",
+      "fixtureKind": "coldcase",
+      "finish": "stainless"
+    },
+    {
+      "id": "cheese",
+      "name": "Cheese",
+      "color": "#F3DA8E",
+      "texture": "dairy.jpg",
+      "fixtureKind": "servicecase",
+      "finish": "stainless"
+    },
+    {
+      "id": "breakfast",
+      "name": "Breakfast",
+      "color": "#E2C9A2",
+      "texture": "dry.jpg",
+      "fixtureKind": "gondola",
+      "finish": "wood"
+    },
+    {
+      "id": "baking",
+      "name": "Baking",
+      "color": "#E6CFA8",
+      "texture": "dry.jpg",
+      "fixtureKind": "gondola",
+      "finish": "wood"
+    },
+    {
+      "id": "pasta",
+      "name": "Pasta & rice",
+      "color": "#E8C79A",
+      "texture": "dry.jpg",
+      "fixtureKind": "gondola",
+      "finish": "wood"
+    },
+    {
+      "id": "world",
+      "name": "World foods",
+      "color": "#E9B98A",
+      "texture": "dry.jpg",
+      "fixtureKind": "gondola",
+      "finish": "wood"
+    },
+    {
+      "id": "canned",
+      "name": "Canned",
+      "color": "#DDC4A0",
+      "texture": "dry.jpg",
+      "fixtureKind": "gondola",
+      "finish": "wood"
+    },
+    {
+      "id": "snack",
+      "name": "Snacks",
+      "color": "#F3C96B",
+      "texture": "snack.jpg",
+      "fixtureKind": "gondola",
+      "finish": "wood"
+    },
+    {
+      "id": "drinks",
+      "name": "Drinks",
+      "color": "#C9DDA0",
+      "texture": "drinks.jpg",
+      "fixtureKind": "gondola",
+      "finish": "wood"
+    },
+    {
+      "id": "household",
+      "name": "Household",
+      "color": "#D8D4CC",
+      "texture": "household.jpg",
+      "fixtureKind": "gondola",
+      "finish": "wood"
+    },
+    {
+      "id": "kitchen",
+      "name": "Kitchen",
+      "color": "#D3C7B5",
+      "texture": "household.jpg",
+      "fixtureKind": "gondola",
+      "finish": "wood"
+    },
+    {
+      "id": "babypet",
+      "name": "Baby & pet",
+      "color": "#E7D3CF",
+      "texture": "pet.jpg",
+      "fixtureKind": "gondola",
+      "finish": "wood"
+    },
+    {
+      "id": "alcohol",
+      "name": "Beer & wine",
+      "color": "#C99A8E",
+      "texture": "drinks.jpg",
+      "fixtureKind": "gondola",
+      "finish": "wood"
+    },
+    {
+      "id": "winebar",
+      "name": "Wine bar",
+      "color": "#B98579",
+      "fixtureKind": "counter",
+      "finish": "wood"
+    },
+    {
+      "id": "frozen",
+      "name": "Frozen",
+      "color": "#E1ECD8",
+      "texture": "frozen.jpg",
+      "fixtureKind": "coldcase",
+      "finish": "stainless"
+    },
+    {
+      "id": "cafe",
+      "name": "Café",
+      "color": "#D9B48A",
+      "texture": "bakery.jpg",
+      "fixtureKind": "counter",
+      "finish": "wood"
+    },
+    {
+      "id": "hotbar",
+      "name": "Hot bar",
+      "color": "#F0B27A",
+      "texture": "deli.jpg",
+      "fixtureKind": "servicecase",
+      "finish": "stainless"
+    },
+    {
+      "id": "saladbar",
+      "name": "Salad bar",
+      "color": "#A9CF8C",
+      "texture": "produce.jpg",
+      "fixtureKind": "servicecase",
+      "finish": "stainless"
+    },
+    {
+      "id": "soups",
+      "name": "Soups",
+      "color": "#E8A86E",
+      "texture": "deli.jpg",
+      "fixtureKind": "servicecase",
+      "finish": "stainless"
+    },
+    {
+      "id": "rotisserie",
+      "name": "Rotisserie",
+      "color": "#E9A15F",
+      "texture": "deli.jpg",
+      "fixtureKind": "servicecase",
+      "finish": "stainless"
+    },
+    {
+      "id": "sushi",
+      "name": "Sushi",
+      "color": "#EFC0B0",
+      "texture": "deli.jpg",
+      "fixtureKind": "servicecase",
+      "finish": "stainless"
+    },
+    {
+      "id": "pizza",
+      "name": "Pizza",
+      "color": "#EBB27C",
+      "texture": "bakery.jpg",
+      "fixtureKind": "servicecase",
+      "finish": "stainless"
+    },
+    {
+      "id": "deli",
+      "name": "Deli",
+      "color": "#EFC9A6",
+      "texture": "deli.jpg",
+      "fixtureKind": "servicecase",
+      "finish": "stainless"
+    },
+    {
+      "id": "bakery",
+      "name": "Bakery",
+      "color": "#E9B46A",
+      "texture": "bakery.jpg",
+      "fixtureKind": "servicecase",
+      "finish": "wood"
+    }
+  ],
+  "outline": [
+    [
+      0,
+      0
+    ],
+    [
+      75,
+      0
+    ],
+    [
+      85,
+      10
+    ],
+    [
+      85,
+      70
+    ],
+    [
+      0,
+      70
+    ]
+  ],
+  "skylights": [
+    {
+      "id": "produce-skylight",
+      "polygon": [
+        [
+          14,
+          3
+        ],
+        [
+          46,
+          3
+        ],
+        [
+          46,
+          13
+        ],
+        [
+          14,
+          13
+        ]
+      ],
+      "height": 6.5
+    }
+  ]
+}

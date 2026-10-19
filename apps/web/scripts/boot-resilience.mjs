@@ -18,6 +18,10 @@
 //   G  a saved answer at a location the map no longer has (the live bug: oat milk → DAIRY-8, confirmed on
 //      map v2) → the app boots, the stale item nothing names shows "Needs a place", the route covers the rest
 //   H  a map change under a trip in progress → the trip resumes without the removed location's stop
+//   I  a device with the demo Supercenter's data (before Grosher) → Grosher opens clean with its hero lists,
+//      the demo's lists and memory untouched, its paused trip not resumed on Grosher's map
+//
+// The app's store is Grosher, so the seeded state is Grosher's (lists:grosher, grosher.trip.grosher, …).
 //
 // Exit code 1 on any failure. CI runs it after the contrast gate.
 
@@ -76,6 +80,9 @@ const shot = async (page, name) => SHOTS && page.screenshot({ path: join(SHOTS, 
 
 async function fresh() {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, acceptDownloads: true });
+  // no model answers here (none runs in CI; a local build may point at this Mac's Ollama): every resolver
+  // call fails, so what the checks see comes from the saved state and the catalog alone
+  await ctx.route(/:11434\/|workers\.dev\/|\/api\/(resolve|health)/, (r) => r.abort());
   const page = await ctx.newPage();
   page.on("console", (m) => process.env.DEBUG && console.log(`  [page] ${m.text()}`));
   return { ctx, page };
@@ -125,12 +132,15 @@ async function renderedBuild(page, build, timeout = 90_000) {
 }
 const buildOf = (page) => page.evaluate(() => document.documentElement.innerHTML.match(/var BUILD = "([^"]*)"/)?.[1] ?? null);
 
+// the store the app opens (the default); its saved state is per store
+const STORE = "grosher";
+
 // the state a device from before the envelopes can hold: a bare (v0) list with a broken row, the value
 // that blanked the live app (notes: 42), a corrupt trip, a bare flag, garbage learning state
 async function seedOldState(page) {
   await page.evaluate(async () => {
-    localStorage.setItem("grosher.notes", "42");
-    localStorage.setItem("grosher.trip", "{not json");
+    localStorage.setItem("grosher.notes.grosher", "42");
+    localStorage.setItem("grosher.trip.grosher", "{not json");
     localStorage.setItem("grosher.flat", "true");
     const db = await new Promise((r) => {
       const q = indexedDB.open("grosher", 1);
@@ -140,8 +150,8 @@ async function seedOldState(page) {
     const tx = db.transaction("kv", "readwrite");
     const kv = tx.objectStore("kv");
     const now = Date.now();
-    kv.put([{ id: "l_old", name: "Draft", items: ["Ghee", "Bananas"], storeId: "demo-supercenter", createdAt: now, updatedAt: now, kind: "draft" }, { id: 7, items: "broken" }], "lists:demo-supercenter");
-    kv.put("garbage", "learning:demo-supercenter");
+    kv.put([{ id: "l_old", name: "Draft", items: ["Ghee", "Bananas"], storeId: "grosher", createdAt: now, updatedAt: now, kind: "draft" }, { id: 7, items: "broken" }], "lists:grosher");
+    kv.put("garbage", "learning:grosher");
     await new Promise((r) => (tx.oncomplete = r));
     db.close();
   });
@@ -171,7 +181,7 @@ try {
       const s = await page.evaluate(() => ({
         bananas: document.body.innerText.includes("Bananas"),
         quarantined: Array.from({ length: localStorage.length }, (_, i) => localStorage.key(i)).filter((k) => k.startsWith("grosher.quarantine.")).length,
-        notes: localStorage.getItem("grosher.notes"),
+        notes: localStorage.getItem("grosher.notes.grosher"),
       }));
       check("A  old state: the list's good rows kept, notes and trip quarantined", s.bananas && s.quarantined >= 2 && s.notes !== "42", JSON.stringify(s));
     }
@@ -260,7 +270,7 @@ try {
     await page.getByRole("button", { name: /reset local data/i }).click();
     const file = await (await download).path();
     const exported = JSON.parse(readFileSync(file, "utf8"));
-    const items = exported.lists?.["demo-supercenter"]?.find((l) => l.kind === "draft")?.items ?? [];
+    const items = exported.lists?.[STORE]?.find((l) => l.kind === "draft")?.items ?? [];
     check("E  Reset local data downloads the lists first", items.includes("Paneer") && items.includes("Atta"), `draft ${JSON.stringify(items)}`);
     const ok = await rendered(page);
     const after = await page.evaluate(() => ({ keys: Array.from({ length: localStorage.length }, (_, i) => localStorage.key(i)).filter((k) => k.startsWith("grosher.") && !k.startsWith("grosher.lists")).length, text: document.body.innerText.includes("Paneer") }));
@@ -283,10 +293,13 @@ try {
     await ctx.close();
   }
   // ---- G: a saved answer at a location the map no longer has
-  const stale = (name, id, extra = {}) => ({ id, name, locationIds: ["DAIRY-8"], source: "llm", department: "dairy", confirms: 2, misses: 0, confidence: 0.86, lastConfirmed: Date.now() - 86_400_000, ...extra });
-  const seedStale = (page, learning, list, trip) =>
+  // a location this map has never had (DAIRY-8 was the live bug's, but Grosher's dairy wall has a bay 8): the
+  // demo Supercenter's aisle 30
+  const STALE_LOC = "A30-L8";
+  const stale = (name, id, extra = {}) => ({ id, name, locationIds: [STALE_LOC], source: "llm", department: "dairy", confirms: 2, misses: 0, confidence: 0.86, lastConfirmed: Date.now() - 86_400_000, ...extra });
+  const seedStale = (page, learning, list, trip, store = STORE) =>
     page.evaluate(
-      async ([learning, list, trip]) => {
+      async ([learning, list, trip, store]) => {
         const db = await new Promise((r) => {
           const q = indexedDB.open("grosher", 1);
           q.onupgradeneeded = () => q.result.createObjectStore("kv");
@@ -295,14 +308,14 @@ try {
         const tx = db.transaction("kv", "readwrite");
         const kv = tx.objectStore("kv");
         const now = Date.now();
-        kv.put(learning, "learning:demo-supercenter");
-        if (list) kv.put([{ id: "l_draft", name: "Draft", items: list, storeId: "demo-supercenter", createdAt: now, updatedAt: now, kind: "draft", usedAt: [] }], "lists:demo-supercenter");
-        kv.delete("index:demo-supercenter"); // the stale entry answers before the full index is in, as on the phone
+        kv.put(learning, `learning:${store}`);
+        if (list) kv.put([{ id: "l_draft", name: "Draft", items: list, storeId: store, createdAt: now, updatedAt: now, kind: "draft", usedAt: [] }], `lists:${store}`);
+        kv.delete(`index:${store}`); // the stale entry answers before the full index is in, as on the phone
         await new Promise((r) => (tx.oncomplete = r));
         db.close();
-        if (trip) localStorage.setItem("grosher.trip", JSON.stringify(trip));
+        if (trip) localStorage.setItem(`grosher.trip.${store}`, JSON.stringify(trip));
       },
-      [learning, list, trip],
+      [learning, list, trip, store],
     );
   {
     deploy("new");
@@ -335,6 +348,41 @@ try {
     const resumed = await page.getByText(/next · 1 of 2/i).waitFor({ timeout: 60_000 }).then(() => true).catch(() => false);
     const plate = await page.evaluate(() => !!document.querySelector(".boot-fail"));
     check("H  a map change under a trip: it resumes, the removed location's stop left for checkout", resumed && !plate);
+    await ctx.close();
+  }
+
+  // ---- I: a device that used the demo Supercenter (the iPhone before Grosher): its data stays where it is,
+  // Grosher opens clean with its hero lists, and the demo's paused trip is not resumed on Grosher's map
+  {
+    deploy("new");
+    const { ctx, page } = await fresh();
+    await install(page);
+    const demoTrip = { original: ["milk", "bananas"], remaining: ["milk", "bananas"], got: [], skipped: [], positionNodeId: "ENTRANCE", walkedM: 0, startedAt: Date.now() - 600_000 };
+    await seedStale(page, { pending: [], llm: [], memory: [{ name: "milk", locationId: "A7-L11", confidence: 0.95, confirms: 5, lastConfirmed: Date.now() }] }, ["Ghee", "Milk"], null, "demo-supercenter");
+    await page.evaluate((t) => localStorage.setItem("grosher.trip", JSON.stringify(t)), demoTrip);
+    await page.reload();
+    const ok = await rendered(page);
+    await page.getByRole("heading", { level: 1, name: "Grosher" }).waitFor({ timeout: 20_000 }).catch(() => {});
+    const s = await page.evaluate(async () => {
+      const db = await new Promise((r) => {
+        const q = indexedDB.open("grosher");
+        q.onsuccess = () => r(q.result);
+      });
+      const get = (k) => new Promise((r) => (db.transaction("kv").objectStore("kv").get(k).onsuccess = (e) => r(e.target.result)));
+      const unwrap = (x) => (x && x.__grosher === 1 ? x.data : x);
+      const demoLists = unwrap(await get("lists:demo-supercenter"));
+      const lists = unwrap(await get("lists:grosher")) ?? [];
+      db.close();
+      return {
+        heading: document.querySelector("h1")?.textContent,
+        trip: !!document.body.innerText.match(/next · 1 of/i),
+        empty: /0 items/i.test(document.body.innerText) || !document.querySelector("li[data-source]"),
+        demoDraft: (demoLists ?? []).find((l) => l.kind === "draft")?.items ?? [],
+        hero: lists.filter((l) => l.kind === "saved").map((l) => l.name),
+      };
+    });
+    check("I  a device with the demo store's data opens Grosher: clean, hero lists offered, the demo's data untouched", ok && s.heading === "Grosher" && !s.trip && s.empty && s.demoDraft.join() === "Ghee,Milk" && s.hero.length === 4, JSON.stringify(s));
+    await shot(page, "i-demo-device");
     await ctx.close();
   }
 } finally {

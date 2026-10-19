@@ -97,8 +97,12 @@ export interface Category {
   aliases?: string[];
 }
 
-/** How a department's fixtures are built in 3D. */
-export type FixtureKind = "gondola" | "coldcase" | "produce" | "bakery" | "counter";
+/**
+ * How a department's fixtures are built in 3D: gondola, cold case (doors), produce table, bakery table,
+ * counter (checkout, service desk, bar), service case (a staffed glass case: seafood, meat, deli, the food
+ * hall's bars), coffin (a low open-top freezer) and bins (bulk gravity and scoop bins).
+ */
+export type FixtureKind = "gondola" | "coldcase" | "produce" | "bakery" | "counter" | "servicecase" | "coffin" | "bins";
 
 /** A physical block on the floor: shelf run, wall shelving, counter. A box in 3D, a filled polygon in 2D. */
 export interface Fixture {
@@ -114,6 +118,8 @@ export interface Fixture {
   shelves?: number;
   /** shelf depth from each face, metres (default half the block width) */
   depth?: number;
+  /** 3D build for this fixture when it differs from its department's (the cold-beer doors in the beer aisle) */
+  fixtureKind?: FixtureKind;
 }
 
 export interface Department {
@@ -124,6 +130,11 @@ export interface Department {
   fixtureKind?: FixtureKind; // default gondola
   anchor?: [number, number]; // where the department name sits on the flat map
   angle?: number; // degrees, label rotation
+  /**
+   * 3D material by zone instead of the department texture: "wood" (warm wood with black steel uprights, the dry
+   * aisles) or "stainless" (fresh and cold). Departments that share a finish share one mesh.
+   */
+  finish?: "wood" | "stainless";
 }
 
 export interface StoreGraph {
@@ -141,6 +152,17 @@ export interface StoreGraph {
   /** Rendering only. The solver never reads these. */
   fixtures?: Fixture[];
   departments?: Department[];
+  /** the building's outer wall (default: the bounding box of nodes and fixtures) */
+  outline?: [number, number][];
+  /** roof glazing: drawn overhead in 3D, and the floor under it is lit by daylight */
+  skylights?: Skylight[];
+}
+
+export interface Skylight {
+  id: string;
+  polygon: [number, number][];
+  /** height of the frame above the floor, metres (default 6) */
+  height?: number;
 }
 
 export interface Weights {

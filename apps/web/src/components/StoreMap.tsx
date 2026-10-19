@@ -175,6 +175,7 @@ export function StoreMap({
   const initial = useMemo(() => {
     const all = [...nodes.values()];
     for (const f of store.fixtures ?? []) for (const [x, y] of f.polygon) all.push({ id: "", x, y, type: "junction" });
+    for (const [x, y] of store.outline ?? []) all.push({ id: "", x, y, type: "junction" });
     return boundsOf(all);
   }, [nodes, store]);
   const maxW = initial.w * 3;
@@ -303,6 +304,7 @@ export function StoreMap({
 
   // ---- derived drawing data
   const deptColor = useMemo(() => new Map((store.departments ?? []).map((d) => [d.id, d.color])), [store]);
+  const deptName = useMemo(() => new Map((store.departments ?? []).map((d) => [d.id, d.name])), [store]);
   const fixtures = store.fixtures ?? [];
   const locs = useMemo(
     () =>
@@ -349,9 +351,11 @@ export function StoreMap({
           const front = near(ends[0]) <= near(ends[1]) ? ends[0] : ends[1];
           const dir = front === ends[0] ? -1 : 1;
           out.push({ key: f.aisle, text: f.aisle, x: vertical ? cx : front.x + dir * 1.4, y: vertical ? front.y + dir * 1.6 : cy, rotate: 0, kind: "aisle" });
-        } else if (f.kind === "wall") {
+        } else {
+          // walls, counters and stations: the department's name once per code ("HOT BAR"), along the long side
           seen.add(f.aisle);
-          out.push({ key: f.aisle, text: f.aisle.toUpperCase(), x: cx, y: cy, rotate: b.h > b.w ? -90 : 0, kind: "wall" });
+          const name = (f.department && deptName.get(f.department)) || f.aisle;
+          out.push({ key: f.aisle, text: name.toUpperCase(), x: cx, y: cy, rotate: b.h > b.w ? -90 : 0, kind: "wall" });
         }
       }
       return out;
@@ -385,7 +389,7 @@ export function StoreMap({
       out.push({ key: aisle, text: aisle, x: end.x + ((c.x - end.x) / len) * 1.6, y: end.y + ((c.y - end.y) / len) * 1.6, rotate: 0, kind: AISLE.test(aisle) ? "aisle" : "wall" });
     }
     return out;
-  }, [fixtures, locs, nodes, fromEntrance, store]);
+  }, [fixtures, locs, nodes, fromEntrance, store, deptName]);
 
   // Route ribbon: walked / current / ahead.
   const walkedPts = useMemo(() => (walkedPath ? pathPoints(walkedPath, nodes) : []), [walkedPath, nodes]);
@@ -448,6 +452,12 @@ export function StoreMap({
       <rect x={initial.x - 100} y={initial.y - 100} width={initial.w + 200} height={initial.h + 200} fill="var(--map-canvas, #EDE9DB)" />
       <rect x={initial.x - 100} y={initial.y - 100} width={initial.w + 200} height={initial.h + 200} fill="url(#map-dots)" />
       {underlay && <image data-layer="underlay" href={underlay.url} x={underlay.x} y={underlay.y} width={underlay.w} height={underlay.h} opacity={underlay.opacity} preserveAspectRatio="none" />}
+
+      {/* the building's wall and the roof glazing over the daylit zone */}
+      {store.outline && <polygon data-layer="outline" points={pointsAttr(store.outline.map(([x, y]) => ({ x, y })))} fill="none" stroke={SOIL_35} strokeWidth={px(2)} strokeLinejoin="round" />}
+      {store.skylights?.map((sk) => (
+        <polygon key={sk.id} data-layer="skylight" points={pointsAttr(sk.polygon.map(([x, y]) => ({ x, y })))} fill="rgba(255,255,255,0.35)" stroke={SOIL_35} strokeWidth={hair} strokeDasharray={`${px(4)} ${px(3)}`} />
+      ))}
 
       {/* fixtures */}
       <g data-layer="fixtures" stroke={SOIL_35} strokeWidth={hair} strokeLinejoin="round" style={showFixtures ? undefined : { display: "none" }}>
@@ -516,20 +526,27 @@ export function StoreMap({
       {/* full soil on a cream halo (painted under the glyphs): at 55% with no halo the codes measured 2.5:1
           where they cross department fills and location dots */}
       <g data-layer="labels" fill={SOIL} stroke="#EDE9DB" strokeWidth={px(3)} strokeLinejoin="round" paintOrder="stroke" textAnchor="middle" fontWeight={500}>
-        {labels.map((l) => (
+        {labels.map((l) => {
+          // a long wall or counter name near the edge of the store stays inside the map (over the store's own
+          // cream, never over whatever the map sits on): ~0.62 em a glyph plus the 2 px tracking
+          const half = l.kind === "wall" ? (l.text.length * (font(10) * 0.62 + px(2))) / 2 : 0;
+          const inX = (v: number) => (half && !l.rotate ? Math.max(initial.x + half, Math.min(initial.x + initial.w - half, v)) : v);
+          const inY = (v: number) => (half && l.rotate ? Math.max(initial.y + half, Math.min(initial.y + initial.h - half, v)) : v);
+          return (
           <text
             key={l.key}
-            x={l.x}
-            y={l.y}
+            x={inX(l.x)}
+            y={inY(l.y)}
             fontSize={font(l.kind === "aisle" ? 11 : 10)}
             letterSpacing={l.kind === "wall" ? px(2) : 0}
             dominantBaseline="middle"
-            transform={l.rotate ? `rotate(${l.rotate} ${l.x} ${l.y})` : undefined}
+            transform={l.rotate ? `rotate(${l.rotate} ${inX(l.x)} ${inY(l.y)})` : undefined}
             data-label={l.key}
           >
             {l.text}
           </text>
-        ))}
+          );
+        })}
       </g>
 
       {/* route ribbon */}

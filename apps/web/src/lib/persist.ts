@@ -44,13 +44,15 @@ const tripOk = (t: unknown) =>
 
 export const SCHEMAS: Schema[] = [
   {
-    match: (k) => k === "grosher.trip",
+    // per store (grosher.trip.<storeId>); the bare key is the demo Supercenter's from before Grosher
+    match: (k) => k === "grosher.trip" || k.startsWith("grosher.trip."),
     version: 1,
     // v0: early snapshots lacked got / skipped
     migrations: [(t) => (isObj(t) ? { got: [], skipped: [], original: t.remaining, ...t } : t)],
     valid: (t) => t === null || tripOk(t),
   },
-  { match: (k) => k === "grosher.notes", version: 1, migrations: [(x) => x], valid: strArr },
+  { match: (k) => k === "grosher.notes" || k.startsWith("grosher.notes."), version: 1, migrations: [(x) => x], valid: strArr },
+  { match: (k) => k.startsWith("grosher.offered."), version: 1, migrations: [(x) => x], valid: strArr },
   { match: (k) => k === "grosher.flat", version: 1, migrations: [(x) => x], valid: (x) => typeof x === "boolean" },
   // the settings sheet coerces each field onto the defaults itself (settings.ts sanitize)
   { match: (k) => k === "grosher.resolver", version: 1, migrations: [(x) => x], valid: isObj },

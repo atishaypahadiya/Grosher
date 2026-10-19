@@ -8,10 +8,12 @@ Grosher turns a shopping list into the shortest walk through the store. Type, pa
 line is matched to a shelf (the store's catalog first, then your own memory of where things were, then a local
 language model for the rest); the route is solved exactly for up to 13 stops with the shopping constraints a
 person would apply anyway (frozen last, heavy late, eggs and chips after the cans), and it re-plans from where
-you stand every time you check something off. One synthetic 30-aisle Supercenter ships as the demo, with 298
-shelf categories the way the aisle signs read and a 47,000-item catalog built from the Instacart 2017 product
-list (non-commercial terms, see `packages/stores/data/instacart/README.md`), so most everyday items resolve
-to the right aisle without a survey; real stores are surveyed with the built-in map editor. It is a web app that installs to the home screen and works offline.
+you stand every time you check something off. The demo store is **Grosher**, our own designed Whole
+Foods-style market ([design/store-grosher.md](design/store-grosher.md)): full grocery plus pharmacy, beer and
+wine, bulk, a food hall and body care, with 324 shelf categories the way the signs read and a 47,000-item
+catalog built from the Instacart 2017 product list (non-commercial terms, see
+`packages/stores/data/instacart/README.md`), so most everyday items resolve to the right shelf without a
+survey; real stores are surveyed with the built-in map editor. It is a web app that installs to the home screen and works offline.
 The visual contract is [DESIGN.md](DESIGN.md).
 
 <p>
@@ -100,7 +102,7 @@ map a new store".
 
 ```
 packages/core      routing engine + item resolution (no dependencies, Node runs the TypeScript)
-packages/stores    store data: the demo Supercenter, departments, shelf slots, generators
+packages/stores    store data: Grosher (the default), the synthetic Supercenter (tests, Walmart reference), slots, generators
 apps/web           Vite + React PWA: list, 3D trip, checkout, editor
 apps/resolver      Cloudflare Worker: the language-model layer over HTTPS
 ```

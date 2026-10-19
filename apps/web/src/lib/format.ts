@@ -38,3 +38,13 @@ export function describeLocation(store: StoreGraph, locationId: string | undefin
   if (loc.bay) parts.push(`section ${loc.bay}`);
   return parts.join(", ");
 }
+
+/** A checkout node as the shopper reads it: "lane 4" (the demo's L3), "lane 1" (LANE1), "express lane", "self-checkout". */
+export function laneName(nodeId: string | null | undefined): string | null {
+  if (!nodeId) return null;
+  if (/^self/i.test(nodeId)) return "self-checkout";
+  if (/^express/i.test(nodeId)) return "express lane";
+  const named = nodeId.match(/^LANE(\d+)$/i);
+  if (named) return `lane ${Number(named[1])}`;
+  return `lane ${nodeId.replace(/^L/, "").replace(/^(\d+)$/, (m) => String(Number(m) + 1))}`;
+}

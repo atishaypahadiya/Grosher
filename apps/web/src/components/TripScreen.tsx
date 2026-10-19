@@ -5,7 +5,7 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import type { Router, Stop } from "@grosher/core";
 import type { StoreBundle } from "@grosher/stores";
 import { elapsedMs, isDone, nextLeg, nextStop, type TripState } from "../lib/trip.ts";
-import { clock, describeLocation, WALK_MPS } from "../lib/format.ts";
+import { clock, describeLocation, laneName, WALK_MPS } from "../lib/format.ts";
 import { band } from "@grosher/core";
 import { locationDepartment } from "../lib/chips.ts";
 import { slotFor } from "@grosher/stores";
@@ -31,7 +31,6 @@ export interface TripScreenProps {
   onBack: () => void;
 }
 
-const laneNumber = (nodeId: string) => nodeId.replace(/^L/, "").replace(/^(\d+)$/, (m) => String(Number(m) + 1));
 
 export function TripScreen({ bundle, router, trip, flat, onFlatChange, onGotIt, onSkip, onAdd, onBack }: TripScreenProps) {
   const { store, catalog } = bundle;
@@ -85,7 +84,7 @@ export function TripScreen({ bundle, router, trip, flat, onFlatChange, onGotIt, 
   const sideWord = loc?.side === "R" ? "Right" : loc?.side === "E" ? "Endcap" : "Left";
   const slotLine = slot ? `${sideWord} · bay ${slot.bay} · shelf ${slot.shelf + 1}` : undefined;
   const nextLabel = leg && stop ? { eyebrow: `${eyebrowParts.join(" · ")} · ${position} of ${total}`, name: stop.name, distance: `${Math.round(leg.distanceM)} m`, slot: slotLine } : null;
-  const checkoutLabel = lane ? { eyebrow: `Checkout · lane ${laneNumber(lane.nodeId)}`, line: `${Math.max(1, Math.round(remainingM / WALK_MPS / 60))} min walk (${Math.round(remainingM)} m)` } : null;
+  const checkoutLabel = lane ? { eyebrow: `Checkout · ${laneName(lane.nodeId)}`, line: `${Math.max(1, Math.round(remainingM / WALK_MPS / 60))} min walk (${Math.round(remainingM)} m)` } : null;
 
   const flatMap = (
     <StoreMap

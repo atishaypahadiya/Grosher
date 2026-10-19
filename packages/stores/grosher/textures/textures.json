@@ -1,0 +1,16 @@
+{
+  "wood": {
+    "file": "wood.jpg",
+    "w": 512,
+    "h": 512,
+    "shotAt": null,
+    "repeatMeters": 2
+  },
+  "stainless": {
+    "file": "stainless.jpg",
+    "w": 512,
+    "h": 512,
+    "shotAt": null,
+    "repeatMeters": 2
+  }
+}

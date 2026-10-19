@@ -51,7 +51,7 @@ describe("editor confidence view", () => {
     });
     location.hash = "#/edit";
     try {
-      render(<App />);
+      render(<App bundle={demoSupercenter} />);
       // the memory rows load asynchronously
       await screen.findByText(/map v/i);
       fireEvent.click(screen.getByRole("button", { name: /^confidence$/i }));

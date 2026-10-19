@@ -6,6 +6,14 @@ import { draftOf, loadLists, loadOntoDraft, markUsed, newList, remove, rename, s
 
 const OLD_ITEMS_KEY = "grosher.items";
 const OLD_USUAL_KEY = "grosher.usual";
+/** the store's shipped lists already offered in this browser (a deleted one is not offered again) */
+export const offeredKey = (storeId: string) => `grosher.offered.${storeId}`;
+
+export interface ShippedList {
+  id: string;
+  name: string;
+  items: string[];
+}
 
 export interface ListsState {
   lists: List[];
@@ -22,7 +30,20 @@ export interface ListsState {
   importLists: (lists: List[]) => void;
 }
 
-export function useLists(storeId: string): ListsState {
+/** Adds the store's shipped lists (Grosher's hero lists) as saved lists, once each per browser. */
+export function offerShipped(lists: List[], storeId: string, shipped: ShippedList[], offered: string[], now = Date.now()): { lists: List[]; offered: string[] } {
+  let next = lists;
+  const seen = new Set(offered);
+  for (const s of shipped) {
+    if (seen.has(s.id)) continue;
+    seen.add(s.id);
+    const id = `${storeId}:${s.id}`;
+    if (!next.some((l) => l.id === id)) next = upsert(next, { ...newList(storeId, "saved", s.name, s.items, now), id });
+  }
+  return { lists: next, offered: [...seen] };
+}
+
+export function useLists(storeId: string, shipped: ShippedList[] = []): ListsState {
   const [lists, setLists] = useState<List[]>([]);
   const [loaded, setLoaded] = useState(false);
 
@@ -39,6 +60,11 @@ export function useLists(storeId: string): ListsState {
       if (oldUsual?.length && !next.some((l) => l.kind === "usual")) next = upsert(next, newList(storeId, "usual", "Usual trip", oldUsual));
       saveLocal(OLD_ITEMS_KEY, null);
       saveLocal(OLD_USUAL_KEY, null);
+      if (shipped.length) {
+        const r = offerShipped(next, storeId, shipped, loadLocal<string[]>(offeredKey(storeId), []));
+        next = r.lists;
+        saveLocal(offeredKey(storeId), r.offered);
+      }
       // items typed before the store answered stay on the draft
       setLists((cur) => {
         const typed = draftOf(cur)?.items ?? [];
@@ -49,6 +75,8 @@ export function useLists(storeId: string): ListsState {
     return () => {
       live = false;
     };
+    // the shipped lists are the store's constant; a new store id brings its own
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storeId]);
   useEffect(() => {
     if (loaded) void saveLists(storeId, lists);

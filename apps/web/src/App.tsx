@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Router, WalkGraph, type Stop } from "@grosher/core";
-import { demoSupercenter } from "@grosher/stores";
+import { DEFAULT_STORE, demoSupercenter, type StoreBundle } from "@grosher/stores";
 import { Ground } from "./components/Ground.tsx";
 import { ListScreen } from "./components/ListScreen.tsx";
 import { TripScreen } from "./components/TripScreen.tsx";
@@ -24,9 +24,12 @@ import { load, save } from "./lib/storage.ts";
 import { useResetFlag } from "./lib/useResetFlag.ts";
 import { bannerText, detectReset, editorHashFor, parseEditorFocus } from "./lib/reset.ts";
 
-const TRIP_KEY = "grosher.trip";
-const NOTES_KEY = "grosher.notes";
+// per store: a trip or a note never follows the shopper into another store's map
+const tripKey = (storeId: string) => `grosher.trip.${storeId}`;
+const notesKey = (storeId: string) => `grosher.notes.${storeId}`;
 const FLAT_KEY = "grosher.flat";
+/** A Walmart survey (Story Rd) matches its signs against the Walmart taxonomy: the demo Supercenter's. */
+const WALMART_REFERENCE = demoSupercenter;
 
 function useHash() {
   const [hash, setHash] = useState(() => (typeof location !== "undefined" ? location.hash : ""));
@@ -38,13 +41,15 @@ function useHash() {
   return hash;
 }
 
-export function App() {
+/** The app on one store: Grosher unless a test hands it another (the demo Supercenter's suite). */
+export function App({ bundle = DEFAULT_STORE }: { bundle?: StoreBundle } = {}) {
   const hash = useHash();
-  const bundle = demoSupercenter;
   const { store } = bundle;
+  const TRIP_KEY = tripKey(store.storeId);
+  const NOTES_KEY = notesKey(store.storeId);
   const router = useMemo(() => new Router(new WalkGraph(store)), [store]);
 
-  const listsState = useLists(store.storeId);
+  const listsState = useLists(store.storeId, bundle.lists);
   const { items, setItems } = listsState;
   const [listsOpen, setListsOpen] = useState(false);
   const historyState = useHistory(store.storeId);
@@ -138,7 +143,7 @@ export function App() {
   if (hash.startsWith("#/survey")) {
     return (
       <SurveyScreen
-        bundle={bundle}
+        bundle={WALMART_REFERENCE}
         onExit={() => {
           location.hash = "";
         }}
@@ -149,7 +154,7 @@ export function App() {
   if (hash.startsWith("#/edit")) {
     // a surveyed store's draft, else the package (an unknown store id falls back to it)
     const sid = storeParam(hash);
-    const edited = (sid && sid !== bundle.store.storeId && surveyedBundle(bundle, sid)) || bundle;
+    const edited = (sid && sid !== bundle.store.storeId && surveyedBundle(WALMART_REFERENCE, sid)) || bundle;
     return (
       <EditorScreen
         key={`${edited.store.storeId}:${editorEpoch}`}

@@ -29,7 +29,7 @@ export const ShareCard = forwardRef<HTMLDivElement, { data: ShareCardData; class
         <Num value={data.clock} className="hero" />
       </div>
       <p className="card-sub">
-        {data.got} of {data.total} items{data.lane ? ` · lane ${data.lane}` : ""}
+        {data.got} of {data.total} items{data.lane ? ` · ${data.lane}` : ""}
       </p>
       {data.vsLast && (
         <p className="card-sub card-vslast" data-testid="vs-last">

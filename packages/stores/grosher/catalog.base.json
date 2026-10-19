@@ -1,0 +1,792 @@
+[
+  {
+    "id": "g-green-chilies",
+    "name": "Green chilies",
+    "tags": [
+      "produce"
+    ],
+    "aliases": [
+      "green chillies",
+      "hari mirch",
+      "fresh green chilies",
+      "thai green chilies"
+    ],
+    "locationIds": [
+      "PRODUCE-I5N-1"
+    ]
+  },
+  {
+    "id": "g-papad",
+    "name": "Papad",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "papadum",
+      "pappadam",
+      "appalam",
+      "lijjat papad"
+    ],
+    "locationIds": [
+      "A4-L9"
+    ]
+  },
+  {
+    "id": "g-bulk-toor-dal",
+    "name": "Bulk toor dal",
+    "aliases": [
+      "toor dal bulk",
+      "bulk arhar dal",
+      "bulk tuvar dal"
+    ],
+    "locationIds": [
+      "BULK-WALL-1"
+    ]
+  },
+  {
+    "id": "g-bulk-moong-dal",
+    "name": "Bulk moong dal",
+    "aliases": [
+      "moong dal bulk"
+    ],
+    "locationIds": [
+      "BULK-WALL-1"
+    ]
+  },
+  {
+    "id": "g-bulk-masoor-dal",
+    "name": "Bulk masoor dal",
+    "aliases": [
+      "masoor dal bulk",
+      "bulk red lentils"
+    ],
+    "locationIds": [
+      "BULK-WALL-1"
+    ]
+  },
+  {
+    "id": "g-bulk-chana-dal",
+    "name": "Bulk chana dal",
+    "aliases": [
+      "chana dal bulk"
+    ],
+    "locationIds": [
+      "BULK-WALL-1"
+    ]
+  },
+  {
+    "id": "g-bulk-rajma",
+    "name": "Bulk rajma",
+    "aliases": [
+      "rajma bulk",
+      "bulk kidney beans"
+    ],
+    "locationIds": [
+      "BULK-WALL-1"
+    ]
+  },
+  {
+    "id": "g-bulk-basmati",
+    "name": "Bulk basmati rice",
+    "aliases": [
+      "basmati rice bulk"
+    ],
+    "locationIds": [
+      "BULK-WALL-8"
+    ]
+  },
+  {
+    "id": "g-bulk-quinoa",
+    "name": "Bulk quinoa",
+    "locationIds": [
+      "BULK-WALL-8"
+    ]
+  },
+  {
+    "id": "g-bulk-oats",
+    "name": "Bulk rolled oats",
+    "aliases": [
+      "bulk oats"
+    ],
+    "locationIds": [
+      "BULK-WALL-8"
+    ]
+  },
+  {
+    "id": "g-bulk-atta",
+    "name": "Bulk whole wheat atta",
+    "aliases": [
+      "bulk atta",
+      "atta bulk"
+    ],
+    "locationIds": [
+      "BULK-ISLAND-N-1"
+    ]
+  },
+  {
+    "id": "g-bulk-almonds",
+    "name": "Bulk almonds",
+    "locationIds": [
+      "BULK-ISLAND-N-8"
+    ]
+  },
+  {
+    "id": "g-bulk-cashews",
+    "name": "Bulk cashews",
+    "locationIds": [
+      "BULK-ISLAND-N-8"
+    ]
+  },
+  {
+    "id": "g-bulk-raisins",
+    "name": "Bulk raisins",
+    "locationIds": [
+      "BULK-ISLAND-S-1"
+    ]
+  },
+  {
+    "id": "g-bulk-dates",
+    "name": "Bulk medjool dates",
+    "aliases": [
+      "bulk dates"
+    ],
+    "locationIds": [
+      "BULK-ISLAND-S-1"
+    ]
+  },
+  {
+    "id": "g-bouquet",
+    "name": "Flower bouquet",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "bouquet",
+      "flowers",
+      "mixed bouquet"
+    ],
+    "locationIds": [
+      "FLORAL-1"
+    ]
+  },
+  {
+    "id": "g-roses",
+    "name": "Roses",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "dozen roses",
+      "red roses"
+    ],
+    "locationIds": [
+      "FLORAL-1"
+    ]
+  },
+  {
+    "id": "g-tulips",
+    "name": "Tulips",
+    "tags": [
+      "fragile"
+    ],
+    "locationIds": [
+      "FLORAL-1"
+    ]
+  },
+  {
+    "id": "g-orchid",
+    "name": "Orchid plant",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "orchid",
+      "potted orchid"
+    ],
+    "locationIds": [
+      "FLORAL-4"
+    ]
+  },
+  {
+    "id": "g-succulent",
+    "name": "Succulent",
+    "tags": [
+      "fragile"
+    ],
+    "locationIds": [
+      "FLORAL-4"
+    ]
+  },
+  {
+    "id": "g-frying-pan",
+    "name": "Frying pan",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "fry pan",
+      "nonstick frying pan"
+    ],
+    "locationIds": [
+      "A9-L1"
+    ]
+  },
+  {
+    "id": "g-saucepan",
+    "name": "Saucepan",
+    "tags": [
+      "heavy"
+    ],
+    "locationIds": [
+      "A9-L1"
+    ]
+  },
+  {
+    "id": "g-sheet-pan",
+    "name": "Sheet pan",
+    "aliases": [
+      "baking sheet"
+    ],
+    "locationIds": [
+      "A9-L1"
+    ]
+  },
+  {
+    "id": "g-spatula",
+    "name": "Spatula",
+    "aliases": [
+      "turner"
+    ],
+    "locationIds": [
+      "A9-L8"
+    ]
+  },
+  {
+    "id": "g-whisk",
+    "name": "Whisk",
+    "locationIds": [
+      "A9-L8"
+    ]
+  },
+  {
+    "id": "g-cutting-board",
+    "name": "Cutting board",
+    "aliases": [
+      "chopping board"
+    ],
+    "locationIds": [
+      "A9-L8"
+    ]
+  },
+  {
+    "id": "g-chef-knife",
+    "name": "Chef's knife",
+    "aliases": [
+      "kitchen knife",
+      "chef knife"
+    ],
+    "locationIds": [
+      "A9-L8"
+    ]
+  },
+  {
+    "id": "g-sushi-platter",
+    "name": "Sushi platter",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "sushi party platter",
+      "sushi tray"
+    ],
+    "locationIds": [
+      "SUSHI-1"
+    ]
+  },
+  {
+    "id": "g-california-roll",
+    "name": "California roll",
+    "locationIds": [
+      "SUSHI-1"
+    ]
+  },
+  {
+    "id": "g-hot-bar-box",
+    "name": "Hot bar box",
+    "aliases": [
+      "hot bar container",
+      "hot bar meal"
+    ],
+    "locationIds": [
+      "HOTBAR-1"
+    ]
+  },
+  {
+    "id": "g-butter-chicken-hot",
+    "name": "Butter chicken (hot bar)",
+    "aliases": [
+      "hot bar butter chicken"
+    ],
+    "locationIds": [
+      "HOTBAR-1"
+    ]
+  },
+  {
+    "id": "g-chicken-soup-hot",
+    "name": "Chicken soup (hot bar)",
+    "aliases": [
+      "hot chicken soup",
+      "chicken soup from the soup bar"
+    ],
+    "locationIds": [
+      "SOUPS-1"
+    ]
+  },
+  {
+    "id": "g-tomato-soup-hot",
+    "name": "Tomato bisque (soup bar)",
+    "aliases": [
+      "hot tomato soup"
+    ],
+    "locationIds": [
+      "SOUPS-1"
+    ]
+  },
+  {
+    "id": "g-salad-bar",
+    "name": "Salad bar salad",
+    "aliases": [
+      "salad bar bowl"
+    ],
+    "locationIds": [
+      "SALADBAR-1"
+    ]
+  },
+  {
+    "id": "g-pizza-slice",
+    "name": "Pizza slice",
+    "aliases": [
+      "slice of pizza"
+    ],
+    "locationIds": [
+      "PIZZA-1"
+    ]
+  },
+  {
+    "id": "g-whole-pizza",
+    "name": "Whole pizza",
+    "aliases": [
+      "fresh baked pizza",
+      "cheese pizza whole"
+    ],
+    "locationIds": [
+      "PIZZA-1"
+    ]
+  },
+  {
+    "id": "g-latte",
+    "name": "Latte",
+    "aliases": [
+      "cafe latte",
+      "oat milk latte"
+    ],
+    "locationIds": [
+      "CAFE-1"
+    ]
+  },
+  {
+    "id": "g-cappuccino",
+    "name": "Cappuccino",
+    "locationIds": [
+      "CAFE-1"
+    ]
+  },
+  {
+    "id": "g-smoothie",
+    "name": "Smoothie",
+    "aliases": [
+      "fruit smoothie",
+      "berry smoothie"
+    ],
+    "locationIds": [
+      "CAFE-4"
+    ]
+  },
+  {
+    "id": "g-fresh-oj",
+    "name": "Fresh-squeezed orange juice",
+    "aliases": [
+      "fresh orange juice",
+      "fresh squeezed oj"
+    ],
+    "locationIds": [
+      "CAFE-4"
+    ]
+  },
+  {
+    "id": "g-wine-tasting",
+    "name": "Wine flight",
+    "aliases": [
+      "wine tasting flight"
+    ],
+    "locationIds": [
+      "WINEBAR-1"
+    ]
+  },
+  {
+    "id": "bananas",
+    "name": "Bananas",
+    "tags": [
+      "produce"
+    ],
+    "locationIds": [
+      "PRODUCE-I4S-1"
+    ]
+  },
+  {
+    "id": "spinach",
+    "name": "Spinach",
+    "tags": [
+      "produce"
+    ],
+    "locationIds": [
+      "PRODUCE-WALL-1"
+    ]
+  },
+  {
+    "id": "onions",
+    "name": "Onions",
+    "tags": [
+      "produce"
+    ],
+    "locationIds": [
+      "PRODUCE-I6N-1"
+    ]
+  },
+  {
+    "id": "bread",
+    "name": "Bread",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "sandwich bread",
+      "loaf of bread"
+    ],
+    "locationIds": [
+      "BREAD-N-1"
+    ]
+  },
+  {
+    "id": "tortillas",
+    "name": "Tortillas",
+    "aliases": [
+      "wraps",
+      "flour tortillas"
+    ],
+    "locationIds": [
+      "A4-L26"
+    ]
+  },
+  {
+    "id": "eggs",
+    "name": "Eggs",
+    "tags": [
+      "fragile",
+      "chilled"
+    ],
+    "locationIds": [
+      "DAIRY-3"
+    ]
+  },
+  {
+    "id": "milk",
+    "name": "Milk",
+    "tags": [
+      "chilled",
+      "heavy"
+    ],
+    "aliases": [
+      "whole milk",
+      "2 percent milk",
+      "skim milk"
+    ],
+    "locationIds": [
+      "DAIRY-1"
+    ]
+  },
+  {
+    "id": "yogurt",
+    "name": "Greek yogurt",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "yogurt",
+      "yoghurt",
+      "chobani"
+    ],
+    "locationIds": [
+      "DAIRY-4"
+    ]
+  },
+  {
+    "id": "chicken",
+    "name": "Chicken thighs",
+    "tags": [
+      "chilled"
+    ],
+    "aliases": [
+      "chicken",
+      "chicken breast"
+    ],
+    "locationIds": [
+      "MEAT-CASE-1"
+    ]
+  },
+  {
+    "id": "paneer",
+    "name": "Paneer",
+    "tags": [
+      "chilled"
+    ],
+    "locationIds": [
+      "DAIRY-8"
+    ]
+  },
+  {
+    "id": "rice",
+    "name": "Basmati rice 10 lb",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "rice",
+      "basmati",
+      "jasmine rice"
+    ],
+    "locationIds": [
+      "A3-R7"
+    ]
+  },
+  {
+    "id": "lentils",
+    "name": "Lentils",
+    "locationIds": [
+      "A3-R23"
+    ]
+  },
+  {
+    "id": "pasta",
+    "name": "Pasta",
+    "locationIds": [
+      "A3-L1"
+    ]
+  },
+  {
+    "id": "sauce",
+    "name": "Pasta sauce",
+    "tags": [
+      "fragile"
+    ],
+    "locationIds": [
+      "A3-L9"
+    ]
+  },
+  {
+    "id": "cereal",
+    "name": "Cereal",
+    "aliases": [
+      "cheerios",
+      "corn flakes"
+    ],
+    "locationIds": [
+      "A1-L1"
+    ]
+  },
+  {
+    "id": "coffee",
+    "name": "Coffee",
+    "locationIds": [
+      "A1-R1"
+    ]
+  },
+  {
+    "id": "oats",
+    "name": "Oats",
+    "aliases": [
+      "oatmeal",
+      "quaker oats",
+      "rolled oats"
+    ],
+    "locationIds": [
+      "A1-L7"
+    ]
+  },
+  {
+    "id": "spices",
+    "name": "Cumin",
+    "aliases": [
+      "cumin seeds",
+      "jeera"
+    ],
+    "locationIds": [
+      "A2-R7"
+    ]
+  },
+  {
+    "id": "oil",
+    "name": "Olive oil",
+    "tags": [
+      "heavy",
+      "fragile"
+    ],
+    "aliases": [
+      "evoo",
+      "cooking oil"
+    ],
+    "locationIds": [
+      "A2-R1"
+    ]
+  },
+  {
+    "id": "chips",
+    "name": "Chips",
+    "tags": [
+      "fragile"
+    ],
+    "aliases": [
+      "crisps",
+      "potato chips",
+      "lays",
+      "doritos"
+    ],
+    "locationIds": [
+      "A6-L1"
+    ]
+  },
+  {
+    "id": "water",
+    "name": "Water 24-pack",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "water",
+      "bottled water",
+      "water bottles"
+    ],
+    "locationIds": [
+      "A7-L1"
+    ]
+  },
+  {
+    "id": "soda",
+    "name": "Soda",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "coke",
+      "pepsi",
+      "pop",
+      "cola",
+      "sprite"
+    ],
+    "locationIds": [
+      "A7-L8"
+    ]
+  },
+  {
+    "id": "tp",
+    "name": "Toilet paper",
+    "aliases": [
+      "toilet roll",
+      "bath tissue",
+      "charmin",
+      "loo roll"
+    ],
+    "locationIds": [
+      "A8-L1"
+    ]
+  },
+  {
+    "id": "detergent",
+    "name": "Detergent",
+    "tags": [
+      "heavy"
+    ],
+    "aliases": [
+      "laundry detergent",
+      "tide",
+      "tide pods"
+    ],
+    "locationIds": [
+      "A8-R19"
+    ]
+  },
+  {
+    "id": "batteries",
+    "name": "Batteries",
+    "locationIds": [
+      "A9-R15"
+    ]
+  },
+  {
+    "id": "icecream",
+    "name": "Ice cream",
+    "tags": [
+      "frozen"
+    ],
+    "aliases": [
+      "icecream",
+      "ben and jerrys",
+      "gelato"
+    ],
+    "locationIds": [
+      "FROZEN-B-S-1"
+    ]
+  },
+  {
+    "id": "peas",
+    "name": "Frozen peas",
+    "tags": [
+      "frozen"
+    ],
+    "locationIds": [
+      "FROZEN-A-N-1"
+    ]
+  },
+  {
+    "id": "pizza",
+    "name": "Frozen pizza",
+    "tags": [
+      "frozen"
+    ],
+    "locationIds": [
+      "FROZEN-A-S-1"
+    ]
+  },
+  {
+    "id": "berries",
+    "name": "Frozen berries",
+    "tags": [
+      "frozen"
+    ],
+    "locationIds": [
+      "FROZEN-A-N-7"
+    ]
+  },
+  {
+    "id": "snacks",
+    "name": "Granola bars",
+    "aliases": [
+      "granola",
+      "cereal bars",
+      "nature valley"
+    ],
+    "locationIds": [
+      "A1-L13"
+    ]
+  }
+]

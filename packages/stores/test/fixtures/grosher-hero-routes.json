@@ -1,0 +1,108 @@
+{
+  "dal-chawal": {
+    "items": [
+      "toor dal (bulk) → bulk-pulses (exact)",
+      "basmati rice → basmati-indian-rice (exact)",
+      "ghee → ghee-oils-indian (exact)",
+      "onions → onions-garlic (exact)",
+      "tomatoes → tomatoes-peppers (exact)",
+      "cilantro → fresh-herbs (exact)",
+      "green chilies → tomatoes-peppers (exact)",
+      "yogurt → yogurt (exact)",
+      "paneer → paneer-indian-dairy (exact)",
+      "atta → atta-flours (exact)"
+    ],
+    "order": [
+      "Green chilies",
+      "Tomato",
+      "Basmati rice 10 lb",
+      "Atta",
+      "Ghee",
+      "Onions",
+      "Cilantro",
+      "Bulk toor dal",
+      "Greek yogurt",
+      "Paneer"
+    ],
+    "lane": "SELF",
+    "routeM": 315,
+    "listOrderM": 445
+  },
+  "weekly-staples": {
+    "items": [
+      "milk → milk (exact)",
+      "eggs → eggs (exact)",
+      "bread → sandwich-bread (exact)",
+      "bananas → bananas (exact)",
+      "spinach → salad-greens (exact)",
+      "chicken → chicken (exact)",
+      "cereal → cereal (exact)",
+      "coffee → ground-coffee (exact)",
+      "paper towels → paper-towels (exact)",
+      "dish soap → dish-soap (exact)",
+      "frozen peas → frozen-vegetables (exact)"
+    ],
+    "order": [
+      "Dish Soap",
+      "Paper Towel",
+      "Coffee",
+      "Cereal",
+      "Spinach",
+      "Bananas",
+      "Bread",
+      "Milk",
+      "Chicken thighs",
+      "Eggs",
+      "Frozen peas"
+    ],
+    "lane": "SELF",
+    "routeM": 387,
+    "listOrderM": 513
+  },
+  "friday-night": {
+    "items": [
+      "chips → potato-chips (exact)",
+      "salsa → dips-salsa-jar (exact)",
+      "sushi platter → sushi (exact)",
+      "red wine → red-wine (exact)",
+      "cheese → block-specialty-cheese (exact)",
+      "crackers → crackers (exact)",
+      "ice cream → ice-cream (exact)",
+      "sparkling water → sparkling-water (exact)",
+      "flowers → bouquets (exact)"
+    ],
+    "order": [
+      "Flower bouquet",
+      "Sparkling Water",
+      "Chips",
+      "Crackers",
+      "Red Wine",
+      "Salsa Medium",
+      "Cheese",
+      "Sushi platter",
+      "Ice cream"
+    ],
+    "lane": "SELF",
+    "routeM": 292,
+    "listOrderM": 523
+  },
+  "pharmacy-run": {
+    "items": [
+      "cold & flu medicine → cold-flu (category)",
+      "tissues → facial-tissue (exact)",
+      "orange juice → refrigerated-juice (exact)",
+      "chicken soup (hot bar) → soups (exact)",
+      "throat lozenges → cold-flu (exact)"
+    ],
+    "order": [
+      "Throat lozenge",
+      "Cold And Flu Medicine",
+      "Tissues",
+      "Orange 100% Juice",
+      "Chicken soup (hot bar)"
+    ],
+    "lane": "SELF",
+    "routeM": 256,
+    "listOrderM": 331
+  }
+}

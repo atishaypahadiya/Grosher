@@ -105,21 +105,30 @@ export function layoutProducts(store: StoreGraph, colorsFor: (dept: string | und
   const out: FixtureItems[] = [];
   for (const f of all) {
     const p = fixtureParams(f, store.departments);
-    if (p.kind === "counter") continue;
+    // counters, bins (they draw their own contents) and seating carry no packed products
+    if (p.kind === "counter" || p.kind === "bins" || f.kind === "other") continue;
     const colors = colorsFor(f.department);
     const r = rng(hash(f.id));
     const wall = f.kind === "wall";
     const towardCentre: 1 | -1 = p.vertical ? (centre.x < p.cx ? 1 : -1) : centre.y > p.cz ? 1 : -1;
+    // a service case is browsed through its glass on the open faces; a coffin has one tub, filled from both sides
     const faces = openFaces(p, wall, towardCentre);
     const items: Item[] = [];
     const bayLen = p.length / p.bays;
-    const levels = p.kind === "bakery" ? [p.height] : p.kind === "produce" ? [0.35, shelfHeight(p, 1) + 0.05, p.height].slice(0, p.shelves) : Array.from({ length: p.shelves }, (_, s) => shelfHeight(p, s) + SHELF_T);
+    const levels =
+      p.kind === "bakery"
+        ? [p.height]
+        : p.kind === "produce"
+          ? [0.35, shelfHeight(p, 1) + 0.05, p.height].slice(0, p.shelves)
+          : p.kind === "coffin" || p.kind === "servicecase"
+            ? Array.from({ length: p.shelves }, (_, s) => shelfHeight(p, s) + 0.01)
+            : Array.from({ length: p.shelves }, (_, s) => shelfHeight(p, s) + SHELF_T);
     const depth = Math.min(p.depth, p.width / 2);
     const toMap = (lx: number, lz: number) => (p.vertical ? { x: p.cx - lz, z: p.cz + lx } : { x: p.cx + lx, z: p.cz + lz });
     const rotBase = p.vertical ? -Math.PI / 2 : 0;
     for (const face of faces) {
       for (let b = 0; b < p.bays; b++) {
-        const prim: Prim = p.kind === "produce" ? "tray" : p.kind === "bakery" ? (r() < 0.5 ? "tray" : "bag") : PRIMS[Math.floor(r() * (PRIMS.length - 1))];
+        const prim: Prim = p.kind === "produce" || p.kind === "servicecase" ? "tray" : p.kind === "bakery" ? (r() < 0.5 ? "tray" : "bag") : p.kind === "coffin" ? (r() < 0.5 ? "box" : "bag") : PRIMS[Math.floor(r() * (PRIMS.length - 1))];
         const x0 = -p.length / 2 + b * bayLen + 0.06;
         const x1 = x0 + bayLen - 0.12;
         for (const y of levels) {
@@ -127,7 +136,7 @@ export function layoutProducts(store: StoreGraph, colorsFor: (dept: string | und
           let x = x0 + bw / 2 + r() * 0.04;
           const zFront = face * (p.width / 2 - bd / 2 - 0.04);
           const zBack = face * (p.width / 2 - depth + bd / 2 + 0.02);
-          const rows = p.kind === "produce" || p.kind === "bakery" ? 2 : 1;
+          const rows = p.kind === "produce" || p.kind === "bakery" || p.kind === "coffin" || p.kind === "servicecase" ? 2 : 1;
           while (x + bw / 2 <= x1) {
             for (let row = 0; row < rows; row++) {
               const z = row === 0 ? zFront : zBack;

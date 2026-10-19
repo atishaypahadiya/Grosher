@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { band, type Router, type StoreGraph } from "@grosher/core";
 import { aislesNeverEntered, elapsedMs, summarize, type TripState } from "../lib/trip.ts";
 import type { TripRecord } from "../lib/history.ts";
-import { clock, WALK_MPS } from "../lib/format.ts";
+import { clock, laneName, WALK_MPS } from "../lib/format.ts";
 import { renderCardPng, shareOrDownload } from "../lib/share.ts";
 import { ShareCard, type ShareCardData } from "./ShareCard.tsx";
 import { Ground } from "./Ground.tsx";
@@ -23,7 +23,7 @@ export interface CheckoutScreenProps {
   onClose: () => void;
 }
 
-const laneLabel = (lane: string | null) => (lane ? lane.replace(/^L/, "").replace(/^(\d+)$/, (m) => String(Number(m) + 1)) : null);
+const laneLabel = laneName;
 
 /** "3 min faster than your last trip · 40 m less" */
 export function vsLastLine(timeMs: number, walkedM: number, previous: TripRecord | undefined): string | undefined {
@@ -39,7 +39,7 @@ export function cardDataFromRecord(store: StoreGraph, r: TripRecord, previous?: 
   const total = r.bought.length + r.skipped.length + r.unknown.length;
   const savedPct = r.baselineM > 0 ? Math.round((1 - r.walkedM / r.baselineM) * 100) : 0;
   const weekday = new Date(r.date).toLocaleDateString(undefined, { weekday: "short" });
-  const place = (store.address ?? store.name ?? store.storeId).split("·")[0].trim();
+  const place = (store.name ?? store.address ?? store.storeId).split("·")[0].trim();
   return {
     clock: clock(r.timeMs),
     got: r.bought.length,
@@ -59,7 +59,7 @@ export function cardData(store: StoreGraph, router: Router, trip: TripState, pre
   const lane = trip.route.legs.find((l) => l.label === "Checkout")?.nodeId ?? null;
   const savedPct = s.baselineM > 0 ? Math.round((1 - s.totalM / s.baselineM) * 100) : 0;
   const weekday = new Date(trip.doneAt ?? Date.now()).toLocaleDateString(undefined, { weekday: "short" });
-  const place = (store.address ?? store.name ?? store.storeId).split("·")[0].trim();
+  const place = (store.name ?? store.address ?? store.storeId).split("·")[0].trim();
   return {
     clock: clock(elapsedMs(trip)),
     got: trip.got.length,

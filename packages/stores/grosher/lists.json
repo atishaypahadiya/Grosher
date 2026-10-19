@@ -1,0 +1,61 @@
+[
+  {
+    "id": "dal-chawal",
+    "name": "Weeknight dal-chawal",
+    "items": [
+      "toor dal (bulk)",
+      "basmati rice",
+      "ghee",
+      "onions",
+      "tomatoes",
+      "cilantro",
+      "green chilies",
+      "yogurt",
+      "paneer",
+      "atta"
+    ]
+  },
+  {
+    "id": "weekly-staples",
+    "name": "Weekly staples",
+    "items": [
+      "milk",
+      "eggs",
+      "bread",
+      "bananas",
+      "spinach",
+      "chicken",
+      "cereal",
+      "coffee",
+      "paper towels",
+      "dish soap",
+      "frozen peas"
+    ]
+  },
+  {
+    "id": "friday-night",
+    "name": "Friday night in",
+    "items": [
+      "chips",
+      "salsa",
+      "sushi platter",
+      "red wine",
+      "cheese",
+      "crackers",
+      "ice cream",
+      "sparkling water",
+      "flowers"
+    ]
+  },
+  {
+    "id": "pharmacy-run",
+    "name": "Quick pharmacy run",
+    "items": [
+      "cold & flu medicine",
+      "tissues",
+      "orange juice",
+      "chicken soup (hot bar)",
+      "throat lozenges"
+    ]
+  }
+]

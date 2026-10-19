@@ -7,12 +7,19 @@ import demoStore from "../demo/store.json" with { type: "json" };
 import demoBaseCatalog from "../demo/catalog.base.json" with { type: "json" };
 import demoCategories from "../demo/categories.json" with { type: "json" };
 import demoTextures from "../demo/textures/textures.json" with { type: "json" };
+import grosherStore from "../grosher/store.json" with { type: "json" };
+import grosherBaseCatalog from "../grosher/catalog.base.json" with { type: "json" };
+import grosherCategories from "../grosher/categories.json" with { type: "json" };
+import grosherTextures from "../grosher/textures/textures.json" with { type: "json" };
+import grosherLists from "../grosher/lists.json" with { type: "json" };
+import { carryCatalog, type Rehome } from "./carry.ts";
 
 export { DEPARTMENTS, departmentById } from "./departments.ts";
 export * from "./geometry.ts";
 export * from "./slots.ts";
 export * from "./resolveContext.ts";
 export { reconcile, catalogKey, isBaseRow, type CatalogRow } from "./reconcile.ts";
+export { carryCatalog, type Rehome } from "./carry.ts";
 
 /** textures.json: one entry per department that has a photo (or placeholder). */
 export type TextureManifest = Record<string, { file: string; w: number; h: number; shotAt: string | null; repeatMeters: number }>;
@@ -44,6 +51,8 @@ export interface StoreBundle {
   textures: TextureManifest;
   /** absolute URL of a texture file, resolved against this package (works in Vite and Node) */
   textureUrl: (file: string) => string;
+  /** saved lists the store ships for demos (Grosher's hero lists), offered once per browser */
+  lists?: { id: string; name: string; items: string[] }[];
 }
 
 /** Minimal shape check for JSON coming from disk or an edit-mode import. Throws on bad input. */
@@ -97,7 +106,31 @@ export const demoSupercenter: StoreBundle = withLazyCatalog(
   () => import("../demo/catalog.json", { with: { type: "json" } }).then((m) => m.default as unknown as CatalogFile),
 );
 
-export const STORES: StoreBundle[] = [demoSupercenter];
+/**
+ * Grosher, our own designed market (design/store-grosher.md, scripts/gen-grosher.ts): the default store. Its
+ * full catalog is the demo's 47,612 rows carried onto Grosher's shelves at load time (same categories, plus
+ * grosher/rehome.json for the rows Walmart grocery had no shelf for), so the 7 MB file ships once. Finishes
+ * (wood, stainless) are its own textures; department textures are the demo's placeholders.
+ */
+const GROSHER_FILES = new Set(Object.values(grosherTextures).map((t) => t.file));
+export const grosher: StoreBundle = {
+  ...withLazyCatalog(
+    parseStoreBundle({ store: grosherStore, catalog: grosherBaseCatalog, categories: grosherCategories, textures: { ...demoTextures, ...grosherTextures } }, (file) =>
+      GROSHER_FILES.has(file) ? new URL(`../grosher/textures/${file}`, import.meta.url).href : new URL(`../demo/textures/${file}`, import.meta.url).href,
+    ),
+    () =>
+      Promise.all([
+        import("../demo/catalog.json", { with: { type: "json" } }).then((m) => m.default as unknown as CatalogFile),
+        import("../grosher/rehome.json", { with: { type: "json" } }).then((m) => (m.default as unknown as { items: Rehome }).items),
+      ]).then(([file, rehome]) => ({ ...file, items: carryCatalog(file.items, demoCategories as Category[], grosherCategories as Category[], rehome) })),
+  ),
+  lists: grosherLists,
+};
+
+/** Every store the app can open. The first is the default; the demo Supercenter is kept for the tests and as
+ * the Walmart reference taxonomy a Walmart survey (Story Rd) matches its signs against, never offered. */
+export const STORES: StoreBundle[] = [grosher, demoSupercenter];
+export const DEFAULT_STORE = grosher;
 
 export function getStore(storeId: string): StoreBundle | undefined {
   return STORES.find((b) => b.store.storeId === storeId);

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { WalkGraph, Router } from "@grosher/core";
-import { STORES } from "../src/index.ts";
+import { STORES, demoSupercenter } from "../src/index.ts";
 
 for (const { store, catalog } of STORES) {
   test(`${store.storeId}: every shelf location is reachable from the entrance and reaches the exit`, () => {
@@ -77,7 +77,7 @@ for (const { store } of STORES) {
 import { fixtureForLocation, fixtureParams, offsetForBay, slotFor } from "../src/slots.ts";
 
 test("slots: demo locations map to a fixture, bay, face and shelf; bays count from the front", () => {
-  const { store } = STORES[0];
+  const { store } = demoSupercenter;
   const loc = store.locations.find((l) => l.id === "A3-L16")!; // hot sauce & salsa: bays 16–20 on the left of A3
   const slot = slotFor(store, loc)!;
   assert.ok(slot, "no slot");
@@ -106,7 +106,7 @@ test("slots: demo locations map to a fixture, bay, face and shelf; bays count fr
 import { departmentLocations } from "../src/resolveContext.ts";
 
 test("departmentLocations: every demo location belongs to one department", () => {
-  const { store } = STORES[0];
+  const { store } = demoSupercenter;
   const dl = departmentLocations(store);
   const all = Object.values(dl).flat();
   assert.equal(new Set(all).size, store.locations.length);
@@ -119,7 +119,7 @@ test("departmentLocations: every demo location belongs to one department", () =>
 import { categoryLocations, llmOptions } from "../src/resolveContext.ts";
 
 test("categories: every category has its own location on its aisle and side, every location has exactly one category", () => {
-  const { store, categories } = STORES[0];
+  const { store, categories } = demoSupercenter;
   assert.ok(categories.length >= 290 && categories.length <= 320, `${categories.length} categories`);
   const seen = new Set<string>();
   const locs = new Map(store.locations.map((l) => [l.id, l]));

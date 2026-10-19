@@ -63,7 +63,7 @@ describe("saved locations from an older map", () => {
 
   test("the app boots; the stale item that nothing names shows Needs a place; the route covers the rest", async () => {
     await dbSetRaw("learning:demo-supercenter", { pending: [oatMilk, gizmo], llm: [], memory: [paneerMemory] });
-    render(<App />);
+    render(<App bundle={demoSupercenter} />);
     add("oat milk, qwzx gizmo, paneer, bananas");
     expect(await screen.findByText(/4 items · 3 placed/i, {}, { timeout: 15_000 })).toBeTruthy();
     const rows = within(screen.getByRole("list")).getAllByRole("listitem");
@@ -85,8 +85,8 @@ describe("saved locations from an older map", () => {
   test("a map change mid-trip: the saved trip resumes without the removed location's stop, which checkout asks about", async () => {
     await dbSetRaw("learning:demo-supercenter", { pending: [gizmo], llm: [], memory: [] });
     // a trip saved under the old map: its next stop's only location is gone
-    localStorage.setItem("grosher.trip", JSON.stringify({ original: ["llm:qwzxgizmo", "milk", "bananas"], remaining: ["llm:qwzxgizmo", "milk", "bananas"], got: [], skipped: [], positionNodeId: STORE.entranceId, walkedM: 0, startedAt: 1 }));
-    render(<App />);
+    localStorage.setItem("grosher.trip.demo-supercenter", JSON.stringify({ original: ["llm:qwzxgizmo", "milk", "bananas"], remaining: ["llm:qwzxgizmo", "milk", "bananas"], got: [], skipped: [], positionNodeId: STORE.entranceId, walkedM: 0, startedAt: 1 }));
+    render(<App bundle={demoSupercenter} />);
     expect(await screen.findByText(/next · 1 of 2/i, {}, { timeout: 15_000 })).toBeTruthy();
     const progress = screen.getByRole("progressbar", { name: /trip progress/i });
     expect(progress.getAttribute("aria-valuemax")).toBe("2");
