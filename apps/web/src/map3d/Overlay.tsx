@@ -181,6 +181,7 @@ export function OverlayDom({ items, registry }: { items: OverlayItem[]; registry
       {items.map((it) => (
         <div
           key={it.key}
+          data-key={it.key}
           className={["m-item", it.className].filter(Boolean).join(" ")}
           ref={(el) => {
             if (el) registry.set(it.key, el);

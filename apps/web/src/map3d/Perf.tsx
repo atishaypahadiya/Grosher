@@ -6,10 +6,26 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { productStats } from "./Products.tsx";
 import { cameraStats } from "./CameraRig.tsx";
 import { litStats } from "./LitSlot.tsx";
+import { heroStats } from "../hero/stats.ts";
 
 declare global {
   interface Window {
-    __grosherPerf?: { calls: number; triangles: number; frameMs: number; frames: number; programs: number; instances: number; productFixtures: number; distance: number; tilt: number; lit: unknown };
+    __grosherPerf?: {
+      calls: number;
+      triangles: number;
+      frameMs: number;
+      frames: number;
+      programs: number;
+      instances: number;
+      productFixtures: number;
+      distance: number;
+      tilt: number;
+      lit: unknown;
+      /** live GPU objects, and the open hero zone's cost (null tier: none open) */
+      textures: number;
+      geometries: number;
+      hero: typeof heroStats;
+    };
   }
 }
 
@@ -42,6 +58,9 @@ export function Perf() {
       distance: Math.round(cameraStats.distance * 10) / 10,
       tilt: Math.round(cameraStats.tilt),
       lit: litStats.slot,
+      textures: gl.info.memory.textures,
+      geometries: gl.info.memory.geometries,
+      hero: { ...heroStats },
     };
     gl.info.reset();
     invalidate(); // keep rendering so the numbers are a steady-state measurement

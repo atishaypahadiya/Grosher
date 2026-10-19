@@ -1,12 +1,16 @@
 // The 3D trip map: a demand-rendered R3F canvas plus touch gestures on its
 // container. Everything about *what* to show is derived here from the trip.
 
-import { useMemo, useRef, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { Canvas } from "@react-three/fiber";
 import { WalkGraph, type RouteLeg, type StoreGraph } from "@grosher/core";
 import type { StoreBundle } from "@grosher/stores";
 import type { TripState } from "../lib/trip.ts";
-import { Scene } from "./Scene.tsx";
+import { Scene, type CloseUpState } from "./Scene.tsx";
+import { heroStopAt, type HeroTargetInfo } from "../hero/index.ts";
+import type { CloseUpCameraHandle } from "../hero/CloseUpCamera.tsx";
+import { DebugPerf, debugPerfOn } from "./DebugPerf.tsx";
+import { IconArrowLeft } from "../components/Icons.tsx";
 import type { CameraRigHandle } from "./CameraRig.tsx";
 import { fixtureBox, fixtureForLocation } from "./layout.ts";
 import { slotFor } from "@grosher/stores";
@@ -25,6 +29,8 @@ export interface TripMap3DProps {
   className?: string;
   /** fractions of the map height covered by the header strip (top) and the bottom sheet (bottom) */
   safe?: SafeArea;
+  /** a hero close-up opened or closed (the trip header turns to plates over the zone's dark ceiling) */
+  onCloseUpChange?: (open: boolean) => void;
 }
 
 interface Pt {
@@ -62,7 +68,7 @@ export function footprintOf(store: StoreGraph) {
   return { x: (x0 + x1) / 2, z: (y0 + y1) / 2, w: x1 - x0 + 2 * pad, d: y1 - y0 + 2 * pad };
 }
 
-export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel, checkoutLabel, perf = false, className, safe = { top: 0.16, bottom: 0.36 } }: TripMap3DProps) {
+export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel, checkoutLabel, perf = false, className, safe = { top: 0.16, bottom: 0.36 }, onCloseUpChange }: TripMap3DProps) {
   const { store } = bundle;
   const graph = useMemo(() => new WalkGraph(store), [store]);
   const nodes = graph.nodes;
@@ -74,6 +80,34 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
   const legs = trip.route.legs;
   const current = legs[0];
   const nextIsStop = !!current?.stopId;
+
+  // ---- hero close-ups: eye level in a zone that has one (src/hero), when the next stop is in it or a stop
+  // in it is tapped; back (the pill, a swipe down) returns to the overview and is remembered for that stop
+  const [closeUp, setCloseUp] = useState<(CloseUpState & { stopId: string }) | null>(null);
+  const [flatShelf, setFlatShelf] = useState<{ image: string; name: string } | null>(null);
+  const dismissed = useRef(new Set<string>());
+  const closeUpRef = useRef<CloseUpCameraHandle | null>(null);
+  const openCloseUp = (stopId: string, locationId: string | undefined, itemName: string) => {
+    const h = heroStopAt(store, bundle.categories, locationId);
+    if (!h) return false;
+    setFlatShelf(null);
+    setCloseUp((c) => (c && c.stopId === stopId && !c.exiting ? c : { zone: h.zone, category: h.category, itemName, target: null, exiting: false, stopId }));
+    return true;
+  };
+  const leaveCloseUp = (remember: boolean) =>
+    setCloseUp((c) => {
+      if (!c) return c;
+      if (remember) dismissed.current.add(c.stopId);
+      // the zone never loaded (no target yet): nothing to animate back from
+      return c.target ? { ...c, exiting: true } : null;
+    });
+  useEffect(() => {
+    const stopId = nextIsStop ? current!.stopId! : null;
+    const hero = stopId ? heroStopAt(store, bundle.categories, current!.locationId) : null;
+    if (stopId && hero && !dismissed.current.has(stopId)) openCloseUp(stopId, current!.locationId, current!.label);
+    else if (closeUp && !closeUp.exiting && closeUp.stopId !== stopId) leaveCloseUp(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current?.stopId, current?.locationId]);
   const nextNode = current ? nodes.get(current.nodeId) : undefined;
   const litFixtureId = useMemo(() => (nextIsStop ? fixtureForLocation(store, current?.locationId, nextNode)?.id ?? null : null), [store, current, nextNode, nextIsStop]);
   const litSlot = useMemo(() => {
@@ -161,16 +195,50 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
   const cameraRef = useRef<CameraRigHandle | null>(null);
   const pointers = useRef(new Map<number, Pt>());
   const prev = useRef<{ a: Pt; b?: Pt } | null>(null);
+  const press = useRef<{ x: number; y: number; t: number; multi: boolean } | null>(null);
+  const near = !!closeUp?.target && !closeUp.exiting;
   const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     e.currentTarget.setPointerCapture(e.pointerId);
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     const ps = [...pointers.current.values()];
     prev.current = { a: ps[0], b: ps[1] };
+    if (ps.length === 1) press.current = { x: e.clientX, y: e.clientY, t: performance.now(), multi: false };
+    else if (press.current) press.current.multi = true;
+  };
+  /** a tap on a stop's card or dot: its key in the overlay registry, from the boxes under the point */
+  const stopUnder = (x: number, y: number): string | null => {
+    for (const [key, el] of registry) {
+      if (key !== "next" && key !== "next-label" && !key.startsWith("stop-")) continue;
+      const hit = [el, ...el.querySelectorAll<HTMLElement>("*")].some((n) => {
+        const r = n.getBoundingClientRect();
+        return r.width > 0 && x >= r.left && x <= r.right && y >= r.top && y <= r.bottom && getComputedStyle(n).visibility !== "hidden";
+      });
+      if (hit) return key.startsWith("stop-") ? key.slice(5) : (current?.stopId ?? null);
+    }
+    return null;
   };
   const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (!pointers.current.has(e.pointerId) || !prev.current) return;
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     const ps = [...pointers.current.values()];
+    if (near) {
+      const cu = closeUpRef.current;
+      if (!cu) return;
+      if (ps.length === 1) {
+        const dx = ps[0].x - prev.current.a.x;
+        const dy = ps[0].y - prev.current.a.y;
+        if (e.shiftKey) cu.pan(dx);
+        else cu.look(dx, dy);
+        prev.current = { a: ps[0] };
+      } else if (prev.current.b) {
+        const d0 = dist(prev.current.a, prev.current.b) || 1;
+        const d1 = dist(ps[0], ps[1]) || 1;
+        cu.dolly(d1 / d0);
+        cu.pan((ps[0].x + ps[1].x) / 2 - (prev.current.a.x + prev.current.b.x) / 2);
+        prev.current = { a: ps[0], b: ps[1] };
+      }
+      return;
+    }
     const cam = cameraRef.current;
     if (!cam) return;
     if (ps.length === 1) {
@@ -194,10 +262,41 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
     pointers.current.delete(e.pointerId);
     const ps = [...pointers.current.values()];
     prev.current = ps.length ? { a: ps[0], b: ps[1] } : null;
+    const p = press.current;
+    if (ps.length || !p) return;
+    press.current = null;
+    const dx = e.clientX - p.x;
+    const dy = e.clientY - p.y;
+    const dt = performance.now() - p.t;
+    if (p.multi) return;
+    // a quick flick down leaves a close-up
+    if (near && dy > 90 && dt < 450 && Math.abs(dx) < dy * 0.6) {
+      leaveCloseUp(true);
+      return;
+    }
+    // a tap on a stop in a hero zone opens its close-up
+    if (!near && Math.hypot(dx, dy) < 8 && dt < 350) {
+      const stopId = stopUnder(e.clientX, e.clientY);
+      const leg = stopId ? legs.find((l) => l.stopId === stopId) : undefined;
+      if (leg && stopId) {
+        dismissed.current.delete(stopId);
+        openCloseUp(stopId, leg.locationId, leg.label);
+      }
+    }
   };
   const onWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-    cameraRef.current?.zoom(Math.exp(-e.deltaY * 0.0015));
+    const f = Math.exp(-e.deltaY * 0.0015);
+    if (near) closeUpRef.current?.dolly(f);
+    else cameraRef.current?.zoom(f);
   };
+  const debugPerf = useMemo(() => debugPerfOn(), []);
+  useEffect(() => onCloseUpChange?.(near), [near, onCloseUpChange]);
+  // the close-up's state for the gates and ?debug=perf: none, loading (zone not ready), open, leaving
+  useEffect(() => {
+    if (!perf && !debugPerf) return;
+    const w = window as Window & { __grosherCloseUp?: unknown };
+    w.__grosherCloseUp = closeUp ? { zone: closeUp.zone.id, category: closeUp.category, item: closeUp.itemName, bin: closeUp.target?.name ?? null, state: closeUp.exiting ? "leaving" : closeUp.target ? "open" : "loading" } : null;
+  }, [closeUp, perf, debugPerf]);
 
   return (
     <div
@@ -211,7 +310,7 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
       data-testid="map3d"
     >
       <Canvas
-        frameloop={perf ? "always" : "demand"}
+        frameloop={perf || debugPerf ? "always" : "demand"}
         dpr={[1, 2]}
         gl={{ antialias: true, alpha: false, powerPreference: "high-performance", stencil: false }}
         camera={{ fov: 60, near: 0.5, far: 400, position: [0, 40, 60] }}
@@ -234,11 +333,42 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
           reducedMotion={reducedMotion}
           cameraRef={cameraRef}
           onOverZoomOut={() => onFlatChange(true)}
-          perf={perf}
+          perf={perf || debugPerf}
+          closeUp={closeUp}
+          closeUpRef={closeUpRef}
+          onHeroTarget={(t: HeroTargetInfo) => setCloseUp((c) => (c && !c.exiting ? { ...c, target: t } : c))}
+          onHeroError={() => {
+            // no close-up on this device (no compressed textures, the chunk failed): the flat shelf image instead
+            setCloseUp((c) => {
+              if (c) setFlatShelf({ image: c.zone.flatImage(c.category), name: c.itemName });
+              return null;
+            });
+          }}
+          onCloseUpExited={() => setCloseUp(null)}
         />
       </Canvas>
       <div className="trip-vignette" aria-hidden />
-      <OverlayDom items={items} registry={registry} />
+      <div className={near ? "m-overlay-hidden" : undefined}>
+        <OverlayDom items={items} registry={registry} />
+      </div>
+      {closeUp && !closeUp.exiting && (
+        <button type="button" className="pill closeup-back" onClick={() => leaveCloseUp(true)} onPointerDown={(e) => e.stopPropagation()}>
+          <IconArrowLeft />
+          Back to the map
+        </button>
+      )}
+      {flatShelf && (
+        <figure className="flat-shelf" data-testid="flat-shelf" onPointerDown={(e) => e.stopPropagation()}>
+          <img src={flatShelf.image} alt={`The shelf where ${flatShelf.name} is, lit in lime`} />
+          <figcaption>
+            <span>{flatShelf.name}</span>
+            <button type="button" className="pill closeup-back-inline" onClick={() => setFlatShelf(null)}>
+              Close
+            </button>
+          </figcaption>
+        </figure>
+      )}
+      {debugPerf && <DebugPerf mode={near ? "close-up" : "overview"} />}
     </div>
   );
 }

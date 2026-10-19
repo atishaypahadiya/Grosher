@@ -165,6 +165,20 @@ Phone screens render in a centred column, max-width 430px, full viewport height;
 
 **Error plate** (index.html's boot guard): over the ground gradient, a `--plate` soil card (radius 24, white hairline): "Something went wrong" Outfit 500 22, a muted line, the error in a dark inset code block, **Reload** (lime, soil text) and **Reset local data** (outline white), the build id. In the contrast gate (lowest text 9.38:1).
 
+## 5b. Hero close-ups (eye level)
+
+A zone with a close-up (today Grosher's Bulk & pulses) is drawn at full detail at eye level, everything else
+stays at overview detail. The look follows an earthy Indian pulses store: warm matte clay-plaster walls, a warm
+polished-concrete floor, an earthy ceiling with exposed copper conduit; black ceiling tracks whose spots throw
+warm (~3000 K) pools on the shelves, darker between; black powder-coated square-steel shelving with five tiers
+of light pine planks (visible grain, slightly rounded edges); black header boards with white uppercase Outfit
+lettering; stand-up pouches, kraft bags, glass jars, tins and clay pots under fictional Grosher house-brand
+labels; clear acrylic gravity bins and scoop bins showing the grain (moong green, masoor orange, chana yellow,
+rajma red, basmati white); open burlap sacks with rolled rims, a stone chakki on a wooden stand, a clay pot of
+dried wheat. Grain surfaces are normal-mapped piles, never instanced grains. The stop's bin is lit lime and
+lifted a little: lime still means now. Over the zone's dark interior every control is on the soil plate with
+white text. Budget: ≤ 70 draw calls, ≤ 250k triangles, ≤ 16 MB textures, ≤ 2.5 MB download (the close-up gate).
+
 ## 6. Data additions
 
 In `packages/core/src/types.ts` (optional fields, demo store keeps working):

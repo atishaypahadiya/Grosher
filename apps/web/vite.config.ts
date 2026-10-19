@@ -24,7 +24,9 @@ process.env.VITE_BUILD_ID ||= process.env.CF_PAGES_COMMIT_SHA?.slice(0, 7) || sh
 const LEGACY_SW = process.env.GROSHER_LEGACY_SW === "1";
 const precache = {
   // Everything the build emits, textures included, is precached on first load.
-  globPatterns: ["**/*.{js,css,html,svg,png,jpg,webp,woff2}"],
+  // ktx2 + wasm: the hero close-ups' textures and the Basis transcoder (src/hero), so a close-up opens offline in
+  // the store; they download in the background after the first visit and reach the GPU only when one opens
+  globPatterns: ["**/*.{js,css,html,svg,png,jpg,webp,woff2,ktx2,wasm}"],
   // the project write-up (public/project/) is a separate static page: not precached with the app,
   // and never answered with the app shell
   globIgnores: ["project/**"],

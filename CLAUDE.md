@@ -592,6 +592,62 @@ and is not a device number; measure that on a phone.
 The Playwright scripts that drove these checks live outside the repo; the pattern is: `vite dev`, fill the
 list, Route, `waitForFunction(() => window.__grosherPerf.frames > 100)`, read the object, screenshot.
 
+### Hero close-ups (`apps/web/src/hero`): full-detail aisles
+
+Two zoom levels. The overview stays as above; a zone that has a **hero close-up** (`HERO_ZONES` in
+`src/hero/index.ts`: today Grosher's Bulk & pulses, `aisle: "BULK"`) opens at eye level when the next stop is
+in it (or a stop in it is tapped: `stopUnder` hit-tests the overlay's `data-key` items). The scene keeps the
+overview until the zone's chunk and textures are in and its bin is picked (`closeUp.target`), then
+`CloseUpCamera` dollies down in 480 ms to 1.6 m, 2.45 m back from the stop's bin, aimed so the bin sits mid-way
+between the progress strip and the sheet; the bin is lifted 3 cm, pulled 6 cm and lit lime (`HeroZone`'s lit
+volume, the bloom's selection). Look ±57° yaw / ±17° pitch (drag), pan along the zone (two fingers, shift-drag),
+dolly −0.9…+0.6 m (pinch, wheel); no free flight. Back: the "Back to the map" pill or a flick down (> 90 px in
+< 450 ms), remembered for that stop; the next stop leaving the zone dollies out on its own. While it is open the
+overview's lights, floor, skylight, products, ribbon, lit slot and overlay are off, the zone's overview fixtures
+(`hideFixtures`) are left out of the merge, the fog is a warm dark (`#2E2219`, .034) and the trip header turns
+to plates (`.is-closeup`). `CameraRig` is `paused` and gives the way back (`view()`).
+- **The shelf kit** (`src/hero/kit`, procedural in code: no Blender here or in CI, deterministic, the whole
+  zone is a 37 KB gzipped chunk instead of a glTF download, and the next aisle is a recipe, not new art):
+  `geom.ts` (tiled boxes, rounded planks, grid planes, lathes, beams, `Batch` merge per material),
+  `pieces.ts` (square-steel shelving with pine planks, header boards, grain mounds, open burlap sacks with
+  rolled rims, clay pots, dried wheat, a stone chakki on its stand, copper conduit, black tracks with spot
+  heads), `templates.ts` (instanced: stand-up pouch, kraft bag, jar with its contents / label / lid, tin,
+  gravity bin, scoop bin), `bake.ts` (the lighting), `materials.ts` (KTX2 loading, tiers, materials; `aCell`
+  per-instance atlas cells via one shader patch).
+- **The recipe** (`src/hero/bulk/recipe.ts`, pure data; `zone.ts` assembles it): five wall sections west to
+  east under black header boards (PULSES & DALS · RICE & GRAINS · FLOURS & ATTA · NUTS & SEEDS · DRIED FRUIT),
+  each three 1.2 m bays: kraft bags, two rows of pouches, jars and tins, three gravity bins at eye level, clay
+  pots on top; the island's 56 scoop bins; the centerpiece (four sacks, the chakki, a pot of wheat); the
+  clay-plaster shell, copper conduit, two tracks of spots; the room around the zone (floor, ceiling, outer
+  walls) so eye level never sees the sky. 45 gravity bins + 56 scoop bins are the targets (`pickTarget`: the
+  category's bin sharing most words with the item, else its first). Variation is seeded (`rng(5435)`): fill,
+  lean, yaw, spacing, gaps.
+- **Light is baked**: 19 track spots (warm 3000 K, cones .42 rad) + a dim ambient + contact shadow under planks
+  and at the floor, into vertex colours (static) and instance colours (bins, packs); the runtime adds only a
+  hemisphere and one key light for the normal maps. Pools on the shelves, darker between.
+- **Textures** (`scripts/gen-hero-textures.mjs` → `src/hero/assets/*.ktx2`, committed; needs `basisu`, `brew
+  install basis_universal`): drawn on canvases in headless Chromium (Outfit for lettering), encoded with
+  `-y_flip` (compressed textures cannot flip on upload): pine, plaster + normal, concrete, burlap + normal,
+  terracotta, stone (ETC1S), grains atlas (16 shapes, near-white, tinted per bin) + normal (ETC1S: UASTC was
+  1.1 MB of noise), 48 house-brand labels + 64 bin tags (UASTC), header boards (UASTC). Two tiers: hi 1.35 MB,
+  lo (half size) 0.46 MB. The Basis transcoder is `public/basis/` (a test keeps it identical to three's).
+  Tier: `?tier=hi|lo` pins it; lo on ≤ 3 GB memory or ≤ 4 cores, or after a close-up whose dolly ran under
+  ~30 fps (median frame > 34 ms; remembered in `grosher.heroTier`). Precached (`ktx2`, `wasm` in the PWA
+  globs) so a close-up opens offline; they reach the GPU only when one opens, and are disposed when it closes.
+- **Fallback**: no WebGL (the trip's flat map) or a zone that fails to load shows the flat shelf image
+  (`public/hero/bulk/<category>.webp`, `scripts/capture-hero-flat.mjs`, rendered from the close-up itself with
+  the bin lit).
+- **Close-up budget** (`src/hero/budget.ts`, `scripts/hero-gate.mjs` in CI, separate from the overview gate):
+  ≤ 70 draw calls, ≤ 250,000 triangles, ≤ 16 MB GPU textures (transcoded, every mip), ≤ 2,500 KB download
+  (zone chunk gzip + hi KTX2 + transcoder gzip), and nothing of the zone fetched before a close-up opens.
+  Measured 18 Oct 2026: 51 calls / 146k triangles at eye level, 53 / 157k down the aisle, 4.8 MB textures (BC
+  on desktop; ASTC on an iPhone can be up to twice), 1,639 KB download. `?debug=perf` shows fps, frame ms,
+  calls, triangles, live textures / geometries, the zone's texture MB, tier and load time, and the heap where
+  the browser tells (not Safari) on any device; the map renders continuously while it is on.
+- **The next aisle**: a recipe beside `bulk/` (what stands where, its labels), an entry in `HERO_ZONES` (its
+  aisle, the overview fixtures it replaces), its header text and labels in the generator, its flat images.
+  The kit's pieces and templates, the bake, the camera and the gate carry over.
+
 ### Texture pipeline
 
 One 512×512 JPEG (q80) per department, tiled every 2 m on every shelf of that department. Placeholders

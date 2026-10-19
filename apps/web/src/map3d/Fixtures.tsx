@@ -8,7 +8,7 @@
 // finish's material and its uprights and rails in black steel under wood.
 // The next stop's slot is lit separately (LitSlot).
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { BoxGeometry, Color, DoubleSide, EdgesGeometry, LineBasicMaterial, LineSegments, Mesh, MeshStandardMaterial, PlaneGeometry, RepeatWrapping, SRGBColorSpace, Texture, TextureLoader, type BufferGeometry } from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { useLoader } from "@react-three/fiber";
@@ -73,6 +73,10 @@ export interface FixturesProps {
   repeatMeters?: number;
   nodes: Map<string, GraphNode>;
   fromEntrance: Map<string, number>;
+  /** fixtures to leave out (a hero close-up draws its own in their place) */
+  hide?: string[];
+  /** a close-up is open: the rest of the store is a dim backdrop (darker, no glow, no outlines) */
+  dim?: boolean;
 }
 
 interface Built {
@@ -82,7 +86,8 @@ interface Built {
   parts: Parts;
 }
 
-export function Fixtures({ store, textureUrl, repeatMeters = 2, nodes, fromEntrance }: FixturesProps) {
+export function Fixtures({ store, textureUrl, repeatMeters = 2, nodes, fromEntrance, hide, dim = false }: FixturesProps) {
+  const hideKey = (hide ?? []).join("|");
   const departments = useMemo(() => store.departments ?? [], [store]);
   const withTexture = useMemo(() => departments.filter((d) => d.texture && !d.finish), [departments]);
   const finishes = useMemo(() => [...new Set(departments.flatMap((d) => (d.finish ? [d.finish] : [])))], [departments]);
@@ -103,7 +108,8 @@ export function Fixtures({ store, textureUrl, repeatMeters = 2, nodes, fromEntra
   // Every fixture's detailed parts, once per store.
   const built = useMemo<Built[]>(() => {
     const centre = { x: 0, y: 0 };
-    const all = store.fixtures ?? [];
+    const hidden = new Set(hideKey ? hideKey.split("|") : []);
+    const all = (store.fixtures ?? []).filter((f) => !hidden.has(f.id));
     if (all.length) {
       centre.x = all.reduce((s, f) => s + fixtureBox(f).cx, 0) / all.length;
       centre.y = all.reduce((s, f) => s + fixtureBox(f).cz, 0) / all.length;
@@ -116,7 +122,7 @@ export function Fixtures({ store, textureUrl, repeatMeters = 2, nodes, fromEntra
       const parts = generate(p, repeatMeters, { wall: f.kind === "wall", towardCentre, frontSign: frontSignOf(p, store) });
       return { f, p, hull, parts };
     });
-  }, [store, departments, repeatMeters]);
+  }, [store, departments, repeatMeters, hideKey]);
 
   const materialFor = (dept: Department | undefined) => {
     const map = dept ? textureFor.get(dept.id) ?? null : null;
@@ -198,6 +204,21 @@ export function Fixtures({ store, textureUrl, repeatMeters = 2, nodes, fromEntra
     const mat = new MeshStandardMaterial({ map: texture, transparent: true, side: DoubleSide, roughness: 1, depthWrite: false });
     return new Mesh(geo, mat);
   }, [built, nodes, fromEntrance]);
+
+  // dimming in place: the merged meshes stay, their materials darken (restored on the way out)
+  useEffect(() => {
+    const k = dim ? 0.32 : 1;
+    for (const g of groups)
+      for (const m of [g.opaque, g.trim, g.frame, g.glow]) {
+        const mat = m?.material as MeshStandardMaterial | undefined;
+        if (!mat) continue;
+        const base = (mat.userData.base ??= { color: mat.color.clone(), emissive: mat.emissiveIntensity });
+        mat.color.copy(base.color).multiplyScalar(k);
+        mat.emissiveIntensity = dim ? 0 : base.emissive;
+      }
+    if (edges) edges.visible = !dim;
+    if (signs) signs.visible = !dim;
+  }, [dim, groups, edges, signs]);
 
   return (
     <group name="fixtures">

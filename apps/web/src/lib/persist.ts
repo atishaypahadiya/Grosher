@@ -53,6 +53,7 @@ export const SCHEMAS: Schema[] = [
   },
   { match: (k) => k === "grosher.notes" || k.startsWith("grosher.notes."), version: 1, migrations: [(x) => x], valid: strArr },
   { match: (k) => k.startsWith("grosher.offered."), version: 1, migrations: [(x) => x], valid: strArr },
+  { match: (k) => k === "grosher.heroTier", version: 1, migrations: [(x) => x], valid: (x) => x === null || x === "lo" || x === "hi" },
   { match: (k) => k === "grosher.flat", version: 1, migrations: [(x) => x], valid: (x) => typeof x === "boolean" },
   // the settings sheet coerces each field onto the defaults itself (settings.ts sanitize)
   { match: (k) => k === "grosher.resolver", version: 1, migrations: [(x) => x], valid: isObj },

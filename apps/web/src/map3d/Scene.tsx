@@ -1,7 +1,7 @@
 // The trip scene (DESIGN.md §3): gradient background, fog, floor with a
 // white edge, fixtures, ribbon, markers, lights, bloom + vignette.
 
-import { Suspense, useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { Component, lazy, Suspense, useEffect, useMemo, useRef, useState, type ComponentType, type LazyExoticComponent, type ReactNode, type RefObject } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Line } from "@react-three/drei";
 import { EffectComposer, SelectiveBloom } from "@react-three/postprocessing";
@@ -17,6 +17,40 @@ import { OverlayProjector, type OverlayItem, type OverlayRegistry } from "./Over
 import { CameraRig, MIN_DISTANCE_PINCH, type CameraRigHandle } from "./CameraRig.tsx";
 import { Perf } from "./Perf.tsx";
 import type { Focus, SafeArea } from "./CameraRig.tsx";
+import type { HeroTargetInfo, HeroZoneComponentProps, HeroZoneEntry } from "../hero/index.ts";
+import { CloseUpCamera, type CloseUpCameraHandle } from "../hero/CloseUpCamera.tsx";
+
+/** A hero close-up as the 3D map asks for it. */
+export interface CloseUpState {
+  zone: HeroZoneEntry;
+  category: string;
+  itemName: string;
+  /** set once the zone has picked its bin */
+  target: HeroTargetInfo | null;
+  exiting: boolean;
+}
+
+// one lazy component per zone, so re-renders never re-import it
+const ZONE_COMPONENTS = new Map<string, LazyExoticComponent<ComponentType<HeroZoneComponentProps>>>();
+const zoneComponent = (z: HeroZoneEntry) => {
+  let c = ZONE_COMPONENTS.get(z.id);
+  if (!c) ZONE_COMPONENTS.set(z.id, (c = lazy(z.load)));
+  return c;
+};
+
+/** A failed hero chunk or texture load: report it (the map shows the flat shelf image) and render nothing. */
+class ZoneBoundary extends Component<{ onError: (e: Error) => void; children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  componentDidCatch(e: Error) {
+    this.props.onError(e);
+  }
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
+}
 
 const HAZE = "#FF9E6B"; // --haze: the fog and the hemisphere light's sky
 const DEEP = "#184D2E";
@@ -164,10 +198,21 @@ export interface SceneProps {
   cameraRef: RefObject<CameraRigHandle | null>;
   onOverZoomOut: () => void;
   perf: boolean;
+  /** an open hero close-up: its zone at full detail, the eye-level camera, its own light */
+  closeUp?: CloseUpState | null;
+  closeUpRef?: RefObject<CloseUpCameraHandle | null>;
+  onHeroTarget?: (t: HeroTargetInfo) => void;
+  onHeroError?: (e: Error) => void;
+  onCloseUpExited?: () => void;
 }
 
-export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, footprint, litSlot, legFixtureIds, ribbon, overlay, focus, safe, flat, reducedMotion, cameraRef, onOverZoomOut, perf }: SceneProps) {
+export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, footprint, litSlot, legFixtureIds, ribbon, overlay, focus, safe, flat, reducedMotion, cameraRef, onOverZoomOut, perf, closeUp, closeUpRef, onHeroTarget, onHeroError, onCloseUpExited }: SceneProps) {
   const [litMesh, setLitMesh] = useState<Mesh | null>(null);
+  const [heroLit, setHeroLit] = useState<Mesh | null>(null);
+  // the zone loads (and picks its bin) while the overview stays as it is; the scene turns to the close-up, and
+  // the camera starts down, only once the zone is ready
+  const near = !!closeUp?.target;
+  const Zone = closeUp ? zoneComponent(closeUp.zone) : null;
   const [glowLine, setGlowLine] = useState<Object3D | null>(null);
   const bloomRef = useRef<SelectiveBloomEffect | null>(null);
   const distanceRef = useRef(36);
@@ -177,7 +222,7 @@ export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, fo
       setSettled((s) => (s && Math.hypot(s.x - cam.x, s.y - cam.y, s.z - cam.z) < 0.5 ? s : { x: cam.x, y: cam.y, z: cam.z })),
     [],
   );
-  const selection = useMemo(() => [litMesh, glowLine].filter((o): o is Object3D => !!o), [litMesh, glowLine]);
+  const selection = useMemo(() => (near ? [heroLit] : [litMesh, glowLine]).filter((o): o is Object3D => !!o), [near, heroLit, litMesh, glowLine]);
   const hemi = useRef<HemisphereLight>(null);
   const sun = useRef<DirectionalLight>(null);
   const outline = store.outline;
@@ -199,12 +244,13 @@ export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, fo
   return (
     <>
       <Background />
-      {/* ~12% haze at 60 m, ~30% at 100 m: with the CSS overlay the next stop never loses more than 40% */}
-      <fogExp2 attach="fog" args={[HAZE, 0.006]} />
-      <hemisphereLight ref={hemi} args={[HAZE, DEEP, 0.9]} />
-      <directionalLight ref={sun} position={[-20, 30, 40]} intensity={daylit ? 0.6 : 0.5} color={daylit ? "#FFD9B0" : "#FFFFFF"} />
+      {/* ~12% haze at 60 m, ~30% at 100 m: with the CSS overlay the next stop never loses more than 40%. In a
+          close-up the store around the zone fades into a warm dark instead, and the zone brings its own light. */}
+      {near ? <fogExp2 attach="fog" args={["#2E2219", 0.034]} /> : <fogExp2 attach="fog" args={[HAZE, 0.006]} />}
+      {!near && <hemisphereLight ref={hemi} args={[HAZE, DEEP, 0.9]} />}
+      {!near && <directionalLight ref={sun} position={[-20, 30, 40]} intensity={daylit ? 0.6 : 0.5} color={daylit ? "#FFD9B0" : "#FFFFFF"} />}
 
-      {floor ? (
+      {near ? null : floor ? (
         <mesh rotation-x={-Math.PI / 2} geometry={floor} name="floor">
           <meshBasicMaterial color="#FFFFFF" transparent opacity={0.08} />
         </mesh>
@@ -214,23 +260,42 @@ export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, fo
           <meshBasicMaterial color="#FFFFFF" transparent opacity={0.08} />
         </mesh>
       )}
-      <Skylights store={store} />
-      <Line points={edge} color="#FFFFFF" transparent opacity={0.3} lineWidth={1} />
+      {!near && <Skylights store={store} />}
+      {!near && <Line points={edge} color="#FFFFFF" transparent opacity={0.3} lineWidth={1} />}
 
       <Suspense fallback={null}>
-        <Fixtures store={store} textureUrl={textureUrl} repeatMeters={repeatMeters} nodes={nodes} fromEntrance={fromEntrance} />
-        <Products store={store} textureUrl={textureUrl} settled={settled} priority={legFixtureIds} you={{ x: focus.you.x, z: focus.you.y }} />
+        <Fixtures store={store} textureUrl={textureUrl} repeatMeters={repeatMeters} nodes={nodes} fromEntrance={fromEntrance} hide={closeUp?.zone.hideFixtures} dim={near} />
+        {!near && <Products store={store} textureUrl={textureUrl} settled={settled} priority={legFixtureIds} you={{ x: focus.you.x, z: focus.you.y }} />}
       </Suspense>
-      <Ribbon nodes={nodes} walked={ribbon.walked} current={ribbon.current} ahead={ribbon.ahead} onGlowLine={setGlowLine} />
-      {litSlot && <LitSlot slot={litSlot} onMesh={setLitMesh} />}
-      <OverlayProjector items={overlay.items} registry={overlay.registry} safe={safe} />
-      <CameraRig ref={cameraRef} focus={focus} safe={safe} distanceRef={distanceRef} onSettle={onSettle} flat={flat} reducedMotion={reducedMotion} onOverZoomOut={onOverZoomOut} />
+      {Zone && closeUp && (
+        <ZoneBoundary onError={(e) => onHeroError?.(e)}>
+          <Suspense fallback={null}>
+            <Zone store={store} category={closeUp.category} itemName={closeUp.itemName} onTarget={(t) => onHeroTarget?.(t)} onLit={setHeroLit} onError={(e) => onHeroError?.(e)} />
+          </Suspense>
+        </ZoneBoundary>
+      )}
+      {!near && <Ribbon nodes={nodes} walked={ribbon.walked} current={ribbon.current} ahead={ribbon.ahead} onGlowLine={setGlowLine} />}
+      {!near && litSlot && <LitSlot slot={litSlot} onMesh={setLitMesh} />}
+      {!near && <OverlayProjector items={overlay.items} registry={overlay.registry} safe={safe} />}
+      <CameraRig ref={cameraRef} focus={focus} safe={safe} distanceRef={distanceRef} onSettle={onSettle} flat={flat} reducedMotion={reducedMotion} onOverZoomOut={onOverZoomOut} paused={near} />
+      {closeUp?.target && (
+        <CloseUpCamera
+          ref={closeUpRef}
+          target={closeUp.target}
+          safe={safe}
+          reducedMotion={reducedMotion}
+          exiting={closeUp.exiting}
+          returnView={() => cameraRef.current!.view()}
+          onExited={() => onCloseUpExited?.()}
+          distanceRef={distanceRef}
+        />
+      )}
       <BloomDriver effect={bloomRef} distanceRef={distanceRef} full={0.7} />
 
       {/* One bloom pass, selective: the lit fixture and the current leg's wide ribbon copy. The rest of the
           frame never blooms, so the haze stays clean and the pass stays within the draw-call budget. */}
       <EffectComposer multisampling={0}>
-        {selection.length ? <SelectiveBloom ref={bloomRef} selection={selection} lights={[hemi, sun]} luminanceThreshold={0.15} intensity={0.7} radius={0.42} mipmapBlur ignoreBackground /> : <></>}
+        {selection.length ? <SelectiveBloom ref={bloomRef} selection={selection} lights={near ? [] : [hemi, sun]} luminanceThreshold={0.15} intensity={0.7} radius={0.42} mipmapBlur ignoreBackground /> : <></>}
       </EffectComposer>
       {perf && <Perf />}
     </>

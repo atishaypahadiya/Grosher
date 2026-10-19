@@ -323,6 +323,23 @@ try {
   all.push(...(await measure(page, "checkout")));
   await ctx.close();
 
+  // ---- a hero close-up (src/hero): the header, the back pill and the sheet over the zone's dark interior
+  {
+    const cctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
+    const cp = await cctx.newPage();
+    cp.on("pageerror", (e) => errors.push(e.message));
+    await cp.goto(`${BASE}/?perf=1&tier=hi`, { waitUntil: "load" });
+    await cp.evaluate(() => document.fonts.ready);
+    const ci = cp.getByLabel(/add items/i);
+    await ci.fill("toor dal (bulk)");
+    await ci.press("Enter");
+    await cp.getByRole("button", { name: /route 1 item/i }).click({ timeout: 60_000 });
+    await cp.waitForFunction(() => window.__grosherCloseUp?.state === "open" && window.__grosherPerf?.hero?.tier, null, { timeout: 120_000 });
+    await cp.waitForTimeout(1500);
+    all.push(...(await measure(cp, "trip close-up")));
+    await cctx.close();
+  }
+
   // ---- the sheets, and a list with an unknown item (no model answers here, so it stays unknown)
   const sctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
   const sp = await sctx.newPage();

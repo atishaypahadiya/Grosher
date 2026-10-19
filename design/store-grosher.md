@@ -195,3 +195,11 @@ corner in the floor and on the flat map. Performance gate on Grosher: 46–48 dr
 - **Stainless reads as neutral steel**: fresh and cold fixtures take the light's strength but not the haze's
   colour.
 - Walls and counters are named by their department on the next-stop card and the sheet ("Body care, left").
+
+## Step 2: Bulk & pulses as the hero aisle (18 Oct 2026)
+
+The zone is the benchmark for close-up quality and the recipe every other aisle follows: see CLAUDE.md "Hero
+close-ups" and DESIGN.md §5b. The overview layout was set to real proportions for it (map v2): 0.65 m wall
+shelving with the five sections west to east, a 1.4 m waist-high scoop-bin island (new category: bulk granola,
+trail mix & snacks), a centerpiece plinth at the island's west end. The reference photos named in the brief
+(design/refs/) were not in the repository when it was built; the look follows the brief's description.

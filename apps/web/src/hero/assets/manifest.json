@@ -1,0 +1,149 @@
+{
+  "note": "scripts/gen-hero-textures.mjs; bytes on disk (KTX2, zstd / ETC1S supercompressed)",
+  "textures": {
+    "pine": {
+      "bytes": 44080,
+      "kind": "etc1s",
+      "w": 512,
+      "h": 512
+    },
+    "pine.lo": {
+      "bytes": 14182,
+      "kind": "etc1s",
+      "w": 256,
+      "h": 256
+    },
+    "plaster": {
+      "bytes": 22653,
+      "kind": "etc1s",
+      "w": 512,
+      "h": 512
+    },
+    "plaster.lo": {
+      "bytes": 7681,
+      "kind": "etc1s",
+      "w": 256,
+      "h": 256
+    },
+    "plaster_n": {
+      "bytes": 238365,
+      "kind": "normal",
+      "w": 512,
+      "h": 512
+    },
+    "plaster_n.lo": {
+      "bytes": 69295,
+      "kind": "normal",
+      "w": 256,
+      "h": 256
+    },
+    "concrete": {
+      "bytes": 39367,
+      "kind": "etc1s",
+      "w": 512,
+      "h": 512
+    },
+    "concrete.lo": {
+      "bytes": 15118,
+      "kind": "etc1s",
+      "w": 256,
+      "h": 256
+    },
+    "burlap": {
+      "bytes": 50199,
+      "kind": "etc1s",
+      "w": 512,
+      "h": 512
+    },
+    "burlap.lo": {
+      "bytes": 12902,
+      "kind": "etc1s",
+      "w": 256,
+      "h": 256
+    },
+    "burlap_n": {
+      "bytes": 168104,
+      "kind": "normal",
+      "w": 512,
+      "h": 512
+    },
+    "burlap_n.lo": {
+      "bytes": 45777,
+      "kind": "normal",
+      "w": 256,
+      "h": 256
+    },
+    "terracotta": {
+      "bytes": 13206,
+      "kind": "etc1s",
+      "w": 256,
+      "h": 256
+    },
+    "terracotta.lo": {
+      "bytes": 4114,
+      "kind": "etc1s",
+      "w": 128,
+      "h": 128
+    },
+    "stone": {
+      "bytes": 17093,
+      "kind": "etc1s",
+      "w": 256,
+      "h": 256
+    },
+    "stone.lo": {
+      "bytes": 5364,
+      "kind": "etc1s",
+      "w": 128,
+      "h": 128
+    },
+    "grains": {
+      "bytes": 217080,
+      "kind": "etc1s",
+      "w": 1024,
+      "h": 1024
+    },
+    "grains.lo": {
+      "bytes": 73018,
+      "kind": "etc1s",
+      "w": 512,
+      "h": 512
+    },
+    "grains_n": {
+      "bytes": 323372,
+      "kind": "normal-etc1s",
+      "w": 1024,
+      "h": 1024
+    },
+    "grains_n.lo": {
+      "bytes": 113963,
+      "kind": "normal-etc1s",
+      "w": 512,
+      "h": 512
+    },
+    "labels": {
+      "bytes": 199956,
+      "kind": "uastc",
+      "w": 1024,
+      "h": 1024
+    },
+    "labels.lo": {
+      "bytes": 85134,
+      "kind": "uastc",
+      "w": 512,
+      "h": 512
+    },
+    "headers": {
+      "bytes": 46690,
+      "kind": "uastc",
+      "w": 1024,
+      "h": 512
+    },
+    "headers.lo": {
+      "bytes": 20469,
+      "kind": "uastc",
+      "w": 512,
+      "h": 256
+    }
+  }
+}

@@ -13,7 +13,8 @@ Foods-style market ([design/store-grosher.md](design/store-grosher.md)): full gr
 wine, bulk, a food hall and body care, with 324 shelf categories the way the signs read and a 47,000-item
 catalog built from the Instacart 2017 product list (non-commercial terms, see
 `packages/stores/data/instacart/README.md`), so most everyday items resolve to the right shelf without a
-survey; real stores are surveyed with the built-in map editor. It is a web app that installs to the home screen and works offline.
+survey; its Bulk & pulses aisle opens at eye level in full detail when you walk to it (clay walls, track
+lights, gravity bins, burlap sacks, a stone chakki), built from a procedural shelf kit the other aisles reuse; real stores are surveyed with the built-in map editor. It is a web app that installs to the home screen and works offline.
 The visual contract is [DESIGN.md](DESIGN.md).
 
 <p>

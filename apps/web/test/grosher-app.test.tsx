@@ -88,3 +88,14 @@ test("shipped lists are offered once: a deleted one does not come back", () => {
 test("lane names read the way the shopper does", () => {
   expect([laneName("L3"), laneName("LANE1"), laneName("EXPRESS"), laneName("SELF"), laneName(null)]).toEqual(["lane 4", "lane 1", "express lane", "self-checkout", null]);
 });
+
+test("without WebGL, a stop in the Bulk hero zone shows its flat shelf image; Close hides it for that stop", async () => {
+  render(<App />);
+  fireEvent.change(screen.getByLabelText(/add items/i), { target: { value: "toor dal (bulk)" } });
+  fireEvent.submit(screen.getByLabelText(/add items/i).closest("form")!);
+  fireEvent.click(await screen.findByRole("button", { name: /route 1 item/i }, { timeout: 10_000 }));
+  const fig = await screen.findByTestId("flat-shelf");
+  expect(fig.querySelector("img")!.getAttribute("src")).toMatch(/hero\/bulk\/bulk-pulses\.webp$/);
+  fireEvent.click(within(fig).getByRole("button", { name: /close/i }));
+  expect(screen.queryByTestId("flat-shelf")).toBeNull();
+});

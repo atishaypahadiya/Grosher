@@ -16,6 +16,7 @@ import { Num } from "./Num.tsx";
 import { IconArrowLeft, IconCheck, IconLayers, IconPlus } from "./Icons.tsx";
 
 import { FallbackBoundary } from "./ErrorBoundary.tsx";
+import { heroStopAt } from "../hero/index.ts";
 
 const TripMap3D = lazy(() => import("../map3d/TripMap3D.tsx"));
 
@@ -62,6 +63,10 @@ export function TripScreen({ bundle, router, trip, flat, onFlatChange, onGotIt, 
     return () => ro.disconnect();
   }, [addOpen, trip.remaining.length]);
   const webgl = useMemo(() => webglAvailable(), []);
+  // a hero close-up is open: the header sits over the zone's dark ceiling, not the sky
+  const [closeUp, setCloseUp] = useState(false);
+  // without WebGL the hero zone's flat shelf image stands in for the close-up (closed per stop)
+  const [shelfOpenFor, setShelfOpenFor] = useState<string | null>(null);
   const perf = typeof location !== "undefined" && new URLSearchParams(location.search).has("perf");
 
   const leg = nextLeg(trip);
@@ -72,6 +77,8 @@ export function TripScreen({ bundle, router, trip, flat, onFlatChange, onGotIt, 
   const doneCount = trip.got.length + trip.skipped.length;
 
   const loc = leg ? store.locations.find((l) => l.id === leg.locationId) : undefined;
+  const hero = !webgl && leg ? heroStopAt(store, bundle.categories, leg.locationId) : null;
+  const shelfImage = hero ? hero.zone.flatImage(hero.category) : null;
   const dept = locationDepartment(store, loc);
   const tags = stop?.tags ?? [];
   const hint = tags.includes("hot") ? " · hot, so it's near the end" : tags.includes("frozen") || tags.includes("chilled") ? " · cold, so it's near the end" : tags.includes("heavy") ? " · heavy, so it's early" : tags.includes("bulky") ? " · bulky, under the cart" : "";
@@ -102,18 +109,30 @@ export function TripScreen({ bundle, router, trip, flat, onFlatChange, onGotIt, 
   const vignette = <div className="trip-vignette" aria-hidden />;
 
   return (
-    <div className="trip-screen" ref={screenRef}>
+    <div className={closeUp ? "trip-screen is-closeup" : "trip-screen"} ref={screenRef}>
       <div className="trip-map">
         {webgl ? (
           <FallbackBoundary name="3D map" fallback={<>{flatMap}{vignette}</>}>
             <Suspense fallback={flatMap}>
-              <TripMap3D bundle={bundle} trip={trip} flat={flat} onFlatChange={onFlatChange} nextLabel={nextLabel} checkoutLabel={checkoutLabel} perf={perf} safe={safe} />
+              <TripMap3D bundle={bundle} trip={trip} flat={flat} onFlatChange={onFlatChange} nextLabel={nextLabel} checkoutLabel={checkoutLabel} perf={perf} safe={safe} onCloseUpChange={setCloseUp} />
             </Suspense>
           </FallbackBoundary>
         ) : (
           <>
             {flatMap}
             {vignette}
+            {/* no 3D: a stop in a hero zone shows the shelf as a flat image, the stop's bin lit */}
+            {shelfImage && shelfOpenFor !== leg?.stopId && (
+              <figure className="flat-shelf" data-testid="flat-shelf">
+                <img src={shelfImage} alt={`The shelf where ${stop?.name ?? "it"} is, lit in lime`} />
+                <figcaption>
+                  <span>{stop?.name}</span>
+                  <button type="button" className="pill closeup-back-inline" onClick={() => setShelfOpenFor(leg?.stopId ?? null)}>
+                    Close
+                  </button>
+                </figcaption>
+              </figure>
+            )}
           </>
         )}
       </div>

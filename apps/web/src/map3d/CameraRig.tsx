@@ -4,7 +4,7 @@
 
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { PerspectiveCamera, Vector3 } from "three";
+import { PerspectiveCamera, Quaternion, Vector3 } from "three";
 import { easeOutCubic, MAX_DISTANCE, MIN_DISTANCE, type Framing } from "./layout.ts";
 
 /** What the camera should frame: the shopper, the next stop if any, and the current leg's path. */
@@ -209,6 +209,8 @@ export interface CameraRigHandle {
   rotate: (deltaDeg: number) => void;
   /** returns the new flat state */
   flatten: (flat: boolean) => void;
+  /** the camera's pose for the current framing (what a close-up returns to) */
+  view: () => { position: Vector3; quaternion: Quaternion; fov: number };
 }
 
 export interface CameraRigProps {
@@ -222,9 +224,11 @@ export interface CameraRigProps {
   reducedMotion?: boolean;
   /** fires when pinching out past max zoom (caller may flatten) */
   onOverZoomOut?: () => void;
+  /** a close-up owns the camera: the rig keeps its framing up to date but does not move the camera */
+  paused?: boolean;
 }
 
-export const CameraRig = forwardRef<CameraRigHandle, CameraRigProps>(function CameraRig({ focus, safe = DEFAULT_SAFE, distanceRef, onSettle, flat, reducedMotion, onOverZoomOut }, ref) {
+export const CameraRig = forwardRef<CameraRigHandle, CameraRigProps>(function CameraRig({ focus, safe = DEFAULT_SAFE, distanceRef, onSettle, flat, reducedMotion, onOverZoomOut, paused = false }, ref) {
   const { camera, invalidate, size } = useThree();
   const initial = solveFraming(focus, flat, size.width / size.height, undefined, safe);
   const pose = useRef<Pose>({ ...initial, tilt: flat ? 2 : DEFAULT_TILT, yaw: flat ? 0 : DEFAULT_YAW });
@@ -313,10 +317,27 @@ export const CameraRig = forwardRef<CameraRigHandle, CameraRigProps>(function Ca
       settleSoon();
     },
     flatten: (f) => animateTo({ tilt: f ? 2 : DEFAULT_TILT, yaw: f ? 0 : DEFAULT_YAW }),
+    view: () => {
+      const scratch = new PerspectiveCamera(verticalFov(size.width / size.height), size.width / size.height, 0.5, 400);
+      placeCamera(scratch, to.current);
+      return { position: scratch.position.clone(), quaternion: scratch.quaternion.clone(), fov: scratch.fov };
+    },
   }));
 
+  // handing back from a close-up: finish any framing at once, from the pose the close-up returned to
+  useEffect(() => {
+    if (paused) return;
+    if (t0.current !== null) {
+      pose.current = { ...to.current };
+      t0.current = null;
+    }
+    apply(pose.current);
+    invalidate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paused]);
+
   useFrame(() => {
-    if (t0.current === null) return;
+    if (paused || t0.current === null) return;
     const k = t0.current === -Infinity ? 1 : Math.min(1, (performance.now() - t0.current) / EASE_MS);
     const e = easeOutCubic(k);
     const a = from.current;
@@ -336,6 +357,7 @@ export const CameraRig = forwardRef<CameraRigHandle, CameraRigProps>(function Ca
   });
 
   useEffect(() => {
+    if (paused) return;
     apply(pose.current);
     invalidate();
     // eslint-disable-next-line react-hooks/exhaustive-deps

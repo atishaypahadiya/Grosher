@@ -172,7 +172,9 @@
         window.addEventListener("error", function (e) {
           var t = e.target;
           var src = t && t !== window ? t.src || t.href || "" : "";
-          if (src && /\/assets\//.test(src) && (t.tagName === "SCRIPT" || t.tagName === "LINK")) recover("could not load " + src);
+          // a modulepreload link is a hint: the import it preloads rejects to its own caller (a boundary with a
+          // fallback, like the 3D map's, or the unhandledrejection below), so its error is not a broken app
+          if (src && /\/assets\//.test(src) && (t.tagName === "SCRIPT" || (t.tagName === "LINK" && t.rel !== "modulepreload"))) recover("could not load " + src);
         }, true);
         window.addEventListener("unhandledrejection", function (e) {
           if (window.__grosherIsChunkError(e.reason)) recover(String((e.reason && e.reason.message) || e.reason));

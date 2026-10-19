@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   check:
-    name: typecheck · test · build · perf gate · contrast gate · survey flow · boot resilience
+    name: typecheck · test · build · perf gate · close-up gate · contrast gate · survey flow · boot resilience
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -60,6 +60,13 @@ jobs:
           npx vite preview --port 4173 --strictPort &
           for i in $(seq 1 40); do curl -sf http://localhost:4173/ > /dev/null && break; sleep 0.5; done
           node scripts/perf-gate.mjs http://localhost:4173
+
+      - name: Close-up gate (hero zone ≤ 70 draw calls, ≤ 250k triangles, ≤ 16 MB textures, ≤ 2.5 MB download)
+        working-directory: apps/web
+        run: |
+          curl -sf http://localhost:4173/ > /dev/null || (npx vite preview --port 4173 --strictPort &)
+          for i in $(seq 1 40); do curl -sf http://localhost:4173/ > /dev/null && break; sleep 0.5; done
+          node scripts/hero-gate.mjs http://localhost:4173
 
       - name: Contrast gate (text ≥ 4.5:1, focus rings and icons ≥ 3:1)
         working-directory: apps/web
