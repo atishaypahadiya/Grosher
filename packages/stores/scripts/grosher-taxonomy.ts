@@ -75,6 +75,7 @@ export const NEW_CATEGORIES: TaxCategory[] = [
   c("bulk-rice-grains", "Bulk rice & grains", ["bulk rice", "bulk basmati", "basmati rice bulk", "bulk quinoa", "bulk oats", "bulk grains", "bulk barley", "bulk millet"]),
   c("bulk-flours", "Bulk flours", ["bulk flour", "bulk atta", "atta bulk", "bulk besan", "bulk whole wheat flour", "bulk almond flour"]),
   c("bulk-nuts-seeds", "Bulk nuts & seeds", ["bulk nuts", "bulk almonds", "bulk cashews", "bulk walnuts", "bulk pistachios", "bulk seeds", "bulk chia seeds", "bulk trail mix"]),
+  c("bulk-snacks", "Bulk granola, trail mix & snacks", ["bulk granola", "granola bulk", "bulk trail mix", "trail mix bulk", "bulk muesli", "bulk chocolate chips", "bulk coffee beans", "scoop bins"]),
   c("bulk-dried-fruit", "Bulk dried fruit", ["bulk dried fruit", "bulk raisins", "bulk dates", "bulk apricots", "bulk dried cranberries", "bulk figs"]),
   // floral and customer service (west column, by the entrance)
   c("bouquets", "Bouquets & cut flowers", ["flowers", "bouquet", "fresh flowers", "cut flowers", "roses", "tulips", "sunflowers", "lilies", "flower bouquet"]),
@@ -179,9 +180,10 @@ export const FACES: Record<string, Face> = {
   "PRODUCE-I6N": { aisle: "PRODUCE", sign: "Produce · Vegetables", department: "produce", cats: ["onions-garlic"] },
   "PRODUCE-I7N": { aisle: "PRODUCE", sign: "Produce · Vegetables", department: "produce", cats: ["potatoes-roots"] },
   "PRODUCE-I8N": { aisle: "PRODUCE", sign: "Produce · Vegetables", department: "produce", cats: ["cooking-vegetables"] },
-  "BULK-WALL": { aisle: "BULK", sign: "Bulk · Pulses · Rice & grains · Flours · Nuts", department: "bulk", cats: ["bulk-pulses", "bulk-rice-grains"] },
-  "BULK-ISLAND-N": { aisle: "BULK", sign: "Bulk · Pulses · Rice & grains · Flours · Nuts", department: "bulk", cats: ["bulk-flours", "bulk-nuts-seeds"] },
-  "BULK-ISLAND-S": { aisle: "BULK", sign: "Bulk · Pulses · Rice & grains · Flours · Nuts", department: "bulk", cats: ["bulk-dried-fruit"] },
+  // the bulk wall reads like its header boards, west to east: PULSES & DALS · RICE & GRAINS · FLOURS & ATTA ·
+  // NUTS & SEEDS · DRIED FRUIT (apps/web/src/hero/bulk is the close-up of this zone); the island is scoop bins
+  "BULK-WALL": { aisle: "BULK", sign: "Bulk · Pulses & dals · Rice & grains · Flours & atta · Nuts & seeds · Dried fruit", department: "bulk", cats: ["bulk-pulses", "bulk-rice-grains", "bulk-flours", "bulk-nuts-seeds", "bulk-dried-fruit"] },
+  "BULK-ISLAND-N": { aisle: "BULK", sign: "Bulk · Scoop bins · Granola · Trail mix", department: "bulk", cats: ["bulk-snacks"] },
 
   // ------------------------------------------------------------ west column
   FLORAL: { aisle: "FLORAL", sign: "Floral · Bouquets · Plants", department: "floral", cats: ["bouquets", "plants"] },

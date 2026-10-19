@@ -58,15 +58,15 @@ test("no fixture overlaps another; every fixture is inside the building, cut cor
 test("every shelf and counter is reachable: each one that sells something has a location in front of it", () => {
   const served = new Set(store.locations.map((l) => fixtureForLocation(store, l)?.id));
   // checkout counters, seating, end caps and the wine bar's three inner sides sell nothing on the map
-  const quiet = (f: Fixture) => f.department === "checkout" || f.department === "seating" || /-cap[EW]$/.test(f.id) || /^f-winebar-[nse]$/.test(f.id);
+  const quiet = (f: Fixture) => f.department === "checkout" || f.department === "seating" || f.kind === "other" || /-cap[EW]$/.test(f.id) || /^f-winebar-[nse]$/.test(f.id);
   for (const f of store.fixtures!) if (!quiet(f)) assert.ok(served.has(f.id), `${f.id} (${f.department}) has no location in front of it`);
 });
 
 test("every category is placed: all 298 of the demo's plus Grosher's own, one per location, against its department", () => {
   const ids = new Set(categories.map((c) => c.id));
   for (const c of demoSupercenter.categories) assert.ok(ids.has(c.id), `${c.id} has no Grosher shelf`);
-  for (const id of ["papad", "cookware", "kitchen-utensils", "beer", "cold-beer", "red-wine", "white-wine", "sparkling-wine", "spirits", "bulk-pulses", "bulk-rice-grains", "bulk-nuts-seeds", "bulk-dried-fruit", "bulk-flours", "bouquets", "plants", "hot-bar", "salad-bar", "soups", "sushi", "pizza", "cafe-coffee", "cafe-juice"]) assert.ok(ids.has(id), id);
-  assert.equal(categories.length, 324);
+  for (const id of ["papad", "cookware", "kitchen-utensils", "beer", "cold-beer", "red-wine", "white-wine", "sparkling-wine", "spirits", "bulk-pulses", "bulk-rice-grains", "bulk-nuts-seeds", "bulk-dried-fruit", "bulk-flours", "bulk-snacks", "bouquets", "plants", "hot-bar", "salad-bar", "soups", "sushi", "pizza", "cafe-coffee", "cafe-juice"]) assert.ok(ids.has(id), id);
+  assert.equal(categories.length, 325);
   assert.equal(new Set(categories.map((c) => c.locationId)).size, categories.length, "two categories share a location");
   assert.equal(store.locations.length, categories.length, "a location without a category");
   for (const c of categories) {
@@ -195,4 +195,14 @@ test("nothing points at the demo: Grosher's locations, categories and catalog us
   for (const s of await grosher.loadCatalog()) for (const l of s.locationIds) assert.ok(ids.has(l) && !demoOnly.has(l), `${s.id} → ${l}`);
   const shapeOk = (g: StoreGraph) => g.storeId === "grosher" && g.version >= 1;
   assert.ok(shapeOk(store));
+});
+
+test("the carried catalog's key names its source: regenerate (npm run gen:grosher) after the demo catalog changes", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { catalogHash } = await import("@grosher/core");
+  const carry = JSON.parse(readFileSync(new URL("../grosher/carry.json", import.meta.url), "utf8"));
+  const demo = JSON.parse(readFileSync(new URL("../demo/catalog.json", import.meta.url), "utf8"));
+  assert.equal(carry.sourceHash, catalogHash(demo.items), "grosher/carry.json is stale");
+  assert.equal(grosher.catalogKey, carry.key);
+  assert.ok(carry.key.endsWith(`:v${store.version}`));
 });

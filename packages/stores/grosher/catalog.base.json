@@ -92,14 +92,14 @@
       "basmati rice bulk"
     ],
     "locationIds": [
-      "BULK-WALL-8"
+      "BULK-WALL-4"
     ]
   },
   {
     "id": "g-bulk-quinoa",
     "name": "Bulk quinoa",
     "locationIds": [
-      "BULK-WALL-8"
+      "BULK-WALL-4"
     ]
   },
   {
@@ -109,7 +109,7 @@
       "bulk oats"
     ],
     "locationIds": [
-      "BULK-WALL-8"
+      "BULK-WALL-4"
     ]
   },
   {
@@ -120,28 +120,28 @@
       "atta bulk"
     ],
     "locationIds": [
-      "BULK-ISLAND-N-1"
+      "BULK-WALL-7"
     ]
   },
   {
     "id": "g-bulk-almonds",
     "name": "Bulk almonds",
     "locationIds": [
-      "BULK-ISLAND-N-8"
+      "BULK-WALL-9"
     ]
   },
   {
     "id": "g-bulk-cashews",
     "name": "Bulk cashews",
     "locationIds": [
-      "BULK-ISLAND-N-8"
+      "BULK-WALL-9"
     ]
   },
   {
     "id": "g-bulk-raisins",
     "name": "Bulk raisins",
     "locationIds": [
-      "BULK-ISLAND-S-1"
+      "BULK-WALL-12"
     ]
   },
   {
@@ -151,7 +151,7 @@
       "bulk dates"
     ],
     "locationIds": [
-      "BULK-ISLAND-S-1"
+      "BULK-WALL-12"
     ]
   },
   {

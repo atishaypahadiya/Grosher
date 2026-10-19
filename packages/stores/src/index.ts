@@ -12,6 +12,7 @@ import grosherBaseCatalog from "../grosher/catalog.base.json" with { type: "json
 import grosherCategories from "../grosher/categories.json" with { type: "json" };
 import grosherTextures from "../grosher/textures/textures.json" with { type: "json" };
 import grosherLists from "../grosher/lists.json" with { type: "json" };
+import grosherCarry from "../grosher/carry.json" with { type: "json" };
 import { carryCatalog, type Rehome } from "./carry.ts";
 import { handlingTags } from "./handling.ts";
 
@@ -55,6 +56,12 @@ export interface StoreBundle {
   textureUrl: (file: string) => string;
   /** saved lists the store ships for demos (Grosher's hero lists), offered once per browser */
   lists?: { id: string; name: string; items: string[] }[];
+  /**
+   * Identity of the full catalog `loadCatalog` resolves to, when it is derived (Grosher's is carried from the
+   * demo's and re-shelved): the app caches the result and its index under it instead of re-deriving and
+   * re-hashing on every load. Absent: the catalog is a file as is.
+   */
+  catalogKey?: string;
 }
 
 /** Minimal shape check for JSON coming from disk or an edit-mode import. Throws on bad input. */
@@ -127,6 +134,7 @@ export const grosher: StoreBundle = {
       ]).then(([file, rehome]) => ({ ...file, items: carryCatalog(file.items, demoCategories as Category[], grosherCategories as Category[], rehome, (s, cat) => handlingTags(s.tags, cat, s.name)) })),
   ),
   lists: grosherLists,
+  catalogKey: grosherCarry.key,
 };
 
 /** Every store the app can open. The first is the default; the demo Supercenter is kept for the tests and as

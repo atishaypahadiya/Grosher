@@ -24,6 +24,8 @@ import type { Category, Fixture, FixtureKind, GraphEdge, GraphNode, NodeType, Sh
 import { TAXONOMY, type TaxCategory } from "./taxonomy.ts";
 import { BULKY, CATEGORY_PATCHES, FACES, GROSHER_DEPARTMENTS, GROSHER_ITEMS, HEAVY, HERO_LISTS, NEW_CATEGORIES, REHOME } from "./grosher-taxonomy.ts";
 import { HANDLING_TAGS, handlingTags } from "../src/handling.ts";
+import { catalogHash } from "@grosher/core";
+import { createHash } from "node:crypto";
 
 const BAY_M = 1.22;
 const ENTRANCE: [number, number] = [0, 6];
@@ -266,8 +268,12 @@ F("f-winebar-e", "counter", [70.2, 37.8, 71, 43.2], "winebar", { height: 1.1 });
 F("f-produce-wall", "wall", [13, 1, 48, 2.2], "produce", { aisle: "PRODUCE", fixtureKind: "gondola", height: 1.7, shelves: 4 });
 ISLAND_ROWS.forEach(([y0, y1], row) => ISLAND_X.forEach(([x0, x1], i) => F(`f-island${row * 4 + i + 1}`, "shelf", [x0, y0, x1, y1], "produce", { fixtureKind: "produce" })));
 // bulk: gravity bins on the wall, scoop bins on the island
-F("f-bulk-wall", "wall", [50, 1, 68, 2.2], "bulk", { aisle: "BULK" });
-F("f-bulk-island", "shelf", [50.5, 4.8, 67.5, 6.8], "bulk", { height: 1.5 });
+// the bulk wall is 0.65 m deep shelving in front of a plaster wall (the close-up, apps/web/src/hero/bulk, builds
+// it in detail); the island is waist-high scoop bins; the centerpiece (sacks, a chakki, a clay pot) stands at
+// its west end
+F("f-bulk-wall", "wall", [50, 1.55, 68, 2.2], "bulk", { aisle: "BULK", height: 2.1, shelves: 5 });
+F("f-bulk-island", "shelf", [52.6, 5.0, 67.4, 6.4], "bulk", { height: 1.0, shelves: 2 });
+F("f-bulk-display", "other", [50.3, 4.9, 52.2, 6.9], "bulk", { height: 0.9, fixtureKind: "bakery" });
 // west column
 F("f-floral", "shelf", [3, 1.6, 9.5, 4.4], "floral", { aisle: "FLORAL", height: 1.0 });
 F("f-service", "counter", [3, 7.6, 9, 8.6], "service", { aisle: "SERVICE", height: 1.1 });
@@ -419,8 +425,7 @@ for (const [face, i, y] of islandFaces) {
   layFace(face, "h", y, [[x0 + 0.3, x1 - 0.3]], southFace ? "L" : "R");
 }
 layFace("BULK-WALL", "h", Y_WET, [[50.3, 67.7]], "L");
-layFace("BULK-ISLAND-N", "h", Y_WET, [[50.8, 67.2]], "R");
-layFace("BULK-ISLAND-S", "h", Y_ISLANDS, [[50.8, 67.2]], "L");
+layFace("BULK-ISLAND-N", "h", Y_WET, [[52.9, 67.1]], "R");
 // west column
 layFace("FLORAL", "h", Y_ENTRY, [[3.3, 9.2]], "L");
 layFace("SERVICE", "h", Y_ENTRY, [[3.3, 8.7]], "R");
@@ -484,7 +489,8 @@ const outline: [number, number][] = [
 ];
 const store: StoreGraph = {
   storeId: "grosher",
-  version: 1,
+  // 2: the bulk zone at real proportions (wall shelving, scoop-bin island, centerpiece), 18 Oct 2026
+  version: 2,
   name: "Grosher",
   address: "Demo market",
   nodes: [...nodes.values()],
@@ -577,6 +583,11 @@ writeFileSync(join(out, "categories.json"), JSON.stringify(categories, null, 2) 
 writeFileSync(join(out, "catalog.base.json"), JSON.stringify(base, null, 2) + "\n");
 writeFileSync(join(out, "rehome.json"), JSON.stringify({ note: "carried catalog rows whose Walmart shelf Grosher has a better one for: item id → {demo category: Grosher category} (scripts/grosher-taxonomy.ts REHOME)", moved, items: rehome }, null, 1) + "\n");
 writeFileSync(join(out, "lists.json"), JSON.stringify(HERO_LISTS, null, 2) + "\n");
+// the carried catalog's identity: the source catalog's content hash, Grosher's shelves and the re-home table,
+// and the store version. The app caches the carried rows and their index under it (apps/web/src/lib/catalogCache.ts)
+const sourceHash = catalogHash(demoCatalog.items);
+const shelves = createHash("sha256").update(JSON.stringify(categories)).update(JSON.stringify(rehome)).update(readFileSync(join(import.meta.dirname, "..", "src", "handling.ts"), "utf8")).digest("hex").slice(0, 12);
+writeFileSync(join(out, "carry.json"), JSON.stringify({ note: "identity of the carried catalog (scripts/gen-grosher.ts): the source catalog hash, Grosher's shelves and re-home table, the store version", sourceHash, shelves, key: `${sourceHash}:${shelves}:v${store.version}` }, null, 2) + "\n");
 writeFileSync(join(out, "textures", "wood.jpg"), finishTexture("wood", 7));
 writeFileSync(join(out, "textures", "stainless.jpg"), finishTexture("stainless", 11));
 const finishes = { wood: { file: "wood.jpg", w: 512, h: 512, shotAt: null, repeatMeters: 2 }, stainless: { file: "stainless.jpg", w: 512, h: 512, shotAt: null, repeatMeters: 2 } };

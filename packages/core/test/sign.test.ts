@@ -45,7 +45,7 @@ test("cold comes from the shelf's category, not the answer: shelf-stable oat mil
   const ctx = { catalog: [], categories, llm: new Map([["zorbo oat drink", { category: "shelf-milk", confidence: 0.68, tags: ["chilled" as const] }]]), locations: new Set(categories.map((c) => c.locationId)) };
   const shelf = resolveItem("zorbo oat drink", ctx);
   assert.equal(shelf.locationIds[0], "A17-R11");
-  assert.deepEqual(shelf.tags, []); // the model said chilled; the drinks aisle is ambient
+  assert.deepEqual(shelf.tags, ["heavy"]); // the model said chilled; a guess takes its shelf's tags only (the demo's shelf milk: heavy, ambient)
   // "oat milk" itself: the Milk alternatives sign names it, the dairy case, chilled
   assert.deepEqual(resolveItem("oat milk", ctx).tags, ["chilled"]);
   const base = { query: "oat milk", confidence: 0.9, source: "exact" as const, canonicalName: "Oat milk", tags: ["fragile" as const] };

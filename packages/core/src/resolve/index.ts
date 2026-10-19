@@ -539,7 +539,9 @@ export function llmLayer(query: string, ctx: ResolveContext): ResolveResult | nu
     confidence: llmConfidence(guess.confidence),
     source: "llm",
     canonicalName: guess.canonicalName ?? titleCase(query),
-    tags: guess.tags?.length ? guess.tags : (cat?.tags ?? []),
+    // a guess is placed on a shelf, and its tags are that shelf's (storage, heavy, bulky, fragile, produce):
+    // the model's own tags only where there are no categories to take them from (the department mocks)
+    tags: cat ? [...(cat.tags ?? [])] : (guess.tags ?? []),
     department: cat?.department ?? guess.category,
     subcategory: guess.subcategory ?? cat?.name,
   });

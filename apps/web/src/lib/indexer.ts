@@ -4,8 +4,9 @@
 // lookup, not a build. Where there is no Worker (jsdom) the index builds
 // here, synchronously, as before.
 
-import { CandidateIndex, catalogHash, primeIndex, type Stop } from "@grosher/core";
+import { CandidateIndex, catalogHash, primeIndex, type IndexParts, type Stop } from "@grosher/core";
 import type { IndexReply, IndexRequest } from "./indexWorker.ts";
+import { dbGet } from "./db.ts";
 
 export interface IndexResult {
   index: CandidateIndex;
@@ -26,7 +27,11 @@ declare global {
 
 const DEV = !!(import.meta.env as { DEV?: boolean }).DEV;
 
-export function buildCandidateIndex(storeId: string, catalog: Stop[]): Promise<IndexResult> {
+/**
+ * `key`: the catalog's known identity (a bundle's catalogKey). The cached index is looked up by it here, on the
+ * main thread, with no worker, no copy of the rows and no hash; a miss builds in the worker and caches under it.
+ */
+export async function buildCandidateIndex(storeId: string, catalog: Stop[], key?: string): Promise<IndexResult> {
   const t0 = performance.now();
   const done = (r: IndexResult) => {
     primeIndex(catalog, r.index);
@@ -34,9 +39,20 @@ export function buildCandidateIndex(storeId: string, catalog: Stop[]): Promise<I
     if (DEV) console.info(`[index] ${catalog.length} items · ${r.index.size} forms · ${r.source} · ${Math.round(r.ms)} ms (worker ${Math.round(r.workerMs)} ms)`);
     return r;
   };
+  if (key) {
+    const cached = await dbGet<{ hash: string; parts: IndexParts } | null>(`index:${storeId}`, null).catch(() => null);
+    if (cached && cached.hash === key && cached.parts?.version === 1 && cached.parts.stopIdx.length === cached.parts.texts.length) {
+      try {
+        const index = CandidateIndex.fromParts(catalog, cached.parts);
+        return done({ index, source: "cache", ms: performance.now() - t0, workerMs: 0, hash: key });
+      } catch {
+        // a stale or damaged cache: build below
+      }
+    }
+  }
   if (typeof Worker === "undefined") {
     const index = new CandidateIndex(catalog);
-    return Promise.resolve(done({ index, source: "sync", ms: performance.now() - t0, workerMs: 0, hash: catalogHash(catalog) }));
+    return done({ index, source: "sync", ms: performance.now() - t0, workerMs: 0, hash: key ?? catalogHash(catalog) });
   }
   return new Promise<IndexResult>((resolve) => {
     let worker: Worker;
@@ -62,6 +78,6 @@ export function buildCandidateIndex(storeId: string, catalog: Stop[]): Promise<I
       const index = new CandidateIndex(catalog);
       resolve(done({ index, source: "sync", ms: performance.now() - t0, workerMs: 0, hash: catalogHash(catalog) }));
     };
-    worker.postMessage({ storeId, catalog } satisfies IndexRequest);
+    worker.postMessage({ storeId, catalog, key } satisfies IndexRequest);
   });
 }

@@ -6,6 +6,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { categoryCandidates, confirmMemory, confirmed, demoteMemory, missed, normalize, pendingEntry, placeMemory, resolveList, type CandidateIndex, type ItemMemory, type ItemTag, type LlmGuess, type ResolveResult, type Stop } from "@grosher/core";
+import { loadFullCatalog } from "./catalogCache.ts";
 import { buildCandidateIndex } from "./indexer.ts";
 import { departmentLocations, llmOptions, type StoreBundle } from "@grosher/stores";
 import { defaultProvider, fetchGuesses, type LlmProvider } from "./resolver.ts";
@@ -44,9 +45,8 @@ export function useResolution(bundle: StoreBundle, items: string[], provider?: L
   const [catalogReady, setCatalogReady] = useState(false);
   useEffect(() => {
     let live = true;
-    bundle
-      .loadCatalog()
-      .then((rows) => buildCandidateIndex(store.storeId, rows).then((r) => ({ rows, index: r.index })))
+    loadFullCatalog(bundle)
+      .then(({ rows, key }) => buildCandidateIndex(store.storeId, rows, key).then((r) => ({ rows, index: r.index })))
       .then((f) => {
         if (!live) return;
         setFull(f);

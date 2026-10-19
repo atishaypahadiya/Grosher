@@ -28,6 +28,8 @@ export function mergedCatalog(catalog: Stop[], pending: Stop[]): Stop[] {
 export interface RevalidateReport {
   /** saved guesses re-placed through their category / left to ask (no location on this map) */
   pendingRemapped: string[];
+  /** model guesses whose saved tags were not their shelf's, rewritten */
+  pendingRetagged: string[];
   pendingAsk: string[];
   memoryRemapped: string[];
   /** memory rows kept as they are, but pointing nowhere on this map: they resolve as "needs a place" */
@@ -47,7 +49,7 @@ export interface RevalidateReport {
  */
 export function revalidateLearning(saved: Learning, ref: { locations: ReadonlySet<string>; categories: Category[]; departments?: string[] }, now = Date.now()): { learning: Learning; report: RevalidateReport; changed: boolean } {
   let l = saved;
-  const report: RevalidateReport = { pendingRemapped: [], pendingAsk: [], memoryRemapped: [], memoryAsk: [], llmDropped: [], guessesRequeued: [], memoryFromGuess: [] };
+  const report: RevalidateReport = { pendingRemapped: [], pendingAsk: [], pendingRetagged: [], memoryRemapped: [], memoryAsk: [], llmDropped: [], guessesRequeued: [], memoryFromGuess: [] };
   // answers from an older prompt (version 1 named departments, and an aisle picked by department landed
   // non-grocery items in dry goods): unconfirmed or once-confirmed model guesses are asked again under the
   // current prompt, with the memory rows a single "Got it" made of them; twice-confirmed ones stay
@@ -74,13 +76,23 @@ export function revalidateLearning(saved: Learning, ref: { locations: ReadonlySe
     }
     return null;
   };
-  const pending = l.pending.map((p) => {
+  const placed = l.pending.map((p) => {
     const known = p.locationIds.filter((x) => ref.locations.has(x));
     if (known.length === p.locationIds.length) return p;
     if (known.length) return { ...p, locationIds: known };
     const loc = place([p.subcategory, p.name]);
     (loc ? report.pendingRemapped : report.pendingAsk).push(p.name);
     return { ...p, locationIds: loc ? [loc] : [] };
+  });
+  // a model guess's tags are its shelf's (saved ones from before carried the model's own: "heavy" sunglasses)
+  const shelfTags = new Map(ref.categories.map((c) => [c.locationId, c.tags ?? []]));
+  const pending = placed.map((p) => {
+    const tags = p.source === "llm" && p.locationIds.length ? shelfTags.get(p.locationIds[0]) : undefined;
+    if (!tags) return p;
+    const same = (p.tags ?? []).length === tags.length && tags.every((t) => p.tags!.includes(t));
+    if (same) return p;
+    report.pendingRetagged.push(p.name);
+    return { ...p, tags: [...tags] };
   });
   const memory = l.memory.map((m) => {
     if (ref.locations.has(m.locationId)) return m;
@@ -101,6 +113,6 @@ export function revalidateLearning(saved: Learning, ref: { locations: ReadonlySe
     return false;
   });
   const versioned = l.llmVersion !== undefined && l.llmVersion !== saved.llmVersion;
-  const changed = versioned || report.pendingRemapped.length + report.pendingAsk.length + report.memoryRemapped.length + report.llmDropped.length > 0;
+  const changed = versioned || report.pendingRemapped.length + report.pendingAsk.length + report.pendingRetagged.length + report.memoryRemapped.length + report.llmDropped.length > 0;
   return { learning: changed ? { pending, memory, llm, llmVersion: LLM_ANSWERS_VERSION } : l, report, changed };
 }

@@ -77,6 +77,8 @@ export const SCHEMAS: Schema[] = [
     migrations: [(x) => (isObj(x) ? { pending: keep(x.pending, isObj) ?? [], llm: keep(x.llm, (e) => Array.isArray(e) && isStr(e[0])) ?? [], memory: keep(x.memory, (m) => isObj(m) && isStr(m.name) && isStr(m.locationId)) ?? [] } : undefined)],
     valid: (x) => isObj(x) && Array.isArray(x.pending) && Array.isArray(x.llm) && Array.isArray(x.memory),
   },
+  // a derived catalog's rows under its key (catalogCache.ts); rows are not checked one by one (47,000 of them)
+  { match: (k) => k.startsWith("catalog:"), version: 1, migrations: [(x) => x], valid: (x) => x === null || (isObj(x) && isStr(x.key) && Array.isArray(x.rows)) },
   { match: (k) => k.startsWith("index:"), version: 1, migrations: [(x) => x], valid: (x) => x === null || (isObj(x) && isStr(x.hash) && isObj(x.parts)) },
   { match: (k) => k === "grosher.calibration", version: 1, migrations: [(x) => x], valid: (x) => isObj(x) && isNum(x.paceMps) && isNum(x.distanceM) && (x.strideM === null || isNum(x.strideM)) },
   { match: (k) => k === "grosher.survey.active", version: 1, migrations: [(x) => x], valid: (x) => x === null || isStr(x) },

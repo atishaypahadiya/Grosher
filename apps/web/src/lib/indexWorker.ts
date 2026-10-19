@@ -10,6 +10,8 @@ import { dbGet, dbSet } from "./db.ts";
 export interface IndexRequest {
   storeId: string;
   catalog: Stop[];
+  /** the catalog's known identity (a bundle's catalogKey): used as the cache hash instead of hashing the rows */
+  key?: string;
 }
 
 export interface IndexReply {
@@ -29,8 +31,8 @@ export const cacheKey = (storeId: string) => `index:${storeId}`;
 
 self.onmessage = async (e: MessageEvent<IndexRequest>) => {
   const t0 = performance.now();
-  const { storeId, catalog } = e.data;
-  const hash = catalogHash(catalog);
+  const { storeId, catalog, key } = e.data;
+  const hash = key ?? catalogHash(catalog);
   const cached = await dbGet<Cached | null>(cacheKey(storeId), null);
   if (cached && cached.hash === hash && cached.parts?.version === 1 && cached.parts.stopIdx.length === cached.parts.texts.length) {
     const reply: IndexReply = { hash, source: "cache", parts: cached.parts, ms: performance.now() - t0 };

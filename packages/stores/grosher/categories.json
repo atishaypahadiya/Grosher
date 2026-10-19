@@ -4321,12 +4321,12 @@
   {
     "id": "bulk-pulses",
     "name": "Bulk pulses & dal",
-    "group": "Bulk · Pulses · Rice & grains · Flours · Nuts",
+    "group": "Bulk · Pulses & dals · Rice & grains · Flours & atta · Nuts & seeds · Dried fruit",
     "aisle": "BULK",
     "side": "L",
     "bays": [
       1,
-      7
+      3
     ],
     "locationId": "BULK-WALL-1",
     "department": "bulk",
@@ -4351,14 +4351,14 @@
   {
     "id": "bulk-rice-grains",
     "name": "Bulk rice & grains",
-    "group": "Bulk · Pulses · Rice & grains · Flours · Nuts",
+    "group": "Bulk · Pulses & dals · Rice & grains · Flours & atta · Nuts & seeds · Dried fruit",
     "aisle": "BULK",
     "side": "L",
     "bays": [
-      8,
-      14
+      4,
+      6
     ],
-    "locationId": "BULK-WALL-8",
+    "locationId": "BULK-WALL-4",
     "department": "bulk",
     "aliases": [
       "bulk rice",
@@ -4374,14 +4374,14 @@
   {
     "id": "bulk-flours",
     "name": "Bulk flours",
-    "group": "Bulk · Pulses · Rice & grains · Flours · Nuts",
+    "group": "Bulk · Pulses & dals · Rice & grains · Flours & atta · Nuts & seeds · Dried fruit",
     "aisle": "BULK",
-    "side": "R",
+    "side": "L",
     "bays": [
-      1,
-      7
+      7,
+      8
     ],
-    "locationId": "BULK-ISLAND-N-1",
+    "locationId": "BULK-WALL-7",
     "department": "bulk",
     "aliases": [
       "bulk flour",
@@ -4395,14 +4395,14 @@
   {
     "id": "bulk-nuts-seeds",
     "name": "Bulk nuts & seeds",
-    "group": "Bulk · Pulses · Rice & grains · Flours · Nuts",
+    "group": "Bulk · Pulses & dals · Rice & grains · Flours & atta · Nuts & seeds · Dried fruit",
     "aisle": "BULK",
-    "side": "R",
+    "side": "L",
     "bays": [
-      8,
-      13
+      9,
+      11
     ],
-    "locationId": "BULK-ISLAND-N-8",
+    "locationId": "BULK-WALL-9",
     "department": "bulk",
     "aliases": [
       "bulk nuts",
@@ -4418,14 +4418,14 @@
   {
     "id": "bulk-dried-fruit",
     "name": "Bulk dried fruit",
-    "group": "Bulk · Pulses · Rice & grains · Flours · Nuts",
+    "group": "Bulk · Pulses & dals · Rice & grains · Flours & atta · Nuts & seeds · Dried fruit",
     "aisle": "BULK",
     "side": "L",
     "bays": [
-      1,
-      13
+      12,
+      14
     ],
-    "locationId": "BULK-ISLAND-S-1",
+    "locationId": "BULK-WALL-12",
     "department": "bulk",
     "aliases": [
       "bulk dried fruit",
@@ -4434,6 +4434,29 @@
       "bulk apricots",
       "bulk dried cranberries",
       "bulk figs"
+    ]
+  },
+  {
+    "id": "bulk-snacks",
+    "name": "Bulk granola, trail mix & snacks",
+    "group": "Bulk · Scoop bins · Granola · Trail mix",
+    "aisle": "BULK",
+    "side": "R",
+    "bays": [
+      1,
+      12
+    ],
+    "locationId": "BULK-ISLAND-N-1",
+    "department": "bulk",
+    "aliases": [
+      "bulk granola",
+      "granola bulk",
+      "bulk trail mix",
+      "trail mix bulk",
+      "bulk muesli",
+      "bulk chocolate chips",
+      "bulk coffee beans",
+      "scoop bins"
     ]
   },
   {
