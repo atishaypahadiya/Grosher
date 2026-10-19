@@ -25,6 +25,8 @@ declare global {
       textures: number;
       geometries: number;
       hero: typeof heroStats;
+      /** where the camera is (metres), for captures that wait for a pose */
+      camera: [number, number, number];
     };
   }
 }
@@ -40,7 +42,7 @@ export function Perf() {
     };
   }, [gl]);
   // Runs first in the frame: report the previous frame's totals, then reset.
-  useFrame(({ gl, invalidate }) => {
+  useFrame(({ gl, invalidate, camera }) => {
     const now = performance.now();
     samples.current.push(now - last.current);
     last.current = now;
@@ -61,6 +63,7 @@ export function Perf() {
       textures: gl.info.memory.textures,
       geometries: gl.info.memory.geometries,
       hero: { ...heroStats },
+      camera: [camera.position.x, camera.position.y, camera.position.z].map((v) => Math.round(v * 100) / 100) as [number, number, number],
     };
     gl.info.reset();
     invalidate(); // keep rendering so the numbers are a steady-state measurement

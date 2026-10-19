@@ -7,21 +7,23 @@
 // (Outfit for the lettering, loaded from public/fonts), from the zone recipe (src/hero/bulk/recipe.ts) for
 // the labels, tags and header boards:
 //
-//   pine, plaster (+ normal), concrete, burlap (+ normal), terracotta, stone   tileable surfaces
-//   grains (+ normal)   4 × 4 atlas of grain shapes, near-white so a bin's tint colours them
-//   labels              48 house-brand product labels and 64 bin tags
+//   pine, plaster (+ normal), concrete, burlap (+ normal), terracotta, stone (+ normal)   tileable surfaces
+//   grains (+ normal)   8 × 4 atlas of grain shapes at their real size (recipe.ts GRAIN_SHAPES), near-white so
+//                       a bin's tint colours them; the normals at half size
+//   labels              house-brand labels, each drawn at its pack's aspect (kit/products.ts), and bin tags
 //   headers             the black header boards with white uppercase lettering
+//   cutouts             RGBA, alpha-tested: the sacks' stencils, the jute fringe, wheat ears
 //
-// Albedo goes to ETC1S (small, fine for organic surfaces); normal maps and lettering to UASTC with RDO
-// (sharp edges, still zstd-supercompressed), except the grains' normals: thousands of tiny domes are noise
-// to UASTC (1.1 MB even with RDO), so they go to ETC1S at its best quality (the relief survives, the size
-// drops ~8×). sRGB for colour, linear for normals. Mipmapped.
+// Albedo and normal maps go to ETC1S (small; organic surfaces and relief survive it: the grains' normals were
+// 1.1 MB as UASTC and ~8× smaller as ETC1S); lettering and cutouts to UASTC with RDO (sharp edges, still
+// zstd-supercompressed). sRGB for colour, linear for normals. Mipmapped.
 
 import { chromium } from "playwright";
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { GRAIN_SHAPES, HEADERS, labelCells } from "../src/hero/bulk/recipe.ts";
+import { GRAIN_SHAPES, HEADERS, LABEL_ATLAS, LABEL_ROWS, LABEL_STYLE, SACK_STENCILS, labelCells } from "../src/hero/bulk/recipe.ts";
+import { TEMPLATES } from "../src/hero/kit/products.ts";
 
 const ROOT = join(import.meta.dirname, "..");
 const OUT = join(ROOT, "src", "hero", "assets");
@@ -32,12 +34,14 @@ mkdirSync(OUT, { recursive: true });
 
 const font = readFileSync(join(ROOT, "public", "fonts", "outfit-latin.woff2")).toString("base64");
 const { labels, tags } = labelCells();
+// each pack's label front, width over height: the generator draws the lettering at that aspect
+const ASPECT = Object.fromEntries(Object.entries(TEMPLATES).map(([k, t]) => { const f = t().front; return [k, f[0] / f[1]]; }));
 
 const browser = await chromium.launch();
 const page = await browser.newPage();
 await page.setContent("<!doctype html><html><body></body></html>");
 const images = await page.evaluate(
-  async ({ font, labels, tags, headers, shapes }) => {
+  async ({ font, labels, tags, headers, GRAIN, STYLE, ASPECT, LABEL_ATLAS, LABEL_ROWS, stencils }) => {
     const face = new FontFace("Outfit", `url(data:font/woff2;base64,${font})`, { weight: "100 900" });
     await face.load();
     document.fonts.add(face);
@@ -149,34 +153,38 @@ const images = await page.evaluate(
         return [clamp(228 + l), clamp(196 + l * 0.9), clamp(150 + l * 0.75)];
       }));
     }
-    // ---------------------------------------------------------------- clay plaster: warm, matte, trowelled
+    // ---------------------------------------------------------------- clay plaster: warm tan, matte, trowelled
     {
       const big = fbm([[3, 1], [8, 0.6], [24, 0.3]]);
       const fine = fbm([[96, 1], [256, 0.8]]);
+      const blot = fbm([[5, 1], [13, 0.5]]);
       const hgt = new Float32Array(512 * 512);
       put("plaster", paint(512, 512, (u, v, x, y) => {
         const b = big(u, v);
         const f = fine(u, v);
         hgt[y * 512 + x] = b * 0.6 + f * 0.4;
-        const l = (b - 0.5) * 30 + (f - 0.5) * 10;
-        return [clamp(198 + l), clamp(162 + l * 0.9), clamp(128 + l * 0.8)];
+        // the reference's mud plaster: tan with darker clouds where it was trowelled wetter
+        const l = (b - 0.5) * 34 + (f - 0.5) * 12 - Math.max(0, blot(u, v) - 0.58) * 70;
+        return [clamp(192 + l), clamp(156 + l * 0.9), clamp(116 + l * 0.8)];
       }));
       put("plaster_n", normalFrom(512, hgt, 512, 3.2));
     }
-    // ---------------------------------------------------------------- polished concrete: warm, clouded, flecked
+    // ---------------------------------------------------------------- polished concrete: khaki-olive, clouded, flecked
     {
       const cloud = fbm([[3, 1], [9, 0.5], [27, 0.25]]);
+      const swirl = fbm([[2, 1], [5, 0.6]]);
       const c = paint(512, 512, (u, v) => {
-        const l = (cloud(u, v) - 0.5) * 34;
-        return [clamp(178 + l), clamp(163 + l * 0.95), clamp(146 + l * 0.9)];
+        const sw = Math.sin((u * 3 + swirl(u, v) * 4) * Math.PI * 2) * 0.5 + 0.5;
+        const l = (cloud(u, v) - 0.5) * 38 + (sw - 0.5) * 8;
+        return [clamp(160 + l), clamp(146 + l * 0.95), clamp(104 + l * 0.85)];
       });
       const ctx = c.getContext("2d");
-      for (let i = 0; i < 2600; i++) {
+      for (let i = 0; i < 1400; i++) {
         const x = rand() * 512;
         const y = rand() * 512;
-        const r = 0.6 + rand() * 1.6;
-        const d = rand() < 0.5;
-        ctx.fillStyle = d ? `rgba(90,78,66,${0.25 + rand() * 0.35})` : `rgba(236,226,212,${0.25 + rand() * 0.35})`;
+        const r = 0.4 + rand() * 0.7;
+        const d = rand() < 0.55;
+        ctx.fillStyle = d ? `rgba(80,70,48,${0.12 + rand() * 0.18})` : `rgba(214,204,172,${0.1 + rand() * 0.15})`;
         for (const [ox, oy] of [[0, 0], [512, 0], [-512, 0], [0, 512], [0, -512]]) {
           ctx.beginPath();
           ctx.arc(x + ox, y + oy, r, 0, Math.PI * 2);
@@ -185,23 +193,32 @@ const images = await page.evaluate(
       }
       put("concrete", c);
     }
-    // ---------------------------------------------------------------- burlap: a loose plain weave
+    // ---------------------------------------------------------------- jute: pale, a fine plain weave with slubs
     {
+      // the tile is 0.25 m of cloth: 100 threads each way, a 2.5 mm pitch (5 px)
       const n = fbm([[32, 1], [128, 0.7]]);
+      const T = 5;
+      const slubW = Array.from({ length: 512 / T }, () => (rand() < 0.12 ? 1.5 + rand() : 1));
+      const slubH = Array.from({ length: 512 / T }, () => (rand() < 0.12 ? 1.5 + rand() : 1));
+      const toneW = Array.from({ length: 512 / T }, () => (rand() - 0.5) * 26);
+      const toneH = Array.from({ length: 512 / T }, () => (rand() - 0.5) * 26);
       const hgt = new Float32Array(512 * 512);
-      const T = 16; // px a thread pitch (32 threads over the tile)
       put("burlap", paint(512, 512, (u, v, x, y) => {
+        const i = Math.floor(x / T);
+        const j = Math.floor(y / T);
         const cx = (x % T) / T;
         const cy = (y % T) / T;
-        const overX = (Math.floor(x / T) + Math.floor(y / T)) % 2 === 0;
-        const warpThread = Math.sin(cx * Math.PI); // across the vertical thread
-        const weftThread = Math.sin(cy * Math.PI);
-        const h = overX ? Math.max(weftThread * 0.9, warpThread * 0.6) : Math.max(warpThread * 0.9, weftThread * 0.6);
-        const gap = Math.min(warpThread, weftThread) < 0.12 && Math.max(warpThread, weftThread) < 0.5;
+        const over = (i + j) % 2 === 0;
+        const vert = Math.max(0, 1 - Math.abs(cx - 0.5) * 2 / Math.min(1, 0.72 * slubW[i])); // the warp thread across x
+        const horz = Math.max(0, 1 - Math.abs(cy - 0.5) * 2 / Math.min(1, 0.72 * slubH[j]));
+        const h = over ? Math.max(horz * 0.95, vert * 0.6) : Math.max(vert * 0.95, horz * 0.6);
+        const gap = vert < 0.05 && horz < 0.05;
         const fuzz = n(u, v);
         hgt[y * 512 + x] = gap ? 0 : h * 0.8 + fuzz * 0.2;
-        const l = (h - 0.6) * 40 + (fuzz - 0.5) * 30 - (gap ? 60 : 0);
-        return [clamp(178 + l), clamp(142 + l * 0.9), clamp(94 + l * 0.75)];
+        const tone = over ? toneH[j] : toneW[i];
+        const l = (h - 0.6) * 46 + (fuzz - 0.5) * 24 + tone - (gap ? 70 : 0);
+        // the reference's sacks: a pale, slightly grey jute
+        return [clamp(206 + l), clamp(192 + l * 0.95), clamp(160 + l * 0.85)];
       }));
       put("burlap_n", normalFrom(512, hgt, 512, 4));
     }
@@ -211,54 +228,86 @@ const images = await page.evaluate(
       put("terracotta", paint(256, 256, (u, v) => {
         const ring = Math.sin(v * Math.PI * 2 * 28) * 6;
         const l = (n(u, v) - 0.5) * 30 + ring;
-        return [clamp(186 + l), clamp(100 + l * 0.7), clamp(62 + l * 0.5)];
+        return [clamp(196 + l), clamp(112 + l * 0.7), clamp(70 + l * 0.5)];
       }));
     }
-    // ---------------------------------------------------------------- stone: a grey granite for the chakki
+    // ---------------------------------------------------------------- stone: grey granite, dressed with a chisel
     {
       const n = fbm([[16, 1], [64, 0.8], [256, 0.6]]);
-      put("stone", paint(256, 256, (u, v) => {
+      const hgt = new Float32Array(256 * 256);
+      // chisel grooves run along v (up a wheel's rim), a few per tile, jittered
+      const grooves = Array.from({ length: 14 }, (_, k) => (k + rand() * 0.6) / 14);
+      put("stone", paint(256, 256, (u, v, x, y) => {
         const f = n(u, v);
-        const fleck = f > 0.62 ? 30 : f < 0.36 ? -34 : 0;
-        const l = (f - 0.5) * 40 + fleck;
-        return [clamp(132 + l), clamp(126 + l), clamp(118 + l)];
+        let g = 0;
+        for (const gu of grooves) {
+          const d = Math.abs(((u - gu + 1.5) % 1) - 0.5) * 256;
+          g = Math.max(g, Math.max(0, 1 - d / 2.2));
+        }
+        const pit = f < 0.3 ? 1 : 0;
+        hgt[y * 256 + x] = f * 0.5 - g * 0.5 - pit * 0.3;
+        const fleck = f > 0.64 ? 26 : f < 0.36 ? -30 : 0;
+        const l = (f - 0.5) * 40 + fleck - g * 36;
+        return [clamp(138 + l), clamp(133 + l), clamp(126 + l)];
       }));
+      put("stone_n", normalFrom(256, hgt, 256, 5));
     }
-    // ---------------------------------------------------------------- grains: 4 × 4 cells of 256 px, near-white
+    // ---------------------------------------------------------------- grains: 8 × 4 cells of 256 px, at real size
     {
-      const S = 1024;
       const C = 256;
-      const alb = canvas(S, S);
-      const hc = canvas(S, S);
+      const W = C * 8;
+      const H = C * 4;
+      const alb = canvas(W, H);
+      const hc = canvas(W, H);
       const a = alb.getContext("2d");
       const hctx = hc.getContext("2d");
-      a.fillStyle = "#5a5652";
-      a.fillRect(0, 0, S, S);
+      // the crevices between grains: deep shade, never a black hole
+      a.fillStyle = "#5C5650";
+      a.fillRect(0, 0, W, H);
       hctx.fillStyle = "#000";
-      hctx.fillRect(0, 0, S, S);
-      hctx.globalCompositeOperation = "lighten";
-      const spec = {
-        round: { n: 900, rx: 6, ry: 6 },
-        roundBig: { n: 260, rx: 11, ry: 10 },
-        split: { n: 700, rx: 7, ry: 6, flat: true },
-        kidney: { n: 330, rx: 13, ry: 7, notch: true },
-        long: { n: 700, rx: 13, ry: 3.4 },
-        short: { n: 900, rx: 8, ry: 4 },
-        tiny: { n: 2600, rx: 2.6, ry: 2.4 },
-        flake: { n: 420, rx: 10, ry: 7, flake: true },
-        powder: { n: 0 },
-        granular: { n: 9000, rx: 1.3, ry: 1.2 },
-        oval: { n: 340, rx: 13, ry: 8 },
-        crescent: { n: 380, rx: 12, ry: 8, crescent: true },
-        blob: { n: 400, rx: 10, ry: 8, wrinkle: true },
-        drop: { n: 650, rx: 5.5, ry: 5.5 },
-        bean: { n: 340, rx: 10, ry: 7.5, crease: true },
-        cluster: { n: 360, rx: 9, ry: 7, flake: true, mixed: true },
+      hctx.fillRect(0, 0, W, H);
+      /** the outline of one grain, centred at 0, 0, unrotated (length along x) */
+      const outline = (ctx, kind, rx, ry, r) => {
+        ctx.beginPath();
+        if (kind === "kidney" || kind === "crescent") {
+          // a bean: the outer edge a full arc, the inner edge bowed in
+          const bow = kind === "crescent" ? 0.55 : 0.28;
+          ctx.ellipse(0, 0, rx, ry, 0, Math.PI, 0, false);
+          ctx.quadraticCurveTo(rx * 0.7, ry * 0.8, rx * 0.3, ry * (1 - bow));
+          ctx.quadraticCurveTo(0, ry * (0.6 - bow), -rx * 0.3, ry * (1 - bow));
+          ctx.quadraticCurveTo(-rx * 0.7, ry * 0.8, -rx, 0);
+        } else if (kind === "teardrop") {
+          ctx.moveTo(rx, 0);
+          ctx.bezierCurveTo(rx * 0.4, ry * 1.2, -rx * 1.1, ry * 1.05, -rx, 0);
+          ctx.bezierCurveTo(-rx * 1.1, -ry * 1.05, rx * 0.4, -ry * 1.2, rx, 0);
+        } else if (kind === "long") {
+          const k = ry;
+          ctx.moveTo(-rx + k, -ry);
+          ctx.lineTo(rx - k, -ry);
+          ctx.quadraticCurveTo(rx + k * 0.2, 0, rx - k, ry);
+          ctx.lineTo(-rx + k, ry);
+          ctx.quadraticCurveTo(-rx - k * 0.2, 0, -rx + k, -ry);
+        } else if (kind === "flake" || kind === "cluster" || kind === "wrinkled" || kind === "puff") {
+          const n = 9;
+          for (let k = 0; k <= n; k++) {
+            const t = (k / n) * Math.PI * 2;
+            const j = kind === "flake" ? 0.72 + r() * 0.42 : kind === "puff" ? 0.86 + r() * 0.2 : 0.82 + r() * 0.26;
+            const px = Math.cos(t) * rx * j;
+            const py = Math.sin(t) * ry * j;
+            if (k === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          }
+          ctx.closePath();
+        } else if (kind === "chickpea") {
+          ctx.ellipse(0, 0, rx, ry, 0, 0.35, Math.PI * 2 - 0.35);
+          ctx.lineTo(rx * 1.18, 0); // the beak
+          ctx.closePath();
+        } else ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
       };
-      shapes.forEach((shape, idx) => {
-        const ox = (idx % 4) * C;
-        const oy = Math.floor(idx / 4) * C;
-        const p = spec[shape];
+      GRAIN.forEach((shape, idx) => {
+        const ox = (idx % 8) * C;
+        const oy = Math.floor(idx / 8) * C;
+        const ppm = C / (shape.cellM * 1000); // px per millimetre
         a.save();
         hctx.save();
         a.beginPath();
@@ -267,87 +316,157 @@ const images = await page.evaluate(
         hctx.beginPath();
         hctx.rect(ox, oy, C, C);
         hctx.clip();
-        if (shape === "powder") {
-          // soft mounds and a fine speckle, no grains
-          const m = fbm([[6, 1], [24, 0.5], [96, 0.35]]);
-          for (let y = 0; y < C; y += 2)
-            for (let x = 0; x < C; x += 2) {
+        if (shape.draw === "powder" || shape.draw === "granular") {
+          // flour: soft mounds and a fine speckle; sooji: sand-fine grains
+          const m = fbm([[4, 1], [16, 0.5], [64, 0.35]]);
+          const step = shape.draw === "granular" ? 1 : 2;
+          for (let y = 0; y < C; y += step)
+            for (let x = 0; x < C; x += step) {
               const h = m(x / C, y / C);
-              const l = Math.round(205 + (h - 0.5) * 70 + (rand() - 0.5) * 22);
+              const grain = shape.draw === "granular" ? (rand() - 0.5) * 70 : (rand() - 0.5) * 16;
+              const l = clamp(214 + (h - 0.5) * 60 + grain);
               a.fillStyle = `rgb(${l},${l},${l})`;
-              a.fillRect(ox + x, oy + y, 2, 2);
-              const g = Math.round(h * 255);
+              a.fillRect(ox + x, oy + y, step, step);
+              const g = clamp(h * 200 + (shape.draw === "granular" ? rand() * 55 : rand() * 10));
               hctx.fillStyle = `rgb(${g},${g},${g})`;
-              hctx.fillRect(ox + x, oy + y, 2, 2);
+              hctx.fillRect(ox + x, oy + y, step, step);
             }
         } else {
-          for (let i = 0; i < p.n; i++) {
+          const rx0 = (shape.size[0] * ppm) / 2;
+          const ry0 = (shape.size[1] * ppm) / 2;
+          // enough grains to cover the cell twice over: a pile, no gaps but the shadows between grains
+          const n = Math.ceil((3.4 * C * C) / (Math.PI * rx0 * ry0));
+          const mixed = shape.draw === "cluster";
+          const mix = shape.id === "granola" ? [[196, 150, 92], [174, 124, 72], [226, 196, 140], [150, 98, 60], [232, 214, 170]] : [[214, 168, 112], [92, 50, 40], [230, 206, 160], [176, 96, 60], [236, 228, 210], [150, 60, 48]];
+          for (let i = 0; i < n; i++) {
             const cx = ox + rand() * C;
             const cy = oy + rand() * C;
-            const rot = rand() * Math.PI;
-            const s = 0.82 + rand() * 0.36;
-            const rx = p.rx * s;
-            const ry = p.ry * s;
-            // brightness varies grain to grain, never hue: the bin's tint is the colour
-            const lum = 232 + (rand() - 0.5) * 34;
-            const base = p.mixed ? [[226, 196, 140], [180, 120, 70], [240, 228, 200], [120, 70, 40], [200, 60, 60]][Math.floor(rand() * 5)] : [lum, lum, lum];
-            for (const [dx, dy] of [[0, 0], [C, 0], [-C, 0], [0, C], [0, -C]]) {
+            const rot = rand() * Math.PI * 2;
+            const sz = 0.85 + rand() * 0.3;
+            // a flat grain (a lentil, a split dal, a flake) lies at any tilt in a pile: seen from above it is an
+            // ellipse of any eccentricity, which is what makes a pile of lentils read as lentils
+            const flatGrain = ["lens", "split", "flake", "teardrop"].includes(shape.draw) || shape.id === "pumpkinSeed";
+            const tilt = flatGrain ? 0.3 + 0.7 * Math.sqrt(rand()) : shape.draw === "oval" ? 0.75 + rand() * 0.25 : 1;
+            const rx = rx0 * sz * (mixed ? 0.7 + rand() * 0.6 : 1);
+            const ry = ry0 * sz * tilt * (mixed ? 0.7 + rand() * 0.6 : 1);
+            const lum = 226 + (rand() - 0.5) * 36;
+            const base = mixed ? mix[Math.floor(rand() * mix.length)] : [lum, lum, lum];
+            const seed = rand() * 1e6;
+            const kind = shape.draw === "split" ? "lens" : shape.draw === "drop" ? "oval" : shape.draw === "bean" ? "oval" : shape.draw;
+            // split dal: most pieces lie flat face up (paler, a fine edge of seed coat), a few on their dome
+            const flatFace = shape.draw === "split" && rand() < 0.7;
+            // a D-shaped half when it lies on its edge
+            for (const [dx, dy] of [[0, 0], [C, 0], [-C, 0], [0, C], [0, -C], [C, C], [-C, -C], [C, -C], [-C, C]]) {
               const x = cx + dx;
               const y = cy + dy;
-              // albedo: a lit dome, darker at the rim (the grain's own shading), a highlight up-left
-              const g = a.createRadialGradient(x - rx * 0.3, y - ry * 0.35, 0, x, y, Math.max(rx, ry));
-              const [r, gg, b] = base.map((c) => clamp(c));
-              g.addColorStop(0, `rgb(${clamp(r + 20)},${clamp(gg + 20)},${clamp(b + 20)})`);
-              g.addColorStop(0.55, `rgb(${r},${gg},${b})`);
-              g.addColorStop(1, `rgb(${clamp(r * 0.62)},${clamp(gg * 0.62)},${clamp(b * 0.62)})`);
-              a.fillStyle = g;
-              a.beginPath();
-              if (p.flake) {
-                for (let k = 0; k < 7; k++) {
-                  const ang = rot + (k / 7) * Math.PI * 2;
-                  const rr = (0.7 + rand() * 0.5) * (k % 2 ? rx : ry);
-                  if (k === 0) a.moveTo(x + Math.cos(ang) * rr, y + Math.sin(ang) * rr);
-                  else a.lineTo(x + Math.cos(ang) * rr, y + Math.sin(ang) * rr);
-                }
-                a.closePath();
-              } else if (p.crescent) {
-                // a cashew: a fat curved kidney, the inner edge a shallower arc
-                a.ellipse(x, y, rx, ry, rot, 0, Math.PI);
-                a.ellipse(x, y + Math.cos(rot) * ry * 0.15, rx * 0.55, ry * 0.45, rot, Math.PI, 0, true);
-                a.closePath();
-              } else a.ellipse(x, y, rx, ry, rot, 0, Math.PI * 2);
+              if (x < ox - rx * 2 || x > ox + C + rx * 2 || y < oy - rx * 2 || y > oy + C + rx * 2) continue;
+              let s = seed;
+              const r = () => {
+                s = (s * 16807) % 2147483647;
+                return (s % 1000) / 1000;
+              };
+              // the shadow it casts on the grains below
+              a.save();
+              a.translate(x + rx * 0.18, y + ry * 0.22);
+              a.rotate(rot);
+              outline(a, kind, rx * 1.05, ry * 1.05, r);
+              a.fillStyle = "rgba(0,0,0,0.38)";
               a.fill();
-              if (p.flat) {
-                a.strokeStyle = "rgba(255,255,255,0.35)";
-                a.lineWidth = 1;
+              a.restore();
+              s = seed;
+              a.save();
+              a.translate(x, y);
+              a.rotate(rot);
+              outline(a, kind, rx, ry, r);
+              const [cr, cg, cb] = base;
+              const flat = kind === "lens" || kind === "flake";
+              const g = a.createRadialGradient(-rx * 0.25, -ry * 0.3, 0, 0, 0, Math.max(rx, ry));
+              // a flat face is evenly lit (a tilted one a touch darker) with a thin dark rim; a dome shades round
+              const top = flat ? 0.88 + tilt * 0.14 : 1.1;
+              g.addColorStop(0, `rgb(${clamp(cr * top)},${clamp(cg * top)},${clamp(cb * top)})`);
+              g.addColorStop(flat ? 0.82 : 0.5, `rgb(${clamp(cr * (flat ? top * 0.96 : 1))},${clamp(cg * (flat ? top * 0.96 : 1))},${clamp(cb * (flat ? top * 0.96 : 1))})`);
+              g.addColorStop(1, `rgb(${clamp(cr * 0.6)},${clamp(cg * 0.6)},${clamp(cb * 0.6)})`);
+              a.fillStyle = g;
+              a.fill();
+              if (flat && tilt > 0.55) {
+                // the lens's edge catching the light
+                a.strokeStyle = "rgba(255,255,255,0.22)";
+                a.lineWidth = Math.max(0.6, rx * 0.08);
                 a.beginPath();
-                a.ellipse(x, y, rx * 0.7, ry * 0.7, rot, 0, Math.PI * 2);
+                a.ellipse(0, 0, rx * 0.86, ry * 0.86, 0, Math.PI * 1.05, Math.PI * 1.75);
                 a.stroke();
               }
-              if (p.notch || p.crease || p.wrinkle) {
-                a.strokeStyle = "rgba(40,30,25,0.55)";
-                a.lineWidth = p.wrinkle ? 1 : 1.4;
+              // details: a split face's seed-coat rim, a whole moong's hilum, a bean's crease, wrinkles, a gloss
+              a.lineWidth = Math.max(0.6, ry * 0.12);
+              if (flatFace) {
+                a.strokeStyle = "rgba(60,40,20,0.35)";
+                a.stroke();
+              }
+              if (shape.draw === "oval" && shape.gloss && rx > 3) {
+                a.strokeStyle = "rgba(255,255,255,0.55)";
+                a.lineWidth = Math.max(0.5, ry * 0.18);
                 a.beginPath();
-                if (p.wrinkle) {
-                  for (let k = 0; k < 3; k++) {
-                    const t = rot + rand() * Math.PI;
-                    a.moveTo(x + Math.cos(t) * rx * 0.6, y + Math.sin(t) * ry * 0.6);
-                    a.quadraticCurveTo(x, y, x - Math.cos(t + 0.6) * rx * 0.5, y - Math.sin(t + 0.6) * ry * 0.5);
-                  }
-                } else {
-                  a.moveTo(x - Math.cos(rot) * rx * 0.7, y - Math.sin(rot) * rx * 0.7);
-                  a.lineTo(x + Math.cos(rot) * rx * 0.7, y + Math.sin(rot) * rx * 0.7);
+                a.moveTo(-rx * 0.3, -ry * 0.05);
+                a.lineTo(rx * 0.3, -ry * 0.05);
+                a.stroke();
+              }
+              if (shape.draw === "bean") {
+                a.strokeStyle = "rgba(30,20,12,0.6)";
+                a.lineWidth = Math.max(0.6, ry * 0.14);
+                a.beginPath();
+                a.moveTo(-rx * 0.75, 0);
+                a.bezierCurveTo(-rx * 0.2, ry * 0.3, rx * 0.2, -ry * 0.3, rx * 0.75, 0);
+                a.stroke();
+              }
+              if (shape.draw === "wrinkled" || shape.draw === "chickpea" || shape.id === "walnut") {
+                a.strokeStyle = "rgba(30,18,12,0.45)";
+                a.lineWidth = Math.max(0.6, ry * 0.07);
+                for (let k = 0; k < (shape.id === "walnut" ? 6 : 3); k++) {
+                  const t = r() * Math.PI * 2;
+                  a.beginPath();
+                  a.moveTo(Math.cos(t) * rx * 0.7, Math.sin(t) * ry * 0.7);
+                  a.quadraticCurveTo((r() - 0.5) * rx, (r() - 0.5) * ry, -Math.cos(t + 0.8) * rx * 0.6, -Math.sin(t + 0.8) * ry * 0.6);
+                  a.stroke();
                 }
-                a.stroke();
               }
-              // height: a dome
-              const hg = hctx.createRadialGradient(x, y, 0, x, y, Math.max(rx, ry));
+              if (shape.draw === "teardrop" && rx > 4) {
+                a.strokeStyle = "rgba(40,24,14,0.3)";
+                a.lineWidth = 0.7;
+                for (let k = -1; k <= 1; k++) {
+                  a.beginPath();
+                  a.moveTo(-rx * 0.8, k * ry * 0.35);
+                  a.quadraticCurveTo(0, k * ry * 0.5, rx * 0.8, k * ry * 0.1);
+                  a.stroke();
+                }
+              }
+              if (shape.draw === "puff") {
+                a.fillStyle = "rgba(120,80,50,0.45)";
+                for (let k = 0; k < 3; k++) {
+                  a.beginPath();
+                  a.arc((r() - 0.5) * rx, (r() - 0.5) * ry, rx * (0.1 + r() * 0.15), 0, Math.PI * 2);
+                  a.fill();
+                }
+              }
+              if (shape.gloss) {
+                a.fillStyle = `rgba(255,255,255,${0.35 * shape.gloss})`;
+                a.beginPath();
+                a.ellipse(-rx * 0.3, -ry * 0.35, rx * 0.22, ry * 0.16, 0, 0, Math.PI * 2);
+                a.fill();
+              }
+              a.restore();
+              // height: a dome (a plateau for flat faces)
+              s = seed;
+              hctx.save();
+              hctx.translate(x, y);
+              hctx.rotate(rot);
+              outline(hctx, kind, rx, ry, r);
+              const hg = hctx.createRadialGradient(0, 0, 0, 0, 0, Math.max(rx, ry));
               hg.addColorStop(0, "#fff");
-              hg.addColorStop(1, "#000");
+              hg.addColorStop(flat || flatFace ? 0.7 : 0.35, flat || flatFace ? "#eee" : "#bbb");
+              hg.addColorStop(1, "#222");
               hctx.fillStyle = hg;
-              hctx.beginPath();
-              hctx.ellipse(x, y, rx, ry, rot, 0, Math.PI * 2);
               hctx.fill();
+              hctx.restore();
             }
           }
         }
@@ -355,26 +474,41 @@ const images = await page.evaluate(
         hctx.restore();
       });
       put("grains", alb);
-      put("grains_n", normalFrom(S, heightOf(hc), S, 5, C));
+      // the relief at half size: a grain's dome needs fewer pixels than its colour
+      const hgt = heightOf(hc);
+      const nrm = normalFrom(W, hgt, H, 5, C);
+      out.grains_n = half(nrm).toDataURL("image/png");
+      out["grains_n.lo"] = half(half(nrm)).toDataURL("image/png");
     }
-    // ---------------------------------------------------------------- labels: 48 house-brand labels + 64 bin tags
+    // ---------------------------------------------------------------- labels: house-brand labels at each pack's aspect + bin tags
     {
-      const S = 1024;
-      const c = canvas(S, S);
+      const [W, H] = LABEL_ATLAS;
+      const c = canvas(W, H);
       const ctx = c.getContext("2d");
       ctx.fillStyle = "#e9dfcf";
-      ctx.fillRect(0, 0, S, S);
+      ctx.fillRect(0, 0, W, H);
       const kraftNoise = fbm([[16, 1], [64, 0.8], [128, 0.5]]);
-      const kraft = paint(128, 128, (u, v) => {
+      const kraft = paint(160, 160, (u, v) => {
         const l = (kraftNoise(u, v) - 0.5) * 30;
         return [clamp(186 + l), clamp(146 + l * 0.9), clamp(98 + l * 0.8)];
       });
+      // woven polypropylene: white tape weave
+      const woven = paint(64, 64, (u, v, x, y) => {
+        const over = (Math.floor(x / 4) + Math.floor(y / 4)) % 2 === 0;
+        const along = over ? (x % 4) / 4 : (y % 4) / 4;
+        const l = 238 - Math.abs(along - 0.5) * 30 - (rand() < 0.02 ? 20 : 0);
+        return [l, l, clamp(l - 6)];
+      });
+      const fit = (text, max, size, weight = 600, min = 8) => {
+        ctx.font = `${weight} ${size}px Outfit`;
+        while (ctx.measureText(text).width > max && size > min) ctx.font = `${weight} ${--size}px Outfit`;
+        return size;
+      };
       const wrap = (text, max, size, weight = 600) => {
         ctx.font = `${weight} ${size}px Outfit`;
-        const words = text.split(" ");
         const lines = [];
         let line = "";
-        for (const w of words) {
+        for (const w of text.split(" ")) {
           const t = line ? `${line} ${w}` : w;
           if (ctx.measureText(t).width > max && line) {
             lines.push(line);
@@ -384,88 +518,191 @@ const images = await page.evaluate(
         lines.push(line);
         return lines;
       };
+      const lines = (arr, cx, cy, lh) => arr.forEach((t, k) => ctx.fillText(t, cx, cy + k * lh - ((arr.length - 1) * lh) / 2));
+      /** a few grains in a window, so the pack shows what is in it */
+      const window = (x, y, w, h, tint, r = 6) => {
+        ctx.save();
+        ctx.beginPath();
+        ctx.roundRect(x, y, w, h, r);
+        ctx.clip();
+        ctx.fillStyle = tint;
+        ctx.fillRect(x, y, w, h);
+        for (let k = 0; k < (w * h) / 14; k++) {
+          ctx.fillStyle = rand() < 0.5 ? "rgba(255,255,255,0.28)" : "rgba(0,0,0,0.22)";
+          ctx.beginPath();
+          ctx.ellipse(x + rand() * w, y + rand() * h, 2 + rand() * 1.6, 1.4 + rand(), rand() * 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+        ctx.strokeStyle = "rgba(255,255,255,0.7)";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.roundRect(x, y, w, h, r);
+        ctx.stroke();
+      };
       const ink = "#2A1A10";
       labels.forEach((l, i) => {
-        const x = (i % 8) * 128;
-        const y = Math.floor(i / 8) * 128;
+        const x = (i % 16) * 128;
+        const y = Math.floor(i / 16) * 128;
+        const style = STYLE[l.kind];
+        const aspect = ASPECT[l.kind];
         ctx.save();
         ctx.beginPath();
         ctx.rect(x, y, 128, 128);
         ctx.clip();
-        // the side strip, x 0–12: what the pack's sides, back and top show
-        if (l.kind === "kraft") ctx.drawImage(kraft, x, y);
+        // the side strip (x 0–12): what the pack's sides, back and top show
+        const strip = { pouch: "#F4EEE2", kraft: null, sack: null, carton: l.band, jar: "#F2EADB", spice: "#2A2420", ghee: "#D9A82E", oil: "#F2EADB", tin: l.band }[style];
+        if (style === "kraft") ctx.drawImage(kraft, x, y);
+        else if (style === "sack") for (let k = 0; k < 4; k++) for (let j = 0; j < 2; j++) ctx.drawImage(woven, x + j * 64, y + k * 32, 64, 32);
         else {
-          ctx.fillStyle = l.kind === "tin" ? l.band : "#F2EADB";
+          ctx.fillStyle = strip;
           ctx.fillRect(x, y, 128, 128);
         }
-        ctx.fillStyle = l.kind === "kraft" ? "rgba(0,0,0,0)" : l.band;
-        ctx.fillRect(x, y, 12, 128);
-        const fx = x + 12;
-        const fw = 116;
-        if (l.kind === "kraft") {
-          ctx.fillStyle = "rgba(42,26,16,0.75)";
-          ctx.font = "600 10px Outfit";
-          ctx.textAlign = "center";
-          ctx.fillText("G R O S H E R", fx + fw / 2, y + 20);
-          ctx.fillStyle = "#F7F1E6";
-          ctx.fillRect(fx + 10, y + 32, fw - 20, 70);
+        // the front: drawn in a virtual box at the pack's aspect (160 tall), squeezed into 116 × 128
+        const VH = 160;
+        const VW = VH * aspect;
+        ctx.translate(x + 12, y);
+        ctx.scale(116 / VW, 128 / VH);
+        const cx = VW / 2;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "alphabetic";
+        if (style === "pouch") {
+          const g = ctx.createLinearGradient(0, 0, VW, 0);
+          g.addColorStop(0, "#F7F2E8");
+          g.addColorStop(0.5, "#FFFFFF");
+          g.addColorStop(1, "#EFE8DA");
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, VW, VH);
           ctx.fillStyle = l.band;
-          ctx.fillRect(fx + 10, y + 32, fw - 20, 8);
-          ctx.fillStyle = ink;
-          const lines = wrap(l.name, fw - 28, 15);
-          lines.forEach((t, k) => ctx.fillText(t, fx + fw / 2, y + 60 + k * 16 - (lines.length - 1) * 8));
-          ctx.font = "500 10px Outfit";
-          ctx.fillText(l.weight, fx + fw / 2, y + 96);
-        } else if (l.kind === "tin") {
-          ctx.fillStyle = "rgba(255,255,255,0.9)";
-          ctx.font = "600 10px Outfit";
-          ctx.textAlign = "center";
-          ctx.fillText("G R O S H E R", fx + fw / 2, y + 24);
-          ctx.fillStyle = "#F7F1E6";
-          ctx.fillRect(fx, y + 40, fw, 48);
-          ctx.fillStyle = ink;
-          const lines = wrap(l.name, fw - 16, 15);
-          lines.forEach((t, k) => ctx.fillText(t, fx + fw / 2, y + 66 + k * 16 - (lines.length - 1) * 8));
-          ctx.fillStyle = "rgba(255,255,255,0.9)";
-          ctx.font = "500 11px Outfit";
-          ctx.fillText(l.weight, fx + fw / 2, y + 110);
-        } else {
-          // pouch and jar: cream with the section's band, the wordmark on the band
-          ctx.fillStyle = l.band;
-          ctx.fillRect(fx, y, fw, l.kind === "jar" ? 18 : 26);
-          if (l.kind === "jar") ctx.fillRect(fx, y + 110, fw, 18);
+          ctx.fillRect(0, 0, VW, 34);
           ctx.fillStyle = "#FFFFFF";
           ctx.font = "600 10px Outfit";
-          ctx.textAlign = "center";
-          ctx.fillText("G R O S H E R", fx + fw / 2, y + (l.kind === "jar" ? 13 : 17));
+          ctx.fillText("G R O S H E R", cx, 22);
           ctx.fillStyle = ink;
-          const lines = wrap(l.name, fw - 14, 17);
-          lines.forEach((t, k) => ctx.fillText(t, fx + fw / 2, y + 68 + k * 18 - (lines.length - 1) * 9));
-          // a small grain emblem: three dots in the band colour
+          lines(wrap(l.name, VW - 14, 15), cx, 60, 15);
+          window(VW * 0.16, 80, VW * 0.68, 46, l.tint, 8);
           ctx.fillStyle = l.band;
-          for (let k = -1; k <= 1; k++) {
-            ctx.beginPath();
-            ctx.arc(fx + fw / 2 + k * 9, y + 40, 3.2, 0, Math.PI * 2);
-            ctx.fill();
-          }
+          ctx.font = "600 11px Outfit";
+          ctx.fillText(l.weight, cx, 148);
+        } else if (style === "kraft") {
+          ctx.drawImage(kraft, 0, 0, VW, VH);
+          ctx.fillStyle = "rgba(42,26,16,0.8)";
+          ctx.font = "700 10px Outfit";
+          ctx.fillText("G R O S H E R", cx, 26);
+          ctx.fillStyle = "#F7F1E6";
+          ctx.fillRect(VW * 0.1, 44, VW * 0.8, 84);
+          ctx.fillStyle = l.band;
+          ctx.fillRect(VW * 0.1, 44, VW * 0.8, 9);
           ctx.fillStyle = ink;
-          ctx.font = "500 11px Outfit";
-          ctx.fillText(l.weight, fx + fw / 2, y + (l.kind === "jar" ? 102 : 112));
+          lines(wrap(l.name, VW * 0.72, 15), cx, 84, 15);
+          ctx.font = "500 10px Outfit";
+          ctx.fillText(l.weight, cx, 120);
+        } else if (style === "sack") {
+          for (let k = 0; k < 5; k++) for (let j = 0; j < 3; j++) ctx.drawImage(woven, j * 64, k * 64, 64, 64);
+          ctx.fillStyle = l.band;
+          ctx.fillRect(0, 10, VW, 40);
+          ctx.fillStyle = "#FFFFFF";
+          const nm = l.name.toUpperCase();
+          fit(nm, VW - 12, 16, 700);
+          ctx.fillText(nm, cx, 36);
+          ctx.fillStyle = l.tint;
+          ctx.beginPath();
+          ctx.ellipse(cx, 82, VW * 0.26, 20, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = l.band;
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          ctx.fillStyle = l.band;
+          ctx.font = "800 26px Outfit";
+          ctx.fillText(l.weight, cx, 136);
+          ctx.fillStyle = "rgba(42,26,16,0.75)";
+          ctx.font = "600 9px Outfit";
+          ctx.fillText("G R O S H E R", cx, 152);
+        } else if (style === "carton") {
+          ctx.fillStyle = l.band;
+          ctx.fillRect(0, 0, VW, VH);
+          ctx.fillStyle = "#FFFFFF";
+          ctx.font = "700 7px Outfit";
+          ctx.fillText("GROSHER", cx, 14);
+          ctx.fillStyle = "#F7F1E6";
+          ctx.fillRect(4, 22, VW - 8, 66);
+          ctx.fillStyle = ink;
+          lines(wrap(l.name, VW - 12, 11, 700), cx, 52, 12);
+          window(6, 96, VW - 12, 40, l.tint, 4);
+          ctx.fillStyle = "#FFFFFF";
+          ctx.font = "600 8px Outfit";
+          ctx.fillText(l.weight, cx, 152);
+        } else if (style === "jar" || style === "oil" || style === "tin") {
+          ctx.fillStyle = style === "tin" ? l.band : "#F4ECDD";
+          ctx.fillRect(0, 0, VW, VH);
+          if (style !== "tin") {
+            ctx.fillStyle = l.band;
+            ctx.fillRect(0, 0, VW, 22);
+            ctx.fillRect(0, VH - 14, VW, 14);
+          } else {
+            ctx.fillStyle = "#F7F1E6";
+            ctx.fillRect(VW * 0.12, 40, VW * 0.76, 82);
+          }
+          ctx.fillStyle = style === "tin" ? "#FFFFFF" : "#FFFFFF";
+          ctx.font = "600 12px Outfit";
+          ctx.fillText("G R O S H E R", cx, style === "tin" ? 28 : 16);
+          ctx.fillStyle = ink;
+          if (style === "oil") {
+            ctx.font = "600 11px Outfit";
+            ctx.fillText("COLD PRESSED", cx, 48);
+          }
+          const size = fit(l.name, VW * 0.7, style === "jar" ? 30 : 24, 700, 12);
+          lines(wrap(l.name, VW * 0.72, size, 700), cx, style === "oil" ? 92 : 88, size + 2);
+          ctx.font = "500 14px Outfit";
+          ctx.fillText(l.weight, cx, style === "tin" ? 114 : 132);
+        } else if (style === "spice") {
+          ctx.fillStyle = "#2A2420";
+          ctx.fillRect(0, 0, VW, VH);
+          ctx.fillStyle = l.tint;
+          ctx.fillRect(0, 26, VW, 108);
+          ctx.fillStyle = "#FFFFFF";
+          ctx.font = "600 13px Outfit";
+          ctx.fillText("G R O S H E R", cx, 18);
+          ctx.fillStyle = "#FFFFFF";
+          const nm = l.name.toUpperCase();
+          const size = fit(nm, VW * 0.8, 44, 800, 14);
+          ctx.fillText(nm, cx, 80 + size * 0.35);
+          ctx.font = "500 14px Outfit";
+          ctx.fillText(l.weight, cx, 152);
+        } else if (style === "ghee") {
+          const g = ctx.createLinearGradient(0, 0, VW, 0);
+          g.addColorStop(0, "#B8861E");
+          g.addColorStop(0.45, "#F2D27A");
+          g.addColorStop(1, "#C8962A");
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, VW, VH);
+          ctx.fillStyle = "#4A2A10";
+          ctx.font = "700 12px Outfit";
+          ctx.fillText("G R O S H E R", cx, 24);
+          ctx.fillStyle = "#FFF8E8";
+          ctx.beginPath();
+          ctx.ellipse(cx, 84, VW * 0.36, 38, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#4A2A10";
+          ctx.font = "600 11px Outfit";
+          ctx.fillText("PURE", cx, 64);
+          const size = fit(l.name, VW * 0.6, 26, 800, 12);
+          ctx.fillText(l.name, cx, 92 + size * 0.2);
+          ctx.font = "600 16px Outfit";
+          ctx.fillText(l.weight, cx, 146);
         }
         ctx.restore();
       });
       tags.forEach((t, i) => {
-        const x = (i % 8) * 128;
-        const y = 768 + Math.floor(i / 8) * 32;
+        const x = (i % 16) * 128;
+        const y = LABEL_ROWS * 128 + Math.floor(i / 16) * 32;
         ctx.fillStyle = "#F6F1E7";
         ctx.fillRect(x, y, 128, 32);
         ctx.fillStyle = t.band;
         ctx.fillRect(x, y, 8, 32);
         ctx.fillStyle = ink;
         ctx.textAlign = "center";
-        let size = 15;
-        ctx.font = `600 ${size}px Outfit`;
-        while (ctx.measureText(t.name.toUpperCase()).width > 112 && size > 9) ctx.font = `600 ${--size}px Outfit`;
+        fit(t.name.toUpperCase(), 112, 15, 600, 9);
         ctx.fillText(t.name.toUpperCase(), x + 68, y + 21);
       });
       put("labels", c);
@@ -491,16 +728,122 @@ const images = await page.evaluate(
       });
       put("headers", c);
     }
+    // ---------------------------------------------------------------- cutouts: sack stencils, jute fringe, wheat ears (RGBA)
+    {
+      const [W, H] = [1024, 512];
+      const c = canvas(W, H);
+      const ctx = c.getContext("2d");
+      ctx.clearRect(0, 0, W, H);
+      // stencils: a mill's stamp in faded teal ink, a frame round some
+      stencils.forEach((rows, i) => {
+        const x = i * 256;
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(x, 0, 256, 128);
+        ctx.clip();
+        ctx.fillStyle = "#2D6670";
+        ctx.strokeStyle = "#2D6670";
+        ctx.textAlign = "center";
+        rows.forEach((t, k) => {
+          ctx.font = `${k === 1 ? 800 : 700} ${k === 1 ? 24 : 18}px Outfit`;
+          let size = k === 1 ? 24 : 18;
+          while (ctx.measureText(t).width > 230 && size > 10) ctx.font = `700 ${--size}px Outfit`;
+          ctx.fillText(t, x + 128, 34 + k * 34);
+        });
+        if (i % 2 === 1) {
+          ctx.lineWidth = 3;
+          ctx.strokeRect(x + 10, 8, 236, 112);
+        }
+        // worn ink: knock holes in it
+        ctx.globalCompositeOperation = "destination-out";
+        for (let k = 0; k < 900; k++) {
+          ctx.fillStyle = `rgba(0,0,0,${0.5 + rand() * 0.5})`;
+          ctx.fillRect(x + rand() * 256, rand() * 128, 1 + rand() * 3, 1 + rand() * 2);
+        }
+        ctx.restore();
+      });
+      // the frayed fringe: loose jute fibres hanging off a rolled rim, tileable along x
+      {
+        const y0 = 128;
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(0, y0, W, 64);
+        ctx.clip();
+        for (let k = 0; k < 900; k++) {
+          const x = rand() * W;
+          const len = 10 + rand() * 46;
+          const tone = 170 + rand() * 50;
+          ctx.strokeStyle = `rgba(${tone},${tone * 0.92},${tone * 0.76},1)`;
+          ctx.lineWidth = 0.8 + rand() * 1.3;
+          for (const ox of [0, W, -W]) {
+            ctx.beginPath();
+            ctx.moveTo(x + ox, y0);
+            ctx.bezierCurveTo(x + ox + (rand() - 0.5) * 8, y0 + len * 0.4, x + ox + (rand() - 0.5) * 14, y0 + len * 0.7, x + ox + (rand() - 0.5) * 16, y0 + len);
+            ctx.stroke();
+          }
+        }
+        ctx.restore();
+      }
+      // wheat ears: two rows of spikelets on a rachis, long awns above, a bit of stalk below
+      for (let i = 0; i < 8; i++) {
+        const x0 = i * 128;
+        const y0 = H - 192;
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(x0, y0, 128, 192);
+        ctx.clip();
+        const cx = x0 + 64 + (rand() - 0.5) * 6;
+        const bottom = y0 + 186;
+        const earTop = y0 + 70 + rand() * 10;
+        const earBottom = y0 + 150;
+        const straw = (k) => {
+          const t = 196 + k;
+          return `rgb(${clamp(t)},${clamp(t * 0.8)},${clamp(t * 0.5)})`;
+        };
+        ctx.strokeStyle = straw(-10);
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(cx, bottom);
+        ctx.lineTo(cx, earTop);
+        ctx.stroke();
+        const n = 9 + Math.floor(rand() * 3);
+        for (let k = 0; k < n; k++) {
+          const t = k / (n - 1);
+          const y = earBottom - t * (earBottom - earTop);
+          for (const side of [-1, 1]) {
+            const sx = cx + side * (7 - t * 2);
+            const sy = y - (side === 1 ? 4 : 0);
+            ctx.fillStyle = straw((rand() - 0.5) * 30);
+            ctx.beginPath();
+            ctx.ellipse(sx, sy, 5.5 - t * 1.5, 8.5 - t * 2, side * 0.45, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = "rgba(120,86,40,0.6)";
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+            // the awn: a long fine bristle up and out
+            ctx.strokeStyle = straw(10);
+            ctx.lineWidth = 0.9;
+            ctx.beginPath();
+            ctx.moveTo(sx, sy - 7);
+            ctx.lineTo(sx + side * (8 + rand() * 10), sy - 50 - rand() * 30);
+            ctx.stroke();
+          }
+        }
+        ctx.restore();
+      }
+      out.cutouts = c.toDataURL("image/png");
+      out["cutouts.lo"] = half(c).toDataURL("image/png");
+    }
     return out;
   },
-  { font, labels, tags, headers: HEADERS, shapes: [...GRAIN_SHAPES] },
+  { font, labels, tags, headers: HEADERS, GRAIN: GRAIN_SHAPES, STYLE: LABEL_STYLE, ASPECT, LABEL_ATLAS, LABEL_ROWS, stencils: SACK_STENCILS },
 );
 await browser.close();
 
 // ---------------------------------------------------------------- encode
 const KIND = {
-  pine: "etc1s", plaster: "etc1s", plaster_n: "normal", concrete: "etc1s", burlap: "etc1s", burlap_n: "normal",
-  terracotta: "etc1s", stone: "etc1s", grains: "etc1s", grains_n: "normal-etc1s", labels: "uastc", headers: "uastc",
+  pine: "etc1s", plaster: "etc1s", plaster_n: "normal-etc1s", concrete: "etc1s", burlap: "etc1s", burlap_n: "normal-etc1s",
+  terracotta: "etc1s", stone: "etc1s", stone_n: "normal-etc1s", grains: "etc1s", grains_n: "normal-etc1s", labels: "uastc", headers: "uastc", cutouts: "uastc",
 };
 const manifest = {};
 for (const [name, url] of Object.entries(images)) {

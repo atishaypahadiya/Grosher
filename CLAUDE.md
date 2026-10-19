@@ -597,56 +597,88 @@ list, Route, `waitForFunction(() => window.__grosherPerf.frames > 100)`, read th
 Two zoom levels. The overview stays as above; a zone that has a **hero close-up** (`HERO_ZONES` in
 `src/hero/index.ts`: today Grosher's Bulk & pulses, `aisle: "BULK"`) opens at eye level when the next stop is
 in it (or a stop in it is tapped: `stopUnder` hit-tests the overlay's `data-key` items). The scene keeps the
-overview until the zone's chunk and textures are in and its bin is picked (`closeUp.target`), then
-`CloseUpCamera` dollies down in 480 ms to 1.6 m, 2.45 m back from the stop's bin, aimed so the bin sits mid-way
-between the progress strip and the sheet; the bin is lifted 3 cm, pulled 6 cm and lit lime (`HeroZone`'s lit
-volume, the bloom's selection). Look ±57° yaw / ±17° pitch (drag), pan along the zone (two fingers, shift-drag),
-dolly −0.9…+0.6 m (pinch, wheel); no free flight. Back: the "Back to the map" pill or a flick down (> 90 px in
-< 450 ms), remembered for that stop; the next stop leaving the zone dollies out on its own. While it is open the
-overview's lights, floor, skylight, products, ribbon, lit slot and overlay are off, the zone's overview fixtures
-(`hideFixtures`) are left out of the merge, the fog is a warm dark (`#2E2219`, .034) and the trip header turns
-to plates (`.is-closeup`). `CameraRig` is `paused` and gives the way back (`view()`).
-- **The shelf kit** (`src/hero/kit`, procedural in code: no Blender here or in CI, deterministic, the whole
-  zone is a 37 KB gzipped chunk instead of a glTF download, and the next aisle is a recipe, not new art):
-  `geom.ts` (tiled boxes, rounded planks, grid planes, lathes, beams, `Batch` merge per material),
-  `pieces.ts` (square-steel shelving with pine planks, header boards, grain mounds, open burlap sacks with
-  rolled rims, clay pots, dried wheat, a stone chakki on its stand, copper conduit, black tracks with spot
-  heads), `templates.ts` (instanced: stand-up pouch, kraft bag, jar with its contents / label / lid, tin,
-  gravity bin, scoop bin), `bake.ts` (the lighting), `materials.ts` (KTX2 loading, tiers, materials; `aCell`
-  per-instance atlas cells via one shader patch).
+overview until the zone's chunk and textures are in, its programs compiled (`compileAsync`) and every buffer
+uploaded (one draw into a 1 × 1 target from the door), so no frame of the arrival stalls (measured on an M4
+Pro at 390 × 844 × 3: a 120–450 ms pause before the camera moves, then 84 frames none over 17 ms).
+- **The arrival** (`CloseUpCamera`, two moves, each eased on its own): a descent of 480 ms on a curve that
+  stays out over the walkway, never above the zone, its view on a point gliding from where the overview
+  looked to the aisle mouth (never the sky), to the **door** (`Target.door`: eye level, outside the zone's
+  ceiling, at the nearer open end of the aisle, or 2.1 m out from a south-facing island bin); then a walk in
+  (360–760 ms by its length, a 1.2 cm head bob, both off under reduced motion, which cuts) to stand 2.45 m
+  from the bin, turned to face it, the bin in the middle of the band between the strip and the sheet. The
+  way out walks back to the door and rises to the overview's pose. `envRef` (0 overview … 1 eye level, from
+  the camera's height between 9 m and 2.2 m) blends the scene: the fog and background to a warm dark
+  (`#2A1F17`, .03), the overview's lights and skylight spots down (lights fade, never leave the scene: that
+  recompiles every program), the overview's fixtures to 40% (`Fixtures dimRef`). Look ±57° yaw / ±17° pitch,
+  pan along the zone, dolly −0.9…+1.75 m (to arm's length, 0.7 m); no free flight. Back: the pill or a flick
+  down (> 90 px in < 450 ms), remembered for that stop; the next stop leaving the zone walks out on its own.
+  While it is open the products, ribbon, lit slot and overlay are off, the zone's and its backdrop's overview
+  fixtures (`hideFixtures`) are left out, and the trip header and sheet turn to plates and warm deep glass.
+- **Light is per pixel** (`kit/light.ts`, one patch on every kit material): 35 lights (19 track spots aimed at
+  the shelf and island at 3000 K, 2 on the centerpiece, 10 recessed downlights, the skylight's daylight over
+  produce, 3 washes on the aisle 1 gondola), each a cone with a sharp edge (softness 6–12% of its angle)
+  through three's own `RE_Direct`, so the pools are crisp and the polished concrete and glass catch real
+  highlights; shadows are analytic: a fragment is dark where its line to a light crosses a listed slab (the
+  five shelf planks, the island top), so every plank throws a shadow line onto what is under it. No shadow
+  maps, no extra passes. Contact shadows are decals (`kit/decals.ts`: one instanced, multiplied quad per
+  pack on its plank, per sack and pot, at the foot of the shelving and the island; one draw call). Vertex /
+  instance colours carry only a tint and corner occlusion. The ambient is one hemisphere (warm bounce); the
+  ceiling has a little light of its own (the reference's ceiling is lit by bounce). `lightAt` / `shadowAt`
+  are the same maths in TypeScript, for the tests.
+- **Grain at its real size**: the grains atlas (8 × 4 cells of 256 px, `GRAIN_SHAPES` in `bulk/recipe.ts`)
+  draws each shape at its size in mm within a cell of `cellM` metres (a 4.2 mm masoor lentil in a 6 cm cell,
+  ~18 px; rajma 15 mm in 14 cm), flat grains at random tilts so a pile of lentils reads as tilted discs. The
+  `tiles` patch maps it from the world along the surface's main axis (no stretch when a bin's fill is
+  scaled) with `textureGrad` across the cell's wrap, and lays a bin's front and sides in bands 3–5 cm deep, a
+  shade apart, against the acrylic. The **target** bin also gets real grains (`kit/grains.ts`): low-poly
+  solids at real size over its visible surface (its front behind the acrylic, or a scoop bin's mound), each
+  a shade apart, capped at 40,000 triangles; powders and flakes stay texture.
+- **The shelf kit** (`src/hero/kit`, procedural in code: no Blender here or in CI, deterministic, the zone a
+  46 KB chunk): `geom.ts`, `pieces.ts` (square-steel shelving, thick pine planks each cut from a different
+  part of the board, header boards tilted toward the aisle, jute sacks slumped with folds, a lumpy rolled rim,
+  frayed fringe and a mill's stencil, clay pots and stacked matkas, a dark clay pot with a rope lip and a
+  sheaf of wheat with real ears, the chakki: two dressed granite wheels, grain round the eye, a pale peg, a
+  spout, a round wooden tray on four posts; conduit, tracks with lit lenses, downlights; for backdrops,
+  produce stands and a gondola), `products.ts` (pouches in three sizes, kraft bags, woven 1 / 5 / 10 kg
+  sacks, cartons, jars, spice jars, ghee tins, glass oil bottles, tins: built once, placed and **merged per
+  material**, so 584 packs are a few draw calls; labels through a per-vertex `aCell`, contents through
+  `aGrain`), `templates.ts` (the instanced bins: they are the targets, lifted 3 cm and pulled 6 cm), `bake.ts`
+  (tint and occlusion), `materials.ts` (KTX2, tiers, the patches; steel, copper, paint, caps and tin lids are
+  one white material coloured per vertex), `light.ts`, `decals.ts`, `grains.ts`.
 - **The recipe** (`src/hero/bulk/recipe.ts`, pure data; `zone.ts` assembles it): five wall sections west to
-  east under black header boards (PULSES & DALS · RICE & GRAINS · FLOURS & ATTA · NUTS & SEEDS · DRIED FRUIT),
-  each three 1.2 m bays: kraft bags, two rows of pouches, jars and tins, three gravity bins at eye level, clay
-  pots on top; the island's 56 scoop bins; the centerpiece (four sacks, the chakki, a pot of wheat); the
-  clay-plaster shell, copper conduit, two tracks of spots; the room around the zone (floor, ceiling, outer
-  walls) so eye level never sees the sky. 45 gravity bins + 56 scoop bins are the targets (`pickTarget`: the
-  category's bin sharing most words with the item, else its first). Variation is seeded (`rng(5435)`): fill,
-  lean, yaw, spacing, gaps.
-- **Light is baked**: 19 track spots (warm 3000 K, cones .42 rad) + a dim ambient + contact shadow under planks
-  and at the floor, into vertex colours (static) and instance colours (bins, packs); the runtime adds only a
-  hemisphere and one key light for the normal maps. Pools on the shelves, darker between.
-- **Textures** (`scripts/gen-hero-textures.mjs` → `src/hero/assets/*.ktx2`, committed; needs `basisu`, `brew
-  install basis_universal`): drawn on canvases in headless Chromium (Outfit for lettering), encoded with
-  `-y_flip` (compressed textures cannot flip on upload): pine, plaster + normal, concrete, burlap + normal,
-  terracotta, stone (ETC1S), grains atlas (16 shapes, near-white, tinted per bin) + normal (ETC1S: UASTC was
-  1.1 MB of noise), 48 house-brand labels + 64 bin tags (UASTC), header boards (UASTC). Two tiers: hi 1.35 MB,
-  lo (half size) 0.46 MB. The Basis transcoder is `public/basis/` (a test keeps it identical to three's).
-  Tier: `?tier=hi|lo` pins it; lo on ≤ 3 GB memory or ≤ 4 cores, or after a close-up whose dolly ran under
-  ~30 fps (median frame > 34 ms; remembered in `grosher.heroTier`). Precached (`ktx2`, `wasm` in the PWA
-  globs) so a close-up opens offline; they reach the GPU only when one opens, and are disposed when it closes.
-- **Fallback**: no WebGL (the trip's flat map) or a zone that fails to load shows the flat shelf image
-  (`public/hero/bulk/<category>.webp`, `scripts/capture-hero-flat.mjs`, rendered from the close-up itself with
-  the bin lit).
-- **Close-up budget** (`src/hero/budget.ts`, `scripts/hero-gate.mjs` in CI, separate from the overview gate):
-  ≤ 70 draw calls, ≤ 250,000 triangles, ≤ 16 MB GPU textures (transcoded, every mip), ≤ 2,500 KB download
-  (zone chunk gzip + hi KTX2 + transcoder gzip), and nothing of the zone fetched before a close-up opens.
-  Measured 18 Oct 2026: 51 calls / 146k triangles at eye level, 53 / 157k down the aisle, 4.8 MB textures (BC
-  on desktop; ASTC on an iPhone can be up to twice), 1,639 KB download. `?debug=perf` shows fps, frame ms,
-  calls, triangles, live textures / geometries, the zone's texture MB, tier and load time, and the heap where
-  the browser tells (not Safari) on any device; the map renders continuously while it is on.
-- **The next aisle**: a recipe beside `bulk/` (what stands where, its labels), an entry in `HERO_ZONES` (its
-  aisle, the overview fixtures it replaces), its header text and labels in the generator, its flat images.
-  The kit's pieces and templates, the bake, the camera and the gate carry over.
+  east under PULSES & DALS · RICE & GRAINS · FLOURS & ATTA · NUTS & SEEDS · DRIED FRUIT, each three 1.2 m bays:
+  per section what its floor tier, its two middle tiers and its top stock (`Section.tiers`, `top`), front row
+  and a second row behind, no two neighbours alike (the test checks every row), sizes, lean and gaps
+  varied; three gravity bins at eye level; matkas, some stacked and lidded, on top. The island's 56 scoop
+  bins; the centerpiece on the floor (four sacks: white, green, yellow and orange as in the reference, the
+  chakki, the pot of wheat); the clay-plaster wall; a ceiling over the zone only (x 49.4–68.6, y 1.5–7.6) with
+  a fascia round its open sides, facing down only (from above it is not there). **The backdrop**: beyond it,
+  the four produce stands nearest (tilted crates of fruit drawn as grain piles at fruit size) under the
+  skylight's frame and glow, the produce wall's near end, the aisle 1 gondola's face full of packs, the beer
+  aisle's cases; the rest of the store's floor; everything further fades into the warm dark.
+- **Textures** (`scripts/gen-hero-textures.mjs` → `src/hero/assets/*.ktx2`, committed; needs `basisu`): drawn
+  on canvases in headless Chromium, `-y_flip`: pine, tan clay plaster + normal, khaki polished concrete, pale
+  jute (a 2.5 mm weave with slubs) + normal, terracotta, dressed granite + normal (ETC1S, normals too), the
+  grains atlas 2048 × 1024 (+ normals at half size, ETC1S), labels 2048 × 1280 (138 house-brand labels each
+  drawn at its pack's front aspect so lettering reads true, and 55 bin tags; UASTC), header boards (UASTC),
+  cutouts 1024 × 512 RGBA (sack stencils, the jute fringe, wheat ears; UASTC, alpha-tested). Hi 1.84 MB, lo
+  0.61 MB. Tier: `?tier=hi|lo` pins it; lo on ≤ 3 GB memory or ≤ 4 cores, or after a close-up whose arrival
+  ran under ~30 fps (remembered in `grosher.heroTier`). Precached; on the GPU only while a zone is open.
+- **Fallback**: no WebGL, or a zone that fails to load, shows the flat shelf image
+  (`public/hero/bulk/<category>.webp`, `scripts/capture-hero-flat.mjs`, rendered from the close-up itself).
+- **Close-up budget** (`src/hero/budget.ts`, `scripts/hero-gate.mjs` in CI): ≤ 70 draw calls, ≤ 250,000
+  triangles, ≤ 16 MB GPU textures, ≤ 2,500 KB download, nothing fetched before a close-up opens. The gate reads
+  the worst frame of the arrival (the page's clock slowed 40×), eye level, down the aisle, and a scoop bin
+  facing out over the store. Measured 19 Oct 2026: arriving 61 calls / 206k triangles, eye level 47 / 184k
+  (with the target's real grains), down the aisle 47 / 154k, scoop bins 56 / 166k; 7.5 MB textures (BC on a
+  desktop; ASTC on an iPhone can be up to twice); 2,140 KB download. On the M4 Pro's GPU (Metal) at 390 × 844
+  × 3, uncapped: 2.5 ms a frame median, 3.8 ms p95 (an iPhone's GPU is several times slower: check it there
+  with `?debug=perf`). SwiftShader frame times (CI) are software rendering, not a device number.
+- **References** for the look are kept in `design/refs/` (git-ignored: third-party photos, not ours to
+  publish); `.work/` is the ignored place for local captures and comparison images.
+- **The next aisle**: a recipe beside `bulk/` (sections, tiers, labels), its lights and slabs, an entry in
+  `HERO_ZONES` (its aisle, the overview fixtures it and its backdrop replace), its labels in the generator,
+  its flat images. The kit, the light, the camera and the gate carry over.
 
 ### Texture pipeline
 

@@ -12,3 +12,9 @@ __pycache__/
 packages/stores/data/instacart/*.csv
 packages/stores/demo/catalog.instacart.json
 packages/stores/demo/catalog.merged.json
+
+# reference photos: third-party images (copyrighted), kept local, never published
+design/refs/
+
+# local captures and comparison images (screenshots, perf runs): never committed
+.work/

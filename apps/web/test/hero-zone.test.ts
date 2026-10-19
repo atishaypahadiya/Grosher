@@ -1,13 +1,21 @@
-// The Bulk hero zone builds from the shelf kit: every section's bins are targets, an item finds its own bin,
-// the light is baked into every static vertex, and the geometry stays inside the close-up budget.
+// The Bulk hero zone builds from the shelf kit: every section's bins are targets and an item finds its own
+// bin; every walk in starts outside the zone's ceiling; the light is per pixel with sharp pools, darker
+// between, and the shelf planks' shadows (checked through the TypeScript twin of the shader, light.ts); no two
+// neighbouring packs are alike; grains are at their real size; the geometry fits the close-up budget.
 
 import { expect, test } from "vitest";
+import { MeshBasicMaterial } from "three";
 import { grosher } from "@grosher/stores";
-import { buildBulkZone, HIDE_FIXTURES, pickTarget } from "../src/hero/bulk/zone.ts";
-import { SECTIONS, labelCells } from "../src/hero/bulk/recipe.ts";
+import { buildBulkZone, bulkRig, CEIL, EYE, grainSurface, HIDE_FIXTURES, pickTarget, SHELF, shapeOf } from "../src/hero/bulk/zone.ts";
+import { GRAINS, GRAIN_SHAPES, LABEL_COLS, LABEL_ROWS, SECTIONS, TAG_COLS, TAG_ROWS, labelCells, labelKey } from "../src/hero/bulk/recipe.ts";
+import { HERO_ZONES } from "../src/hero/index.ts";
+import { lightAt, shadowAt } from "../src/hero/kit/light.ts";
+import { GRAIN_TRIANGLES, grainLayer } from "../src/hero/kit/grains.ts";
+import { hex } from "../src/hero/kit/bake.ts";
 import { CLOSE_UP_BUDGET } from "../src/hero/budget.ts";
 
 const zone = buildBulkZone(grosher.store.outline);
+const rig = bulkRig();
 
 test("every bin is a target; an item finds its own bin, a category without a match its first", () => {
   expect(zone.targets.filter((t) => t.category !== "bulk-snacks")).toHaveLength(45);
@@ -21,38 +29,79 @@ test("every bin is a target; an item finds its own bin, a category without a mat
   expect(pickTarget(zone.targets, "bulk-snacks", "bulk granola")?.name).toBe("House Granola");
   expect(pickTarget(zone.targets, "bulk-pulses", "something else")?.name).toBe(SECTIONS[0].bins[0].name);
   expect(pickTarget(zone.targets, "dairy", "milk")).toBeNull();
-  // every target's category is one of Grosher's, on the bulk shelves
   const bulk = new Set(grosher.categories.filter((c) => c.aisle === "BULK").map((c) => c.id));
   for (const t of zone.targets) expect(bulk.has(t.category)).toBe(true);
+  // the overview fixtures the close-up replaces exist, and the 3D map hides the same ones
   for (const id of HIDE_FIXTURES) expect(grosher.store.fixtures!.some((f) => f.id === id)).toBe(true);
+  expect(HERO_ZONES.find((z) => z.id === "bulk")!.hideFixtures).toEqual(HIDE_FIXTURES);
 });
 
-test("the light is baked into every static vertex: warm pools on the shelves, darker between", () => {
-  for (const [key, g] of zone.statics) expect(g.getAttribute("color"), key).toBeTruthy();
-  // along the bin tier's plank fronts, x 50–68: a pool under each spot, falloff between
-  const pine = zone.statics.get("pine")!;
-  const pos = pine.getAttribute("position");
-  const col = pine.getAttribute("color");
-  const row: { x: number; r: number; b: number }[] = [];
-  for (let i = 0; i < pos.count; i++) if (Math.abs(pos.getY(i) - 1.294) < 0.012 && pos.getZ(i) > 2.15) row.push({ x: pos.getX(i), r: col.getX(i), b: col.getZ(i) });
-  expect(row.length).toBeGreaterThan(40);
-  const reds = row.map((v) => v.r);
-  expect(Math.max(...reds) / Math.min(...reds)).toBeGreaterThan(1.6);
-  // warm: red well over blue in the pools (3000 K)
-  const top = row.reduce((a, b) => (b.r > a.r ? b : a));
-  expect(top.r / Math.max(top.b, 1e-3)).toBeGreaterThan(1.8);
+test("every walk in starts at eye level outside the zone's ceiling: the descent never comes down through it", () => {
+  const under = (x: number, z: number) => x > CEIL.x0 && x < CEIL.x1 && z > CEIL.z0 && z < CEIL.z1;
+  for (const t of zone.targets) {
+    expect(t.door[1]).toBe(EYE);
+    expect(under(t.door[0], t.door[2]), t.name).toBe(false);
+    // and it is no further than the aisle's length from where the shopper ends up
+    expect(Math.hypot(t.door[0] - t.center[0], t.door[2] - t.center[2])).toBeLessThan(12);
+  }
 });
 
-test("every product label and bin tag is in the atlas; the geometry fits the close-up budget", () => {
-  const { labels, tags } = labelCells();
-  expect(labels).toHaveLength(48);
-  expect(tags.length).toBeLessThanOrEqual(64);
-  expect(new Set(labels.map((l) => l.name)).size).toBe(48);
-  expect(zone.triangles).toBeLessThan(CLOSE_UP_BUDGET.triangles);
+test("light per pixel: sharp warm pools on the shelf, darker between; the planks shadow what is under them", () => {
+  // along the bin tier's front, 30 cm under the plank above: a pool under each spot, falloff between
+  const y = SHELF.tiers[3] + 0.4;
+  const row = Array.from({ length: 181 }, (_, i) => {
+    const x = SHELF.x0 + 0.1 * i;
+    return lightAt(rig, [x, y, SHELF.zFront + 0.001], [0, 0, 1]);
+  });
+  const reds = row.slice(5, -5).map((c) => c[0]);
+  expect(Math.max(...reds) / Math.max(Math.min(...reds), 1e-3)).toBeGreaterThan(2);
+  const top = row.reduce((a, b) => (b[0] > a[0] ? b : a));
+  expect(top[0] / top[2]).toBeGreaterThan(2); // ~3000 K
+  // a downlight's pool on the floor has a sharp edge: lit inside, dark 20 cm out
+  const dl = rig.lights.find((l) => l.pos[1] === 4.4)!;
+  const r = dl.pos[1] * Math.tan(dl.angle);
+  const at = (d: number) => lightAt(rig, [dl.pos[0] + d, 0, dl.pos[2]], [0, 1, 0])[0];
+  expect(at(r - 0.15) / Math.max(at(r + 0.2), 1e-3)).toBeGreaterThan(3);
+  // shadows: the wall behind the shelf just under a plank is dark to the spot in front, the plank's top is not
+  const spot = rig.lights[0].pos;
+  expect(shadowAt(rig, [spot[0], SHELF.tiers[2] - 0.03, SHELF.zBack + 0.05], spot)).toBeLessThan(0.05);
+  expect(shadowAt(rig, [spot[0], SHELF.tiers[2] + 0.04, SHELF.zFront - 0.05], spot)).toBe(1);
+});
+
+test("packs: every kind on the shelves, no two neighbours alike, every one labelled", () => {
+  const kinds = new Set(zone.facings.map((f) => f.kind));
+  for (const k of ["pouchS", "pouchM", "pouchL", "kraft", "sack1", "sack5", "sack10", "carton", "jar", "spiceJar", "gheeTin", "oilBottle", "tin"]) expect(kinds.has(k as never), k).toBe(true);
+  expect(zone.facings.length).toBeGreaterThan(500); // 584 on 19 Oct 2026, from 382
+  const rows = new Map<string, typeof zone.facings>();
+  for (const f of zone.facings) rows.set(f.row, [...(rows.get(f.row) ?? []), f]);
+  for (const r of rows.values()) for (let i = 1; i < r.length; i++) expect(labelKey(r[i].kind, r[i].name)).not.toBe(labelKey(r[i - 1].kind, r[i - 1].name));
+  const { labels, tags, index } = labelCells();
+  expect(labels.length).toBeLessThanOrEqual(LABEL_COLS * LABEL_ROWS);
+  expect(tags.length).toBeLessThanOrEqual(TAG_COLS * TAG_ROWS);
+  for (const f of zone.facings) expect(index.has(labelKey(f.kind, f.name)), `${f.kind} ${f.name}`).toBe(true);
+});
+
+test("grains at their real size: every bin's grain has a shape; the target's real grains fit their budget", () => {
+  for (const g of Object.values(GRAINS)) expect(GRAIN_SHAPES.some((s) => s.id === g.shape), g.id).toBe(true);
+  // a masoor lentil is 4.2 mm and a cell covers 6 cm: ~18 px of 256 per lentil
+  const masoor = GRAIN_SHAPES.find((s) => s.id === "masoor")!;
+  expect((masoor.size[0] / (masoor.cellM * 1000)) * 256).toBeCloseTo(17.9, 0);
+  for (const name of ["Toor Dal", "Masoor Dal", "Rajma", "Basmati Rice", "House Granola", "Coffee Beans"]) {
+    const t = zone.targets.find((x) => x.name === name)!;
+    const layer = grainLayer({ surface: grainSurface(t), shape: shapeOf(t.grain), tint: hex(GRAINS[t.grain].tint) }, new MeshBasicMaterial());
+    if (!layer) continue; // flakes and powders show their texture only
+    const tris = (layer.geometry.getAttribute("position").count / 3) * layer.count;
+    expect(tris, name).toBeLessThanOrEqual(GRAIN_TRIANGLES);
+    expect(layer.count, name).toBeGreaterThan(300);
+  }
+});
+
+test("the zone, its real grains and the overview around it fit the close-up budget", () => {
+  // the overview's dimmed fixtures cost ~15–25k more; the gate measures the whole frame
+  expect(zone.triangles + GRAIN_TRIANGLES).toBeLessThan(CLOSE_UP_BUDGET.triangles - 30_000);
   const counts = Object.fromEntries(zone.instances.map((i) => [i.name, i.matrices.length]));
   expect(counts["bin-fill"]).toBe(45);
   expect(counts["scoop-fill"]).toBe(56);
-  expect(counts.pouch).toBeGreaterThan(100);
 });
 
 test("the Basis transcoder served from /basis/ is the one this three.js expects", async () => {

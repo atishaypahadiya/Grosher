@@ -13,6 +13,8 @@ export interface HeroTargetInfo {
   name: string;
   /** how far an eye-level camera may pan along x */
   bounds: { x0: number; x1: number };
+  /** where the walk in starts: eye level, outside the zone's ceiling (the descent ends there) */
+  door: [number, number, number];
 }
 
 export interface HeroZoneComponentProps {
@@ -41,7 +43,8 @@ export const HERO_ZONES: HeroZoneEntry[] = [
     id: "bulk",
     storeId: "grosher",
     aisle: "BULK",
-    hideFixtures: ["f-bulk-wall", "f-bulk-island", "f-bulk-display"],
+    // its own three fixtures, and the ones it redraws as the backdrop seen from inside it
+    hideFixtures: ["f-bulk-wall", "f-bulk-island", "f-bulk-display", "f-island3", "f-island4", "f-island7", "f-island8", "f-produce-wall", "f-run0", "f-run0-capE", "f-bws0", "f-bws0-capW", "f-bws0-capE"],
     load: () => import("./bulk/HeroZone.tsx"),
     flatImage: (category) => `${import.meta.env.BASE_URL}hero/bulk/${category}.webp`,
   },

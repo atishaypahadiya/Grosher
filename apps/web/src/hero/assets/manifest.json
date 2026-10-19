@@ -14,124 +14,136 @@
       "h": 256
     },
     "plaster": {
-      "bytes": 22653,
+      "bytes": 30874,
       "kind": "etc1s",
       "w": 512,
       "h": 512
     },
     "plaster.lo": {
-      "bytes": 7681,
+      "bytes": 11057,
       "kind": "etc1s",
       "w": 256,
       "h": 256
     },
     "plaster_n": {
-      "bytes": 238365,
-      "kind": "normal",
+      "bytes": 89982,
+      "kind": "normal-etc1s",
       "w": 512,
       "h": 512
     },
     "plaster_n.lo": {
-      "bytes": 69295,
-      "kind": "normal",
+      "bytes": 26941,
+      "kind": "normal-etc1s",
       "w": 256,
       "h": 256
     },
     "concrete": {
-      "bytes": 39367,
+      "bytes": 20488,
       "kind": "etc1s",
       "w": 512,
       "h": 512
     },
     "concrete.lo": {
-      "bytes": 15118,
+      "bytes": 7738,
       "kind": "etc1s",
       "w": 256,
       "h": 256
     },
     "burlap": {
-      "bytes": 50199,
+      "bytes": 52003,
       "kind": "etc1s",
       "w": 512,
       "h": 512
     },
     "burlap.lo": {
-      "bytes": 12902,
+      "bytes": 17099,
       "kind": "etc1s",
       "w": 256,
       "h": 256
     },
     "burlap_n": {
-      "bytes": 168104,
-      "kind": "normal",
+      "bytes": 44918,
+      "kind": "normal-etc1s",
       "w": 512,
       "h": 512
     },
     "burlap_n.lo": {
-      "bytes": 45777,
-      "kind": "normal",
+      "bytes": 14091,
+      "kind": "normal-etc1s",
       "w": 256,
       "h": 256
     },
     "terracotta": {
-      "bytes": 13206,
+      "bytes": 13022,
       "kind": "etc1s",
       "w": 256,
       "h": 256
     },
     "terracotta.lo": {
-      "bytes": 4114,
+      "bytes": 4107,
       "kind": "etc1s",
       "w": 128,
       "h": 128
     },
     "stone": {
-      "bytes": 17093,
+      "bytes": 18844,
       "kind": "etc1s",
       "w": 256,
       "h": 256
     },
     "stone.lo": {
-      "bytes": 5364,
+      "bytes": 5480,
       "kind": "etc1s",
       "w": 128,
       "h": 128
     },
+    "stone_n": {
+      "bytes": 32800,
+      "kind": "normal-etc1s",
+      "w": 256,
+      "h": 256
+    },
+    "stone_n.lo": {
+      "bytes": 8593,
+      "kind": "normal-etc1s",
+      "w": 128,
+      "h": 128
+    },
     "grains": {
-      "bytes": 217080,
+      "bytes": 441056,
       "kind": "etc1s",
-      "w": 1024,
+      "w": 2048,
       "h": 1024
     },
     "grains.lo": {
-      "bytes": 73018,
+      "bytes": 125366,
       "kind": "etc1s",
-      "w": 512,
+      "w": 1024,
       "h": 512
     },
     "grains_n": {
-      "bytes": 323372,
+      "bytes": 185242,
       "kind": "normal-etc1s",
       "w": 1024,
-      "h": 1024
+      "h": 512
     },
     "grains_n.lo": {
-      "bytes": 113963,
+      "bytes": 61025,
       "kind": "normal-etc1s",
       "w": 512,
-      "h": 512
+      "h": 256
     },
     "labels": {
-      "bytes": 199956,
+      "bytes": 694649,
       "kind": "uastc",
-      "w": 1024,
-      "h": 1024
+      "w": 2048,
+      "h": 1280
     },
     "labels.lo": {
-      "bytes": 85134,
+      "bytes": 246230,
       "kind": "uastc",
-      "w": 512,
-      "h": 512
+      "w": 1024,
+      "h": 640
     },
     "headers": {
       "bytes": 46690,
@@ -141,6 +153,18 @@
     },
     "headers.lo": {
       "bytes": 20469,
+      "kind": "uastc",
+      "w": 512,
+      "h": 256
+    },
+    "cutouts": {
+      "bytes": 169369,
+      "kind": "uastc",
+      "w": 1024,
+      "h": 512
+    },
+    "cutouts.lo": {
+      "bytes": 57661,
       "kind": "uastc",
       "w": 512,
       "h": 256

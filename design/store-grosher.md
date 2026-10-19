@@ -203,3 +203,12 @@ close-ups" and DESIGN.md §5b. The overview layout was set to real proportions f
 shelving with the five sections west to east, a 1.4 m waist-high scoop-bin island (new category: bulk granola,
 trail mix & snacks), a centerpiece plinth at the island's west end. The reference photos named in the brief
 (design/refs/) were not in the repository when it was built; the look follows the brief's description.
+
+### Refinement against the references (19 Oct 2026)
+
+The reference photos arrived and are kept locally in `design/refs/` (git-ignored: third-party images). Against
+them: the arrival descends outside the zone and walks in under its own ceiling (no ceiling over the rest of
+the store); light became per pixel with sharp pools and plank shadows; grain is drawn at its real size, with
+real grains on the stop's bin; the shelves carry thirteen kinds of pack; the centerpiece was rebuilt from the
+photo (jute sacks with rolled frayed rims, the chakki in its round tray, a grey clay pot of wheat); the
+produce stands, the produce wall's end and the aisle 1 gondola stand beyond the zone as its backdrop.

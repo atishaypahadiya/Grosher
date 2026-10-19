@@ -8,7 +8,8 @@
 // finish's material and its uprights and rails in black steel under wood.
 // The next stop's slot is lit separately (LitSlot).
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
+import { useFrame } from "@react-three/fiber";
 import { BoxGeometry, Color, DoubleSide, EdgesGeometry, LineBasicMaterial, LineSegments, Mesh, MeshStandardMaterial, PlaneGeometry, RepeatWrapping, SRGBColorSpace, Texture, TextureLoader, type BufferGeometry } from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { useLoader } from "@react-three/fiber";
@@ -75,8 +76,8 @@ export interface FixturesProps {
   fromEntrance: Map<string, number>;
   /** fixtures to leave out (a hero close-up draws its own in their place) */
   hide?: string[];
-  /** a close-up is open: the rest of the store is a dim backdrop (darker, no glow, no outlines) */
-  dim?: boolean;
+  /** a close-up's blend (0 … 1): the rest of the store dims into a backdrop (darker, no glow, no outlines) */
+  dimRef?: { current: number };
 }
 
 interface Built {
@@ -86,7 +87,7 @@ interface Built {
   parts: Parts;
 }
 
-export function Fixtures({ store, textureUrl, repeatMeters = 2, nodes, fromEntrance, hide, dim = false }: FixturesProps) {
+export function Fixtures({ store, textureUrl, repeatMeters = 2, nodes, fromEntrance, hide, dimRef }: FixturesProps) {
   const hideKey = (hide ?? []).join("|");
   const departments = useMemo(() => store.departments ?? [], [store]);
   const withTexture = useMemo(() => departments.filter((d) => d.texture && !d.finish), [departments]);
@@ -205,20 +206,28 @@ export function Fixtures({ store, textureUrl, repeatMeters = 2, nodes, fromEntra
     return new Mesh(geo, mat);
   }, [built, nodes, fromEntrance]);
 
-  // dimming in place: the merged meshes stay, their materials darken (restored on the way out)
-  useEffect(() => {
-    const k = dim ? 0.32 : 1;
+  // dimming in place, as the close-up's camera comes down: the merged meshes stay, their materials darken
+  // (restored on the way out)
+  const lastDim = useRef(-1);
+  const applyDim = (k: number) => {
     for (const g of groups)
       for (const m of [g.opaque, g.trim, g.frame, g.glow]) {
         const mat = m?.material as MeshStandardMaterial | undefined;
         if (!mat) continue;
         const base = (mat.userData.base ??= { color: mat.color.clone(), emissive: mat.emissiveIntensity });
-        mat.color.copy(base.color).multiplyScalar(k);
-        mat.emissiveIntensity = dim ? 0 : base.emissive;
+        mat.color.copy(base.color).multiplyScalar(1 - 0.6 * k);
+        mat.emissiveIntensity = base.emissive * (1 - k);
       }
-    if (edges) edges.visible = !dim;
-    if (signs) signs.visible = !dim;
-  }, [dim, groups, edges, signs]);
+    if (edges) edges.visible = k < 0.5;
+    if (signs) signs.visible = k < 0.5;
+  };
+  useFrame(() => {
+    const k = dimRef?.current ?? 0;
+    if (Math.abs(k - lastDim.current) < 0.01) return;
+    lastDim.current = k;
+    applyDim(k);
+  });
+  useEffect(() => () => applyDim(0), [groups]);
 
   return (
     <group name="fixtures">

@@ -5,7 +5,7 @@ import { Component, lazy, Suspense, useEffect, useMemo, useRef, useState, type C
 import { useFrame, useThree } from "@react-three/fiber";
 import { Line } from "@react-three/drei";
 import { EffectComposer, SelectiveBloom } from "@react-three/postprocessing";
-import { BufferGeometry, CanvasTexture, Float32BufferAttribute, LineBasicMaterial, LineSegments, Object3D, Shape, ShapeGeometry, SRGBColorSpace, type DirectionalLight, type HemisphereLight, type Mesh } from "three";
+import { BufferGeometry, CanvasTexture, Color, Float32BufferAttribute, LineBasicMaterial, LineSegments, Object3D, Shape, ShapeGeometry, SRGBColorSpace, type DirectionalLight, type FogExp2, type Group, type HemisphereLight, type Mesh } from "three";
 import type { SelectiveBloomEffect } from "postprocessing";
 import type { GraphNode, StoreGraph } from "@grosher/core";
 import { Fixtures } from "./Fixtures.tsx";
@@ -55,20 +55,32 @@ class ZoneBoundary extends Component<{ onError: (e: Error) => void; children: Re
 const HAZE = "#FF9E6B"; // --haze: the fog and the hemisphere light's sky
 const DEEP = "#184D2E";
 
+const GROUND: [number, string][] = [
+  [0, "#FF9E6B"],
+  [0.11, "#F2703A"],
+  [0.32, "#E2A23C"],
+  [0.52, "#86B84A"],
+  [0.76, "#2E7D46"],
+  [1, "#184D2E"],
+];
+/** in a close-up the store beyond the zone fades into a warm dark: the fog and the background both */
+const CLOSE_DARK = "#2A1F17";
+const CLOSE_FOG = 0.03;
+
+/** the ground gradient, mixed `k` of the way toward the close-up's dark */
+function paintGradient(c: HTMLCanvasElement, k: number) {
+  const ctx = c.getContext("2d")!;
+  const g = ctx.createLinearGradient(0, 0, 0, 512);
+  const dark = new Color(CLOSE_DARK);
+  for (const [at, hex] of GROUND) g.addColorStop(at, `#${new Color(hex).lerp(dark, k).getHexString()}`);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 4, 512);
+}
 function gradientTexture() {
   const c = document.createElement("canvas");
   c.width = 4;
   c.height = 512;
-  const ctx = c.getContext("2d")!;
-  const g = ctx.createLinearGradient(0, 0, 0, 512);
-  g.addColorStop(0, "#FF9E6B");
-  g.addColorStop(0.11, "#F2703A");
-  g.addColorStop(0.32, "#E2A23C");
-  g.addColorStop(0.52, "#86B84A");
-  g.addColorStop(0.76, "#2E7D46");
-  g.addColorStop(1, "#184D2E");
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, 4, 512);
+  paintGradient(c, 0);
   const t = new CanvasTexture(c);
   t.colorSpace = SRGBColorSpace;
   return t;
@@ -85,16 +97,57 @@ function BloomDriver({ effect, distanceRef, full }: { effect: RefObject<Selectiv
   return null;
 }
 
-function Background() {
+function Background({ envRef }: { envRef: { current: number } }) {
   const scene = useThree((s) => s.scene);
+  const tex = useRef<CanvasTexture | null>(null);
+  const last = useRef(0);
   useEffect(() => {
     const t = gradientTexture();
+    tex.current = t;
     scene.background = t;
     return () => {
       scene.background = null;
       t.dispose();
     };
   }, [scene]);
+  useFrame(() => {
+    const t = tex.current;
+    const k = envRef.current;
+    if (!t || Math.abs(k - last.current) < 0.02) return;
+    last.current = k;
+    paintGradient(t.image as HTMLCanvasElement, k);
+    t.needsUpdate = true;
+  });
+  return null;
+}
+
+/**
+ * The blend between the overview and a close-up (`envRef`, 0 … 1, from the close-up camera's height): the
+ * fog thickens into the warm dark, the overview's own lights and the skylight's daylight spots fade, so the
+ * store goes from the overview's haze to the zone's lamplight as the camera comes down, never in one cut.
+ */
+function EnvDriver({ envRef, fog, hemi, sun, sky, daylit }: { envRef: { current: number }; fog: RefObject<FogExp2 | null>; hemi: RefObject<HemisphereLight | null>; sun: RefObject<DirectionalLight | null>; sky: RefObject<Group | null>; daylit: boolean }) {
+  const last = useRef(-1);
+  const haze = useMemo(() => new Color(HAZE), []);
+  const dark = useMemo(() => new Color(CLOSE_DARK), []);
+  useFrame(() => {
+    const k = envRef.current;
+    if (Math.abs(k - last.current) < 0.003) return;
+    last.current = k;
+    if (fog.current) {
+      fog.current.color.copy(haze).lerp(dark, k);
+      fog.current.density = 0.006 + (CLOSE_FOG - 0.006) * k;
+    }
+    if (hemi.current) hemi.current.intensity = 0.9 * (1 - k);
+    if (sun.current) sun.current.intensity = (daylit ? 0.6 : 0.5) * (1 - k);
+    // the skylights' frame and panes go, their spots fade: a light never leaves the scene (that would
+    // recompile every material mid-move), it only dims
+    sky.current?.traverse((o) => {
+      const l = o as Object3D & { isLight?: boolean; intensity: number; userData: { base?: number } };
+      if (l.isLight) l.intensity = (l.userData.base ??= l.intensity) * (1 - k);
+      else if (o !== sky.current && "geometry" in o) o.visible = k < 0.5;
+    });
+  });
   return null;
 }
 
@@ -212,6 +265,11 @@ export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, fo
   // the zone loads (and picks its bin) while the overview stays as it is; the scene turns to the close-up, and
   // the camera starts down, only once the zone is ready
   const near = !!closeUp?.target;
+  // 0 overview … 1 eye level, written by the close-up camera every frame it moves
+  const envRef = useRef(0);
+  if (!closeUp) envRef.current = 0;
+  const fogRef = useRef<FogExp2>(null);
+  const skyRef = useRef<Group>(null);
   const Zone = closeUp ? zoneComponent(closeUp.zone) : null;
   const [glowLine, setGlowLine] = useState<Object3D | null>(null);
   const bloomRef = useRef<SelectiveBloomEffect | null>(null);
@@ -243,12 +301,14 @@ export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, fo
 
   return (
     <>
-      <Background />
+      <Background envRef={envRef} />
       {/* ~12% haze at 60 m, ~30% at 100 m: with the CSS overlay the next stop never loses more than 40%. In a
-          close-up the store around the zone fades into a warm dark instead, and the zone brings its own light. */}
-      {near ? <fogExp2 attach="fog" args={["#2E2219", 0.034]} /> : <fogExp2 attach="fog" args={[HAZE, 0.006]} />}
-      {!near && <hemisphereLight ref={hemi} args={[HAZE, DEEP, 0.9]} />}
-      {!near && <directionalLight ref={sun} position={[-20, 30, 40]} intensity={daylit ? 0.6 : 0.5} color={daylit ? "#FFD9B0" : "#FFFFFF"} />}
+          close-up the store around the zone fades into a warm dark instead (EnvDriver), and the zone brings
+          its own light. */}
+      <fogExp2 ref={fogRef} attach="fog" args={[HAZE, 0.006]} />
+      <hemisphereLight ref={hemi} args={[HAZE, DEEP, 0.9]} />
+      <directionalLight ref={sun} position={[-20, 30, 40]} intensity={daylit ? 0.6 : 0.5} color={daylit ? "#FFD9B0" : "#FFFFFF"} />
+      <EnvDriver envRef={envRef} fog={fogRef} hemi={hemi} sun={sun} sky={skyRef} daylit={daylit} />
 
       {near ? null : floor ? (
         <mesh rotation-x={-Math.PI / 2} geometry={floor} name="floor">
@@ -260,18 +320,23 @@ export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, fo
           <meshBasicMaterial color="#FFFFFF" transparent opacity={0.08} />
         </mesh>
       )}
-      {!near && <Skylights store={store} />}
+      <group ref={skyRef}>
+        <Skylights store={store} />
+      </group>
       {!near && <Line points={edge} color="#FFFFFF" transparent opacity={0.3} lineWidth={1} />}
 
       <Suspense fallback={null}>
-        <Fixtures store={store} textureUrl={textureUrl} repeatMeters={repeatMeters} nodes={nodes} fromEntrance={fromEntrance} hide={closeUp?.zone.hideFixtures} dim={near} />
+        <Fixtures store={store} textureUrl={textureUrl} repeatMeters={repeatMeters} nodes={nodes} fromEntrance={fromEntrance} hide={closeUp?.zone.hideFixtures} dimRef={closeUp ? envRef : undefined} />
         {!near && <Products store={store} textureUrl={textureUrl} settled={settled} priority={legFixtureIds} you={{ x: focus.you.x, z: focus.you.y }} />}
       </Suspense>
       {Zone && closeUp && (
         <ZoneBoundary onError={(e) => onHeroError?.(e)}>
-          <Suspense fallback={null}>
-            <Zone store={store} category={closeUp.category} itemName={closeUp.itemName} onTarget={(t) => onHeroTarget?.(t)} onLit={setHeroLit} onError={(e) => onHeroError?.(e)} />
-          </Suspense>
+          {/* hidden until the scene turns to the close-up: never drawn over the overview's products and ribbon */}
+          <group visible={near}>
+            <Suspense fallback={null}>
+              <Zone store={store} category={closeUp.category} itemName={closeUp.itemName} onTarget={(t) => onHeroTarget?.(t)} onLit={setHeroLit} onError={(e) => onHeroError?.(e)} />
+            </Suspense>
+          </group>
         </ZoneBoundary>
       )}
       {!near && <Ribbon nodes={nodes} walked={ribbon.walked} current={ribbon.current} ahead={ribbon.ahead} onGlowLine={setGlowLine} />}
@@ -288,6 +353,7 @@ export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, fo
           returnView={() => cameraRef.current!.view()}
           onExited={() => onCloseUpExited?.()}
           distanceRef={distanceRef}
+          envRef={envRef}
         />
       )}
       <BloomDriver effect={bloomRef} distanceRef={distanceRef} full={0.7} />

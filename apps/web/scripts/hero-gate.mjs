@@ -4,7 +4,9 @@
 //   node scripts/hero-gate.mjs http://localhost:4173 [--shots dir]
 //
 //   lazy        nothing of the zone (its chunk, its textures, the transcoder) is fetched before a close-up opens
-//   draw calls  per frame, every pass, at eye level facing PULSES & DALS, and looking down the aisle (worst)
+//   draw calls  per frame, every pass: the worst frame of the arrival (high up, the overview still drawn under
+//               the zone), at eye level facing PULSES & DALS, looking down the aisle, and from the island's scoop
+//               bins out over the store
 //   triangles   the same
 //   GPU MB      the hero textures as transcoded on this device, every mip level (hi tier)
 //   download    the zone chunk (gzip), its hi-tier KTX2 files and the transcoder (gzip), from dist/
@@ -74,10 +76,33 @@ try {
   const again = page.getByLabel(/add items/i);
   await again.fill("toor dal (bulk)");
   await again.press("Enter");
+  // the arrival in slow motion (the page's clock 40× slower): every frame's reading, the worst kept
+  await page.evaluate(() => {
+    const real = performance.now.bind(performance);
+    let base = real();
+    let at = base;
+    let rate = 1 / 40;
+    performance.now = () => at + (real() - base) * rate;
+    // back to real time, without the clock jumping
+    window.__grosherClockNormal = () => {
+      at += (real() - base) * rate;
+      base = real();
+      rate = 1;
+    };
+  });
   await page.getByRole("button", { name: /route 1 item/i }).click({ timeout: 30_000 });
   await page.waitForFunction(() => window.__grosherCloseUp?.state === "open" && window.__grosherPerf?.hero?.tier, null, { timeout: 90_000 });
-  await page.waitForTimeout(1500); // the dolly, then settle
-  rows.push({ view: "eye level, facing the bin", ...(await steady(30)) });
+  let worst = null;
+  for (let i = 0; i < 30; i++) {
+    const r = await page.evaluate(() => ({ ...window.__grosherPerf }));
+    if (!worst || r.calls > worst.calls || (r.calls === worst.calls && r.triangles > worst.triangles)) worst = r;
+    await page.waitForTimeout(800);
+  }
+  // (this page's clock was slowed: its frame times mean nothing, so they print as "–")
+  rows.push({ view: "arriving (worst frame)", ...worst, patched: true });
+  await page.evaluate(() => window.__grosherClockNormal());
+  await page.waitForTimeout(2500); // the walk in ends, then settle
+  rows.push({ view: "eye level, facing the bin", ...(await steady(30)), patched: true });
   if (SHOTS) await page.screenshot({ path: join(SHOTS, "hero-eye.png") });
   // look down the aisle: the widest view of the zone (and the overview beyond it)
   const box = await page.getByTestId("map3d").boundingBox();
@@ -88,8 +113,22 @@ try {
   await page.mouse.move(cx + 300, cy, { steps: 20 });
   await page.mouse.up();
   await page.waitForTimeout(600);
-  rows.push({ view: "down the aisle", ...(await steady(30)) });
+  rows.push({ view: "down the aisle", ...(await steady(30)), patched: true });
   if (SHOTS) await page.screenshot({ path: join(SHOTS, "hero-aisle.png") });
+  // a scoop bin on the island's north face: the shopper looks south, out over the rest of the store
+  await page.goto(`${BASE}/?perf=1&tier=hi`, { waitUntil: "load" });
+  await page.evaluate(() => {
+    localStorage.clear();
+    indexedDB.deleteDatabase("grosher");
+  });
+  await page.goto(`${BASE}/?perf=1&tier=hi`, { waitUntil: "load" });
+  const third = page.getByLabel(/add items/i);
+  await third.fill("bulk granola");
+  await third.press("Enter");
+  await page.getByRole("button", { name: /route 1 item/i }).click({ timeout: 30_000 });
+  await page.waitForFunction(() => window.__grosherCloseUp?.state === "open" && window.__grosherPerf?.hero?.tier, null, { timeout: 90_000 });
+  await page.waitForTimeout(3000);
+  rows.push({ view: "scoop bins, facing out", ...(await steady(30)) });
 } finally {
   await browser.close();
 }
@@ -101,7 +140,7 @@ for (const r of rows) {
   const mb = r.hero.gpuBytes / 2 ** 20;
   const over = r.calls > B.drawCalls || r.triangles > B.triangles || mb > B.gpuTextureMB;
   failed ||= over;
-  console.log(`${pad(r.view, 28)} ${pad(r.calls, 7)} ${pad(r.triangles.toLocaleString("en-US"), 11)} ${pad(mb.toFixed(1) + " MB", 10)} ${r.frameMs.toFixed(1)}${over ? "   OVER BUDGET" : ""}`);
+  console.log(`${pad(r.view, 28)} ${pad(r.calls, 7)} ${pad(r.triangles.toLocaleString("en-US"), 11)} ${pad(mb.toFixed(1) + " MB", 10)} ${r.patched ? "–" : r.frameMs.toFixed(1)}${over ? "   OVER BUDGET" : ""}`);
 }
 const dlOver = downloadKB > B.downloadKB;
 failed ||= dlOver;

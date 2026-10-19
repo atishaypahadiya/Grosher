@@ -1,21 +1,30 @@
-// The eye-level camera of a hero close-up: it dollies from the overview down to ~1.6 m in the aisle, facing
-// the shelf with the stop's bin in the clear band between the progress strip and the sheet (480 ms, the
-// design's longest animation; a cut under reduced motion), then allows a limited look around (±35° yaw,
-// ±17° pitch), a pan along the aisle inside the zone and a short dolly. No free flight. On exit it dollies
-// back to the overview camera's pose and hands over.
+// The eye-level camera of a hero close-up. The way in has two moves: it descends from the overview over the
+// walkway outside the zone (a curve that stays out over the store, never above the zone's ceiling) to eye
+// level at the zone's open side, then walks in under the ceiling's edge to stand ~2.45 m from the stop's
+// bin, turning to face the shelf, with a slight head bob (480 ms down, then a walk of 360–760 ms by its
+// length; a cut under reduced motion). At eye level it allows a limited look around (±57° yaw, ±17° pitch),
+// a pan along the zone and a short dolly, down to arm's length. No free flight. On exit it walks back out
+// and rises to the overview camera's pose, and hands over.
+//
+// `envRef` carries how far the scene is into the close-up (0 overview … 1 eye level), from the camera's
+// height: the fog, the background, the overview's lights and fixtures blend on it (Scene.tsx).
 
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { Euler, PerspectiveCamera, Quaternion, Vector3 } from "three";
+import { Euler, Matrix4, PerspectiveCamera, Quaternion, Vector3 } from "three";
 import type { HeroTargetInfo } from "./index.ts";
 import type { SafeArea } from "../map3d/CameraRig.tsx";
 
 export const EYE_HEIGHT = 1.6;
 const STAND_OFF = 2.45; // metres from the bin's centre to the shopper
-const EASE_MS = 480;
+const DESCENT_MS = 480;
 const YAW = 1.0; // ±57°: enough to look down the aisle, never behind
 const PITCH = 0.3;
-const DOLLY: [number, number] = [-0.9, 0.6];
+const DOLLY: [number, number] = [-0.9, 1.75]; // to arm's length (0.7 m from the bin)
+const BOB = 0.012; // metres, a step's rise and fall
+
+/** the walk's duration for its length: a stroll, never a dash, never past 760 ms */
+export const walkMs = (metres: number) => Math.round(Math.min(760, Math.max(360, 300 + metres * 40)));
 
 export interface CloseUpCameraHandle {
   look: (dxPx: number, dyPx: number) => void;
@@ -39,18 +48,48 @@ export interface CloseUpCameraProps {
   onExited: () => void;
   /** written while the close-up is open, for the perf readout */
   distanceRef?: { current: number };
+  /** 0 overview … 1 eye level: how far the scene is into the close-up */
+  envRef?: { current: number };
 }
 
 /** A vertical field that shows ~60° across in landscape and a usable width in portrait, 50–75°. */
 export const closeUpFov = (aspect: number) => Math.min(75, Math.max(50, (2 * Math.atan(Math.tan(Math.PI / 6) / aspect) * 180) / Math.PI));
 
 const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
 
-export const CloseUpCamera = forwardRef<CloseUpCameraHandle, CloseUpCameraProps>(function CloseUpCamera({ target, safe, reducedMotion, exiting, returnView, onExited, distanceRef }, ref) {
+/** the environment blend for a camera height: overview above 9 m, the close-up at 2.2 m and below */
+export const envAt = (y: number) => {
+  const t = Math.max(0, Math.min(1, (9 - y) / (9 - 2.2)));
+  return t * t * (3 - 2 * t);
+};
+
+/** a pose looking from `from` toward `to`, level */
+const lookPose = (from: Vector3, to: Vector3, fov: number): CameraView => {
+  const yaw = Math.atan2(-(to.x - from.x), -(to.z - from.z));
+  return { position: from.clone(), quaternion: new Quaternion().setFromEuler(new Euler(-0.04, yaw, 0, "YXZ")), fov };
+};
+const UP = new Vector3(0, 1, 0);
+/** the camera's orientation looking from `from` at `at` (no roll) */
+const aim = (from: Vector3, at: Vector3) => new Quaternion().setFromRotationMatrix(new Matrix4().lookAt(from, at, UP));
+/** where a pose's view meets the floor (or a point 30 m out, when it looks above the horizon) */
+const groundOf = (v: CameraView) => {
+  const f = new Vector3(0, 0, -1).applyQuaternion(v.quaternion);
+  return f.y < -0.05 ? v.position.clone().addScaledVector(f, -v.position.y / f.y) : v.position.clone().addScaledVector(f, 30);
+};
+
+interface Segment {
+  ms: number;
+  /** the pose at eased progress e (0–1) and raw progress t */
+  at: (e: number, t: number) => CameraView;
+  ease: (t: number) => number;
+}
+
+export const CloseUpCamera = forwardRef<CloseUpCameraHandle, CloseUpCameraProps>(function CloseUpCamera({ target, safe, reducedMotion, exiting, returnView, onExited, distanceRef, envRef }, ref) {
   const { camera, invalidate, size } = useThree();
   const cam = camera as PerspectiveCamera;
   const user = useRef({ yaw: 0, pitch: 0, pan: 0, dolly: 0 });
-  const anim = useRef<{ t0: number; from: CameraView; to: () => CameraView; done?: () => void } | null>(null);
+  const anim = useRef<{ t0: number; segs: Segment[]; i: number; done?: () => void } | null>(null);
   const settled = useRef(false);
 
   /** the eye pose for the current target and the shopper's look / pan / dolly */
@@ -78,35 +117,102 @@ export const CloseUpCamera = forwardRef<CloseUpCameraHandle, CloseUpCameraProps>
     cam.updateProjectionMatrix();
     cam.updateMatrixWorld(true);
     if (distanceRef) distanceRef.current = 2;
+    if (envRef) envRef.current = envAt(v.position.y);
   };
 
-  const start = (to: () => CameraView, done?: () => void) => {
-    const from = { position: cam.position.clone(), quaternion: cam.quaternion.clone(), fov: cam.fov };
+  const run = (segs: Segment[], done?: () => void) => {
     if (reducedMotion) {
-      apply(to());
+      const last = segs[segs.length - 1];
+      apply(last.at(1, 1));
       done?.();
       invalidate();
       return;
     }
-    anim.current = { t0: performance.now(), from, to, done };
+    anim.current = { t0: performance.now(), segs, i: 0, done };
     invalidate();
   };
 
-  // in: from wherever the overview left the camera, down to eye level
+  /** the two moves between `high` (the overview's pose) and the eye pose, through the door */
+  const moves = (high: CameraView): { descent: Segment; walk: Segment } => {
+    const end = eye();
+    const door = new Vector3(...target.door);
+    const stand = end.position.clone();
+    const doorPose = lookPose(door, stand.clone().lerp(new Vector3(...target.center), 0.25), end.fov);
+    // the curve's control point: above the door at the overview's height, so the path comes down outside
+    const ctrl = new Vector3(door.x, high.position.y, door.z).lerp(high.position, 0.25);
+    // the view stays on the store all the way down: it looks at a point that glides from where the overview
+    // was looking to the zone's open side ahead of the door, so the camera never turns to the sky
+    const from = groundOf(high);
+    const ahead = door.clone().add(new Vector3(0, 0, -1).applyQuaternion(doorPose.quaternion).multiplyScalar(3));
+    const descent: Segment = {
+      ms: DESCENT_MS,
+      ease: easeInOut,
+      at: (e) => {
+        const a = high.position.clone().multiplyScalar((1 - e) * (1 - e));
+        const b = ctrl.clone().multiplyScalar(2 * e * (1 - e));
+        const c = door.clone().multiplyScalar(e * e);
+        const position = a.add(b).add(c);
+        const q = aim(position, from.clone().lerp(ahead, easeOut(e)));
+        // the first and last moments hand over exactly from the overview's pose and to the door's
+        const quaternion = high.quaternion.clone().slerp(q, Math.min(1, e * 6)).slerp(doorPose.quaternion, Math.max(0, (e - 0.85) / 0.15));
+        return { position, quaternion, fov: high.fov + (doorPose.fov - high.fov) * e };
+      },
+    };
+    const metres = door.distanceTo(stand);
+    const walk: Segment = {
+      ms: walkMs(metres),
+      ease: easeInOut,
+      at: (e) => {
+        const p = door.clone().lerp(stand, e);
+        // a step every ~0.7 m: the head rises and falls, fading in and out with the walk
+        if (!reducedMotion) p.y += BOB * Math.sin(Math.PI * e) * Math.pow(Math.sin((Math.PI * e * metres) / 0.7), 2);
+        return { position: p, quaternion: doorPose.quaternion.clone().slerp(end.quaternion, easeInOut(Math.min(1, e * 1.15))), fov: end.fov };
+      },
+    };
+    return { descent, walk };
+  };
+
+  // in: from wherever the overview left the camera, down outside the zone, then the walk in
   useEffect(() => {
     cam.near = 0.05;
     cam.updateProjectionMatrix();
     settled.current = false;
-    start(eye, () => (settled.current = true));
+    user.current = { yaw: 0, pitch: 0, pan: 0, dolly: 0 };
+    const high = { position: cam.position.clone(), quaternion: cam.quaternion.clone(), fov: cam.fov };
+    // already at eye level (another bin in the zone): just walk over
+    if (cam.position.y < 3) {
+      const from = high;
+      const to = eye();
+      run([{ ms: walkMs(from.position.distanceTo(to.position)), ease: easeInOut, at: (e) => ({ position: from.position.clone().lerp(to.position, e), quaternion: from.quaternion.clone().slerp(to.quaternion, e), fov: to.fov }) }], () => (settled.current = true));
+      return;
+    }
+    const { descent, walk } = moves(high);
+    run([descent, walk], () => (settled.current = true));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [target.center[0], target.center[1], target.center[2], target.facing]);
 
-  // out: back to the overview pose, then hand over
+  // out: walk back to the door, rise to the overview pose, then hand over
   useEffect(() => {
     if (!exiting) return;
-    start(returnView, () => {
+    const back = returnView();
+    const here = { position: cam.position.clone(), quaternion: cam.quaternion.clone(), fov: cam.fov };
+    const { descent, walk } = moves(back);
+    const out: Segment[] = [
+      {
+        ...walk,
+        // the walk back starts from wherever the shopper looked (panned, turned, dollied): blend that in
+        at: (e, t) => {
+          const p = walk.at(1 - e, 1 - t);
+          const k = Math.min(1, e * 3);
+          return { position: here.position.clone().lerp(p.position, k), quaternion: here.quaternion.clone().slerp(p.quaternion, k), fov: p.fov };
+        },
+      },
+      { ...descent, at: (e, t) => descent.at(1 - e, 1 - t) },
+    ];
+    run(out, () => {
       cam.near = 0.5;
       cam.updateProjectionMatrix();
+      if (envRef) envRef.current = 0;
       onExited();
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -123,14 +229,21 @@ export const CloseUpCamera = forwardRef<CloseUpCameraHandle, CloseUpCameraProps>
   useFrame(() => {
     const a = anim.current;
     if (!a) return;
-    const k = Math.min(1, (performance.now() - a.t0) / EASE_MS);
-    const e = easeInOut(k);
-    const to = a.to();
-    apply({ position: a.from.position.clone().lerp(to.position, e), quaternion: a.from.quaternion.clone().slerp(to.quaternion, e), fov: a.from.fov + (to.fov - a.from.fov) * e });
-    if (k >= 1) {
-      anim.current = null;
-      a.done?.();
-    } else invalidate();
+    const seg = a.segs[a.i];
+    const t = Math.min(1, (performance.now() - a.t0) / seg.ms);
+    apply(seg.at(seg.ease(t), t));
+    if (t < 1) {
+      invalidate();
+      return;
+    }
+    if (a.i + 1 < a.segs.length) {
+      a.i += 1;
+      a.t0 = performance.now();
+      invalidate();
+      return;
+    }
+    anim.current = null;
+    a.done?.();
   });
 
   useImperativeHandle(ref, () => ({
