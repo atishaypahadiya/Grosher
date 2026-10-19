@@ -40,7 +40,7 @@ npm test                                 # core (node --test), stores (node --te
 npm run typecheck                        # tsc --noEmit in every workspace
 npm run dev                              # Vite dev server for apps/web, http://localhost:5173 (host: true for phones)
 cd apps/web && node scripts/contrast-gate.mjs http://localhost:4173 --report   # contrast gate against vite preview (CI runs it)
-npm run bench                            # core: route vs. list-order baseline, 5–30 stops, with each row's saved p10–p90, then a 14-stop range on its own seed
+npm run bench                            # core: route vs. list-order baseline, 5–30 stops, with each row's saved p10–p90, then a 14-stop range on its own seed (-- --store grosher: the same 30 items on Grosher)
 
 cd packages/core && node --test --test-name-pattern="reroute" test/solver.test.ts     # one core test
 cd apps/web && npx vitest run test/trip.test.ts                                      # one web file
@@ -74,7 +74,8 @@ Read `src/types.ts`, then `graph.ts`, then `solver.ts`.
   `fixtures` (polygons with height, department, aisle sign, and `bays` / `shelves` / `depth`) and
   `departments` (color, texture file, `fixtureKind`: gondola, coldcase, produce, bakery, counter).
   A `Stop` is a list item resolved to one or more candidate locations plus tags
-  (`frozen|chilled|hot|heavy|fragile|produce`). Rendering-only: `outline` (the building's wall, Grosher's cut
+  (`frozen|chilled|hot|heavy|bulky|fragile|produce`; `bulky` is big and light, rides under or on top of the
+  cart, no penalty, and the trip sheet says "bulky, under the cart"). Rendering-only: `outline` (the building's wall, Grosher's cut
   corner), `skylights` (daylight in 3D), a department's `finish` (wood / stainless), a fixture's own
   `fixtureKind` (the cold-beer doors in the beer aisle), and the kinds `servicecase`, `coffin`, `bins`.
 - `WalkGraph` splits each edge at its shelf locations into virtual `loc:<id>` nodes and runs heap Dijkstra;
@@ -401,7 +402,16 @@ front of each face, one per category at the centre of its bay run; ids are `A4-L
 never meet it). Departments are one per sign or counter ("A4 · world foods", "Sushi · last") and carry a
 `finish` (wood / stainless) for the 3D material. Storage (pinned in `test/grosher.test.ts`): hot = rotisserie,
 hot bar, soups; 40 chilled (the fresh counters, dairy, cheese, deli, cut fruit and vegetables, sushi, the salad
-bar, cold beer); 25 frozen; beer, wine, the café, greens, herbs and mushrooms ambient.
+bar, cold beer); 25 frozen; beer, wine, the café, greens, herbs and mushrooms ambient. **Handling by the
+shelf** (`HEAVY` / `BULKY` in `grosher-taxonomy.ts`, `src/handling.ts`, pinned in the test): heavy = about 2 kg
+or more for the typical unit, 29 shelves (cases of water, soda, sparkling water, sports drinks, beer and cider;
+gallon jugs of milk, iced tea, shelf juice, bleach, detergent and fabric softener; big rice and atta bags, flour,
+sugar; ghee and cooking oil; pet food and litter; charcoal; melons, 5 lb potatoes; ice, whole turkeys); bulky = 10
+(toilet paper, paper towels, tissues, diapers, incontinence, mops, chips and popcorn). Every carried and base row
+takes heavy / bulky from its shelf (the source catalog had 9,785 heavy rows: every soup can and paper towel),
+plus heavy for a multipack or case of cans or bottles that says so in its name (`MULTIPACK`, a handful: the
+import stripped pack sizes from names, so canned multipacks mostly cannot be told apart from single cans). A
+model's guess keeps its own tags. The demo Supercenter keeps its old tags (tests only).
 - **Catalog carry-over** (`src/carry.ts`): Grosher's full catalog is the demo's `catalog.json` moved onto
   Grosher's shelves at load time through the shared category ids (the 7 MB file ships once), plus
   `grosher/rehome.json` (964 rows the Walmart taxonomy had to shelve wrong: Instacart's beer, wine and spirits
@@ -414,9 +424,10 @@ bar, cold beer); 25 frozen; beer, wine, the café, greens, herbs and mushrooms a
   offers them once per browser as saved lists (`offerShipped`, `grosher.offered.<storeId>`; a deleted one is
   not offered again). `test/grosher.test.ts` resolves every item offline, solves each (Held–Karp, 0.1–2 ms),
   and compares items, order, lane and metres with `test/fixtures/grosher-hero-routes.json`, so a map edit
-  shows up as a diff. On 18 Oct 2026: dal-chawal 315 m vs 445 in list order, weekly staples 387 vs 513,
-  Friday night 292 vs 523, pharmacy run 256 vs 331. The existing heavy-early penalty makes weekly staples
-  start in aisle 8 (dish soap, paper towels): 387 m against 359 with cold-last alone.
+  shows up as a diff. On 18 Oct 2026, with heavy by the shelf: dal-chawal 315 m vs 445 in list order,
+  weekly staples 359 vs 513 (produce first now; before, dish soap and paper towels counted as heavy and pulled
+  it to aisle 8 first, 387 m), Friday night 289 vs 523, pharmacy run 256 vs 331. Dal-chawal still leaves produce
+  for basmati, atta and ghee, which are heavy.
 - **Resolver on Grosher** (`eval:everyday --store grosher`; the blind fixture's demo aisles are translated to
   the Grosher aisles holding their categories): 99% offline (149 / 150) against the demo's 98%. The
   new-shelves set (`test/fixtures/grosher-new-shelves.json`, 33 things Walmart grocery had no shelf for, NOT
@@ -424,8 +435,8 @@ bar, cold beer); 25 frozen; beer, wine, the café, greens, herbs and mushrooms a
   either).
 - **What still depends on the demo Supercenter:** the catalog file and its categories (the carry-over), the
   demo department textures Grosher's products sample, survey mode and the surveyed editor (the Walmart
-  reference taxonomy), most unit tests and `npm run bench`, the stale-location tests, and the project page's
-  captures and numbers (`capture-project.mjs` would now run on Grosher; not re-shot).
+  reference taxonomy), most unit tests and `npm run bench` (default), and the stale-location tests. The
+  project page's media and numbers are Grosher's (`capture-project.mjs` runs on the default store).
 
 **The demo Supercenter** (`scripts/gen-demo.ts`, 100 nodes, 151 edges, 65 fixtures, 298 locations) mirrors
 a Walmart grocery side plus the near general-merchandise aisles: produce wall by the entrance (right), deli

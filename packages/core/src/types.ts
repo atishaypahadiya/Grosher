@@ -25,7 +25,8 @@ export interface GraphEdge {
   oneWay?: boolean; // e.g. entrance turnstiles
 }
 
-export type ItemTag = "frozen" | "chilled" | "hot" | "heavy" | "fragile" | "produce";
+/** "bulky": big and light (paper towels, toilet paper); it rides under or on top of the cart, no route penalty */
+export type ItemTag = "frozen" | "chilled" | "hot" | "heavy" | "bulky" | "fragile" | "produce";
 
 /**
  * Storage: how the shelf keeps an item (the fridge, the freezer, the deli's hot case). A property of the

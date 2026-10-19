@@ -74,12 +74,14 @@ export function TripScreen({ bundle, router, trip, flat, onFlatChange, onGotIt, 
   const loc = leg ? store.locations.find((l) => l.id === leg.locationId) : undefined;
   const dept = locationDepartment(store, loc);
   const tags = stop?.tags ?? [];
-  const hint = tags.includes("hot") ? " · hot, so it's near the end" : tags.includes("frozen") || tags.includes("chilled") ? " · cold, so it's near the end" : tags.includes("heavy") ? " · heavy, so it's early" : "";
+  const hint = tags.includes("hot") ? " · hot, so it's near the end" : tags.includes("frozen") || tags.includes("chilled") ? " · cold, so it's near the end" : tags.includes("heavy") ? " · heavy, so it's early" : tags.includes("bulky") ? " · bulky, under the cart" : "";
   const locationLine = leg ? `${describeLocation(store, leg.locationId)}${hint}` : "";
 
   const remainingM = trip.route.legs.reduce((s, l) => s + l.distanceM, 0);
   const lane = trip.route.legs.find((l) => l.label === "Checkout");
-  const eyebrowParts = [dept?.name, loc?.aisle].filter((p, i, arr): p is string => !!p && arr.findIndex((q) => q?.toLowerCase() === p.toLowerCase()) === i);
+  // the department, then the aisle number on a numbered aisle ("Snacks · A12"); a wall or counter's code
+  // ("BODYCARE") would only repeat its department's name
+  const eyebrowParts = [dept?.name, loc && (/^A\d+$/i.test(loc.aisle) || !dept) ? loc.aisle : undefined].filter((p): p is string => !!p);
   const slot = loc ? slotFor(store, loc) : undefined;
   const sideWord = loc?.side === "R" ? "Right" : loc?.side === "E" ? "Endcap" : "Left";
   const slotLine = slot ? `${sideWord} · bay ${slot.bay} · shelf ${slot.shelf + 1}` : undefined;

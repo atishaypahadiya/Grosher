@@ -1,4 +1,5 @@
 import type { StoreGraph } from "@grosher/core";
+import { locationDepartment } from "./chips.ts";
 
 /** Shopping pace with a cart, metres per second. Matches the core bench. */
 export const WALK_MPS = 1.0;
@@ -30,10 +31,11 @@ export const minutesNum = (m: number) => String(Math.max(1, Math.round(m / WALK_
 const SIDE: Record<string, string> = { L: "left", R: "right" };
 
 /** "A12, left, section 100" style description of a shelf location. */
+/** "A4, left" on a numbered aisle; a wall or counter by its department's name ("Body care, left", not "BODYCARE") */
 export function describeLocation(store: StoreGraph, locationId: string | undefined): string {
   const loc = store.locations.find((l) => l.id === locationId);
   if (!loc) return "";
-  const parts = [loc.aisle];
+  const parts = [/^A\d+$/i.test(loc.aisle) ? loc.aisle : locationDepartment(store, loc)?.name ?? loc.aisle];
   if (loc.side) parts.push(SIDE[loc.side] ?? loc.side);
   if (loc.bay) parts.push(`section ${loc.bay}`);
   return parts.join(", ");

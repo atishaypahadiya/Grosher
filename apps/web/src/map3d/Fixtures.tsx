@@ -26,6 +26,32 @@ const GLOW = new MeshStandardMaterial({ color: "#F4FBFC", emissive: new Color("#
 // black steel: the uprights, end panels and rails of the wood-finish fixtures
 const STEEL = new MeshStandardMaterial({ color: "#2A2824", roughness: 0.45, metalness: 0.35 });
 const FINISH_FILE = { wood: "wood.jpg", stainless: "stainless.jpg" } as const;
+
+/**
+ * Neutral light for the fresh and cold zones: the scene's light is the haze (an orange hemisphere sky and a
+ * warm key), which turns pale steel peach. This material keeps the light's strength but drops its colour
+ * (every light term reduced to its luminance), so stainless and the cold-case frames read as brushed steel
+ * while the background, the sky and the wood stay warm. One extra shader program, no extra draw calls.
+ */
+function neutralLight<M extends MeshStandardMaterial>(m: M): M {
+  m.onBeforeCompile = (shader) => {
+    shader.fragmentShader = shader.fragmentShader.replace(
+      "#include <lights_fragment_end>",
+      `#include <lights_fragment_end>
+      {
+        const vec3 LUMA = vec3(0.2126, 0.7152, 0.0722);
+        reflectedLight.directDiffuse = vec3(dot(reflectedLight.directDiffuse, LUMA));
+        reflectedLight.indirectDiffuse = vec3(dot(reflectedLight.indirectDiffuse, LUMA));
+        reflectedLight.directSpecular = vec3(dot(reflectedLight.directSpecular, LUMA));
+        reflectedLight.indirectSpecular = vec3(dot(reflectedLight.indirectSpecular, LUMA));
+      }`,
+    );
+  };
+  m.customProgramCacheKey = () => "grosher-neutral-light";
+  return m;
+}
+const FRAME_STEEL = neutralLight(new MeshStandardMaterial({ color: "#E4E6E3", roughness: 0.35 }));
+const GLOW_STEEL = neutralLight(new MeshStandardMaterial({ color: "#F2F3F1", emissive: new Color("#E6E8E5"), emissiveIntensity: 0.45, roughness: 1 }));
 type Finish = keyof typeof FINISH_FILE;
 
 function hullGeometry(b: Box) {
@@ -97,9 +123,11 @@ export function Fixtures({ store, textureUrl, repeatMeters = 2, nodes, fromEntra
     return new MeshStandardMaterial({ map, color: dept ? (map ? tint(dept.color) : new Color(dept.color)) : new Color("#DCE3D4"), roughness: 0.85, metalness: 0 });
   };
   const finishMaterial = (finish: Finish) =>
-    // no environment map in this scene, so metalness would only darken the steel: stainless reads by its pale
-    // brushed texture and a low roughness instead
-    new MeshStandardMaterial({ map: textureFor.get(`finish:${finish}`) ?? null, color: "#FFFFFF", roughness: finish === "wood" ? 0.75 : 0.3, metalness: 0 });
+    finish === "wood"
+      ? new MeshStandardMaterial({ map: textureFor.get("finish:wood") ?? null, color: "#FFFFFF", roughness: 0.75, metalness: 0 })
+      : // no environment map in this scene, so metalness would only darken the steel: stainless reads by its
+        // brushed texture, a low roughness, neutral light and a little grey of its own so the shaded sides stay steel
+        neutralLight(new MeshStandardMaterial({ map: textureFor.get("finish:stainless") ?? null, color: "#F4F5F3", emissive: new Color("#6B6E6C"), emissiveIntensity: 1, roughness: 0.3, metalness: 0 }));
 
   // Merged per department, or per finish for departments that have one.
   const groups = useMemo(() => {
@@ -132,8 +160,8 @@ export function Fixtures({ store, textureUrl, repeatMeters = 2, nodes, fromEntra
         opaque: opaque ? new Mesh(opaque, finish ? finishMaterial(finish) : materialFor(dept)) : null,
         trim: trim ? new Mesh(trim, STEEL) : null,
         glass: glass ? new Mesh(glass, GLASS) : null,
-        frame: frame ? new Mesh(frame, FRAME) : null,
-        glow: glow ? new Mesh(glow, GLOW) : null,
+        frame: frame ? new Mesh(frame, finish === "stainless" ? FRAME_STEEL : FRAME) : null,
+        glow: glow ? new Mesh(glow, finish === "stainless" ? GLOW_STEEL : GLOW) : null,
       });
     }
     return out;

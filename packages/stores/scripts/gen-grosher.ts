@@ -22,7 +22,8 @@ import { join } from "node:path";
 import { encode } from "jpeg-js";
 import type { Category, Fixture, FixtureKind, GraphEdge, GraphNode, NodeType, ShelfLocation, StoreGraph, Stop } from "@grosher/core";
 import { TAXONOMY, type TaxCategory } from "./taxonomy.ts";
-import { CATEGORY_PATCHES, FACES, GROSHER_DEPARTMENTS, GROSHER_ITEMS, HERO_LISTS, NEW_CATEGORIES, REHOME } from "./grosher-taxonomy.ts";
+import { BULKY, CATEGORY_PATCHES, FACES, GROSHER_DEPARTMENTS, GROSHER_ITEMS, HEAVY, HERO_LISTS, NEW_CATEGORIES, REHOME } from "./grosher-taxonomy.ts";
+import { HANDLING_TAGS, handlingTags } from "../src/handling.ts";
 
 const BAY_M = 1.22;
 const ENTRANCE: [number, number] = [0, 6];
@@ -325,9 +326,13 @@ F("f-bakery-case", "wall", [61.5, 65.8, 71.5, 67], "bakery", { aisle: "BAKERY" }
 const reused = new Map<string, TaxCategory>();
 for (const a of TAXONOMY) for (const cat of [...a.left, ...(a.right ?? [])]) reused.set(cat.id, cat);
 const fresh = new Map(NEW_CATEGORIES.map((cat) => [cat.id, cat]));
+for (const id of [...HEAVY, ...BULKY]) if (!fresh.has(id) && !reused.has(id)) throw new Error(`HEAVY / BULKY names an unknown category ${id}`);
 const categoryDef = (id: string): TaxCategory => {
-  const base = fresh.get(id) ?? reused.get(id);
-  if (!base) throw new Error(`unknown category ${id}`);
+  const found = fresh.get(id) ?? reused.get(id);
+  if (!found) throw new Error(`unknown category ${id}`);
+  // heavy and bulky are Grosher's own (HEAVY, BULKY), never the demo taxonomy's
+  const tags = [...(found.tags ?? []).filter((t) => !HANDLING_TAGS.includes(t)), ...(HEAVY.includes(id) ? (["heavy"] as const) : []), ...(BULKY.includes(id) ? (["bulky"] as const) : [])];
+  const base: TaxCategory = { ...found, ...(tags.length || found.tags ? { tags } : {}) };
   const p = CATEGORY_PATCHES[id];
   if (!p) return base;
   const aliases = [...(base.aliases ?? []).filter((a) => !p.remove?.includes(a)), ...(p.add ?? []).filter((a) => !(base.aliases ?? []).includes(a))];
@@ -500,16 +505,17 @@ const demoCats = JSON.parse(readFileSync(join(demoDir, "categories.json"), "utf8
 const demoCatOfLoc = new Map(demoCats.map((cat) => [cat.locationId, cat.id]));
 const catById = new Map(categories.map((cat) => [cat.id, cat]));
 const demoBase = JSON.parse(readFileSync(join(demoDir, "catalog.base.json"), "utf8")) as Stop[];
-const own: Stop[] = GROSHER_ITEMS.map(({ categories: cats, ...s }) => ({
-  ...s,
-  locationIds: cats.map((id) => {
-    const cat = catById.get(id);
-    if (!cat) throw new Error(`Grosher item ${s.id}: unknown category ${id}`);
-    return cat.locationId;
-  }),
-}));
-// the demo's 30 base rows keep their ids (the tests and the bench use them); their shelves move to Grosher's
-const carriedBase: Stop[] = demoBase.map((s) => ({ ...s, locationIds: s.locationIds.map((l) => catById.get(demoCatOfLoc.get(l)!)!.locationId) }));
+const own: Stop[] = GROSHER_ITEMS.map(({ categories: cats, ...s }) => {
+  for (const id of cats) if (!catById.get(id)) throw new Error(`Grosher item ${s.id}: unknown category ${id}`);
+  const tags = handlingTags(s.tags, catById.get(cats[0]), s.name);
+  return { ...s, ...(tags.length ? { tags } : { tags: undefined }), locationIds: cats.map((id) => catById.get(id)!.locationId) };
+}).map((s) => JSON.parse(JSON.stringify(s)) as Stop);
+// the demo's 30 base rows keep their ids (the tests and the bench use them); their shelves move to Grosher's,
+// and their heavy / bulky become the shelf's
+const carriedBase: Stop[] = demoBase.map((s) => {
+  const cat = catById.get(demoCatOfLoc.get(s.locationIds[0])!);
+  return { ...s, tags: handlingTags(s.tags, cat, s.name), locationIds: s.locationIds.map((l) => catById.get(demoCatOfLoc.get(l)!)!.locationId) };
+});
 const base = [...own, ...carriedBase];
 
 // the re-homing table over the full carried catalog: item id → {from category: to category}

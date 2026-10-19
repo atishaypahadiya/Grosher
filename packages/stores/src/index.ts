@@ -13,6 +13,7 @@ import grosherCategories from "../grosher/categories.json" with { type: "json" }
 import grosherTextures from "../grosher/textures/textures.json" with { type: "json" };
 import grosherLists from "../grosher/lists.json" with { type: "json" };
 import { carryCatalog, type Rehome } from "./carry.ts";
+import { handlingTags } from "./handling.ts";
 
 export { DEPARTMENTS, departmentById } from "./departments.ts";
 export * from "./geometry.ts";
@@ -20,6 +21,7 @@ export * from "./slots.ts";
 export * from "./resolveContext.ts";
 export { reconcile, catalogKey, isBaseRow, type CatalogRow } from "./reconcile.ts";
 export { carryCatalog, type Rehome } from "./carry.ts";
+export { handlingTags, HANDLING_TAGS, MULTIPACK, MULTIPACK_SHELVES } from "./handling.ts";
 
 /** textures.json: one entry per department that has a photo (or placeholder). */
 export type TextureManifest = Record<string, { file: string; w: number; h: number; shotAt: string | null; repeatMeters: number }>;
@@ -122,7 +124,7 @@ export const grosher: StoreBundle = {
       Promise.all([
         import("../demo/catalog.json", { with: { type: "json" } }).then((m) => m.default as unknown as CatalogFile),
         import("../grosher/rehome.json", { with: { type: "json" } }).then((m) => (m.default as unknown as { items: Rehome }).items),
-      ]).then(([file, rehome]) => ({ ...file, items: carryCatalog(file.items, demoCategories as Category[], grosherCategories as Category[], rehome) })),
+      ]).then(([file, rehome]) => ({ ...file, items: carryCatalog(file.items, demoCategories as Category[], grosherCategories as Category[], rehome, (s, cat) => handlingTags(s.tags, cat, s.name)) })),
   ),
   lists: grosherLists,
 };

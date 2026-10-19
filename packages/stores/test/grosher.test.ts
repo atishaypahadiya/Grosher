@@ -7,7 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { Router, WalkGraph, isStorageTag, resolveItem, toStop, type Fixture, type StoreGraph } from "@grosher/core";
-import { demoSupercenter, grosher, STORES, DEFAULT_STORE } from "../src/index.ts";
+import { demoSupercenter, grosher, STORES, DEFAULT_STORE, MULTIPACK, MULTIPACK_SHELVES } from "../src/index.ts";
 import { fixtureForLocation, fixtureParams } from "../src/slots.ts";
 
 const { store, categories } = grosher;
@@ -123,6 +123,36 @@ test("storage is pinned: hot (rotisserie, hot bar, soups), cold (fresh counters,
   for (const id of ["beer", "red-wine", "white-wine", "sparkling-wine", "spirits", "cafe-coffee", "cafe-juice", "salad-greens", "fresh-herbs", "mushrooms-sprouts", "pizza", "shelf-milk"]) assert.deepEqual((categories.find((c) => c.id === id)!.tags ?? []).filter(isStorageTag), [], id);
   // every location carries its category's storage
   for (const c of categories) assert.deepEqual(store.locations.find((l) => l.id === c.locationId)!.tags ?? [], c.tags ?? [], c.id);
+});
+
+// ------------------------------------------------------------------ handling, pinned: heavy (about 2 kg+ a typical unit) and bulky
+const HEAVY = [
+  "asian-rice-bags", "atta-flours", "basmati-indian-rice", "beer", "bleach", "bottled-water", "cat-food", "cat-litter", "charcoal-grilling", "cider-seltzer",
+  "cold-beer", "cooking-oil", "diet-soda", "dog-food", "fabric-softener", "flour", "frozen-turkey-ham", "ghee-oils-indian", "grapes-melons", "ice",
+  "iced-tea-lemonade", "juice-shelf", "laundry-detergent", "milk", "potatoes-roots", "soda", "sparkling-water", "sports-drinks", "sugar",
+];
+const BULKY = ["cheese-puffs", "diapers", "facial-tissue", "incontinence", "mops-brooms", "paper-towels", "popcorn", "potato-chips", "toilet-paper", "tortilla-chips"];
+
+test("handling is pinned: heavy only where the typical unit is about 2 kg or more, bulky for big light things", async () => {
+  assert.deepEqual(STORAGE_OF("heavy"), HEAVY);
+  assert.deepEqual(STORAGE_OF("bulky"), BULKY);
+  for (const id of ["paper-towels", "toilet-paper", "dish-soap", "potato-chips", "soup", "pasta-sauce", "canned-beans", "rice", "all-purpose-cleaners"]) assert.ok(!categories.find((c) => c.id === id)!.tags?.includes("heavy"), `${id} is not heavy`);
+  // every carried row: heavy only on a heavy shelf, or a multipack of cans or bottles that says so; bulky only on a bulky shelf
+  const catalog = await grosher.loadCatalog();
+  let packs = 0;
+  for (const s of catalog) {
+    const cat = catOfLoc.get(s.locationIds[0]);
+    if (s.tags?.includes("heavy") && !cat?.tags?.includes("heavy")) {
+      assert.ok(MULTIPACK_SHELVES.has(cat!.id) && MULTIPACK.test(s.name), `${s.name} (${cat?.id}) is heavy on a light shelf`);
+      packs++;
+    }
+    if (s.tags?.includes("bulky")) assert.ok(cat?.tags?.includes("bulky"), `${s.name} is bulky on ${cat?.id}`);
+  }
+  assert.ok(packs < 20, `${packs} multipacks`);
+  const row = (name: string) => catalog.find((s) => s.name === name)!;
+  assert.deepEqual(row("Paper Towel").tags?.filter((t) => t === "heavy" || t === "bulky"), ["bulky"]);
+  assert.ok(!row("Dish Soap").tags?.includes("heavy"));
+  assert.ok(row("Water 24-pack").tags?.includes("heavy"));
 });
 
 // ------------------------------------------------------------------ hero lists: resolution, solve time, route snapshots

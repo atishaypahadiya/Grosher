@@ -323,10 +323,10 @@ td .num { font-size: 17px; }
           <a class="pill glass" href="https://github.com/atishaypahadiya/Grosher" rel="noopener">Source on GitHub</a>
         </div>
       </div>
-      <!-- The reroute loop: apps/web/scripts/capture-project.mjs, production build, demo store, 390×844; the trip step and zoom are in capture.json "tripFrame" -->
+      <!-- The reroute loop: apps/web/scripts/capture-project.mjs, production build, Grosher, 390×844; the trip step and zoom are in capture.json "tripFrame" -->
       <figure class="hero-phone" style="margin:0 auto">
         <div class="bezel">
-          <video id="trip-video" width="390" height="844" muted loop playsinline preload="none" controls poster="/project/img/trip-poster.webp" aria-label="Six-second loop of the 3D trip view on a 14-item list. Coffee in aisle A11 is next, with Chips stacked in a card beneath it. The shopper taps Got it; the route re-solves and the camera eases to the next leg, Chips in aisle A12, with its shelf lit and the two stops after it as chips on the edge.">
+          <video id="trip-video" width="390" height="844" muted loop playsinline preload="none" controls poster="/project/img/trip-poster.webp" aria-label="Six-second loop of the 3D trip view on a 14-item list in Grosher. Shampoo in body care is next, with Dal and Chips as the two stops after it. The shopper taps Got it; the route re-solves and the camera eases to the next leg, Dal in aisle A4, world foods, with its shelf lit and Chips in a card beside it.">
             <source src="/project/img/trip.webm" type="video/webm">
             <source src="/project/img/trip.mp4" type="video/mp4">
           </video>
@@ -339,7 +339,7 @@ td .num { font-size: 17px; }
 
 <main id="main">
 
-<!-- 2. The app. Stills: apps/web/scripts/capture-project.mjs, production build, demo store, 390×844, the same 14-item trip as the share card below. -->
+<!-- 2. The app. Stills: apps/web/scripts/capture-project.mjs, production build, Grosher, 390×844, the same 14-item trip as the share card below. -->
 <section class="sect s-app" aria-labelledby="app-title">
   <div class="wrap">
     <div class="sect-head">
@@ -349,24 +349,24 @@ td .num { font-size: 17px; }
     <ul class="phones">
       <li>
         <figure class="phone" style="margin:0">
-          <div class="bezel"><img src="/project/img/list.webp" width="390" height="844" loading="lazy" decoding="async" alt="The list screen on the demo store with 14 items, each placed on a shelf: Greek yogurt in dairy, Paper Towel in A23, Bananas in produce, Dal in A7, Frozen pizza in A18, Coffee in A11. A lime button at the bottom reads Route 14 items, 504 metres, 8 minutes, 49% shorter than walking the list in order."></div>
+          <div class="bezel"><img src="/project/img/list.webp" width="390" height="844" loading="lazy" decoding="async" alt="The list screen in Grosher with 14 items, each placed on a shelf: Greek yogurt in dairy, picked last; Paper Towel in A8, household; Bananas in produce; Dal in A4, world foods; Frozen pizza in frozen, picked last; Coffee in A1, breakfast. A lime button at the bottom reads Route 14 items, 438 metres, 7 minutes, 45% shorter than walking the list in order."></div>
           <figcaption class="badge">List</figcaption>
         </figure>
       </li>
       <li>
         <figure class="phone" style="margin:0">
-          <div class="bezel"><img src="/project/img/trip.webp" width="390" height="844" loading="lazy" decoding="async" alt="The 3D trip view with six of 14 items collected: the next stop, Chips in aisle A12, left side, bay 3, shelf 2, 13 metres away, is the lime card over the store, with its shelf lit. The two stops after it are off to the left, so they show as chips on the map's left edge with arrows pointing at them: Paper Towel, 77 metres on, and Dog Food, 111. Collected stops show a white ring with a check, later stops are numbered dots, and the checkout lane is marked ahead. The bottom sheet offers Got it and Not here."></div>
+          <div class="bezel"><img src="/project/img/trip.webp" width="390" height="844" loading="lazy" decoding="async" alt="The 3D trip view in Grosher with six of 14 items collected: the next stop, Dal in aisle A4, world foods, left side, bay 2, shelf 4, 13 metres away, is the lime card over the store, with its shelf lit. Chips, the stop after it, is a card beside it; collected stops show a white ring with a check, later stops are numbered dots, and the self-checkout is marked ahead, a 5-minute walk. The bottom sheet offers Got it and Not here."></div>
           <figcaption class="badge">3D trip</figcaption>
         </figure>
       </li>
       <li>
         <figure class="phone" style="margin:0">
-          <div class="bezel"><img src="/project/img/checkout.webp" width="390" height="844" loading="lazy" decoding="async" alt="The checkout screen after the same trip: a trip card reading 7:00, 14 of 14 items, lane 10, walked 504 metres, 49% shorter than walking the list in order, about 8 minutes saved."></div>
+          <div class="bezel"><img src="/project/img/checkout.webp" width="390" height="844" loading="lazy" decoding="async" alt="The checkout screen after the same trip: a trip card reading 6:35, 14 of 14 items, self-checkout, walked 438 metres with 7 aisles never entered, 45% shorter than walking the list in order, about 6 minutes saved."></div>
           <figcaption class="badge">Checkout card</figcaption>
         </figure>
       </li>
     </ul>
-    <p class="app-caption">Demo Supercenter: a generated layout, not a real store yet.</p>
+    <p class="app-caption">Grosher: our own designed market, laid out like a real one; not a surveyed store yet.</p>
   </div>
 </section>
 
@@ -417,8 +417,8 @@ td .num { font-size: 17px; }
           <span class="num n" aria-hidden="true">01</span>
           <div>
             <h3>Resolve the list</h3>
-            <!-- 47,612 items: packages/stores/demo/catalog.json (header "sources"); 298 categories: packages/stores/demo/categories.json; layer order: packages/core/src/resolve/index.ts resolveItem -->
-            <p>Each line goes through six layers in order: an exact catalog item, your own memory of where you found it, an aisle sign that names it, a fuzzy match for typos, the local model, and finally a question for you. The catalog is 47,612 items built from the Instacart 2017 product data, mapped onto 298 aisle-sign categories and checked shelf by shelf by a reconcile pass.</p>
+            <!-- 47,612 items: packages/stores/demo/catalog.json (header "sources"), carried onto Grosher by packages/stores/src/carry.ts; 324 categories: packages/stores/grosher/categories.json; layer order: packages/core/src/resolve/index.ts resolveItem -->
+            <p>Each line goes through six layers in order: an exact catalog item, your own memory of where you found it, an aisle sign that names it, a fuzzy match for typos, the local model, and finally a question for you. The catalog is 47,612 items built from the Instacart 2017 product data, mapped onto the store's 324 shelf categories the way its signs read and checked shelf by shelf by a reconcile pass.</p>
           </div>
         </li>
         <li class="card">
@@ -713,68 +713,66 @@ td .num { font-size: 17px; }
     <div class="results sect-body">
 
       <article class="card r-bench">
-        <span class="eyebrow">Benchmark · demo store, random lists</span>
+        <span class="eyebrow">Benchmark · Grosher, four lists as written</span>
         <h3>Route vs walking the list in order</h3>
-        <!-- source: README.md "The route" table = `npm run bench` (packages/core/bench/bench.ts), re-run at commit 9d91e7c -->
+        <!-- source: packages/stores/test/grosher.test.ts (hero lists, offline resolution, warm solve) and its snapshot test/fixtures/grosher-hero-routes.json; lists: packages/stores/grosher/lists.json; 18 Oct 2026 -->
         <table>
-          <caption class="sr-only">Walking distance of the list in typed order and of the Grosher route, by number of stops</caption>
-          <thead><tr><th scope="col">Stops</th><th scope="col">List order</th><th scope="col">Grosher</th><th scope="col">Saved</th></tr></thead>
+          <caption class="sr-only">Walking distance of each hero list in written order and of the Grosher route, in metres</caption>
+          <thead><tr><th scope="col">List</th><th scope="col">In order, m</th><th scope="col">Grosher, m</th><th scope="col">Saved</th></tr></thead>
           <tbody>
-            <tr><td><span class="num">5</span></td><td><span class="num">391</span> m</td><td><span class="num">314</span> m</td><td><span class="num now">20%</span></td></tr>
-            <tr><td><span class="num">8</span></td><td><span class="num">594</span> m</td><td><span class="num">388</span> m</td><td><span class="num now">35%</span></td></tr>
-            <tr><td><span class="num">10</span></td><td><span class="num">666</span> m</td><td><span class="num">431</span> m</td><td><span class="num now">35%</span></td></tr>
-            <tr><td><span class="num">13</span></td><td><span class="num">868</span> m</td><td><span class="num">485</span> m</td><td><span class="num now">44%</span></td></tr>
-            <tr><td><span class="num">18</span></td><td><span class="num">1,171</span> m</td><td><span class="num">584</span> m</td><td><span class="num now">50%</span></td></tr>
-            <tr><td><span class="num">25</span></td><td><span class="num">1,540</span> m</td><td><span class="num">722</span> m</td><td><span class="num now">53%</span></td></tr>
-            <tr><td><span class="num">30</span></td><td><span class="num">1,834</span> m</td><td><span class="num">786</span> m</td><td><span class="num now">57%</span></td></tr>
+            <tr><td>Dal-chawal · <span class="num">10</span></td><td><span class="num">445</span></td><td><span class="num">315</span></td><td><span class="num now">29%</span></td></tr>
+            <tr><td>Weekly staples · <span class="num">11</span></td><td><span class="num">513</span></td><td><span class="num">359</span></td><td><span class="num now">30%</span></td></tr>
+            <tr><td>Friday night in · <span class="num">9</span></td><td><span class="num">523</span></td><td><span class="num">289</span></td><td><span class="num now">45%</span></td></tr>
+            <tr><td>Pharmacy run · <span class="num">5</span></td><td><span class="num">331</span></td><td><span class="num">256</span></td><td><span class="num now">22%</span></td></tr>
           </tbody>
         </table>
-        <!-- 14-stop range: `npm run bench`, the 14-stop block (packages/core/bench/bench.ts, rng 1414, 30 lists): mean 46%, p10–p90 35–54%; the trip's 49%: public/project/capture.json -->
-        <p class="note">Averages over random lists on the generated store, walking distance only, penalties excluded; exact up to 13 stops, heuristic above. A 14-item list should save 35–54% (10th to 90th percentile of 30 random lists); the trip on this page saved 49%.</p>
+        <!-- 14-stop range: `npm run bench -- --store grosher` (packages/core/bench/bench.ts, rng 1414, 30 lists of 14 of the 30 hand-kept items): mean 46%, p10–p90 37–56%; the trip's 45%: public/project/capture.json -->
+        <p class="note">Each list (items after the name) is written the way a person jots it and never reordered; every item is placed offline. Walking distance only, penalties excluded; exact by Held–Karp in 0.1 to 2.2 ms. The dal-chawal route still leaves produce for the rice, atta and ghee, because heavy goes in the cart first. Random 14-item lists save 37–56% (10th to 90th percentile of 30); the trip on this page saved 45%.</p>
       </article>
 
       <article class="card r-solver">
-        <span class="eyebrow">Benchmark · median solve time</span>
-        <h3>Solver speed, before and after delta evaluation</h3>
-        <!-- source: CLAUDE.md "Routing engine" (Router.solve paragraph) and commit 3860098; measured with `npm run bench` -->
+        <span class="eyebrow">Benchmark · median solve time, Grosher</span>
+        <h3>Solver speed by number of stops</h3>
+        <!-- source: `npm run bench -- --store grosher` (packages/core/bench/bench.ts), 18 Oct 2026, this Mac; delta evaluation: commit 3860098 (30 stops 306.4 → 17.7 ms on the demo store) -->
         <table>
-          <caption class="sr-only">Median heuristic solve time before and after delta evaluation, by number of stops</caption>
-          <thead><tr><th scope="col">Stops</th><th scope="col">Before</th><th scope="col">After</th></tr></thead>
+          <caption class="sr-only">Median and worst solve time on Grosher, by number of stops</caption>
+          <thead><tr><th scope="col">Stops</th><th scope="col">Solver</th><th scope="col">Median</th><th scope="col">Worst</th></tr></thead>
           <tbody>
-            <tr><td><span class="num">18</span></td><td><span class="num">29.8</span> ms</td><td><span class="num now">3.6</span> ms</td></tr>
-            <tr><td><span class="num">25</span></td><td><span class="num">130.8</span> ms</td><td><span class="num now">8.0</span> ms</td></tr>
-            <tr><td><span class="num">30</span></td><td><span class="num">306.4</span> ms</td><td><span class="num now">17.7</span> ms</td></tr>
+            <tr><td><span class="num">10</span></td><td>Exact</td><td><span class="num now">0.4</span> ms</td><td><span class="num">1.3</span> ms</td></tr>
+            <tr><td><span class="num">13</span></td><td>Exact</td><td><span class="num now">4.5</span> ms</td><td><span class="num">4.6</span> ms</td></tr>
+            <tr><td><span class="num">18</span></td><td>Heuristic</td><td><span class="num now">3.9</span> ms</td><td><span class="num">9.5</span> ms</td></tr>
+            <tr><td><span class="num">25</span></td><td>Heuristic</td><td><span class="num now">8.3</span> ms</td><td><span class="num">9.0</span> ms</td></tr>
+            <tr><td><span class="num">30</span></td><td>Heuristic</td><td><span class="num now">17.2</span> ms</td><td><span class="num">18.9</span> ms</td></tr>
           </tbody>
         </table>
-        <p class="note">Moves are scored by the edges and penalties they change, not a full re-evaluation. Three seeded starts keep the 12-stop gap to exact under 10%.</p>
+        <p class="note">Above 13 stops, moves are scored by the edges and penalties they change, not a full re-evaluation; that took 30 stops from 306 to 18 ms. Three seeded starts keep the 12-stop gap to exact under 10%.</p>
       </article>
 
       <article class="card r-resolve">
-        <span class="eyebrow">Blind set, run once</span>
+        <span class="eyebrow">Blind set, run once · Grosher</span>
         <h3>Item resolution at aisle level</h3>
-        <!-- source: packages/core/test/fixtures/resolution-everyday.json, scored by packages/core/test/resolution-everyday.test.ts at commit 9d91e7c: 147 of 150, no model -->
+        <!-- source: packages/core/test/fixtures/resolution-everyday.json, scored by `npm run eval:everyday -w @grosher/stores -- --store grosher` (each expected demo aisle translated to the Grosher aisles holding its categories), 18 Oct 2026: 149 of 150, no model; the demo store 147 of 150. New shelves: packages/stores/test/fixtures/grosher-new-shelves.json, 33 items, not blind -->
         <div class="res-cols"><div class="res-a">
-        <div class="big"><span class="num">98<span class="unit">%</span></span><p>147 of 150 everyday items written blind, no model involved.</p></div>
-        <ul class="misses" aria-label="The three misses">
-          <li>"salmon fillet" lands on frozen fillets, not the meat counter</li>
-          <li>"sourdough bread" lands on packaged bread, not the bakery</li>
-          <li>"jeera" lands on the general spice aisle, not Indian spices</li>
+        <div class="big"><span class="num">99<span class="unit">%</span></span><p>149 of 150 everyday items written blind, no model involved (147 on the Walmart-style demo store).</p></div>
+        <ul class="misses" aria-label="The one miss">
+          <li>"salmon fillet" lands on frozen fillets, not the seafood counter</li>
         </ul>
+        <p class="note">Things Walmart grocery had no shelf for (beer and wine, bulk dal, cookware, flowers, the food hall): 29 of 33 placed without the model, 32 with it, against 1 on the old store. That set was written after Grosher's signs, so it is not blind.</p>
         </div><div class="res-b">
         <table>
-          <caption class="sr-only">Aisle-level accuracy by kind of item</caption>
+          <caption class="sr-only">Aisle-level accuracy by kind of item on Grosher</caption>
           <thead><tr><th scope="col">Kind</th><th scope="col">Items</th><th scope="col">Right aisle</th></tr></thead>
           <tbody>
-            <tr><td>Food</td><td><span class="num">60</span></td><td><span class="num">58</span></td></tr>
+            <tr><td>Food</td><td><span class="num">60</span></td><td><span class="num">59</span></td></tr>
             <tr><td>Brands</td><td><span class="num">24</span></td><td><span class="num">24</span></td></tr>
             <tr><td>Pharmacy</td><td><span class="num">19</span></td><td><span class="num">19</span></td></tr>
-            <tr><td>Indian staples</td><td><span class="num">18</span></td><td><span class="num">17</span></td></tr>
+            <tr><td>Indian staples</td><td><span class="num">18</span></td><td><span class="num">18</span></td></tr>
             <tr><td>Household</td><td><span class="num">17</span></td><td><span class="num">17</span></td></tr>
             <tr><td>Misspellings</td><td><span class="num">12</span></td><td><span class="num">12</span></td></tr>
           </tbody>
         </table>
         <!-- source: packages/core/test/fixtures/resolution.json (60) and resolution-heldout.json (30), resolution-fixture.test.ts -->
-        <p class="note">The two tuned fixtures, 60 and 30 items, are regression checks only (60/60, 30/30) and not a measure of accuracy.</p>
+        <p class="note">The set names the old store's aisles; on Grosher an item counts when it lands in an aisle that holds the same shelf. The two tuned fixtures, 60 and 30 items, are regression checks only (60/60, 30/30).</p>
         </div></div>
       </article>
 
@@ -782,34 +780,34 @@ td .num { font-size: 17px; }
         <span class="eyebrow">Measured · production build, headless Chromium</span>
         <h3>Performance against the budget</h3>
         <div class="perf-cols">
-          <!-- draw calls and instances: apps/web/scripts/perf-gate.mjs in CI run 39063622947, recorded in CLAUDE.md "Perf gate"; budget: DESIGN.md §3 -->
+          <!-- draw calls and instances: apps/web/scripts/perf-gate.mjs on Grosher (CI and local, 18 Oct 2026: 46 / 48 / 48 calls, 1,199 / 7,924 / 7,924 instances); budget: DESIGN.md §3 -->
           <div class="budget">
             <div class="row">
-              <div class="row-head"><span>Draw calls, worst framing</span><span><span class="num">44</span> of <span class="num">70</span></span></div>
-              <div class="bar" role="img" aria-label="44 of a 70 draw-call budget"><i style="width:62.9%"></i></div>
+              <div class="row-head"><span>Draw calls, worst framing</span><span><span class="num">48</span> of <span class="num">70</span></span></div>
+              <div class="bar" role="img" aria-label="48 of a 70 draw-call budget"><i style="width:68.6%"></i></div>
             </div>
             <div class="row">
-              <div class="row-head"><span>Product instances, worst framing</span><span><span class="num">10,373</span> of <span class="num">12,000</span></span></div>
-              <div class="bar" role="img" aria-label="10,373 of a 12,000 instance budget"><i style="width:86.4%"></i></div>
+              <div class="row-head"><span>Product instances, worst framing</span><span><span class="num">7,924</span> of <span class="num">12,000</span></span></div>
+              <div class="bar" role="img" aria-label="7,924 of a 12,000 instance budget"><i style="width:66%"></i></div>
             </div>
           </div>
-          <!-- list interactive (117 / 89 ms) and index ready (990 / 141 ms): CLAUDE.md "Item resolution", CandidateIndex paragraph -->
+          <!-- list interactive (56 / 46 ms) and index ready (1,123 / 295 ms): production build, headless Chromium at 390×844, median of 3, 18 Oct 2026 (time from navigation to the add-items field, and to window.__grosherIndex); CLAUDE.md "Item resolution" -->
           <table>
             <caption class="sr-only">Load timings, cold and warm</caption>
             <thead><tr><th scope="col">Load</th><th scope="col">Cold</th><th scope="col">Warm</th></tr></thead>
             <tbody>
-              <tr><td>List interactive</td><td><span class="num">117</span> ms</td><td><span class="num">89</span> ms</td></tr>
-              <tr><td>Catalog index ready</td><td><span class="num">990</span> ms</td><td><span class="num">141</span> ms</td></tr>
+              <tr><td>List interactive</td><td><span class="num">56</span> ms</td><td><span class="num">46</span> ms</td></tr>
+              <tr><td>Catalog index ready</td><td><span class="num">1,123</span> ms</td><td><span class="num">295</span> ms</td></tr>
             </tbody>
           </table>
         </div>
-        <p class="note">The 47,612-item index builds in a Web Worker and is cached in IndexedDB by catalog hash, so the list never waits for it. Headless frame times are software rendering, so no frame rate is claimed.</p>
+        <p class="note">The 47,612-item index builds in a Web Worker and is cached in IndexedDB by catalog hash, so the list never waits for it; a warm load still moves the catalog onto Grosher's shelves before the lookup. Headless frame times are software rendering, so no frame rate is claimed.</p>
       </article>
 
       <article class="card pending r-pending">
         <span class="eyebrow">Not measured</span>
         <h3>Real-store trip: not run yet.</h3>
-        <p>The Story Rd survey replaces the generated layout; until then no time-saved number is claimed for a real store.</p>
+        <p>Grosher is designed to real-store conventions, not surveyed. The Story Rd survey brings the first real aisles; until then no time-saved number is claimed for a real store.</p>
       </article>
 
     </div>
@@ -826,9 +824,9 @@ td .num { font-size: 17px; }
     <div class="iface sect-body">
       <!-- The share card, live HTML. Every figure: public/project/capture.json (apps/web/scripts/capture-project.mjs), the same 14-item trip as the screenshots above. -->
       <article class="card share-card" aria-label="Trip card">
-        <div class="card-eyebrows"><span class="eyebrow">In and out</span><span class="eyebrow">Synthetic layout · Sat</span></div>
-        <div class="card-hero"><span class="num">7:00</span></div>
-        <p class="card-sub">14 of 14 items · lane 10</p>
+        <div class="card-eyebrows"><span class="eyebrow">In and out</span><span class="eyebrow">Grosher · Sun</span></div>
+        <div class="card-hero"><span class="num">6:35</span></div>
+        <p class="card-sub">14 of 14 items · self-checkout</p>
         <svg class="torus" viewBox="0 0 340 152" aria-hidden="true">
           <g fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="0.8">
             <ellipse cx="170" cy="76" rx="36" ry="10"/>
@@ -852,13 +850,13 @@ td .num { font-size: 17px; }
         <div class="tiles">
           <div class="stat-tile tile">
             <div class="label-row"><span class="icon-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 18l4-10 4 6 2-3 6 7"/></svg></span>Walked</div>
-            <span class="num">504<span class="unit">m</span></span>
-            <div class="caption">18 aisles never entered</div>
+            <span class="num">438<span class="unit">m</span></span>
+            <div class="caption">7 aisles never entered</div>
           </div>
           <div class="stat-tile tile">
             <div class="label-row"><span class="icon-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>Vs list in order</div>
-            <span class="num now">−49<span class="unit">%</span></span>
-            <div class="caption">about 8 minutes saved</div>
+            <span class="num now">−45<span class="unit">%</span></span>
+            <div class="caption">about 6 minutes saved</div>
           </div>
         </div>
         <footer class="card-foot"><span class="wordmark"><i class="dot" aria-hidden="true"></i>grosher</span><span class="muted">Get in. Get it. Get out.</span></footer>
@@ -900,7 +898,7 @@ td .num { font-size: 17px; }
         </ul>
       </div>
     </div>
-    <p class="iface-note">The card is live HTML from capture.json: a simulated trip on the demo store, the legs walked at 1 m/s.</p>
+    <p class="iface-note">The card is live HTML from capture.json: a simulated trip in Grosher, the legs walked at 1 m/s.</p>
   </div>
 </section>
 
@@ -912,11 +910,11 @@ td .num { font-size: 17px; }
       <h2 id="limits-title" class="title">What it does not do yet.</h2>
     </div>
     <ul class="card limits sect-body">
-      <li><strong>A generated layout</strong><span>The Demo Supercenter is generated; real aisles replace it after the Story Rd survey.</span></li>
+      <li><strong>A designed store</strong><span>Grosher is our own market, laid out the way real stores are, but no one has walked it; real aisles come with the Story Rd survey.</span></li>
       <li><strong>The resolver needs my laptop awake</strong><span>The model runs on my Mac behind Tailscale Funnel and a token gate. When it sleeps, unknown items wait for a tap; everything the catalog and memory can place still works.</span></li>
       <li><strong>iOS standalone voice is unverified</strong><span>Hold-to-speak is hidden in home-screen mode until it is tested on a device; keyboard dictation covers it.</span></li>
       <li><strong>Tap to advance, no live dot</strong><span>Position moves when you tap Got it or Not here; there is no indoor positioning yet.</span></li>
-      <li><strong>One store</strong><span>The app knows one map today.</span></li>
+      <li><strong>One store</strong><span>The app opens one map today: Grosher.</span></li>
     </ul>
   </div>
 </section>

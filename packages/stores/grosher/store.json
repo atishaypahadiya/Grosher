@@ -1634,9 +1634,7 @@
       "edgeId": "e60",
       "offsetM": 13.13,
       "shelf": 1,
-      "tags": [
-        "heavy"
-      ]
+      "tags": []
     },
     {
       "id": "A1-R10",
@@ -1743,9 +1741,7 @@
       "edgeId": "e61",
       "offsetM": 9.44,
       "shelf": 3,
-      "tags": [
-        "heavy"
-      ]
+      "tags": []
     },
     {
       "id": "A2-L7",
@@ -1849,8 +1845,8 @@
       "offsetM": 5.14,
       "shelf": 2,
       "tags": [
-        "heavy",
-        "fragile"
+        "fragile",
+        "heavy"
       ]
     },
     {
@@ -1963,8 +1959,7 @@
       "offsetM": 15.59,
       "shelf": 2,
       "tags": [
-        "fragile",
-        "heavy"
+        "fragile"
       ]
     },
     {
@@ -2014,9 +2009,7 @@
       "edgeId": "e62",
       "offsetM": 6.99,
       "shelf": 1,
-      "tags": [
-        "heavy"
-      ]
+      "tags": []
     },
     {
       "id": "A3-R7",
@@ -2056,9 +2049,7 @@
       "edgeId": "e62",
       "offsetM": 34.01,
       "shelf": 2,
-      "tags": [
-        "heavy"
-      ]
+      "tags": []
     },
     {
       "id": "A4-L1",
@@ -2067,9 +2058,7 @@
       "edgeId": "e63",
       "offsetM": 5.14,
       "shelf": 3,
-      "tags": [
-        "heavy"
-      ]
+      "tags": []
     },
     {
       "id": "A4-L4",
@@ -2252,9 +2241,7 @@
       "edgeId": "e63",
       "offsetM": 28.49,
       "shelf": 1,
-      "tags": [
-        "heavy"
-      ]
+      "tags": []
     },
     {
       "id": "A4-R23",
@@ -2281,9 +2268,7 @@
       "edgeId": "e63",
       "offsetM": 36.47,
       "shelf": 1,
-      "tags": [
-        "heavy"
-      ]
+      "tags": []
     },
     {
       "id": "A5-L1",
@@ -2292,9 +2277,7 @@
       "edgeId": "e64",
       "offsetM": 5.14,
       "shelf": 2,
-      "tags": [
-        "heavy"
-      ]
+      "tags": []
     },
     {
       "id": "A5-L4",
@@ -2303,9 +2286,7 @@
       "edgeId": "e64",
       "offsetM": 8.83,
       "shelf": 3,
-      "tags": [
-        "heavy"
-      ]
+      "tags": []
     },
     {
       "id": "A5-L7",
@@ -2314,9 +2295,7 @@
       "edgeId": "e64",
       "offsetM": 12.51,
       "shelf": 1,
-      "tags": [
-        "heavy"
-      ]
+      "tags": []
     },
     {
       "id": "A5-L10",
@@ -2325,9 +2304,7 @@
       "edgeId": "e64",
       "offsetM": 16.2,
       "shelf": 2,
-      "tags": [
-        "heavy"
-      ]
+      "tags": []
     },
     {
       "id": "A5-L13",
@@ -2336,9 +2313,7 @@
       "edgeId": "e64",
       "offsetM": 20.5,
       "shelf": 3,
-      "tags": [
-        "heavy"
-      ]
+      "tags": []
     },
     {
       "id": "A5-L17",
@@ -2347,9 +2322,7 @@
       "edgeId": "e64",
       "offsetM": 24.8,
       "shelf": 1,
-      "tags": [
-        "heavy"
-      ]
+      "tags": []
     },
     {
       "id": "A5-L20",
@@ -2358,9 +2331,7 @@
       "edgeId": "e64",
       "offsetM": 28.49,
       "shelf": 2,
-      "tags": [
-        "heavy"
-      ]
+      "tags": []
     },
     {
       "id": "A5-L23",
@@ -2472,7 +2443,8 @@
       "offsetM": 4.53,
       "shelf": 1,
       "tags": [
-        "fragile"
+        "fragile",
+        "bulky"
       ]
     },
     {
@@ -2483,7 +2455,8 @@
       "offsetM": 6.99,
       "shelf": 2,
       "tags": [
-        "fragile"
+        "fragile",
+        "bulky"
       ]
     },
     {
@@ -2494,7 +2467,8 @@
       "offsetM": 9.44,
       "shelf": 3,
       "tags": [
-        "fragile"
+        "fragile",
+        "bulky"
       ]
     },
     {
@@ -2516,7 +2490,8 @@
       "offsetM": 13.13,
       "shelf": 2,
       "tags": [
-        "fragile"
+        "fragile",
+        "bulky"
       ]
     },
     {
@@ -2820,9 +2795,7 @@
       "edgeId": "e66",
       "offsetM": 27.26,
       "shelf": 3,
-      "tags": [
-        "heavy"
-      ]
+      "tags": []
     },
     {
       "id": "A7-L22",
@@ -2862,9 +2835,7 @@
       "edgeId": "e66",
       "offsetM": 13.74,
       "shelf": 1,
-      "tags": [
-        "heavy"
-      ]
+      "tags": []
     },
     {
       "id": "A7-R12",
@@ -2873,9 +2844,7 @@
       "edgeId": "e66",
       "offsetM": 20.5,
       "shelf": 2,
-      "tags": [
-        "heavy"
-      ]
+      "tags": []
     },
     {
       "id": "A7-R18",
@@ -2884,9 +2853,7 @@
       "edgeId": "e66",
       "offsetM": 27.26,
       "shelf": 3,
-      "tags": [
-        "heavy"
-      ]
+      "tags": []
     },
     {
       "id": "A7-R23",
@@ -2895,9 +2862,7 @@
       "edgeId": "e66",
       "offsetM": 34.01,
       "shelf": 1,
-      "tags": [
-        "heavy"
-      ]
+      "tags": []
     },
     {
       "id": "A8-L1",
@@ -2907,7 +2872,7 @@
       "offsetM": 5.76,
       "shelf": 2,
       "tags": [
-        "heavy"
+        "bulky"
       ]
     },
     {
@@ -2918,7 +2883,7 @@
       "offsetM": 10.67,
       "shelf": 3,
       "tags": [
-        "heavy"
+        "bulky"
       ]
     },
     {
@@ -2928,7 +2893,9 @@
       "edgeId": "e67",
       "offsetM": 15.59,
       "shelf": 1,
-      "tags": []
+      "tags": [
+        "bulky"
+      ]
     },
     {
       "id": "A8-L13",
@@ -2937,9 +2904,7 @@
       "edgeId": "e67",
       "offsetM": 20.5,
       "shelf": 2,
-      "tags": [
-        "heavy"
-      ]
+      "tags": []
     },
     {
       "id": "A8-L17",
@@ -2975,9 +2940,7 @@
       "edgeId": "e67",
       "offsetM": 5.14,
       "shelf": 3,
-      "tags": [
-        "heavy"
-      ]
+      "tags": []
     },
     {
       "id": "A8-R4",
@@ -2986,9 +2949,7 @@
       "edgeId": "e67",
       "offsetM": 8.21,
       "shelf": 1,
-      "tags": [
-        "heavy"
-      ]
+      "tags": []
     },
     {
       "id": "A8-R6",
@@ -2997,9 +2958,7 @@
       "edgeId": "e67",
       "offsetM": 11.29,
       "shelf": 2,
-      "tags": [
-        "heavy"
-      ]
+      "tags": []
     },
     {
       "id": "A8-R9",
@@ -3038,7 +2997,7 @@
       "offsetM": 23.57,
       "shelf": 3,
       "tags": [
-        "heavy"
+        "bulky"
       ]
     },
     {
@@ -3079,9 +3038,7 @@
       "edgeId": "e67",
       "offsetM": 35.86,
       "shelf": 1,
-      "tags": [
-        "heavy"
-      ]
+      "tags": []
     },
     {
       "id": "A9-L1",
@@ -3165,7 +3122,7 @@
       "offsetM": 5.76,
       "shelf": 1,
       "tags": [
-        "heavy"
+        "bulky"
       ]
     },
     {
@@ -3184,9 +3141,7 @@
       "edgeId": "e69",
       "offsetM": 15.59,
       "shelf": 3,
-      "tags": [
-        "heavy"
-      ]
+      "tags": []
     },
     {
       "id": "A10-L13",
@@ -3301,7 +3256,8 @@
       "offsetM": 10,
       "shelf": 3,
       "tags": [
-        "chilled"
+        "chilled",
+        "heavy"
       ]
     },
     {
@@ -3311,7 +3267,9 @@
       "edgeId": "e85",
       "offsetM": 6.4,
       "shelf": 1,
-      "tags": []
+      "tags": [
+        "heavy"
+      ]
     },
     {
       "id": "A11-R7",
@@ -3320,7 +3278,9 @@
       "edgeId": "e85",
       "offsetM": 13.6,
       "shelf": 2,
-      "tags": []
+      "tags": [
+        "heavy"
+      ]
     },
     {
       "id": "A12-L1",
@@ -3365,9 +3325,7 @@
       "edgeId": "e87",
       "offsetM": 10,
       "shelf": 1,
-      "tags": [
-        "heavy"
-      ]
+      "tags": []
     },
     {
       "id": "WINEBAR-1",
@@ -3709,9 +3667,7 @@
       "edgeId": "e123",
       "offsetM": 2.14,
       "shelf": 1,
-      "tags": [
-        "heavy"
-      ]
+      "tags": []
     },
     {
       "id": "OTC2-N-3",
@@ -3757,7 +3713,7 @@
       "offsetM": 3.36,
       "shelf": 3,
       "tags": [
-        "heavy"
+        "bulky"
       ]
     },
     {
@@ -4131,8 +4087,7 @@
       "offsetM": 16.72,
       "shelf": 1,
       "tags": [
-        "chilled",
-        "heavy"
+        "chilled"
       ]
     },
     {

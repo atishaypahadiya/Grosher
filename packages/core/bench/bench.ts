@@ -1,10 +1,15 @@
 // Benchmark: Grosher route vs walking the list in the order it was typed.
-// Run: npm run bench
+// Run: npm run bench                       (the demo Supercenter)
+//      npm run bench -- --store grosher    (Grosher: the same 30 hand-kept items, on Grosher's shelves)
 
 import { Router, WalkGraph, type Stop } from "../src/index.ts";
-import { demoSupercenter } from "@grosher/stores";
+import { demoSupercenter, grosher } from "@grosher/stores";
 
-const { store: DEMO_STORE, catalog: DEMO_ITEMS } = demoSupercenter;
+const onGrosher = process.argv.includes("--store") && process.argv[process.argv.indexOf("--store") + 1] === "grosher";
+const baseIds = new Set(demoSupercenter.catalog.map((s) => s.id));
+const DEMO_STORE = onGrosher ? grosher.store : demoSupercenter.store;
+const DEMO_ITEMS = onGrosher ? grosher.catalog.filter((s) => baseIds.has(s.id)) : demoSupercenter.catalog;
+console.log(`${DEMO_STORE.name}: ${DEMO_ITEMS.length} items to sample`);
 
 const router = new Router(new WalkGraph(DEMO_STORE));
 const WALK_MPS = 1.0; // shopping pace with a cart, m/s (rough)
@@ -62,7 +67,7 @@ for (const n of [5, 8, 10, 12, 13, 18, 25, 30]) {
 
 const widths = rows[0].map((_, c) => Math.max(...rows.map((row) => row[c].length)));
 for (const row of rows) console.log(row.map((cell, c) => cell.padStart(widths[c])).join("  "));
-console.log(`\nDemo store, averages over random lists. Distances are walking only (penalties excluded).`);
+console.log(`\n${DEMO_STORE.name}, averages over random lists. Distances are walking only (penalties excluded).`);
 
 // 14 stops on its own seed (the table's shared stream stays untouched): the range a 14-item trip's
 // "vs list in order" should land in. The project page's capture is a 14-item list.

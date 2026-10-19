@@ -220,9 +220,6 @@
   {
     "id": "g-frying-pan",
     "name": "Frying pan",
-    "tags": [
-      "heavy"
-    ],
     "aliases": [
       "fry pan",
       "nonstick frying pan"
@@ -234,9 +231,6 @@
   {
     "id": "g-saucepan",
     "name": "Saucepan",
-    "tags": [
-      "heavy"
-    ],
     "locationIds": [
       "A9-L1"
     ]
@@ -486,7 +480,8 @@
     ],
     "locationIds": [
       "A4-L26"
-    ]
+    ],
+    "tags": []
   },
   {
     "id": "eggs",
@@ -574,14 +569,16 @@
     "name": "Lentils",
     "locationIds": [
       "A3-R23"
-    ]
+    ],
+    "tags": []
   },
   {
     "id": "pasta",
     "name": "Pasta",
     "locationIds": [
       "A3-L1"
-    ]
+    ],
+    "tags": []
   },
   {
     "id": "sauce",
@@ -602,14 +599,16 @@
     ],
     "locationIds": [
       "A1-L1"
-    ]
+    ],
+    "tags": []
   },
   {
     "id": "coffee",
     "name": "Coffee",
     "locationIds": [
       "A1-R1"
-    ]
+    ],
+    "tags": []
   },
   {
     "id": "oats",
@@ -621,7 +620,8 @@
     ],
     "locationIds": [
       "A1-L7"
-    ]
+    ],
+    "tags": []
   },
   {
     "id": "spices",
@@ -632,14 +632,15 @@
     ],
     "locationIds": [
       "A2-R7"
-    ]
+    ],
+    "tags": []
   },
   {
     "id": "oil",
     "name": "Olive oil",
     "tags": [
-      "heavy",
-      "fragile"
+      "fragile",
+      "heavy"
     ],
     "aliases": [
       "evoo",
@@ -653,7 +654,8 @@
     "id": "chips",
     "name": "Chips",
     "tags": [
-      "fragile"
+      "fragile",
+      "bulky"
     ],
     "aliases": [
       "crisps",
@@ -708,6 +710,9 @@
     ],
     "locationIds": [
       "A8-L1"
+    ],
+    "tags": [
+      "bulky"
     ]
   },
   {
@@ -730,7 +735,8 @@
     "name": "Batteries",
     "locationIds": [
       "A9-R15"
-    ]
+    ],
+    "tags": []
   },
   {
     "id": "icecream",
@@ -787,6 +793,7 @@
     ],
     "locationIds": [
       "A1-L13"
-    ]
+    ],
+    "tags": []
   }
 ]

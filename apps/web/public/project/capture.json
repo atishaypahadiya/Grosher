@@ -1,6 +1,6 @@
 {
   "_note": "Written by apps/web/scripts/capture-project.mjs from the production build on the demo store. Simulated trip: the clock is the legs to the stops (legsToStopsM) at the app's walking pace (WALK_MPS = 1.0 m/s, src/lib/format.ts), no time at the shelf. 'Walked' also counts the legs to the lane and the exit. The 3D still and the end of the video are trip step `tripFrame.step`, zoomed in by `tripFrame.zoomSteps` wheel notches (the app's own zoom). The project page's share card shows these numbers.",
-  "capturedAt": "2026-10-18",
+  "capturedAt": "2026-10-19",
   "list": [
     "Greek yogurt",
     "Paper towels",
@@ -17,7 +17,7 @@
     "Spinach",
     "Pasta"
   ],
-  "legsToStopsM": 420,
+  "legsToStopsM": 395,
   "tripFrame": {
     "step": 6,
     "of": 14,
@@ -25,15 +25,14 @@
     "zoomSteps": 0,
     "zoom": 1,
     "cameraDistanceM": 39.1,
-    "cards": 3,
+    "cards": 2,
     "cardsInside": true,
     "cardsOverlap": false,
-    "dots": 5,
+    "dots": 7,
     "nextInMap": true,
     "names": [
-      "2Paper Towel77 m",
-      "3Dog Food111 m",
-      "Snacks · A12 · 7 of 14Chips13 mLeft · bay 3 · shelf 2"
+      "Chips2",
+      "World foods · A4 · 7 of 14Dal13 mLeft · bay 2 · shelf 4"
     ],
     "target": 6,
     "evaluated": [
@@ -41,53 +40,53 @@
         "step": 5,
         "distanceM": 39.1,
         "cards": 3,
-        "dots": 7
+        "dots": 8
       },
       {
         "step": 6,
         "distanceM": 39.1,
-        "cards": 3,
-        "dots": 5
+        "cards": 2,
+        "dots": 7
       },
       {
         "step": 7,
-        "distanceM": 50,
-        "cards": 3,
-        "dots": 4
+        "distanceM": 39.1,
+        "cards": 2,
+        "dots": 6
       },
       {
         "step": 8,
         "distanceM": 39.1,
-        "cards": 3,
-        "dots": 5
+        "cards": 2,
+        "dots": 4
       },
       {
         "step": 9,
         "distanceM": 39.1,
         "cards": 3,
-        "dots": 3
+        "dots": 2
       }
     ]
   },
   "card": {
     "eyebrows": [
       "In and out",
-      "Synthetic layout · Sun"
+      "Grosher · Sun"
     ],
-    "clock": "7:00",
-    "sub": "14 of 14 items · lane 10",
+    "clock": "6:35",
+    "sub": "14 of 14 items · self-checkout",
     "tiles": [
       {
         "label": "Walked",
-        "value": "504",
+        "value": "438",
         "unit": "m",
-        "caption": "18 aisles never entered"
+        "caption": "7 aisles never entered"
       },
       {
         "label": "Vs list in order",
-        "value": "−49",
+        "value": "−45",
         "unit": "%",
-        "caption": "about 8 minutes saved"
+        "caption": "about 6 minutes saved"
       }
     ]
   }

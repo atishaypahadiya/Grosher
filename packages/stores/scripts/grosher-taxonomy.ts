@@ -91,6 +91,23 @@ export const NEW_CATEGORIES: TaxCategory[] = [
   c("cafe-juice", "Juice & smoothie bar", ["smoothie", "smoothies", "fresh squeezed juice", "juice bar", "acai bowl", "green juice"]),
 ];
 
+/**
+ * Handling by the shelf (src/handling.ts). Heavy = about 2 kg or more for the typical unit on that shelf, so
+ * the solver picks it early: cases of water, soda, sparkling water, sports drinks, beer and cider; gallon jugs
+ * (milk, iced tea, shelf juice, bleach, detergent, fabric softener); big rice and atta bags, flour and sugar
+ * bags; ghee tins and cooking-oil jugs; pet food and litter; charcoal; melons and 5 lb potato bags; bagged ice
+ * and whole turkeys. Everything else is not heavy, whatever the source catalog said (it had 9,785 heavy rows:
+ * every soup can, pasta sauce jar and paper towel). Bulky = big and light, rides under or on top of the cart,
+ * no route penalty. Pinned in test/grosher.test.ts.
+ */
+export const HEAVY: string[] = [
+  "bottled-water", "sparkling-water", "soda", "diet-soda", "sports-drinks", "iced-tea-lemonade", "juice-shelf", "beer", "cold-beer", "cider-seltzer",
+  "milk", "basmati-indian-rice", "asian-rice-bags", "atta-flours", "flour", "sugar", "ghee-oils-indian", "cooking-oil",
+  "laundry-detergent", "fabric-softener", "bleach", "charcoal-grilling", "dog-food", "cat-food", "cat-litter",
+  "grapes-melons", "potatoes-roots", "ice", "frozen-turkey-ham",
+];
+export const BULKY: string[] = ["toilet-paper", "paper-towels", "facial-tissue", "diapers", "incontinence", "mops-brooms", "potato-chips", "tortilla-chips", "cheese-puffs", "popcorn"];
+
 /** Grosher-only changes to reused categories: aliases added or removed, a name re-read for this store. */
 export const CATEGORY_PATCHES: Record<string, { name?: string; add?: string[]; remove?: string[] }> = {
   // papad has its own shelf here

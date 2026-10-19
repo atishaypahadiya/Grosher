@@ -43,12 +43,12 @@
       "frozen peas → frozen-vegetables (exact)"
     ],
     "order": [
-      "Dish Soap",
-      "Paper Towel",
-      "Coffee",
-      "Cereal",
       "Spinach",
       "Bananas",
+      "Coffee",
+      "Cereal",
+      "Dish Soap",
+      "Paper Towel",
       "Bread",
       "Milk",
       "Chicken thighs",
@@ -56,7 +56,7 @@
       "Frozen peas"
     ],
     "lane": "SELF",
-    "routeM": 387,
+    "routeM": 359,
     "listOrderM": 513
   },
   "friday-night": {
@@ -75,15 +75,15 @@
       "Flower bouquet",
       "Sparkling Water",
       "Chips",
+      "Salsa Medium",
       "Crackers",
       "Red Wine",
-      "Salsa Medium",
       "Cheese",
       "Sushi platter",
       "Ice cream"
     ],
     "lane": "SELF",
-    "routeM": 292,
+    "routeM": 289,
     "listOrderM": 523
   },
   "pharmacy-run": {
