@@ -1,6 +1,6 @@
 {
   "_note": "Written by apps/web/scripts/capture-project.mjs from the production build on the demo store. Simulated trip: the clock is the legs to the stops (legsToStopsM) at the app's walking pace (WALK_MPS = 1.0 m/s, src/lib/format.ts), no time at the shelf. 'Walked' also counts the legs to the lane and the exit. The 3D still and the end of the video are trip step `tripFrame.step`, zoomed in by `tripFrame.zoomSteps` wheel notches (the app's own zoom). The project page's share card shows these numbers.",
-  "capturedAt": "2026-10-19",
+  "capturedAt": "2026-10-20",
   "list": [
     "Greek yogurt",
     "Paper towels",
@@ -71,7 +71,7 @@
   "card": {
     "eyebrows": [
       "In and out",
-      "Grosher · Sun"
+      "Grosher · Tue"
     ],
     "clock": "6:35",
     "sub": "14 of 14 items · self-checkout",

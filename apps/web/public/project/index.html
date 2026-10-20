@@ -252,7 +252,6 @@ td .num { font-size: 17px; }
   .facts { grid-template-columns: repeat(4, 1fr); max-width: none; }
   .goals { grid-template-columns: 1fr 1fr; }
   .decisions { grid-template-columns: 1fr 1fr; }
-  .decisions li:last-child { grid-column: 1 / -1; }
   .perf-cols { grid-template-columns: 1fr 1fr; }
   .iface { grid-template-columns: 1fr 1fr; }
 }
@@ -264,10 +263,9 @@ td .num { font-size: 17px; }
   .how { grid-template-columns: 1fr 380px; gap: 12px 32px; align-items: start; }
   .how .diagram { grid-column: 2; grid-row: 1 / span 2; position: sticky; top: 24px; }
   .how .rules { grid-column: 1; }
-  /* five decisions without a hole: three over two on a six-column grid */
+  /* six decisions: three over three */
   .decisions { grid-template-columns: repeat(6, 1fr); }
   .decisions li { grid-column: span 2; }
-  .decisions li:nth-child(n+4), .decisions li:last-child { grid-column: span 3; }
   .arch .wide { display: block; }
   .arch .tall { display: none; }
   .arch-notes { grid-template-columns: repeat(3, 1fr); gap: 16px 28px; }
@@ -309,9 +307,9 @@ td .num { font-size: 17px; }
     </div>
     <div class="hero-grid">
       <div>
-        <span class="eyebrow warm">progressive web app · local model · v1</span>
+        <span class="eyebrow warm">progressive web app · local model · 3D</span>
         <h1 class="display">Your list,<br>not their layout.</h1>
-        <p class="lede">Grosher turns a grocery list into one route through the store, entrance to exit, and reroutes as you shop. It runs offline on the phone and resolves items with a model on my own laptop.</p>
+        <p class="lede">Grosher turns a grocery list into one route through the store, entrance to exit, reroutes as you shop, and opens every stop at eye level when you reach it. It runs offline on the phone and resolves items with a model on my own laptop.</p>
         <dl class="facts">
           <div><dt>Role</dt><dd>Solo project</dd></div>
           <div><dt>When</dt><dd>October 2026</dd></div>
@@ -323,15 +321,15 @@ td .num { font-size: 17px; }
           <a class="pill glass" href="https://github.com/atishaypahadiya/Grosher" rel="noopener">Source on GitHub</a>
         </div>
       </div>
-      <!-- The reroute loop: apps/web/scripts/capture-project.mjs, production build, Grosher, 390×844; the trip step and zoom are in capture.json "tripFrame" -->
+      <!-- The close-up arrival: apps/web/scripts/capture-closeup.mjs, production build, Grosher, 390×844, on the Mac's GPU; the cuts are in closeup.json -->
       <figure class="hero-phone" style="margin:0 auto">
         <div class="bezel">
-          <video id="trip-video" width="390" height="844" muted loop playsinline preload="none" controls poster="/project/img/trip-poster.webp" aria-label="Six-second loop of the 3D trip view on a 14-item list in Grosher. Shampoo in body care is next, with Dal and Chips as the two stops after it. The shopper taps Got it; the route re-solves and the camera eases to the next leg, Dal in aisle A4, world foods, with its shelf lit and Chips in a card beside it.">
-            <source src="/project/img/trip.webm" type="video/webm">
-            <source src="/project/img/trip.mp4" type="video/mp4">
+          <video id="closeup-video" data-autoplay width="390" height="844" muted loop playsinline preload="none" controls poster="/project/img/closeup-poster.webp" aria-label="Ten seconds of a trip in Grosher. The camera comes down from the map through Produce's skylight and walks to the bananas, their crate lit in lime. The shopper taps Got it; the camera rises over the store, follows the route to Bulk, comes down into the aisle and stops at eye level in front of the toor dal gravity bin.">
+            <source src="/project/img/closeup.webm" type="video/webm">
+            <source src="/project/img/closeup.mp4" type="video/mp4">
           </video>
         </div>
-        <figcaption class="badge">3D trip · tap Got it, the route re-solves</figcaption>
+        <figcaption class="badge">Every stop at eye level · Produce, then Bulk</figcaption>
       </figure>
     </div>
   </div>
@@ -355,8 +353,14 @@ td .num { font-size: 17px; }
       </li>
       <li>
         <figure class="phone" style="margin:0">
-          <div class="bezel"><img src="/project/img/trip.webp" width="390" height="844" loading="lazy" decoding="async" alt="The 3D trip view in Grosher with six of 14 items collected: the next stop, Dal in aisle A4, world foods, left side, bay 2, shelf 4, 13 metres away, is the lime card over the store, with its shelf lit. Chips, the stop after it, is a card beside it; collected stops show a white ring with a check, later stops are numbered dots, and the self-checkout is marked ahead, a 5-minute walk. The bottom sheet offers Got it and Not here."></div>
-          <figcaption class="badge">3D trip</figcaption>
+          <!-- The reroute loop: apps/web/scripts/capture-project.mjs (close-ups off: ?closeup=0); the trip step and zoom are in capture.json "tripFrame" -->
+          <div class="bezel">
+            <video id="trip-video" data-autoplay width="390" height="844" muted loop playsinline preload="none" controls poster="/project/img/trip-poster.webp" aria-label="Six-second loop of the 3D trip view on a 14-item list in Grosher, six of 14 items collected. The shopper taps Got it; the route re-solves and the camera eases to the next leg, Dal in aisle A4, world foods, with its shelf lit and Chips in a card beside it; collected stops show a white ring with a check, later stops are numbered dots.">
+              <source src="/project/img/trip.webm" type="video/webm">
+              <source src="/project/img/trip.mp4" type="video/mp4">
+            </video>
+          </div>
+          <figcaption class="badge">3D trip · Got it, the route re-solves</figcaption>
         </figure>
       </li>
       <li>
@@ -417,8 +421,8 @@ td .num { font-size: 17px; }
           <span class="num n" aria-hidden="true">01</span>
           <div>
             <h3>Resolve the list</h3>
-            <!-- 47,612 items: packages/stores/demo/catalog.json (header "sources"), carried onto Grosher by packages/stores/src/carry.ts; 324 categories: packages/stores/grosher/categories.json; layer order: packages/core/src/resolve/index.ts resolveItem -->
-            <p>Each line goes through six layers in order: an exact catalog item, your own memory of where you found it, an aisle sign that names it, a fuzzy match for typos, the local model, and finally a question for you. The catalog is 47,612 items built from the Instacart 2017 product data, mapped onto the store's 324 shelf categories the way its signs read and checked shelf by shelf by a reconcile pass.</p>
+            <!-- 47,612 items: packages/stores/demo/catalog.json (header "sources"), carried onto Grosher by packages/stores/src/carry.ts; 325 categories: packages/stores/grosher/categories.json; layer order: packages/core/src/resolve/index.ts resolveItem (exact, memory, category exact, fuzzy, category fuzzy, llm, unknown) -->
+            <p>Each line goes through seven layers in order: an exact catalog item, your own memory of where you found it, an aisle sign that names it, a fuzzy match for typos, a near spelling of a sign, the local model, and finally a question for you. The catalog is 47,612 items built from the Instacart 2017 product data, mapped onto the store's 325 shelf categories the way its signs read and checked shelf by shelf by a reconcile pass. The model only ever picks one of those categories, or none.</p>
           </div>
         </li>
         <li class="card">
@@ -426,15 +430,15 @@ td .num { font-size: 17px; }
           <div>
             <h3>Solve the route</h3>
             <!-- packages/core/src/graph.ts (WalkGraph), packages/core/src/solver.ts (EXACT_LIMIT = 13, DEFAULT_WEIGHTS, localSearch) -->
-            <p>The store is a graph of corridors in metres, with every shelf location a virtual node on its corridor, and Dijkstra gives the walk between any two. Up to 13 stops the order is exact, by Held–Karp; above that, 2-opt and Or-opt with delta evaluation. Cold last, heavy early and fragile late are penalties in metres, so they trade against distance instead of overriding it.</p>
+            <p>The store is a graph of corridors in metres, with every shelf location a virtual node on its corridor, and Dijkstra gives the walk between any two. Up to 13 stops the order is exact, by Held–Karp; above that, 2-opt and Or-opt with delta evaluation. Cold and hot last, heavy early and fragile late are penalties in metres, so they trade against distance instead of overriding it; cold, hot and heavy come from the shelf, not the item's name.</p>
           </div>
         </li>
         <li class="card">
           <span class="num n" aria-hidden="true">03</span>
           <div>
             <h3>Walk it</h3>
-            <!-- apps/web/src/map3d/ (CameraRig.tsx, LitSlot.tsx, Ribbon.tsx), apps/web/src/lib/trip.ts (gotIt, skipStop reroute from the last checked-off node) -->
-            <p>The 3D map frames the current leg and lights the exact bay and shelf of the next item. Got it or Not here re-solves the remaining stops from the shelf you are standing at, and the camera eases to the new leg.</p>
+            <!-- apps/web/src/map3d/ (CameraRig.tsx, LitSlot.tsx, Ribbon.tsx), apps/web/src/lib/trip.ts (gotIt, skipStop reroute from the last checked-off node); close-ups: apps/web/src/hero (Bulk, Produce, standard/); the guard: apps/web/src/lib/guard.ts -->
+            <p>The 3D map frames the current leg and lights the exact bay and shelf of the next item; when it becomes next, the camera comes down to eye level and walks you to the shelf. Got it or Not here re-solves the remaining stops from where you stand. If you drift well off the route, a quiet card says how far the next item is, counted from your steps alone.</p>
           </div>
         </li>
         <li class="card">
@@ -516,7 +520,7 @@ td .num { font-size: 17px; }
   <div class="wrap">
     <div class="sect-head">
       <span class="eyebrow">Decisions</span>
-      <h2 id="decisions-title" class="title">Five choices, each with the number that settled it.</h2>
+      <h2 id="decisions-title" class="title">Six choices, each with the number that settled it.</h2>
     </div>
     <ul class="decisions sect-body">
       <li class="card decision">
@@ -588,6 +592,21 @@ td .num { font-size: 17px; }
           <!-- source: commit 8115d42 message (seeded alone 94%, merged 98%); CLAUDE.md "Store data" -->
           <span class="num">94%<svg class="arrow" viewBox="0 0 12 12" aria-hidden="true"><path d="M1 6h9M7 2.5L10.5 6 7 9.5" fill="none" stroke="currentColor" stroke-width="1.4"/></svg><span class="sr-only"> to </span>98%</span>
           <p>Aisle-level on the blind set: the seeded catalog alone, then merged with the import.</p>
+        </div>
+      </li>
+      <li class="card decision">
+        <span class="eyebrow">Close-ups</span>
+        <h3>The next stop prepared during this one</h3>
+        <dl>
+          <!-- without preparing: CLAUDE.md "Close-ups" (?preload=0 on the M4 Pro, 620–780 ms, a 150–180 ms frame) -->
+          <div><dt>Problem</dt><dd>Opening a close-up compiled its shaders and uploaded its textures in the arrival itself: 620–780 ms before the camera moved, and one frame of 150–180 ms.</dd></div>
+          <div><dt>Choice</dt><dd>Build the next stop's zone while you are at this one, compile it for the frame it will draw into, and upload it in one hidden draw; keep only the open zone's textures on the GPU.</dd></div>
+        </dl>
+        <div class="result">
+          <span class="eyebrow">Result</span>
+          <!-- source: apps/web/scripts/hero-gate.mjs "prepared ahead" in CI run 39471815998 (std:FLORAL-1 → produce 5 ms, produce → bulk 3 ms, bulk → std:DAIRY-1 3 ms); GPU peak 13.7 MB in the same run -->
+          <span class="num">3–5<span class="unit">ms</span></span>
+          <p>From asking for the next close-up to it being ready, in CI's software renderer; the GPU peaks at 13.7 MB across four in a row.</p>
         </div>
       </li>
     </ul>
@@ -715,34 +734,34 @@ td .num { font-size: 17px; }
       <article class="card r-bench">
         <span class="eyebrow">Benchmark · Grosher, four lists as written</span>
         <h3>Route vs walking the list in order</h3>
-        <!-- source: packages/stores/test/grosher.test.ts (hero lists, offline resolution, warm solve) and its snapshot test/fixtures/grosher-hero-routes.json; lists: packages/stores/grosher/lists.json; 18 Oct 2026 -->
+        <!-- source: packages/stores/test/grosher.test.ts (hero lists, offline resolution, warm solve) and its snapshot test/fixtures/grosher-hero-routes.json; lists: packages/stores/grosher/lists.json; the test's own printout, 20 Oct 2026 -->
         <table>
           <caption class="sr-only">Walking distance of each hero list in written order and of the Grosher route, in metres</caption>
           <thead><tr><th scope="col">List</th><th scope="col">In order, m</th><th scope="col">Grosher, m</th><th scope="col">Saved</th></tr></thead>
           <tbody>
-            <tr><td>Dal-chawal · <span class="num">10</span></td><td><span class="num">445</span></td><td><span class="num">315</span></td><td><span class="num now">29%</span></td></tr>
+            <tr><td>Dal-chawal · <span class="num">10</span></td><td><span class="num">440</span></td><td><span class="num">315</span></td><td><span class="num now">28%</span></td></tr>
             <tr><td>Weekly staples · <span class="num">11</span></td><td><span class="num">513</span></td><td><span class="num">359</span></td><td><span class="num now">30%</span></td></tr>
             <tr><td>Friday night in · <span class="num">9</span></td><td><span class="num">523</span></td><td><span class="num">289</span></td><td><span class="num now">45%</span></td></tr>
             <tr><td>Pharmacy run · <span class="num">5</span></td><td><span class="num">331</span></td><td><span class="num">256</span></td><td><span class="num now">22%</span></td></tr>
           </tbody>
         </table>
         <!-- 14-stop range: `npm run bench -- --store grosher` (packages/core/bench/bench.ts, rng 1414, 30 lists of 14 of the 30 hand-kept items): mean 46%, p10–p90 37–56%; the trip's 45%: public/project/capture.json -->
-        <p class="note">Each list (items after the name) is written the way a person jots it and never reordered; every item is placed offline. Walking distance only, penalties excluded; exact by Held–Karp in 0.1 to 2.2 ms. The dal-chawal route still leaves produce for the rice, atta and ghee, because heavy goes in the cart first. Random 14-item lists save 37–56% (10th to 90th percentile of 30); the trip on this page saved 45%.</p>
+        <p class="note">Each list (items after the name) is written the way a person jots it and never reordered; every item is placed offline. Walking distance only, penalties excluded; exact by Held–Karp in 0.0 to 2.0 ms. The dal-chawal route still leaves produce for the rice, atta and ghee, because heavy goes in the cart first. Random 14-item lists save 37–56% (10th to 90th percentile of 30); the trip on this page saved 45%.</p>
       </article>
 
       <article class="card r-solver">
         <span class="eyebrow">Benchmark · median solve time, Grosher</span>
         <h3>Solver speed by number of stops</h3>
-        <!-- source: `npm run bench -- --store grosher` (packages/core/bench/bench.ts), 18 Oct 2026, this Mac; delta evaluation: commit 3860098 (30 stops 306.4 → 17.7 ms on the demo store) -->
+        <!-- source: `npm run bench -- --store grosher` (packages/core/bench/bench.ts), 20 Oct 2026, an M4 Pro; delta evaluation: commit 3860098 (30 stops 306.4 → 17.7 ms on the demo store) -->
         <table>
           <caption class="sr-only">Median and worst solve time on Grosher, by number of stops</caption>
           <thead><tr><th scope="col">Stops</th><th scope="col">Solver</th><th scope="col">Median</th><th scope="col">Worst</th></tr></thead>
           <tbody>
-            <tr><td><span class="num">10</span></td><td>Exact</td><td><span class="num now">0.4</span> ms</td><td><span class="num">1.3</span> ms</td></tr>
-            <tr><td><span class="num">13</span></td><td>Exact</td><td><span class="num now">4.5</span> ms</td><td><span class="num">4.6</span> ms</td></tr>
-            <tr><td><span class="num">18</span></td><td>Heuristic</td><td><span class="num now">3.9</span> ms</td><td><span class="num">9.5</span> ms</td></tr>
-            <tr><td><span class="num">25</span></td><td>Heuristic</td><td><span class="num now">8.3</span> ms</td><td><span class="num">9.0</span> ms</td></tr>
-            <tr><td><span class="num">30</span></td><td>Heuristic</td><td><span class="num now">17.2</span> ms</td><td><span class="num">18.9</span> ms</td></tr>
+            <tr><td><span class="num">10</span></td><td>Exact</td><td><span class="num now">0.4</span> ms</td><td><span class="num">1.2</span> ms</td></tr>
+            <tr><td><span class="num">13</span></td><td>Exact</td><td><span class="num now">4.5</span> ms</td><td><span class="num">4.9</span> ms</td></tr>
+            <tr><td><span class="num">18</span></td><td>Heuristic</td><td><span class="num now">4.1</span> ms</td><td><span class="num">9.1</span> ms</td></tr>
+            <tr><td><span class="num">25</span></td><td>Heuristic</td><td><span class="num now">8.5</span> ms</td><td><span class="num">9.5</span> ms</td></tr>
+            <tr><td><span class="num">30</span></td><td>Heuristic</td><td><span class="num now">18.1</span> ms</td><td><span class="num">19.8</span> ms</td></tr>
           </tbody>
         </table>
         <p class="note">Above 13 stops, moves are scored by the edges and penalties they change, not a full re-evaluation; that took 30 stops from 306 to 18 ms. Three seeded starts keep the 12-stop gap to exact under 10%.</p>
@@ -751,7 +770,7 @@ td .num { font-size: 17px; }
       <article class="card r-resolve">
         <span class="eyebrow">Blind set, run once · Grosher</span>
         <h3>Item resolution at aisle level</h3>
-        <!-- source: packages/core/test/fixtures/resolution-everyday.json, scored by `npm run eval:everyday -w @grosher/stores -- --store grosher` (each expected demo aisle translated to the Grosher aisles holding its categories), 18 Oct 2026: 149 of 150, no model; the demo store 147 of 150. New shelves: packages/stores/test/fixtures/grosher-new-shelves.json, 33 items, not blind -->
+        <!-- source: packages/core/test/fixtures/resolution-everyday.json, scored by `npm run eval:everyday -w @grosher/stores -- --store grosher` (each expected demo aisle translated to the Grosher aisles holding its categories), re-run 20 Oct 2026: 149 of 150, no model; the demo store 147 of 150. New shelves: packages/stores/test/fixtures/grosher-new-shelves.json, 33 items, not blind -->
         <div class="res-cols"><div class="res-a">
         <div class="big"><span class="num">99<span class="unit">%</span></span><p>149 of 150 everyday items written blind, no model involved (147 on the Walmart-style demo store).</p></div>
         <ul class="misses" aria-label="The one miss">
@@ -780,7 +799,7 @@ td .num { font-size: 17px; }
         <span class="eyebrow">Measured · production build, headless Chromium</span>
         <h3>Performance against the budget</h3>
         <div class="perf-cols">
-          <!-- draw calls and instances: apps/web/scripts/perf-gate.mjs on Grosher (CI and local, 18 Oct 2026: 46 / 48 / 48 calls, 1,199 / 7,924 / 7,924 instances); budget: DESIGN.md §3 -->
+          <!-- draw calls and instances: apps/web/scripts/perf-gate.mjs on Grosher (local, 20 Oct 2026: 46 / 48 / 46 calls, 1,199 / 7,924 / 7,924 instances); close-ups: apps/web/scripts/hero-gate.mjs, CI run 39471815998 (worst arrival frame: Bulk 61 calls / 204,979 triangles, Produce 51 / 168,085, standard A4-R16 46 / 179,107; GPU textures peak 13.7 MB across four close-ups in a row; download Bulk 2,306 KB); budgets: DESIGN.md §3, apps/web/src/hero/budget.ts -->
           <div class="budget">
             <div class="row">
               <div class="row-head"><span>Draw calls, worst framing</span><span><span class="num">48</span> of <span class="num">70</span></span></div>
@@ -790,18 +809,30 @@ td .num { font-size: 17px; }
               <div class="row-head"><span>Product instances, worst framing</span><span><span class="num">7,924</span> of <span class="num">12,000</span></span></div>
               <div class="bar" role="img" aria-label="7,924 of a 12,000 instance budget"><i style="width:66%"></i></div>
             </div>
+            <div class="row">
+              <div class="row-head"><span>Close-up draw calls, worst arrival</span><span><span class="num">61</span> of <span class="num">70</span></span></div>
+              <div class="bar" role="img" aria-label="61 of a 70 draw-call budget, Bulk arriving"><i style="width:87.1%"></i></div>
+            </div>
+            <div class="row">
+              <div class="row-head"><span>Close-up triangles, worst arrival</span><span><span class="num">205k</span> of <span class="num">250k</span></span></div>
+              <div class="bar" role="img" aria-label="205 thousand of a 250 thousand triangle budget, Bulk arriving"><i style="width:82%"></i></div>
+            </div>
+            <div class="row">
+              <div class="row-head"><span>Close-up GPU textures, peak</span><span><span class="num">13.7</span> of <span class="num">16</span> MB</span></div>
+              <div class="bar" role="img" aria-label="13.7 of a 16 megabyte texture budget"><i style="width:85.6%"></i></div>
+            </div>
           </div>
-          <!-- list interactive (56 / 46 ms) and index ready (1,123 / 295 ms): production build, headless Chromium at 390×844, median of 3, 18 Oct 2026 (time from navigation to the add-items field, and to window.__grosherIndex); CLAUDE.md "Item resolution" -->
+          <!-- list interactive (80 / 76 ms) and index ready (1,104 / 147 ms): production build, headless Chromium at 390×844, median of 3, 20 Oct 2026 (time from navigation to the add-items field, and to window.__grosherIndex); CLAUDE.md "Item resolution" -->
           <table>
             <caption class="sr-only">Load timings, cold and warm</caption>
             <thead><tr><th scope="col">Load</th><th scope="col">Cold</th><th scope="col">Warm</th></tr></thead>
             <tbody>
-              <tr><td>List interactive</td><td><span class="num">56</span> ms</td><td><span class="num">46</span> ms</td></tr>
-              <tr><td>Catalog index ready</td><td><span class="num">1,123</span> ms</td><td><span class="num">295</span> ms</td></tr>
+              <tr><td>List interactive</td><td><span class="num">80</span> ms</td><td><span class="num">76</span> ms</td></tr>
+              <tr><td>Catalog index ready</td><td><span class="num">1,104</span> ms</td><td><span class="num">147</span> ms</td></tr>
             </tbody>
           </table>
         </div>
-        <p class="note">The 47,612-item index builds in a Web Worker and is cached in IndexedDB by catalog hash, so the list never waits for it; a warm load still moves the catalog onto Grosher's shelves before the lookup. Headless frame times are software rendering, so no frame rate is claimed.</p>
+        <p class="note">The 47,612-item index builds in a Web Worker and is cached in IndexedDB by catalog hash, so the list never waits for it. Close-ups are held to their own budget in CI, in every arrival's worst frame. Headless frame times are software rendering, so no frame rate is claimed.</p>
       </article>
 
       <article class="card pending r-pending">
@@ -914,6 +945,8 @@ td .num { font-size: 17px; }
       <li><strong>The resolver needs my laptop awake</strong><span>The model runs on my Mac behind Tailscale Funnel and a token gate. When it sleeps, unknown items wait for a tap; everything the catalog and memory can place still works.</span></li>
       <li><strong>iOS standalone voice is unverified</strong><span>Hold-to-speak is hidden in home-screen mode until it is tested on a device; keyboard dictation covers it.</span></li>
       <li><strong>Tap to advance, no live dot</strong><span>Position moves when you tap Got it or Not here; there is no indoor positioning yet.</span></li>
+      <li><strong>The guard is tuned on synthetic walks</strong><span>The off-list guard counts steps against the leg's length. Its thresholds come from simulated walks and the demo; they have not been tuned on real trips yet.</span></li>
+      <li><strong>Close-ups not timed on a phone</strong><span>The close-ups meet their draw-call, triangle and texture budgets in CI, but CI renders in software; frame rate on an iPhone is still to be measured. Two aisles, Bulk and Produce, are hand-built; the rest are generated.</span></li>
       <li><strong>One store</strong><span>The app opens one map today: Grosher.</span></li>
     </ul>
   </div>

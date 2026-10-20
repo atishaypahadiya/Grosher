@@ -1,9 +1,10 @@
 // The project page's one animation: a lime token travelling the reroute loop in the pipeline
 // diagram (solver → route → check-off → reroute → solver). It moves only along the connectors and
 // the right-hand rail: while its centre is inside a box it is hidden and that box's border turns
-// lime ("now"), so it never passes over a label. The script also plays the trip video only while
-// it is on screen. Under prefers-reduced-motion neither moves: the token rests on the connector
-// below the check-off box and the video keeps its controls and poster.
+// lime ("now"), so it never passes over a label. The script also plays each video (the close-up
+// arrival in the hero, the reroute loop in the app section) only while it is on screen. Under
+// prefers-reduced-motion nothing moves: the token rests on the connector below the check-off box and
+// the videos keep their controls and posters.
 
 const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
 
@@ -58,9 +59,8 @@ if (path && token) {
   reduce.addEventListener("change", update);
 }
 
-// ---------------------------------------------------------------- the trip video
-const video = document.getElementById("trip-video");
-if (video) {
+// ---------------------------------------------------------------- the videos
+for (const video of document.querySelectorAll("video[data-autoplay]")) {
   let onScreen = false;
   const sync = () => {
     if (reduce.matches) {

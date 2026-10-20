@@ -1,0 +1,28 @@
+{
+  "_note": "Written by apps/web/scripts/capture-closeup.mjs (production build, 390×844, GPU). Seconds from the video's start.",
+  "capturedAt": "2026-10-20",
+  "list": [
+    "Bananas",
+    "Toor dal (bulk)",
+    "Greek yogurt"
+  ],
+  "marks": {
+    "route": 5.372,
+    "map": 5.72,
+    "open1": 5.985,
+    "hold1": 12.65,
+    "gotit": 12.693,
+    "open2": 14.636,
+    "end": 19.642
+  },
+  "cuts": [
+    [
+      6.085,
+      10.385
+    ],
+    [
+      12.493,
+      18.142
+    ]
+  ]
+}

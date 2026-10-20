@@ -8,7 +8,7 @@ Grocery navigation: a shopping list in, the shortest walk through the store out,
 items are checked off. The app opens **Grosher**, our own designed Whole Foods-style market in
 `packages/stores/grosher` (`design/store-grosher.md` is its spec; 85 × 70 m with a cut corner, produce under a
 skylight, bulk, 10 centre aisles, beer and wine, the service counters and dairy on the far east wall, frozen,
-a food hall, 324 shelf categories). The synthetic Walmart-style Supercenter in `packages/stores/demo` (30
+a food hall, 325 shelf categories). The synthetic Walmart-style Supercenter in `packages/stores/demo` (30
 aisles, 298 categories) is kept for the tests and as the Walmart reference taxonomy a Walmart survey matches
 its signs against; the app never offers it. Both share one 47,000-item catalog (the Instacart 2017 product
 list plus a seeded remainder), which resolves most everyday items at aisle precision without a survey. Real stores get surveyed with the built-in map editor. `DESIGN.md` is the visual contract; its boards are in
@@ -87,7 +87,7 @@ Read `src/types.ts`, then `graph.ts`, then `solver.ts`.
   to the last DP choice, a move is scored by the edges it changes (plus the reversed interior for 2-opt,
   since walking distances need not be symmetric) and by the penalties of the positions whose preceding set
   or position changed; an accepted move is followed by one DP to re-pick points. Median solve on the demo
-  store: 18 stops 3.6 ms, 25 stops 8 ms, 30 stops 18 ms (was 30 / 131 / 306 ms with full re-evaluation);
+  store (20 Oct 2026): 18 stops 3.8 ms, 25 stops 8.3 ms, 30 stops 18.4 ms (was 30 / 131 / 306 ms with full re-evaluation);
   three starts keep the 12-stop gap to exact under 10% (one start sat at 16.8%). The end cost picks the best
   checkout lane. `routeForOrder` scores a fixed order (the "vs. your list in order" baseline); `reroute`
   re-solves the remaining stops from the current node.
@@ -124,9 +124,9 @@ word postings for token containment), stored as flat typed-array postings (CSR) 
 **In the app** the full catalog's index is built in a Web Worker (`apps/web/src/lib/indexWorker.ts`, driven
 by `lib/indexer.ts`) and cached in IndexedDB under `index:<storeId>` keyed by `catalogHash` (cyrb53 over
 ids, names, aliases and slots), so a new catalog version pays one build and every later visit a lookup.
-Measured on the production build in headless Chromium at 390×844: the list screen is interactive at 117 ms cold
-and 89 ms warm; the index is ready at 990 ms
-cold (924 in the worker) and 141 ms warm (59 in the worker). Until it lands the resolver works from the
+Measured on the production build in headless Chromium at 390×844 (20 Oct 2026, Grosher, median of 3): the list
+screen is interactive at 80 ms cold and 76 ms warm; the index (145,964 forms) is ready at 1,104 ms cold (780 in the
+worker) and 147 ms warm (from the cache). Until it lands the resolver works from the
 base rows, the pending rows and the signs (`ResolveContext.index` is the prebuilt index, searched before
 `catalog`'s own small one), and the model's batch waits. Where there is no Worker (jsdom) the build is
 synchronous. Categories have the same index, built on the main thread (298 rows).
@@ -372,7 +372,7 @@ the in-memory fallback of `lib/db.ts` where IndexedDB is blocked.
   JSON recognises both shapes and merges by id (a `draft` is never imported). `buildExport` takes a
   `Personal` = `{memory, lists, history}`.
 
-**The off-list guard** (`lib/guard.ts`, `lib/useGuard.ts`, `lib/demoWalk.ts`; 21 Oct 2026): a gentle nudge when
+**The off-list guard** (`lib/guard.ts`, `lib/useGuard.ts`, `lib/demoWalk.ts`; 20 Oct 2026): a gentle nudge when
 the shopper drifts off the route mid-trip, and help, not a nudge, when they have reached the stop but stay. No
 indoor positioning: per leg (the last check-off to the next stop) it compares the steps since the leg began
 (survey mode's `StepDetector` on DeviceMotion) and whether the shopper is standing still (`MotionTracker`: no
@@ -419,7 +419,7 @@ scripts do).
 
 **Grosher** (`scripts/gen-grosher.ts` from `scripts/grosher-taxonomy.ts`; spec `design/store-grosher.md`, its "As
 built" section has every refinement) is the default store (`DEFAULT_STORE`, `STORES[0]`). 115 nodes, 159 edges,
-122 fixtures, 324 locations and categories. The walk graph is built from corridor centrelines (every crossing a
+123 fixtures, 325 locations and categories. The walk graph is built from corridor centrelines (every crossing a
 node, every corridor split there): the west walkway (x 12), produce and bulk aisles, the north walkway, aisles
 1–10 (runs east–west at 3.1 m pitch, 2.0 m clear, end caps both ends), the cross aisle (x 52.5), beer / wine /
 spirits aisles 11–13, the east walkway in front of the counters (x 73.5), the frozen walkway and frozen aisle
@@ -615,9 +615,9 @@ gzipped). The store stays 2D; the scene maps `(x, y) → (x, 0, y)`.
 **Perf gate** (DESIGN.md §3: ≤ 70 draw calls, ≤ 12,000 product instances): open the trip with `?perf=1`;
 `Perf.tsx` writes `window.__grosherPerf = {calls, triangles, programs, frameMs, instances, productFixtures,
 distance, tilt, lit}` with `gl.info` accumulated across all passes. Hull outlines of every fixture are one line batch (one call for the store, not one per department).
-Last measured by the CI perf gate (`apps/web/scripts/perf-gate.mjs`, run 39063622947, 17 Oct 2026, DPR 1, the
-30-aisle demo store with the 47,612-item catalog): default framing 38 calls / 520 instances; down an aisle after
-two items 44 calls / 10,373; flattened 43 calls / 10,373. Frame time from headless Chromium is SwiftShader (software)
+Last measured with the perf gate (`apps/web/scripts/perf-gate.mjs`, 20 Oct 2026, DPR 1, Grosher with its full
+catalog; CI reads the same): default framing 46 calls / 1,199 instances; down an aisle after two items 48 calls /
+7,924; flattened 46 calls / 7,924. Frame time from headless Chromium is SwiftShader (software)
 and is not a device number; measure that on a phone.
 The Playwright scripts that drove these checks live outside the repo; the pattern is: `vite dev`, fill the
 list, Route, `waitForFunction(() => window.__grosherPerf.frames > 100)`, read the object, screenshot.
@@ -849,7 +849,7 @@ freed, off the GPU the moment it is left.
 - **Overhead, facing down only** (as Bulk's ceiling): the ceiling round the opening, the skylight's black
   mullions as downward strips, glowing glass, the well's walls facing in, a fascia facing in, two linear LED
   fittings; from the camera on its way down the room is open.
-- **The way in** (`approach`, 21 Oct 2026; it used to end outside the zone, and the middle stops walked 12–15 m
+- **The way in** (`approach`, 20 Oct 2026; it used to end outside the zone, and the middle stops walked 12–15 m
   in 1.5 s, a run): the descent comes down over the roof to the pane above the landing, through the middle of
   its glass, over the islands, and lands at eye level on the stop's walking line 2.2 m from where the shopper
   will stand, toward the zone's middle, already looking at the display (`HeroTargetInfo.descent`: waypoints
@@ -1012,11 +1012,12 @@ survey, and the editor fixes it on the Mac.
 
 A static write-up, no React: `index.html` with its CSS inline (nothing render-blocking), `project.js` for the
 one animation (a lime token round the reroute loop in the pipeline diagram, visible only on the connectors:
-inside a box it hides and that box's border turns lime) and play-while-visible for the hero video, `img/` for
-the media, `capture.json` for the share card's numbers. Linked from the README's top and the list screen's
-footer ("About"). Sections: hero (two columns from 1100 px: text, and the reroute video in a large phone above
-the fold), the app (three phones), why (with the pull quote), how it works (steps, pipeline diagram, two
-rules), decisions (five Problem / Choice / Result cards, each with one number), architecture (an inline SVG,
+inside a box it hides and that box's border turns lime) and play-while-visible for every `video[data-autoplay]`,
+`img/` for the media, `capture.json` for the share card's numbers. Linked from the README's top and the list
+screen's footer ("About"). Sections: hero (two columns from 1100 px: text, and the close-up arrival video in a
+large phone above the fold), the app (three phones: the list, the reroute loop, the checkout), why (with the
+pull quote), how it works (steps, pipeline diagram, two rules), decisions (six Problem / Choice / Result cards,
+each with one number, three over three), architecture (an inline SVG,
 a wide variant from 1000 px and a tall one below), results (a bento: bench beside solver over not-measured;
 resolution beside performance), interface (the share card live, equal height with the map legend), limits,
 footer.
@@ -1027,7 +1028,8 @@ slice, meeting seamlessly (haze → lime-green → leaf → deep, then back up t
 two blooms kept inside it vertically (a bloom clipped while still tinted draws a seam). Ink follows the region:
 warm ink (`--ink-warm`) on haze and the mango hand-off, white on green; muted white only where the ground is #276E3E or darker or inside
 a card, full white on the leaf footer. Every figure carries an HTML comment with its source file or commit;
-update the page when the README bench, the fixtures, the perf gate or the index timings move.
+update the page (and the README's Numbers, which carry the same figures) when the bench, the fixtures, the
+perf or close-up gate, or the index timings move.
 
 Media: `node apps/web/scripts/capture-project.mjs http://localhost:4173` against `vite preview` of a fresh build.
 It types a 14-item list over 13 aisles in no store order, walks the trip, and writes the 2× WebP stills (list,
@@ -1035,10 +1037,18 @@ It types a 14-item list over 13 aisles in no store order, walks the trip, and wr
 simulated: the page's `Date.now` is frozen and advanced by each leg at `WALK_MPS` (1 m/s), so the card reads
 walking time only. The 3D frame is the mid-trip step (30–70%) nearest 6 of 14 with the next stop's marker in
 the map area, the camera within 40 m, and its cards inside the map area and clear of each other; today that
-is step 6 at the default framing: Chips in lime, and Paper Towel and Dog Food, off screen to the left, as
-edge chips (chips count as cards). `capture.json` records the step and the cards counted at each step
-evaluated. The loop's one reroute arrives at that step; its poster shows Coffee with Chips stacked below. The trip's "vs list in order" (49%) sits inside
-the bench's 14-stop range (35–54%, `npm run bench`'s last line).
+is step 6 at the default framing: Dal in A4 in lime, with Chips in a card beside it (chips count as cards).
+`capture.json` records the step and the cards counted at each step evaluated. The loop's one reroute arrives at
+that step. The trip's "vs list in order" (45%) sits inside the bench's 14-stop range on Grosher (37–56%,
+`npm run bench -- --store grosher`'s last line). The close-ups run with `?closeup=0` here.
+
+The close-up media: `node apps/web/scripts/capture-closeup.mjs http://localhost:4173`, on the Mac's GPU (ANGLE on
+Metal: SwiftShader draws a close-up at a few frames a second). "Bananas, Toor dal (bulk), Greek yogurt": the
+descent into Produce and the stroll to the bananas, a second at eye level, Got it, the way out and the descent
+into Bulk, cut from one recording into `closeup.{webm,mp4}` (the hero), `closeup-poster.webp` (a 2× still) and
+`closeup.gif` (the README's hero, 270 px at 10 fps, ~3.7 MB); the cuts are in `closeup.json`. Playwright
+records at CSS pixels (a 780 × 1688 video of a 2× page is the 390 × 844 picture padded), so it records at
+390 × 844.
 
 The service worker never answers `/project/` with the app shell (`navigateFallbackDenylist`) and does not
 precache it (`globIgnores`). `prefers-reduced-motion` keeps the video paused with controls, the token at rest
