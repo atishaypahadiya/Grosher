@@ -60,8 +60,20 @@ if (path && token) {
 }
 
 // ---------------------------------------------------------------- the videos
+// none fetches before the page has loaded and gone idle: the hero's clip is a megabyte, and on a phone's link
+// it would race the fonts and the text that is the first paint (the poster shows meanwhile)
+const settled = new Promise((resolve) => {
+  const idle = () => (window.requestIdleCallback ? requestIdleCallback(() => resolve(), { timeout: 2000 }) : setTimeout(resolve, 200));
+  if (document.readyState === "complete") idle();
+  else addEventListener("load", idle, { once: true });
+});
 for (const video of document.querySelectorAll("video[data-autoplay]")) {
   let onScreen = false;
+  let ready = false;
+  settled.then(() => {
+    ready = true;
+    sync();
+  });
   const sync = () => {
     if (reduce.matches) {
       video.pause();
@@ -70,6 +82,7 @@ for (const video of document.querySelectorAll("video[data-autoplay]")) {
     }
     video.controls = false;
     if (onScreen) {
+      if (!ready) return;
       if (video.preload === "none") video.preload = "auto";
       video.play().catch(() => {
         video.controls = true; // autoplay refused: the visitor can still press play
