@@ -177,7 +177,7 @@ doors; a chest freezer; a service counter behind curved glass with its staff sid
 wells under a sneeze guard; produce crates on black stands or a stepped rack; a pine counter with a stocked
 back wall), stocked by the categories on that shelf in Grosher house labels (a pack shape per category,
 products told apart by tint and size), the stop's slot lit lime. Standard zones are upgraded to hero quality
-one at a time (produce next). Everything outside a close-up stays at overview detail and, from inside it,
+one at a time (Produce is the second: below). Everything outside a close-up stays at overview detail and, from inside it,
 reads as a backdrop of recognisable fixtures fading into a warm dark. The hero look: The look follows an earthy Indian pulses store (the reference photos are kept locally in
 `design/refs/`): an **aisle with shelving both sides**, the centerpiece in its mouth; warm tan clay-plaster
 walls and ceiling, khaki polished concrete with a soft gloss, exposed copper conduit; an **even, warm, bright
@@ -200,6 +200,20 @@ stops at the aisle's mouth), a tap skips it, reduced motion cuts; the way back o
 close-up is prepared ahead (on the list screen for the first stop, during the stop before it for the others),
 so the descent starts without a pause. Budget: ≤ 70 draw calls, ≤ 250k triangles, ≤ 16 MB textures, ≤ 2.5 MB
 download, in every frame of the arrival too, for the hero zone and the worst standard one.
+
+**Produce, the daylit room** (the second hero zone; references `produce-stainless-skylight.png`,
+`cut-fruit-case.png`): the one place in the store lit by day. A skylight over the islands, its black steel
+mullions every 4 m and glowing glass seen from below, lets in a neutral, cool-white daylight (never blue): a
+bright pool under the opening, soft-edged sun patches in the panes' shapes on the oak plank floor and the
+crates, faint shafts seen from a distance. Along the north wall the wet wall: a stainless open multideck, dark
+inside, five slanted decks each with a bright LED strip under its lip, misting bars over the greens and herbs
+that puff every ~20 s, a brushed canopy carrying black header boards; greens and salad kits, herbs, mushrooms,
+cut vegetables, cut fruit in clear tubs stacked two high in colourful rows, the Grosher Press cold-pressed juices
+in clear bottles with white numbered labels (J01–J21). Eight black-steel islands with two tiers of tilted
+wooden crates each side, heaped with fruit modelled one by one (no two apples the same colour), under small
+black chalkboards in handwritten white chalk with the price beneath; two tall potted plants. The stop's crates
+(or the wall's deck) carry the lime outline and lift a little. Beyond: floral by the entrance, Bulk's warm-lit
+header boards to the east; the store fades to a pale stone, not the lamplit aisles' dark.
 
 ## 6. Data additions
 

@@ -108,7 +108,10 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
     const h = closeUpAt(store, bundle.categories, locationId);
     if (!h || failed.current.has(h.zone.id)) return false;
     setFlatShelf(null);
-    setCloseUp((c) => (c && c.stopId === stopId && !c.exiting ? c : { zone: h.zone, locationId: h.locationId, category: h.category, itemName, target: null, exiting: false, stopId }));
+    // another stop in the open zone keeps the current target until the zone hands over the next one: without
+    // it the scene would be back on the map for those frames, the overview's camera taking the camera, and
+    // the walk over would become a way out and a descent
+    setCloseUp((c) => (c && c.stopId === stopId && !c.exiting ? c : { zone: h.zone, locationId: h.locationId, category: h.category, itemName, target: c && !c.exiting && c.zone.id === h.zone.id ? c.target : null, exiting: false, stopId }));
     return true;
   };
   const leaveCloseUp = (remember: boolean) =>

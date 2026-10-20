@@ -1,6 +1,6 @@
 // Close-ups: every stop opens one at eye level when it is next (or the shopper taps it), lazily loading the
 // zone's chunk and textures. Two qualities: a HERO zone is drawn by hand from a recipe at full detail (today
-// Bulk & pulses, src/hero/bulk); every other stop gets a STANDARD zone, generated from the store data with the
+// Bulk & pulses, src/hero/bulk, and Produce, src/hero/produce); every other stop gets a STANDARD zone, generated from the store data with the
 // same shelf kit (src/hero/standard: its fixture face and the one across, the stop's slot lit lime). A zone
 // is upgraded to hero quality by another entry in HERO_ZONES plus its recipe (src/hero/<zone>/).
 
@@ -22,6 +22,9 @@ export interface HeroTargetInfo {
   height?: number;
   /** metres along `axis` the shopper stands to one side of the target, looking back at it (the aisle shows) */
   side?: number;
+  /** the way from where the shopper stands now to this target, inside the same hero zone (waypoints at eye
+   * level; never through a display); without it the walk over is a straight line (an aisle) */
+  over?: (from: [number, number, number]) => [number, number, number][];
   /** how far an eye-level camera may pan, as positions along `axis` */
   bounds: { x0: number; x1: number };
   /** where the walk in starts: eye level, outside the zone's ceiling (the descent ends there) */
@@ -70,6 +73,9 @@ export interface HeroZoneEntry {
   /** the zone's ambient fill: the scene's one hemisphere light blends to it as the camera comes down (the
    * zone brings no light of its own: a light joining the scene would recompile every material in it) */
   ambient: { sky: string; ground: string; intensity: number };
+  /** what the store beyond the zone fades into as the camera comes down (fog and background); default the
+   * warm dark of a lamplit aisle */
+  surround?: { color: string; fog: number };
   /** the flat shelf images for devices without the 3D close-up, by category (public/hero/<id>/<category>.webp);
    * a standard zone has none (without WebGL the trip's flat map already shows the slot) */
   flatImage: (category: string) => string | null;
@@ -91,6 +97,22 @@ export const HERO_ZONES: HeroZoneEntry[] = [
     // the reference's even, warm fill: most of the light; the spots are accents on top of it
     ambient: { sky: "#FFE6CC", ground: "#C29E7C", intensity: 2.5 },
     flatImage: (category) => `${import.meta.env.BASE_URL}hero/bulk/${category}.webp`,
+  },
+  {
+    id: "produce",
+    quality: "hero",
+    chunk: "produce",
+    storeId: "grosher",
+    aisle: "PRODUCE",
+    // its wall and eight islands, and what it redraws beyond: floral, Bulk's shelving
+    hideFixtures: ["f-produce-wall", "f-island1", "f-island2", "f-island3", "f-island4", "f-island5", "f-island6", "f-island7", "f-island8", "f-floral", "f-bulk-wall", "f-bulk-run", "f-bulk-display"],
+    load: () => import("./produce/ProduceZone.tsx"),
+    prepare: () => import("./produce/ProduceZone.tsx"),
+    // the daylit room: a bright, neutral fill (cool beside Bulk's warm one), the floor's warm bounce below
+    ambient: { sky: "#F3F1EC", ground: "#B8956C", intensity: 2.2 },
+    // daylight carries: the store beyond fades to a pale warm stone, thinner, not the lamplit aisles' dark
+    surround: { color: "#8E877C", fog: 0.018 },
+    flatImage: (category) => `${import.meta.env.BASE_URL}hero/produce/${category}.webp`,
   },
 ];
 

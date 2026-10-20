@@ -69,15 +69,16 @@ const GROUND: [number, string][] = [
   [0.76, "#2E7D46"],
   [1, "#184D2E"],
 ];
-/** in a close-up the store beyond the zone fades into a warm dark: the fog and the background both */
+/** in a close-up the store beyond the zone fades into a warm dark: the fog and the background both (a zone
+ * may set its own: Produce, the daylit room, fades to a pale stone instead) */
 const CLOSE_DARK = "#2A1F17";
 const CLOSE_FOG = 0.03;
 
-/** the ground gradient, mixed `k` of the way toward the close-up's dark */
-function paintGradient(c: HTMLCanvasElement, k: number) {
+/** the ground gradient, mixed `k` of the way toward the close-up's surround */
+function paintGradient(c: HTMLCanvasElement, k: number, surround = CLOSE_DARK) {
   const ctx = c.getContext("2d")!;
   const g = ctx.createLinearGradient(0, 0, 0, 512);
-  const dark = new Color(CLOSE_DARK);
+  const dark = new Color(surround);
   for (const [at, hex] of GROUND) g.addColorStop(at, `#${new Color(hex).lerp(dark, k).getHexString()}`);
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, 4, 512);
@@ -103,7 +104,7 @@ function BloomDriver({ effect, distanceRef, full }: { effect: RefObject<Selectiv
   return null;
 }
 
-function Background({ envRef }: { envRef: { current: number } }) {
+function Background({ envRef, surround }: { envRef: { current: number }; surround?: string }) {
   const scene = useThree((s) => s.scene);
   const tex = useRef<CanvasTexture | null>(null);
   const last = useRef(0);
@@ -121,7 +122,7 @@ function Background({ envRef }: { envRef: { current: number } }) {
     const k = envRef.current;
     if (!t || Math.abs(k - last.current) < 0.02) return;
     last.current = k;
-    paintGradient(t.image as HTMLCanvasElement, k);
+    paintGradient(t.image as HTMLCanvasElement, k, surround);
     t.needsUpdate = true;
   });
   return null;
@@ -132,10 +133,14 @@ function Background({ envRef }: { envRef: { current: number } }) {
  * fog thickens into the warm dark, the overview's own lights and the skylight's daylight spots fade, so the
  * store goes from the overview's haze to the zone's lamplight as the camera comes down, never in one cut.
  */
-function EnvDriver({ envRef, fog, hemi, sun, sky, daylit, ambient }: { envRef: { current: number }; fog: RefObject<FogExp2 | null>; hemi: RefObject<HemisphereLight | null>; sun: RefObject<DirectionalLight | null>; sky: RefObject<Group | null>; daylit: boolean; ambient?: HeroZoneEntry["ambient"] }) {
+function EnvDriver({ envRef, fog, hemi, sun, sky, daylit, ambient, surround }: { envRef: { current: number }; fog: RefObject<FogExp2 | null>; hemi: RefObject<HemisphereLight | null>; sun: RefObject<DirectionalLight | null>; sky: RefObject<Group | null>; daylit: boolean; ambient?: HeroZoneEntry["ambient"]; surround?: HeroZoneEntry["surround"] }) {
   const last = useRef(-1);
   const haze = useMemo(() => new Color(HAZE), []);
-  const dark = useMemo(() => new Color(CLOSE_DARK), []);
+  const dark = useMemo(() => new Color(surround?.color ?? CLOSE_DARK), [surround]);
+  const closeFog = surround?.fog ?? CLOSE_FOG;
+  useEffect(() => {
+    last.current = -1; // a new zone's surround: blend again
+  }, [surround]);
   const deep = useMemo(() => new Color(DEEP), []);
   const fill = useMemo(() => (ambient ? { sky: new Color(ambient.sky), ground: new Color(ambient.ground), intensity: ambient.intensity } : null), [ambient]);
   useFrame(() => {
@@ -144,7 +149,7 @@ function EnvDriver({ envRef, fog, hemi, sun, sky, daylit, ambient }: { envRef: {
     last.current = k;
     if (fog.current) {
       fog.current.color.copy(haze).lerp(dark, k);
-      fog.current.density = 0.006 + (CLOSE_FOG - 0.006) * k;
+      fog.current.density = 0.006 + (closeFog - 0.006) * k;
     }
     // the one hemisphere: the overview's haze, blended to the zone's warm fill (never a second light)
     if (hemi.current) {
@@ -327,14 +332,14 @@ export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, fo
 
   return (
     <>
-      <Background envRef={envRef} />
+      <Background envRef={envRef} surround={closeUp?.zone.surround?.color} />
       {/* ~12% haze at 60 m, ~30% at 100 m: with the CSS overlay the next stop never loses more than 40%. In a
           close-up the store around the zone fades into a warm dark instead (EnvDriver), and the zone brings
           its own light. */}
       <fogExp2 ref={fogRef} attach="fog" args={[HAZE, 0.006]} />
       <hemisphereLight ref={hemi} args={[HAZE, DEEP, 0.9]} />
       <directionalLight ref={sun} position={[-20, 30, 40]} intensity={daylit ? 0.6 : 0.5} color={daylit ? "#FFD9B0" : "#FFFFFF"} />
-      <EnvDriver envRef={envRef} fog={fogRef} hemi={hemi} sun={sun} sky={skyRef} daylit={daylit} ambient={closeUp?.zone.ambient} />
+      <EnvDriver envRef={envRef} fog={fogRef} hemi={hemi} sun={sun} sky={skyRef} daylit={daylit} ambient={closeUp?.zone.ambient} surround={closeUp?.zone.surround} />
 
       {near ? null : floor ? (
         <mesh rotation-x={-Math.PI / 2} geometry={floor} name="floor">

@@ -38,7 +38,31 @@ export interface LightRig {
   slabs: Slab[];
   /** distance at which a light gives its full colour; inverse square beyond */
   reference: number;
+  /** the half-width of a slab shadow's soft edge, metres (default 4 mm: crisp; daylight through a skylight's
+   * mullions is softer) */
+  soft?: number;
+  /** a refrigerated case's lip lights (Produce's multideck): an LED strip under every shelf's front edge */
+  cases?: CaseLight;
 }
+
+/**
+ * LED strips under the front lip of each shelf of an open multideck: every point in the case below a strip
+ * is lit from it, falling off with distance, brightest straight under it. The case is a box (x0–x1, from its
+ * back zBack to zFront); each strip a height and the z of its lip.
+ */
+export interface CaseLight {
+  x0: number;
+  x1: number;
+  zBack: number;
+  zFront: number;
+  strips: { y: number; z: number }[];
+  color: V3;
+  /** metres at which a strip has fallen to half */
+  falloff: number;
+}
+
+/** a rig's program key: every number the shader is compiled with */
+export const rigKey = (rig: LightRig) => `zone${rig.lights.length}-${rig.slabs.length}${rig.soft ? `-s${rig.soft}` : ""}${rig.cases ? `-c${rig.cases.strips.length}` : ""}`;
 
 /** 3000 K, normalised: (255, 180, 107) */
 export const WARM_3000K: V3 = [1.0, 0.706, 0.42];
@@ -58,14 +82,27 @@ export function rigUniforms(rig: LightRig) {
   }
   const zs = rig.slabs.map((s) => new Vector4(s.x0, s.z0, s.x1, s.z1));
   const zsy = rig.slabs.map((s) => s.y);
-  return { uZL: { value: zl }, uZS: { value: zs.length ? zs : [new Vector4()] }, uZSY: { value: zsy.length ? zsy : [0] } };
+  const c = rig.cases;
+  return {
+    uZL: { value: zl },
+    uZS: { value: zs.length ? zs : [new Vector4()] },
+    uZSY: { value: zsy.length ? zsy : [0] },
+    uZC: { value: c ? new Vector4(c.x0, c.x1, c.zBack, c.zFront) : new Vector4() },
+    uZCS: { value: c ? c.strips.map((t) => new Vector4(t.y, t.z, 0, 0)) : [new Vector4()] },
+    uZCC: { value: c ? new Vector4(c.color[0], c.color[1], c.color[2], c.falloff) : new Vector4() },
+  };
 }
 export type RigUniforms = ReturnType<typeof rigUniforms>;
 
 const glsl = (rig: LightRig) => ({
-  defines: `#define ZONE_LIGHTS ${rig.lights.length}\n#define ZONE_SLABS ${rig.slabs.length}\n#define ZONE_REF2 ${(rig.reference * rig.reference).toFixed(4)}\n`,
+  defines: `#define ZONE_LIGHTS ${rig.lights.length}\n#define ZONE_SLABS ${rig.slabs.length}\n#define ZONE_REF2 ${(rig.reference * rig.reference).toFixed(4)}\n#define ZONE_SOFT ${(rig.soft ?? 0.004).toFixed(4)}\n#define ZONE_CASE ${rig.cases?.strips.length ?? 0}\n`,
   pars: /* glsl */ `
     uniform vec4 uZL[ZONE_LIGHTS * 3];
+    #if ZONE_CASE > 0
+    uniform vec4 uZC;
+    uniform vec4 uZCS[ZONE_CASE];
+    uniform vec4 uZCC;
+    #endif
     #if ZONE_SLABS > 0
     uniform vec4 uZS[ZONE_SLABS];
     uniform float uZSY[ZONE_SLABS];
@@ -79,8 +116,8 @@ const glsl = (rig: LightRig) => ({
         if ((p.y - y) * (l.y - y) >= 0.0) continue;
         vec2 h = mix(p.xz, l.xz, (y - p.y) / (l.y - p.y));
         vec4 r = uZS[k];
-        // a 4 mm soft edge: crisp, never aliased
-        vec2 a = smoothstep(r.xy - 0.004, r.xy + 0.004, h) * (1.0 - smoothstep(r.zw - 0.004, r.zw + 0.004, h));
+        // a soft edge (4 mm by default: crisp, never aliased)
+        vec2 a = smoothstep(r.xy - ZONE_SOFT, r.xy + ZONE_SOFT, h) * (1.0 - smoothstep(r.zw - ZONE_SOFT, r.zw + ZONE_SOFT, h));
         s *= 1.0 - a.x * a.y;
       }
       #endif
@@ -106,6 +143,24 @@ const glsl = (rig: LightRig) => ({
       zl.visible = true;
       RE_Direct(zl, geometryPosition, geometryNormal, geometryViewDir, geometryClearcoatNormal, material, reflectedLight);
     }
+    #if ZONE_CASE > 0
+    // the case's lip lights: from the strip above, straight up over this point, falling off with distance
+    if (vZoneWorld.x > uZC.x && vZoneWorld.x < uZC.y && vZoneWorld.z > uZC.z - 0.05 && vZoneWorld.z < uZC.w + 0.35) {
+      for (int k = 0; k < ZONE_CASE; k++) {
+        vec4 st = uZCS[k];
+        float dy = st.x - vZoneWorld.y;
+        if (dy <= 0.005 || dy > 0.7) continue;
+        vec3 toL = vec3(0.0, dy, st.y - vZoneWorld.z);
+        float d2 = dot(toL, toL);
+        vec3 L = toL * inversesqrt(d2);
+        IncidentLight cl;
+        cl.color = uZCC.rgb * L.y * (uZCC.w * uZCC.w) / (uZCC.w * uZCC.w + d2);
+        cl.direction = normalize((viewMatrix * vec4(L, 0.0)).xyz);
+        cl.visible = true;
+        RE_Direct(cl, geometryPosition, geometryNormal, geometryViewDir, geometryClearcoatNormal, material, reflectedLight);
+      }
+    }
+    #endif
   `,
 });
 
@@ -152,13 +207,14 @@ const smooth = (a: number, b: number, x: number) => {
 
 export function shadowAt(rig: LightRig, p: V3, l: V3): number {
   let s = 1;
+  const e = rig.soft ?? 0.004;
   for (const k of rig.slabs) {
     if ((p[1] - k.y) * (l[1] - k.y) >= 0) continue;
     const t = (k.y - p[1]) / (l[1] - p[1]);
     const hx = p[0] + (l[0] - p[0]) * t;
     const hz = p[2] + (l[2] - p[2]) * t;
-    const a = smooth(k.x0 - 0.004, k.x0 + 0.004, hx) * (1 - smooth(k.x1 - 0.004, k.x1 + 0.004, hx));
-    const b = smooth(k.z0 - 0.004, k.z0 + 0.004, hz) * (1 - smooth(k.z1 - 0.004, k.z1 + 0.004, hz));
+    const a = smooth(k.x0 - e, k.x0 + e, hx) * (1 - smooth(k.x1 - e, k.x1 + e, hx));
+    const b = smooth(k.z0 - e, k.z0 + e, hz) * (1 - smooth(k.z1 - e, k.z1 + e, hz));
     s *= 1 - a * b;
   }
   return s;
@@ -181,5 +237,18 @@ export function lightAt(rig: LightRig, p: V3, n: V3): V3 {
     const e = cone * ndl * shadowAt(rig, p, l.pos) * (ref2 / Math.max(d2, ref2 * 0.5));
     for (let c = 0; c < 3; c++) out[c] += l.color[c] * e;
   }
+  const cs = rig.cases;
+  if (cs && p[0] > cs.x0 && p[0] < cs.x1 && p[2] > cs.zBack - 0.05 && p[2] < cs.zFront + 0.35)
+    for (const st of cs.strips) {
+      const dy = st.y - p[1];
+      if (dy <= 0.005 || dy > 0.7) continue;
+      const to = [0, dy, st.z - p[2]];
+      const d2 = to[1] ** 2 + to[2] ** 2;
+      const d = Math.sqrt(d2);
+      const L = to.map((c) => c / d);
+      const ndl = Math.max(0, n[0] * L[0] + n[1] * L[1] + n[2] * L[2]);
+      const e = L[1] * ((cs.falloff * cs.falloff) / (cs.falloff * cs.falloff + d2)) * ndl;
+      for (let c = 0; c < 3; c++) out[c] += cs.color[c] * e;
+    }
   return out;
 }

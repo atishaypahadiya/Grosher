@@ -1,4 +1,4 @@
-// Every stop has a close-up: Bulk's are the hero zone, every other location a standard close-up generated
+// Every stop has a close-up: Bulk's and Produce's are hero zones, every other location a standard close-up generated
 // from the store data (src/hero/standard). Each builds within the close-up budget (the worst is the one the
 // close-up gate opens), shares one light layout (so one set of shader programs), lights its own slot, and is
 // framed so the slot sits between the progress strip and the bottom card, a low shelf by crouching. The
@@ -15,17 +15,19 @@ import { CLOSE_UP_BUDGET } from "../src/hero/budget.ts";
 import { styleOf, VARIANTS } from "../src/hero/standard/styles.ts";
 
 const { store, categories } = grosher;
+/** the aisles drawn by hand (HERO_ZONES): every other location gets a standard close-up */
+const HERO_AISLES = new Set(["BULK", "PRODUCE"]);
 const builds = new Map<string, StandardBuild>();
 for (const loc of store.locations) {
   const h = closeUpAt(store, categories, loc.id);
   if (h?.zone.quality === "standard") builds.set(loc.id, buildStandardZone(store, categories, h.zone.plan!));
 }
 
-test("every location opens a close-up: Bulk's the hero zone, every other a standard one", () => {
+test("every location opens a close-up: Bulk's and Produce's their hero zones, every other a standard one", () => {
   for (const loc of store.locations) {
     const h = closeUpAt(store, categories, loc.id);
     expect(h, loc.id).not.toBeNull();
-    expect(h!.zone.quality).toBe(loc.aisle === "BULK" ? "hero" : "standard");
+    expect(h!.zone.quality).toBe(HERO_AISLES.has(loc.aisle ?? "") ? "hero" : "standard");
     if (h!.zone.quality === "standard") {
       expect(h!.zone.id).toBe(`std:${loc.id}`);
       // it hides the fixture it redraws, and the one across the corridor when it redraws that too
@@ -33,10 +35,11 @@ test("every location opens a close-up: Bulk's the hero zone, every other a stand
       expect(h!.zone.flatImage(h!.category)).toBeNull();
     }
   }
-  expect(builds.size).toBe(store.locations.filter((l) => l.aisle !== "BULK").length);
-  // every kind of fixture has its build
+  expect(builds.size).toBe(store.locations.filter((l) => !HERO_AISLES.has(l.aisle ?? "")).length);
+  // every kind of fixture Grosher has outside its hero zones has its build (the stepped produce wall, now
+  // Produce's hero wet wall, has none left here; its build stays for other stores)
   const kinds = new Set([...builds.values()].map((b) => b.kind));
-  for (const k of ["gondola", "chiller", "doors", "coffin", "service", "bar", "produce", "producewall", "counter"]) expect(kinds.has(k as StandardBuild["kind"]), k).toBe(true);
+  for (const k of ["gondola", "chiller", "doors", "coffin", "service", "bar", "produce", "counter"]) expect(kinds.has(k as StandardBuild["kind"]), k).toBe(true);
 });
 
 test("every standard close-up fits the budget beside the overview; the worst is the one the gate opens", () => {
@@ -68,7 +71,7 @@ test("a face carries its categories, each in its own house style; the slot holds
   // what each face's runs say is at the slot: the stop's own category
   for (const c of categories) {
     const loc = store.locations.find((l) => l.id === c.locationId)!;
-    if (loc.aisle === "BULK") continue;
+    if (HERO_AISLES.has(loc.aisle ?? "")) continue;
     const h = closeUpAt(store, categories, loc.id)!;
     const key = `${h.zone.plan!.face.fixtureId}:${["west", "east", "north", "south"][[h.zone.plan!.face.n[0] < -0.5, h.zone.plan!.face.n[0] > 0.5, h.zone.plan!.face.n[1] < -0.5, true].indexOf(true)]}`;
     expect(faces.get(key)?.some((r) => r.id === c.id), c.id).toBe(true);

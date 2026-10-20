@@ -192,6 +192,78 @@
       "kind": "uastc",
       "w": 512,
       "h": 640
+    },
+    "oak": {
+      "bytes": 131212,
+      "kind": "etc1s",
+      "w": 1024,
+      "h": 1024
+    },
+    "oak.lo": {
+      "bytes": 43498,
+      "kind": "etc1s",
+      "w": 512,
+      "h": 512
+    },
+    "brushed": {
+      "bytes": 13650,
+      "kind": "etc1s",
+      "w": 512,
+      "h": 512
+    },
+    "brushed.lo": {
+      "bytes": 6043,
+      "kind": "etc1s",
+      "w": 256,
+      "h": 256
+    },
+    "chalk": {
+      "bytes": 303334,
+      "kind": "etc1s-hq",
+      "w": 2048,
+      "h": 1280
+    },
+    "chalk.lo": {
+      "bytes": 125337,
+      "kind": "etc1s-hq",
+      "w": 1024,
+      "h": 640
+    },
+    "packs": {
+      "bytes": 392004,
+      "kind": "etc1s",
+      "w": 2048,
+      "h": 1280
+    },
+    "packs.lo": {
+      "bytes": 142307,
+      "kind": "etc1s",
+      "w": 1024,
+      "h": 640
+    },
+    "mounds": {
+      "bytes": 42808,
+      "kind": "etc1s",
+      "w": 1024,
+      "h": 512
+    },
+    "mounds.lo": {
+      "bytes": 14498,
+      "kind": "etc1s",
+      "w": 512,
+      "h": 256
+    },
+    "foliage": {
+      "bytes": 209732,
+      "kind": "etc1s-hq",
+      "w": 1024,
+      "h": 1024
+    },
+    "foliage.lo": {
+      "bytes": 84411,
+      "kind": "etc1s-hq",
+      "w": 512,
+      "h": 512
     }
   }
 }

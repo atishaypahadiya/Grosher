@@ -9,14 +9,25 @@ import { envResident } from "../stats.ts";
 
 export const ENV_SIZE = 64;
 
-/** the sketch: a long warm room, bright light rows overhead, the two shelf faces either side */
-function room(): Scene {
+/** which room the gloss reflects: a lamplit aisle (warm clay, rows of spots), or Produce's daylit room */
+export type EnvPalette = "warm" | "daylight";
+
+/** the sketch: a long room, its light overhead (rows of spots, or a skylight), the two shelf faces either side */
+function room(palette: EnvPalette = "warm"): Scene {
   const s = new Scene();
   const add = (w: number, h: number, d: number, color: Color, pos: [number, number, number], back = false) => {
     const m = new Mesh(new BoxGeometry(w, h, d), new MeshBasicMaterial({ color, side: back ? BackSide : undefined }));
     m.position.set(...pos);
     s.add(m);
   };
+  if (palette === "daylight") {
+    // pale walls and ceiling, a wood floor, the skylight a broad bright panel overhead, produce either side
+    add(40, 4.4, 8, new Color("#B8B2A8"), [0, 2.2, 0], true);
+    add(40, 0.02, 8, new Color("#8A6040"), [0, 0.01, 0]);
+    add(30, 0.02, 5, new Color("#FFFFFF").multiplyScalar(4.5), [0, 4.35, 0]);
+    for (const z of [-2.5, 2.5]) add(40, 1.2, 0.05, new Color("#8A9A5A"), [0, 0.8, z]);
+    return s;
+  }
   add(40, 4.4, 4, new Color("#8C6C50"), [0, 2.2, 0], true);
   // the lit shelf faces, warm and busy, both sides of the aisle
   for (const z of [-1.3, 1.3]) add(40, 1.9, 0.05, new Color("#C49A6C"), [0, 1.15, z]);
@@ -33,9 +44,9 @@ export interface Env {
   dispose: () => void;
 }
 
-export function bakeEnv(gl: WebGLRenderer): Env {
+export function bakeEnv(gl: WebGLRenderer, palette: EnvPalette = "warm"): Env {
   const pmrem = new PMREMGenerator(gl);
-  const scene = room();
+  const scene = room(palette);
   const rt: WebGLRenderTarget = pmrem.fromScene(scene, 0.03, 0.1, 50, { size: ENV_SIZE, position: new Vector3(0, 1.2, 0) });
   pmrem.dispose();
   scene.traverse((o) => {
@@ -61,14 +72,19 @@ export function bakeEnv(gl: WebGLRenderer): Env {
   };
 }
 
-let shared: { gl: WebGLRenderer; env: Env; users: number } | null = null;
-/** The shared environment map for a zone: baked by the first zone that asks, freed when the last lets go. */
-export function acquireEnv(gl: WebGLRenderer): { texture: Texture; release: () => void } {
-  if (!shared || shared.gl !== gl) {
-    shared?.env.dispose();
-    shared = { gl, env: bakeEnv(gl), users: 0 };
+const shared = new Map<EnvPalette, { gl: WebGLRenderer; env: Env; users: number }>();
+/**
+ * The shared environment map for a zone: baked by the first zone that asks, freed when the last lets go. Every
+ * palette is baked at the same size, so a material compiled with one draws with another (Produce compiles
+ * with the warm one while it is only prepared, and takes its daylight one when it goes on the GPU).
+ */
+export function acquireEnv(gl: WebGLRenderer, palette: EnvPalette = "warm"): { texture: Texture; release: () => void } {
+  let s = shared.get(palette);
+  if (!s || s.gl !== gl) {
+    s?.env.dispose();
+    s = { gl, env: bakeEnv(gl, palette), users: 0 };
+    shared.set(palette, s);
   }
-  const s = shared;
   s.users++;
   let held = true;
   return {
@@ -78,7 +94,7 @@ export function acquireEnv(gl: WebGLRenderer): { texture: Texture; release: () =
       held = false;
       if (--s.users > 0) return;
       s.env.dispose();
-      if (shared === s) shared = null;
+      if (shared.get(palette) === s) shared.delete(palette);
     },
   };
 }

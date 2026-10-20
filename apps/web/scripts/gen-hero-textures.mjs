@@ -13,6 +13,9 @@
 //   labels              house-brand labels, each drawn at its pack's aspect (kit/products.ts), and bin tags
 //   headers             the black header boards with white uppercase lettering
 //   cutouts             RGBA, alpha-tested: the sacks' stencils, the jute fringe, wheat ears
+//   oak, brushed, chalk, packs, mounds, foliage    Produce's (scripts/produce-textures.mjs, src/hero/produce/recipe.ts)
+//
+// ONLY=oak,chalk,… re-encodes just those (the rest of the committed files and the manifest stay as they are).
 //
 // Albedo and normal maps go to ETC1S (small; organic surfaces and relief survive it: the grains' normals were
 // 1.1 MB as UASTC and ~8× smaller as ETC1S); lettering and cutouts to UASTC with RDO (sharp edges, still
@@ -26,6 +29,8 @@ import { GRAIN_SHAPES, HEADERS, LABEL_ATLAS, LABEL_ROWS, LABEL_STYLE, SACK_STENC
 import { STANDARD_TEMPLATES, TEMPLATES } from "../src/hero/kit/products.ts";
 import { BAND, signKeys, signLabel, styleOf, CAT_COLS, CAT_CELL } from "../src/hero/standard/styles.ts";
 import CATEGORIES from "../../../packages/stores/grosher/categories.json" with { type: "json" };
+import { CHALK_ATLAS, FOLIAGE, HEADER, HEADERS as PRODUCE_HEADERS, JUICES, JUICE_LABEL, MOUNDS, PACKS, SIGN, signCells } from "../src/hero/produce/recipe.ts";
+import { drawProduce } from "./produce-textures.mjs";
 
 const ROOT = join(import.meta.dirname, "..");
 const OUT = join(ROOT, "src", "hero", "assets");
@@ -928,21 +933,29 @@ const images = await page.evaluate(
   },
   { font, labels, tags, headers: HEADERS, GRAIN: GRAIN_SHAPES, STYLE: LABEL_STYLE, ASPECT, LABEL_ATLAS, LABEL_ROWS, stencils: SACK_STENCILS, CATS, SIGNS, CAT_COLS, CAT_CELL },
 );
+Object.assign(
+  images,
+  await page.evaluate(`(${drawProduce.toString()})(${JSON.stringify({ font, CHALK_ATLAS, SIGN, SIGNS: signCells(), JUICE_LABEL, JUICES, HEADER, HEADERS: PRODUCE_HEADERS, PACKS, MOUNDS, FOLIAGE })})`),
+);
 await browser.close();
 
 // ---------------------------------------------------------------- encode
 const KIND = {
   pine: "etc1s", plaster: "etc1s", plaster_n: "normal-etc1s", concrete: "etc1s", burlap: "etc1s", burlap_n: "normal-etc1s",
   terracotta: "etc1s", stone: "etc1s", stone_n: "normal-etc1s", grains: "etc1s", grains_n: "normal-etc1s", labels: "uastc", headers: "uastc", cutouts: "uastc", catlabels: "etc1s", signs: "uastc",
+  // Produce's lettering is chalk and big numbers: ETC1S at full quality keeps it (UASTC was 4× the bytes)
+  oak: "etc1s", brushed: "etc1s", chalk: "etc1s-hq", packs: "etc1s", mounds: "etc1s", foliage: "etc1s-hq",
 };
-const manifest = {};
+const ONLY = process.env.ONLY ? new Set(process.env.ONLY.split(",")) : null;
+const manifest = ONLY ? JSON.parse(readFileSync(join(OUT, "manifest.json"), "utf8")).textures : {};
 for (const [name, url] of Object.entries(images)) {
+  if (ONLY && !ONLY.has(name.replace(/\.lo$/, ""))) continue;
   const png = join(TMP, `${name}.png`);
   writeFileSync(png, Buffer.from(url.split(",")[1], "base64"));
   const base = name.replace(/\.lo$/, "");
   const kind = KIND[base];
   const flags =
-    kind === "etc1s" ? ["-q", "190", "-comp_level", "2", "-srgb"] : kind === "normal-etc1s" ? ["-q", "255", "-comp_level", "2", "-normal_map", "-linear"] : kind === "normal" ? ["-uastc", "-uastc_level", "2", "-uastc_rdo_l", "4.0", "-normal_map", "-linear"] : ["-uastc", "-uastc_level", "2", "-uastc_rdo_l", "0.5", "-srgb"];
+    kind === "etc1s" ? ["-q", "190", "-comp_level", "2", "-srgb"] : kind === "etc1s-hq" ? ["-q", "255", "-comp_level", "2", "-srgb"] : kind === "normal-etc1s" ? ["-q", "255", "-comp_level", "2", "-normal_map", "-linear"] : kind === "normal" ? ["-uastc", "-uastc_level", "2", "-uastc_rdo_l", "4.0", "-normal_map", "-linear"] : ["-uastc", "-uastc_level", "2", "-uastc_rdo_l", "0.5", "-srgb"];
   // compressed textures cannot be flipped on upload (three keeps flipY false for them): flip here, so atlas
   // rectangles read the way they do for any other texture (v up from the bottom)
   execFileSync("basisu", ["-ktx2", "-mipmap", "-y_flip", ...flags, "-file", png, "-output_path", OUT], { stdio: "ignore" });
@@ -954,7 +967,7 @@ writeFileSync(join(OUT, "manifest.json"), JSON.stringify({ note: "scripts/gen-he
 // PREVIEW=dir keeps the source PNGs there, to look at
 if (process.env.PREVIEW) {
   mkdirSync(process.env.PREVIEW, { recursive: true });
-  for (const name of Object.keys(images)) writeFileSync(join(process.env.PREVIEW, `${name}.png`), readFileSync(join(TMP, `${name}.png`)));
+  for (const name of Object.keys(images)) if (!ONLY || ONLY.has(name.replace(/\.lo$/, ""))) writeFileSync(join(process.env.PREVIEW, `${name}.png`), readFileSync(join(TMP, `${name}.png`)));
 }
 rmSync(TMP, { recursive: true, force: true });
 const sum = (tier) => Object.entries(manifest).filter(([n]) => n.endsWith(".lo") === (tier === "lo")).reduce((s, [, m]) => s + m.bytes, 0);

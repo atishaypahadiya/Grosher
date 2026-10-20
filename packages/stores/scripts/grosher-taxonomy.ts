@@ -117,6 +117,8 @@ export const CATEGORY_PATCHES: Record<string, { name?: string; add?: string[]; r
   "tomatoes-peppers": { add: ["green chilies", "green chillies", "green chili", "hari mirch", "thai chilies", "serrano peppers"] },
   // the bar mixers keep only the mixers now that beer, wine and spirits have shelves
   mixers: { add: ["tonic water", "club soda", "bitters", "cocktail mix"] },
+  // the cut fruit in tubs: "cut fruit" alone fell through to a fuzzy match on gum
+  "cut-fruit-juice": { add: ["cut fruit", "fruit cups", "cut melon", "fruit tubs"] },
   // cold & flu: the way people write it
   "cold-flu": { add: ["cold and flu medicine", "cold medicine", "throat lozenges", "lozenges", "flu medicine"] },
 };

@@ -1,7 +1,8 @@
 // The close-up gate (CI): opens close-ups on the production build and holds them to the close-up budget
-// (src/hero/budget.ts), separate from the overview's perf gate: Grosher's Bulk & pulses hero zone, and the
-// worst standard close-up (the most triangles of all 319, test/standard-zone.test.ts: A4-R16, the mole,
-// enchilada and hot sauces, jars and bottles on both faces of a 35 m aisle).
+// (src/hero/budget.ts), separate from the overview's perf gate: Grosher's two hero zones, Bulk & pulses and
+// Produce (its arrival, an island stop, the wet wall, a look down the zone and along the wall), and the worst
+// standard close-up (the most triangles of all, test/standard-zone.test.ts: A4-R16, the mole, enchilada and
+// hot sauces, jars and bottles on both faces of a 35 m aisle).
 //
 //   node scripts/hero-gate.mjs http://localhost:4173 [--shots dir]
 //
@@ -12,14 +13,15 @@
 //   triangles   the same
 //   GPU MB      the close-up textures resident on the GPU, as transcoded on this device, every mip level (hi
 //               tier): the open zone's and any other zone's still or already uploaded (src/hero/stats.ts)
-//   combined    a walk standard → Bulk → standard, the next zone prepared during each stop: at most one zone on
+//   combined    a walk standard → Produce → Bulk → standard, the next zone prepared during each stop: one zone on
 //               the GPU at a time (the one before is freed when it is left, the next uploads only after), and
 //               the page's peak over the whole walk within the same budget
 //   download    what a close-up fetches that the overview did not: its chunks (gzip), its hi-tier KTX2 files and
 //               the transcoder (gzip), by the requests the page made, sized from dist/
 //   prepared    the next stop's zone prepared during the stop before (at Got it: built, transcoded, compiled,
 //               still off the GPU), then ready within 400 ms or two rendered frames of being asked for (it
-//               uploads in the hold); and the first stop's on the list screen
+//               uploads in the hold), at every step of that walk; and the first stop's on the list screen
+//               (Bulk, Produce, the standard A4-R16)
 //
 // Frame times are headless software rendering (SwiftShader): printed, never judged. Check a phone with
 // ?debug=perf.
@@ -86,7 +88,9 @@ const steady = async (n) => {
 
 const rows = [];
 let lazy;
-const preload = { prepared: false, ready: null, onList: false, std: false, stdReady: null };
+const preload = { prepared: false, onList: false, std: false, produce: false };
+/** each Got it on the combined walk: from, to, asked for → ready, and whether the next zone was prepared */
+const transitions = [];
 /** the walk's residency at each stop (with the next stop's zone prepared) and its peak */
 const combined = { stops: [], peakMB: 0 };
 /** the next zone's state as Got it is tapped on the stop before */
@@ -148,7 +152,7 @@ try {
     };
   });
   /** the arrival (worst frame, slowed), eye level, and a look along the aisle, for the close-up now opening */
-  const arrival = async (label, shot) => {
+  const arrival = async (label, shot, along = "along the aisle", dx = 300) => {
     await page.waitForFunction(() => window.__grosherCloseUp?.state === "open" && window.__grosherPerf?.hero?.tier, null, { timeout: 90_000 });
     let worst = null;
     // 2.5 s of arrival at 1/40 speed: 100 s; read every 1.5 s
@@ -169,10 +173,10 @@ try {
     const cy = box.y + box.height * 0.45;
     await page.mouse.move(cx, cy);
     await page.mouse.down();
-    await page.mouse.move(cx + 300, cy, { steps: 20 });
+    await page.mouse.move(cx + dx, cy, { steps: 20 });
     await page.mouse.up();
     await page.waitForTimeout(600);
-    rows.push({ view: `${label}: along the aisle`, ...(await steady(30)), patched: true });
+    rows.push({ view: `${label}: ${along}`, ...(await steady(30)), patched: true });
     if (SHOTS) await page.screenshot({ path: join(SHOTS, `${shot}-aisle.png`) });
   };
   await slowClock();
@@ -201,32 +205,64 @@ try {
   await page.getByRole("button", { name: /route 1 item/i }).click({ timeout: 30_000 });
   await arrival("standard A4-R16", "standard");
   downloads["standard"] = downloadOf(fetched, baseline);
-  // prepared ahead: a floral stop (a standard close-up), then toor dal; while the first is open the Bulk zone
-  // is prepared in the background, and after "Got it" (the way out, the next leg shown on the map) it opens
-  // without a pause; then a standard stop after Bulk, the same
+  // Produce, the daylit room: an island stop (prepared on the list), its arrival, eye level and a look down the
+  // zone; then the wet wall, facing the chiller, and a look along it
+  await fresh("?perf=1&tier=hi");
+  fetched.length = 0;
+  const pr = page.getByLabel(/add items/i);
+  await pr.fill("honeycrisp apples");
+  await pr.press("Enter");
+  preload.produce = await page
+    .waitForFunction(() => window.__grosherPrepared === "grosher:produce", null, { timeout: 60_000 })
+    .then(() => true, () => false);
+  await slowClock();
+  await page.getByRole("button", { name: /route 1 item/i }).click({ timeout: 30_000 });
+  await arrival("Produce island", "produce-island", "down the zone", -300);
+  downloads.Produce = downloadOf(fetched, baseline);
+  await fresh("?perf=1&tier=hi");
+  const wet = page.getByLabel(/add items/i);
+  await wet.fill("cold pressed juice");
+  await wet.press("Enter");
+  await page.getByRole("button", { name: /route 1 item/i }).click({ timeout: 30_000 });
+  await page.waitForFunction(() => window.__grosherCloseUp?.state === "open" && window.__grosherPerf?.hero?.tier, null, { timeout: 90_000 });
+  await page.waitForTimeout(3000);
+  rows.push({ view: "Produce: the wet wall", ...(await steady(30)) });
+  if (SHOTS) await page.screenshot({ path: join(SHOTS, "produce-wall-eye.png") });
+  {
+    const box = await page.getByTestId("map3d").boundingBox();
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height * 0.45);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width / 2 - 320, box.y + box.height * 0.45, { steps: 20 });
+    await page.mouse.up();
+    await page.waitForTimeout(600);
+    rows.push({ view: "Produce: along the wet wall", ...(await steady(30)) });
+    if (SHOTS) await page.screenshot({ path: join(SHOTS, "produce-wall-along.png") });
+  }
+  // prepared ahead, and one zone on the GPU at a time: floral (a standard close-up), honeycrisp apples (Produce),
+  // toor dal (Bulk), milk (standard). During each stop the next one's zone is prepared in the background; after
+  // "Got it" (the way out, the next leg shown on the map) it opens without a pause
   await fresh("?perf=1&tier=hi");
   const fourth = page.getByLabel(/add items/i);
-  await fourth.fill("bouquet, toor dal (bulk), milk");
+  await fourth.fill("bouquet, honeycrisp apples, toor dal (bulk), milk");
   await fourth.press("Enter");
-  await page.getByRole("button", { name: /route 3 items/i }).click({ timeout: 30_000 });
+  await page.getByRole("button", { name: /route 4 items/i }).click({ timeout: 30_000 });
   await page.getByTestId("map3d").waitFor({ timeout: 60_000 });
-  for (const zone of ["bulk", null]) {
+  for (let step = 0; step < 3; step++) {
     await page.waitForFunction(() => window.__grosherCloseUp?.state === "open", null, { timeout: 90_000 });
     await page.waitForTimeout(6000); // the arrival, then the next zone's preparation in the background
     combined.stops.push(await residentMB());
+    const cur = await page.evaluate(() => window.__grosherCloseUp.zone);
     // tapping Got it: the next stop's zone already prepared during this one (built, transcoded, compiled) and
     // still off the GPU (it uploads in the hold, once this one is freed)
-    ahead.push(await page.evaluate((z) => {
+    ahead.push(await page.evaluate((c) => {
       const zones = window.__grosherPerf.hero.zones ?? {};
-      const next = z ?? Object.keys(zones).find((id) => id.startsWith("std:") && id !== window.__grosherCloseUp.zone);
+      const next = Object.keys(zones).find((id) => id !== c);
       return { zone: next ?? null, state: (next && zones[next]) ?? "absent" };
-    }, zone));
+    }, cur));
     await page.getByRole("button", { name: /got it/i }).click();
-    await page.waitForFunction((z) => (z ? window.__grosherCloseUp?.zone === z : window.__grosherCloseUp?.quality === "standard" && window.__grosherCloseUp?.item !== "Bouquet") && window.__grosherCloseUp?.state === "open", zone, { timeout: 90_000 });
+    await page.waitForFunction((c) => window.__grosherCloseUp?.zone && window.__grosherCloseUp.zone !== c && window.__grosherCloseUp.state === "open", cur, { timeout: 90_000 });
     const z = await page.evaluate(() => window.__grosherCloseUp.zone);
-    const r = await readyIn(z);
-    if (zone) preload.ready = r;
-    else preload.stdReady = r;
+    transitions.push({ from: cur, to: z, ready: await readyIn(z), prepared: ahead.at(-1).zone === z && ahead.at(-1).state === "prepared" });
   }
   await page.waitForTimeout(6000);
   combined.stops.push(await residentMB());
@@ -236,7 +272,7 @@ try {
   // stretches the hold, which hides an unprepared zone's load too: hence the state check. And an overdue frame
   // of the overview, 100–350 ms there, can land between the request and its commit: hence frames as well as ms.)
   const quick = (r) => r !== null && (r.ms < 400 || (r.frames !== null && r.frames <= 2));
-  preload.prepared = quick(preload.ready) && quick(preload.stdReady) && ahead.length === 2 && ahead.every((a) => a.state === "prepared");
+  preload.prepared = transitions.length === 3 && transitions.every((t) => t.prepared && quick(t.ready)) && transitions.some((t) => t.to === "bulk") && transitions.some((t) => t.to === "produce");
 } finally {
   await browser.close();
 }
@@ -258,15 +294,15 @@ for (const [zone, d] of Object.entries(downloads)) {
   console.log(`download, ${zone}: ${d.kb.toFixed(0)} KB (chunks ${(d.chunks / 1024).toFixed(0)} KB gzip, textures ${(d.textures / 1024).toFixed(0)} KB, transcoder ${(d.transcoder / 1024).toFixed(0)} KB gzip)${dlOver ? "   OVER BUDGET" : ""}`);
 }
 const combinedOver = combined.peakMB > B.gpuTextureMB || combined.stops.some((r) => r.mb > B.gpuTextureMB);
-failed ||= combinedOver || combined.stops.length < 3;
-console.log(`combined, standard → Bulk → standard: ${combined.stops.map((r) => `${r.zone} ${r.mb.toFixed(1)} MB (${r.textures} textures)`).join(" · ")}; peak ${combined.peakMB.toFixed(1)} MB${combinedOver ? "   OVER BUDGET" : ""}`);
+failed ||= combinedOver || combined.stops.length < 4;
+console.log(`combined, standard → Produce → Bulk → standard: ${combined.stops.map((r) => `${r.zone} ${r.mb.toFixed(1)} MB (${r.textures} textures)`).join(" · ")}; peak ${combined.peakMB.toFixed(1)} MB${combinedOver ? "   OVER BUDGET" : ""}`);
 console.log(`lazy: ${lazy ? "nothing of a close-up fetched by an empty list or a trip without close-ups" : "FETCHED WITHOUT A CLOSE-UP"}`);
 const fmt = (r) => (r ? `${r.ms} ms, ${r.frames ?? "?"} frames` : "never");
-const states = ahead.map((a) => `${a.zone} ${a.state}`).join(", ");
-console.log(`prepared ahead: ${preload.prepared ? `yes, during the stop before (at Got it: ${states}); asked for → ready ${fmt(preload.ready)} (Bulk), ${fmt(preload.stdReady)} (standard)` : `NO: the next stop's zone was not ready (at Got it: ${states}; asked for → ready ${fmt(preload.ready)} Bulk, ${fmt(preload.stdReady)} standard)`}`);
+const steps = transitions.map((t) => `${t.from} → ${t.to} (${t.prepared ? "prepared" : "NOT prepared"}, ready ${fmt(t.ready)})`).join("; ");
+console.log(`prepared ahead: ${preload.prepared ? "yes, during the stop before" : "NO: the next stop's zone was not ready"}: ${steps}`);
 failed ||= !preload.prepared;
-console.log(`prepared on the list: ${preload.onList && preload.std ? "yes, before Route (Bulk, and the standard A4-R16)" : `NO: the first stop's close-up was not prepared on the list screen (Bulk ${preload.onList}, standard ${preload.std})`}`);
-failed ||= !preload.onList || !preload.std;
+console.log(`prepared on the list: ${preload.onList && preload.std && preload.produce ? "yes, before Route (Bulk, Produce, and the standard A4-R16)" : `NO: the first stop's close-up was not prepared on the list screen (Bulk ${preload.onList}, Produce ${preload.produce}, standard ${preload.std})`}`);
+failed ||= !preload.onList || !preload.std || !preload.produce;
 console.log(`tier: ${rows[0]?.hero.tier}`);
 console.log(`budget: ≤ ${B.drawCalls} draw calls, ≤ ${B.triangles.toLocaleString("en-US")} triangles, ≤ ${B.gpuTextureMB} MB GPU textures, ≤ ${B.downloadKB.toLocaleString("en-US")} KB download`);
 if (errors.length) console.log(`page errors:\n  ${errors.slice(0, 5).join("\n  ")}`);

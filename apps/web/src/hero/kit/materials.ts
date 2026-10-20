@@ -13,7 +13,7 @@ import { KTX2Loader } from "three/examples/jsm/loaders/KTX2Loader.js";
 import { heroStats, trackTexture } from "../stats.ts";
 import { load } from "../../lib/storage.ts";
 import { GRAIN_COLS, GRAIN_ROWS } from "../bulk/recipe.ts";
-import { rigUniforms, withPatches, zoneLightPatch, type LightRig, type Patch } from "./light.ts";
+import { rigKey, rigUniforms, withPatches, zoneLightPatch, type LightRig, type Patch } from "./light.ts";
 
 export type Tier = "hi" | "lo";
 export const TEXTURES = ["pine", "plaster", "plaster_n", "concrete", "burlap", "burlap_n", "terracotta", "stone", "stone_n", "grains", "grains_n", "labels", "headers", "cutouts"] as const;
@@ -22,10 +22,16 @@ export type TextureName = (typeof TEXTURES)[number];
  * goods, every category's house label and the aisle signs */
 export const STANDARD_TEXTURES = ["pine", "plaster", "concrete", "grains", "grains_n", "catlabels", "signs"] as const;
 export type StandardTextureName = (typeof STANDARD_TEXTURES)[number];
-type AnyTexture = TextureName | StandardTextureName;
-const ATLASES: AnyTexture[] = ["grains", "grains_n", "labels", "headers", "cutouts", "catlabels", "signs"];
-export type TextureSet = "bulk" | "standard";
-const SET_NAMES: Record<TextureSet, readonly AnyTexture[]> = { bulk: TEXTURES, standard: STANDARD_TEXTURES };
+/** Produce (src/hero/produce): the wood floor, brushed stainless, the kit's pine for the crates, and four
+ * atlases of its own: chalkboards with juice labels and header boards, what shows in a tub or a punnet, fruit
+ * piles at their real size, and leaves (herbs, plants, flowers) */
+export const PRODUCE_TEXTURES = ["oak", "brushed", "pine", "chalk", "packs", "mounds", "foliage"] as const;
+export type ProduceTextureName = (typeof PRODUCE_TEXTURES)[number];
+type AnyTexture = TextureName | StandardTextureName | ProduceTextureName;
+const ATLASES: AnyTexture[] = ["grains", "grains_n", "labels", "headers", "cutouts", "catlabels", "signs", "chalk", "packs", "mounds", "foliage"];
+export type TextureSet = "bulk" | "standard" | "produce";
+const SET_NAMES: Record<TextureSet, readonly AnyTexture[]> = { bulk: TEXTURES, standard: STANDARD_TEXTURES, produce: PRODUCE_TEXTURES };
+type SetTextures = { bulk: Record<TextureName, Texture>; standard: Record<StandardTextureName, Texture>; produce: Record<ProduceTextureName, Texture> };
 
 // every file, by name, as a hashed asset URL (Vite globs the folder; the service worker precaches them)
 const FILES = import.meta.glob("../assets/*.ktx2", { query: "?url", import: "default", eager: true }) as Record<string, string>;
@@ -81,7 +87,7 @@ export function pickTier(): Tier {
   return "hi";
 }
 
-async function fetchTextures(l: KTX2Loader, tier: Tier, set: TextureSet = "bulk"): Promise<Record<TextureName, Texture>> {
+async function fetchTextures<S extends TextureSet = "bulk">(l: KTX2Loader, tier: Tier, set: S = "bulk" as S): Promise<SetTextures[S]> {
   const entries = await Promise.all(
     SET_NAMES[set].map(async (name) => {
       const t = await l.loadAsync(urlOf(name, tier));
@@ -93,19 +99,20 @@ async function fetchTextures(l: KTX2Loader, tier: Tier, set: TextureSet = "bulk"
       return [name, t] as const;
     }),
   );
-  return Object.fromEntries(entries) as unknown as Record<TextureName, Texture>;
+  return Object.fromEntries(entries) as unknown as SetTextures[S];
 }
 
-/** textures fetched and transcoded ahead (prepareHeroTextures), waiting for the zone to take them */
-const prepared = new Map<Tier, Promise<Record<TextureName, Texture> | null>>();
+/** textures fetched and transcoded ahead (prepareHeroTextures), by set and tier, waiting for the zone to take them */
+const prepared = new Map<string, Promise<unknown>>();
 
-/** Fetch and transcode a tier's textures now, before any 3D canvas exists (the list screen, idle time). */
-export function prepareHeroTextures(tier: Tier): Promise<Record<TextureName, Texture> | null> {
-  let p = prepared.get(tier);
+/** Fetch and transcode a hero zone's textures now, before any 3D canvas exists (the list screen, idle time). */
+export function prepareHeroTextures<S extends "bulk" | "produce" = "bulk">(tier: Tier, set: S = "bulk" as S): Promise<SetTextures[S] | null> {
+  const key = `${set}:${tier}`;
+  let p = prepared.get(key) as Promise<SetTextures[S] | null> | undefined;
   if (!p) {
     const l = ktx2();
-    p = l ? fetchTextures(l, tier).catch(() => null) : Promise.resolve(null);
-    prepared.set(tier, p);
+    p = l ? fetchTextures(l, tier, set).catch(() => null) : Promise.resolve(null);
+    prepared.set(key, p);
   }
   return p;
 }
@@ -137,7 +144,7 @@ export function standardTextures(tier: Tier, gl?: WebGLRenderer): Promise<Record
     const l = ktx2(gl);
     if (!l) return Promise.reject(new Error("no compressed texture support"));
     const t0 = performance.now();
-    p = (fetchTextures(l, tier, "standard") as unknown as Promise<Record<StandardTextureName, Texture>>).then((t) => {
+    p = fetchTextures(l, tier, "standard").then((t) => {
       heroStats.loadMs = Math.round(performance.now() - t0);
       standardLoaded.add(t);
       return t;
@@ -152,17 +159,21 @@ export function standardTextures(tier: Tier, gl?: WebGLRenderer): Promise<Record
 }
 
 /** Drop what was prepared and not taken (the route changed): the transcoded data goes with it. */
-export function dropPreparedTextures() {
-  for (const p of prepared.values()) p.then((t) => t && Object.values(t).forEach((x) => x.dispose()));
-  prepared.clear();
+export function dropPreparedTextures(set?: "bulk" | "produce") {
+  for (const [key, p] of prepared) {
+    if (set && !key.startsWith(`${set}:`)) continue;
+    p.then((t) => t && Object.values(t as Record<string, Texture>).forEach((x) => x.dispose()));
+    prepared.delete(key);
+  }
 }
 
-export async function loadHeroTextures(gl: WebGLRenderer, tier: Tier): Promise<Record<TextureName, Texture>> {
+export async function loadHeroTextures<S extends "bulk" | "produce" = "bulk">(gl: WebGLRenderer, tier: Tier, set: S = "bulk" as S): Promise<SetTextures[S]> {
   const t0 = performance.now();
   // prepared ahead: take them (they are this zone's now; a later close-up loads its own)
-  const ahead = prepared.get(tier);
-  prepared.delete(tier);
-  const t = (ahead && (await ahead)) || (await fetchTextures(ktx2(gl)!, tier));
+  const key = `${set}:${tier}`;
+  const ahead = prepared.get(key) as Promise<SetTextures[S] | null> | undefined;
+  prepared.delete(key);
+  const t = (ahead && (await ahead)) || (await fetchTextures(ktx2(gl)!, tier, set));
   heroStats.tier = tier;
   heroStats.loadMs = Math.round(performance.now() - t0);
   return t;
@@ -185,15 +196,15 @@ const cells: Patch = (shader) => {
  * from the front), sampled with explicit gradients so the wrap has no seam in the mips. On a bin's front and
  * sides the grain lies in layers against the acrylic: bands a couple of centimetres deep, each a shade apart.
  */
-function tiles(map: Texture, normalMap: Texture): Patch {
+function tiles(map: Texture, normalMap: Texture | null, layers = true): Patch {
   return (shader) => {
     shader.uniforms.uGrainMap = { value: map };
-    shader.uniforms.uGrainN = { value: normalMap };
+    if (normalMap) shader.uniforms.uGrainN = { value: normalMap };
     shader.vertexShader = shader.vertexShader
       .replace("#include <common>", "#include <common>\nattribute vec2 aGrain;\nvarying vec2 vGrain;")
       .replace("#include <uv_vertex>", "#include <uv_vertex>\nvGrain = aGrain;");
     shader.fragmentShader = shader.fragmentShader
-      .replace("#include <common>", "#include <common>\nuniform sampler2D uGrainMap;\nuniform sampler2D uGrainN;\nvarying vec2 vGrain;")
+      .replace("#include <common>", `#include <common>\nuniform sampler2D uGrainMap;\n${normalMap ? "uniform sampler2D uGrainN;" : ""}\nvarying vec2 vGrain;`)
       .replace(
         "#include <map_fragment>",
         /* glsl */ `
@@ -213,7 +224,7 @@ function tiles(map: Texture, normalMap: Texture): Patch {
         vec2 gdx = dFdx(gTile) * gScale;
         vec2 gdy = dFdy(gTile) * gScale;
         diffuseColor *= textureGrad(uGrainMap, gUV, gdx, gdy);
-        if (gA.y < 0.6) {
+        if (${layers ? "true" : "false"} && gA.y < 0.6) {
           // layers: poured in batches, settled; a band every ~2.4 cm, wavering
           float gL = vZoneWorld.y * 26.0 + sin(vZoneWorld.x * 11.0 + vZoneWorld.z * 9.0) * 0.45 + sin(vZoneWorld.x * 31.0) * 0.08;
           float gBand = fract(gL);
@@ -222,8 +233,9 @@ function tiles(map: Texture, normalMap: Texture): Patch {
           diffuseColor.rgb *= gShade * (0.82 + 0.18 * smoothstep(0.0, 0.12, gBand));
         }
         `,
-      )
-      .replace(
+      );
+    if (normalMap)
+      shader.fragmentShader = shader.fragmentShader.replace(
         "#include <normal_fragment_maps>",
         /* glsl */ `
         {
@@ -247,7 +259,7 @@ function tiles(map: Texture, normalMap: Texture): Patch {
 export function standardMaterials(t: Record<StandardTextureName, Texture>, rig: LightRig, env?: Texture): Partial<KitMaterials> {
   const uniforms = rigUniforms(rig);
   const zone = zoneLightPatch(rig, uniforms);
-  const key = `zone${rig.lights.length}-${rig.slabs.length}`;
+  const key = rigKey(rig);
   const std = (o: ConstructorParameters<typeof MeshStandardMaterial>[0], tag = "std", ...extra: Patch[]) => withPatches(new MeshStandardMaterial({ vertexColors: true, metalness: 0, ...o }), `${key}-${tag}`, zone, ...extra);
   return {
     plaster: std({ map: t.plaster, roughness: 0.95 }),
@@ -295,7 +307,7 @@ export type KitMaterialKey =
 export function kitMaterials(t: Record<TextureName, Texture>, rig: LightRig, env?: Texture): KitMaterials {
   const uniforms = rigUniforms(rig);
   const zone = zoneLightPatch(rig, uniforms);
-  const key = `zone${rig.lights.length}-${rig.slabs.length}`;
+  const key = rigKey(rig);
   // three keys a program on the material's parameters (maps, instancing, …) plus this: the patch set
   const std = (o: ConstructorParameters<typeof MeshStandardMaterial>[0], tag = "std", ...extra: Patch[]) => withPatches(new MeshStandardMaterial({ vertexColors: true, metalness: 0, ...o }), `${key}-${tag}`, zone, ...extra);
   return {
@@ -327,5 +339,75 @@ export function kitMaterials(t: Record<TextureName, Texture>, rig: LightRig, env
     grainSolid: std({ color: new Color("#FFFFFF"), roughness: 0.5 }),
     // light sources seen directly: lenses, downlight discs, the skylight; their own colour, never tone-mapped
     glow: new MeshBasicMaterial({ vertexColors: true, toneMapped: false }),
+  };
+}
+
+/**
+ * Rows: a cell of an atlas repeated across a face (`aRep` times along u and v, per instance): a far deck's front,
+ * a row of tubs or bottles from one cell. Sampled with the unwrapped coordinates' gradients, so the repeats have
+ * no seam in the mips.
+ */
+const rowCells: Patch = (shader) => {
+  shader.vertexShader = shader.vertexShader
+    .replace("#include <common>", "#include <common>\nattribute vec4 aCell;\nattribute vec2 aRep;\nvarying vec4 vCell;\nvarying vec2 vRepUv;")
+    .replace("#include <uv_vertex>", "#include <uv_vertex>\nvCell = aCell;\n#ifdef USE_MAP\nvRepUv = vMapUv * aRep;\n#endif");
+  shader.fragmentShader = shader.fragmentShader
+    .replace("#include <common>", "#include <common>\nvarying vec4 vCell;\nvarying vec2 vRepUv;")
+    .replace(
+      "#include <map_fragment>",
+      `#ifdef USE_MAP
+        vec2 rUv = vCell.xy + fract(vRepUv) * vCell.zw;
+        diffuseColor *= textureGrad(map, rUv, dFdx(vRepUv) * vCell.zw, dFdy(vRepUv) * vCell.zw);
+      #endif`,
+    );
+};
+
+/** Produce's materials, by key (src/hero/produce). Statics are merged per key; the crates, piles, fruit,
+ * heads, bunches, packs and bottles are instanced. */
+export type ProduceMaterialKey =
+  | "oak"
+  | "steel"
+  | "paint"
+  | "stainless"
+  | "glow"
+  | "chalk"
+  | "chalkCell"
+  | "pine"
+  | "mound"
+  | "fruit"
+  | "plain"
+  | "foliage"
+  | "foliageCell"
+  | "packs"
+  | "packsRow"
+  | "clear";
+export type ProduceMaterials = Record<ProduceMaterialKey, Material>;
+
+export function produceMaterials(t: Record<ProduceTextureName, Texture>, rig: LightRig, env: Texture | undefined, fruitShape: Patch): ProduceMaterials {
+  const uniforms = rigUniforms(rig);
+  const zone = zoneLightPatch(rig, uniforms);
+  const key = rigKey(rig);
+  const std = (o: ConstructorParameters<typeof MeshStandardMaterial>[0], tag = "std", ...extra: Patch[]) => withPatches(new MeshStandardMaterial({ vertexColors: true, metalness: 0, ...o }), `${key}-${tag}`, zone, ...extra);
+  return {
+    // oiled oak planks: a soft sheen from the room, the daylight's highlights per pixel
+    oak: std({ map: t.oak, roughness: 0.48, envMap: env, envMapIntensity: 0.35 }),
+    // black steel stands and frames, and every plain painted part: one mesh, colour in the vertices
+    steel: std({ color: new Color("#FFFFFF"), roughness: 0.45 }),
+    paint: std({ color: new Color("#FFFFFF"), roughness: 0.85 }),
+    // the multideck, its canopy and the wall cladding: brushed stainless that catches the room
+    stainless: std({ map: t.brushed, roughness: 0.3, metalness: 0.55, envMap: env, envMapIntensity: 0.6 }),
+    glow: new MeshBasicMaterial({ vertexColors: true, toneMapped: false }),
+    chalk: std({ map: t.chalk, roughness: 0.9 }),
+    chalkCell: std({ map: t.chalk, roughness: 0.6 }, "cells", cells),
+    pine: std({ map: t.pine, roughness: 0.7 }),
+    mound: std({ roughness: 0.92 }, "tiles", tiles(t.mounds, null, false)),
+    // fruit: the round template reshaped per instance (src/hero/produce/fruit.ts); its colour per instance
+    fruit: withPatches(new MeshStandardMaterial({ color: new Color("#FFFFFF"), metalness: 0, roughness: 0.5 }), `${key}-fruit`, zone, fruitShape),
+    plain: std({ roughness: 0.55 }),
+    foliage: std({ map: t.foliage, alphaTest: 0.5, side: DoubleSide, roughness: 0.6 }),
+    foliageCell: std({ map: t.foliage, alphaTest: 0.5, side: DoubleSide, roughness: 0.6 }, "cells", cells),
+    packs: std({ map: t.packs, roughness: 0.5 }, "cells", cells),
+    packsRow: std({ map: t.packs, roughness: 0.55 }, "rows", rowCells),
+    clear: std({ color: new Color("#F6F8F4"), transparent: true, opacity: 0.05, roughness: 0.06, depthWrite: false, envMap: env, envMapIntensity: 0.12 }),
   };
 }

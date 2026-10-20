@@ -597,11 +597,13 @@ list, Route, `waitForFunction(() => window.__grosherPerf.frames > 100)`, read th
 Two zoom levels. The overview stays as above; **every stop opens a close-up** at eye level when it becomes
 next (or is tapped: `stopUnder` hit-tests the overlay's `data-key` items). `closeUpAt(store, categories,
 locationId)` in `src/hero/index.ts` gives its zone: a **hero** zone when the location is in one (`HERO_ZONES`:
-today Grosher's Bulk & pulses, `aisle: "BULK"`, drawn from a recipe), else a **standard** close-up generated
+Grosher's Bulk & pulses, `aisle: "BULK"`, and Produce, `aisle: "PRODUCE"`, each drawn from a recipe), else a **standard** close-up generated
 from the store data (`std:<locationId>`, see "Standard close-ups" below). Between stops (TripMap3D): Got it or
 Skip → the camera goes back out to the map (0.8 s, the overview's cards and labels stay off until it is
-there), the next leg shows for `HOLD_MS` (1.1 s), then the next stop's close-up opens; two bins in the same
-hero zone are a walk over at eye level instead. "Back to the map" is remembered for that stop. `?closeup=0`
+there), the next leg shows for `HOLD_MS` (1.1 s), then the next stop's close-up opens; two stops in the same
+hero zone are a walk over at eye level instead (the close-up keeps the current target until the zone hands over
+the next: with none for a frame the overview's camera rig took the camera, and the walk over became a way out
+and a descent). "Back to the map" is remembered for that stop. `?closeup=0`
 opens none on its own (a tap still does): the overview gates (perf, contrast's trip shots, the project
 capture) use it. The scene keeps the
 overview until the zone's chunk and textures are in, its programs compiled (`compileAsync`) and every buffer
@@ -733,7 +735,8 @@ ready (the camera starts) 19–29 ms for every stop after the first, 300 ms for 
   (`public/hero/bulk/<category>.webp`, `scripts/capture-hero-flat.mjs`, rendered from the close-up itself).
 - **Close-up budget** (`src/hero/budget.ts`, `scripts/hero-gate.mjs` in CI): ≤ 70 draw calls, ≤ 250,000
   triangles, ≤ 16 MB GPU textures, ≤ 2,500 KB download, for Bulk and for the worst standard close-up (A4-R16,
-  the most triangles of all 319: `test/standard-zone.test.ts` pins which one it is). The gate reads the worst
+  the most triangles of all 304: `test/standard-zone.test.ts` pins which one it is), and for Produce (its arrival,
+  an island stop, the wet wall, a look down the zone and along the wall). The gate reads the worst
   frame of each arrival (the page's clock slowed 40×), eye level, along the aisle, and Bulk's scoop bins facing
   out over the store; checks nothing of a close-up is fetched by an empty list or a `?closeup=0` trip; sizes
   each close-up's download from the requests it made beyond that overview trip's; checks the first stop
@@ -755,10 +758,88 @@ ready (the camera starts) 19–29 ms for every stop after the first, 300 ms for 
   (CI) are software rendering, not a device number.
 - **References** for the look are kept in `design/refs/` (git-ignored: third-party photos, not ours to
   publish); `.work/` is the ignored place for local captures and comparison images.
-- **The next aisle**: a recipe beside `bulk/` (sections, tiers, labels), its lights and slabs, an entry in
-  `HERO_ZONES` (its aisle, the overview fixtures it and its backdrop replace), its labels in the generator,
-  its flat images. The kit, the light, the camera and the gate carry over. Produce is next; its locations then
-  stop being standard close-ups (`closeUpAt` checks `HERO_ZONES` first).
+- **The next aisle**: a recipe beside `bulk/` and `produce/` (sections, tiers, labels), its lights and slabs,
+  an entry in `HERO_ZONES` (its aisle, the overview fixtures it and its backdrop replace, its fill and its
+  `surround`), its textures in the generator, its flat images (`capture-hero-flat.mjs --zone`). The kit, the
+  light, the camera, the one-zone-on-the-GPU rule and the gate carry over; its locations stop being standard
+  close-ups (`closeUpAt` checks `HERO_ZONES` first).
+
+#### Produce (`src/hero/produce`): the daylit room
+
+Grosher's second hero zone (x 12–48, y 1–14.4), the one room in the store lit by day. Built 20 Oct 2026 against
+`design/refs/produce-stainless-skylight.png` and `cut-fruit-case.png` (there was no juice reference: the juice
+follows the brief). Its own chunk (`ProduceZone.tsx`, 23 KB gzip), its own texture set, the same lifecycle as
+Bulk: prepared on the list or during the stop before with nothing on the GPU, uploaded once the zone before it is
+freed, off the GPU the moment it is left.
+- **The recipe** (`recipe.ts`, pure data): 93 kinds of fruit and vegetable (`KINDS`: model, size in metres,
+  colours, blush, stem end, shape parameters, roughness, bumps, stripes, its far pile, its leaves or pack), the
+  islands' 16 faces of five varieties each (`DISPLAYS`: the 10 faces with a location carry its category; the six
+  without one are fillers: stone fruit, squash and pumpkins, Roma and corn, shallots, red potatoes, Brussels
+  sprouts), the wall's 28 bays (`WALL`, on the map's categories and bays: greens and salad kits 1–6, herbs
+  7–11, mushrooms and sprouts 12–17, cut vegetables 18–22, cut fruit 23–25, the Grosher Press juices J01–J21
+  26–28; the brief's order with mushrooms and cut veg where the map has them), the chalkboards (`signCells`: one
+  per variety and per bay, 108), the atlases' layouts.
+- **Fruit one by one** (`fruit.ts`): most kinds are one sphere (120 triangles; 520 for the stop's own crates)
+  that `fruitShape` reshapes per instance in the vertex shader from five attributes (a stem hollow, a pointed top
+  or both ends, lobes and ribs, lumps, a neck, a bend; normals by finite differences), its fragment shader adding
+  a blush streaked from the stem, stripes, the stem end's colour, pores or netting as a derivative bump faded
+  where it would alias, and a roughness per instance (`deform` is the same maths in TypeScript, tested).
+  Bananas, leafy heads and tied herb bunches (stems and twine, leaf cards from the foliage atlas) have templates
+  of their own; punnets, tubs, clamshells and bags are unit boxes with their contents from the packs atlas;
+  juice bottles are glass, juice and cap, and a label (the chalk atlas's juice cells). **Packing** (`packCrate`):
+  each crate's top layer on a jittered grid over its pile's surface, a third of each fruit settled into it,
+  inside the crate's walls, never through another (circles for round ones, footprints for long ones lying),
+  every instance its own colour; deterministic per crate.
+- **Detail by distance** (`selectDetail`, per stop): every crate and wall deck is a group; the stop's own groups
+  always, then the ones the shopper faces within 6.5 m, nearest first, to 80,000 triangles. The rest show their
+  pile: every crate has an instanced mound in the mounds atlas (fruit drawn at their real size, tinted by the
+  fruit's colours mixed with its blush), and a far wall deck a box faced with a row of its stock (`row`: one
+  packs cell repeated across, sampled with the unwrapped gradients). The stop's crates or deck lift 3 cm toward
+  the shopper; their round fruit move to the finer template.
+- **Light** (`produceRig`): the sun 70 m up its ray (`SUN_DIR`, from the south-east), its patches the panes'
+  shapes: the roof round the opening and the seven mullions and the cross bar are slabs, with a 6 cm soft edge
+  (`LightRig.soft`); the sky through the opening, a broad cone from 13 m over it (the roof cuts it off under the
+  margins, so the pool is the opening's); a second toward the wall; warm spots on Bulk's shelving and floral
+  beyond. Daylight is `SKYLIGHT` (1, .985, .955): cool beside the store's 3000 K, never blue. The multideck's
+  LED lips are `LightRig.cases`: under every deck's front edge and the canopy's, per pixel, falling off with
+  distance (a new branch of the zone light, compiled in only where a rig has it, and in the program key,
+  `rigKey`). Inside the case it is dark as in the reference (black decks and back; the stock's colour takes the
+  case's occlusion). The fill is the entry's `ambient` (#F3F1EC over the floor's #B8956C bounce, 2.2), and the
+  store beyond fades to a pale stone (`surround`: #8E877C, fog .018) rather than the lamplit aisles' warm dark
+  (Scene's `EnvDriver` and `Background` read it). The gloss is a **daylight environment** (`acquireEnv(gl,
+  "daylight")`): compiled with the shared warm one while only prepared (same size, same program), swapped in
+  at the upload, released with it. **Shafts**: two crossed additive quads per pane along the sun, fading at the
+  bottom and edges and within 2.5–7 m of the eye (close up they veiled the whole wall). **Mist**: an additive
+  plume under every misting bar (bays 1–11) puffs 3 s every 20 s while the close-up is open, frames only while
+  it puffs, never under reduced motion.
+- **Overhead, facing down only** (as Bulk's ceiling): the ceiling round the opening, the skylight's black
+  mullions as downward strips, glowing glass, the well's walls facing in, a fascia facing in, two linear LED
+  fittings; from the camera on its way down the room is open.
+- **The way in** (`approach`): the descent ends outside the zone at eye level, at the west or east end of the
+  shopper's walking line (y 3.5 along the wall, 8.3 between the rows) or on the south walkway at the foot of a
+  cross aisle (x 21.3, 29.7, 38.1); the walk goes along the line or up the cross aisle and along, to stand on the
+  line facing the display (island stops about 1.8 m from the crates' middle, wall stops 1.9 m, framed as every
+  close-up). Walks are 1.4–15 m, median 8: the middle of the wall's walkway is 11 m and more from every edge,
+  so 19 of 78 stops walk more than 12 m inside the 1.5 s cap, briskly. From one produce stop to the next the
+  camera walks over at eye level by `HeroTargetInfo.over` (`walkOver`: along the line, up the nearest cross
+  aisle, along: never through an island; `CloseUpCamera` follows it).
+- **The backdrop**: floral by the entrance (buckets of blooms from the foliage atlas on a wooden table under
+  its header), Bulk's wall shelving and its five header boards and the scoop-bin run to the east under warm
+  spots; the overview's other fixtures, dimmed.
+- **Textures** (`scripts/produce-textures.mjs`, run by `gen-hero-textures.mjs`; `ONLY=oak,chalk,… ` re-encodes
+  just those): oak planks 1024² ETC1S (128 KB), brushed stainless 512² (13 KB), the kit's pine for the crates,
+  `chalk` 2048 × 1280 (the 108 chalkboards in handwritten-style Outfit roughened like chalk, the 21 juice labels,
+  11 header boards), `packs` 2048 × 1280 (40 cells: cut fruit, cut veg, punnets, greens, the salad kit's bag, far
+  rows), `mounds` 1024 × 512, `foliage` 1024² RGBA (leaves, fronds, a pineapple's crown, blooms). Chalk and
+  foliage are ETC1S at full quality (`etc1s-hq`): as UASTC the chalk was 1.8 MB, its slate's noise defeating
+  compression. Hi 1.11 MB, lo 0.42 MB.
+- **Numbers** (close-up gate, SwiftShader, 390 × 844, 20 Oct 2026): arriving 51 calls / 163k triangles, an
+  island stop at eye level 43 / 159k, down the zone 42 / 133k, the wet wall 46 / 175k, along it 43 / 175k;
+  9.0 MB of textures with both environments; 1,426 KB download (chunk 63 KB gzip, textures 1,110 KB, the
+  transcoder). The flat images add 800 KB to the precache, the textures 1.5 MB (both tiers). The combined walk floral → Produce → Bulk →
+  dairy holds one zone at a time (8.0 · 9.0 · 9.1 · 8.0 MB). On the M4 Pro's GPU (Metal, 390 × 844 × 3, uncapped):
+  2.7 ms a frame median at an island (3.4 p95), 2.8 at the wet wall (4.1 p95), Bulk 2.7 in the same run. Tests:
+  `test/produce-zone.test.ts`.
 
 #### Standard close-ups (`src/hero/standard`)
 
@@ -793,7 +874,7 @@ Any stop outside a hero zone, generated from the store data with the shelf kit; 
   the one it replaces lets go: no re-upload between two standard stops), freed when the trip leaves the last
   one for Bulk or the map. A zone disposes its own geometry and materials.
   Builds are cached (the last four), ~40 ms each on an M4.
-- **Budget**: every one of the 319 builds is under 180k triangles (the test leaves the overview 70k); the
+- **Budget**: every one of the 304 builds (325 locations less Bulk's six and Produce's fifteen) is under 180k triangles (the test leaves the overview 70k); the
   heaviest, A4-R16 (jars and bottles on both faces of a 35 m aisle, 145k), is the one the close-up gate opens.
 
 ### Texture pipeline

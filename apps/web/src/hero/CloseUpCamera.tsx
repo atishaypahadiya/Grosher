@@ -235,11 +235,38 @@ export const CloseUpCamera = forwardRef<CloseUpCameraHandle, CloseUpCameraProps>
     settled.current = false;
     user.current = { yaw: 0, pitch: 0, pan: 0, dolly: 0 };
     const high = { position: cam.position.clone(), quaternion: cam.quaternion.clone(), fov: cam.fov };
-    // already at eye level (another bin in the zone): just walk over
+    // already at eye level (another bin in the zone): just walk over, by the zone's way when it has one
+    // (Produce: along the walking lines and the cross aisles, never through an island), else straight
     if (cam.position.y < 3) {
       const from = high;
       const to = eye();
-      run([{ ms: walkMs(from.position.distanceTo(to.position)), ease: easeSine, at: (e) => ({ position: from.position.clone().lerp(to.position, e), quaternion: from.quaternion.clone().slerp(to.quaternion, e), fov: to.fov }) }], () => (settled.current = true));
+      const way = [from.position.clone(), ...(target.over?.([from.position.x, from.position.y, from.position.z]) ?? []).map((p) => new Vector3(...p)), to.position.clone()];
+      const lengths = way.slice(1).map((p, i) => p.distanceTo(way[i]));
+      const metres = lengths.reduce((a, b) => a + b, 0) || 1e-3;
+      const along = (d: number) => {
+        for (let i = 0; i < lengths.length; i++) {
+          if (d <= lengths[i] || i === lengths.length - 1) return way[i].clone().lerp(way[i + 1], lengths[i] ? Math.min(1, d / lengths[i]) : 1);
+          d -= lengths[i];
+        }
+        return to.position.clone();
+      };
+      run(
+        [
+          {
+            ms: walkMs(metres),
+            ease: easeSine,
+            at: (e) => {
+              const p = along(e * metres);
+              if (way.length === 2) return { position: p, quaternion: from.quaternion.clone().slerp(to.quaternion, e), fov: to.fov };
+              // looking where they walk, turning to the shelf over the last stretch
+              const ahead = lookPose(p, along(Math.min(metres, e * metres + 1.2)), to.fov).quaternion;
+              const q = from.quaternion.clone().slerp(ahead, Math.min(1, e * 5)).slerp(to.quaternion, easeInOut(Math.max(0, (e - 0.6) / 0.4)));
+              return { position: p, quaternion: q, fov: to.fov };
+            },
+          },
+        ],
+        () => (settled.current = true),
+      );
       return;
     }
     const { descent, walk } = moves(high);

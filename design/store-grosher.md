@@ -212,3 +212,15 @@ the store); light became per pixel with sharp pools and plank shadows; grain is 
 real grains on the stop's bin; the shelves carry thirteen kinds of pack; the centerpiece was rebuilt from the
 photo (jute sacks with rolled frayed rims, the chakki in its round tray, a grey clay pot of wheat); the
 produce stands, the produce wall's end and the aisle 1 gondola stand beyond the zone as its backdrop.
+
+## Step 3: Produce as the second hero zone (20 Oct 2026)
+
+The produce zone (x 12–48, y 2–14) upgraded from standard close-ups to a hand-drawn hero zone, the store's one
+daylit room: see CLAUDE.md "Produce (`src/hero/produce`)" and DESIGN.md §5b. Studied against
+`design/refs/produce-stainless-skylight.png` and `cut-fruit-case.png` (kept local). No juice reference was in
+`design/refs/`; the Grosher Press juices follow the brief. The map is unchanged: the islands, the wall and its
+categories and bays are the map's (the wall reads greens and salad kits, herbs, mushrooms and sprouts, cut
+vegetables, cut fruit, juice), and the six island faces that have no location are drawn as fillers (stone
+fruit, squash and pumpkins, Roma and corn, shallots, red potatoes, Brussels sprouts). One alias was added:
+"cut fruit" (and "fruit cups", "cut melon", "fruit tubs") on the cut fruit & juice shelf, where "cut fruit"
+alone had fallen through to a fuzzy match on gum.
