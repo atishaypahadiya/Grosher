@@ -158,7 +158,10 @@ try {
     // 2.5 s of arrival at 1/40 speed: 100 s; read every 1.5 s
     for (let i = 0; i < 40; i++) {
       const r = await page.evaluate(() => ({ ...window.__grosherPerf }));
-      if (!worst || r.calls > worst.calls || (r.calls === worst.calls && r.triangles > worst.triangles)) worst = r;
+      // only frames that drew the close-up: the readout is a frame late, and on a slow runner the overview's
+      // last frame before the switch (its products and fixtures, the overview gate's to judge) landed here
+      const drewZone = Object.keys(r.breakdown ?? {}).some((k) => k.startsWith("hero-"));
+      if (drewZone && (!worst || r.calls > worst.calls || (r.calls === worst.calls && r.triangles > worst.triangles))) worst = r;
       await page.waitForTimeout(1500);
     }
     // (this page's clock was slowed: its frame times mean nothing, so they print as "–")
