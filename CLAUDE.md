@@ -797,7 +797,7 @@ ready (the camera starts) 19–29 ms for every stop after the first, 300 ms for 
 #### Produce (`src/hero/produce`): the daylit room
 
 Grosher's second hero zone (x 12–48, y 1–14.4), the one room in the store lit by day. Built 20 Oct 2026 against
-`design/refs/produce-stainless-skylight.png` and `cut-fruit-case.png`; the juice matched to `juice.png` on 21 Oct. Its own chunk (`ProduceZone.tsx`, 23 KB gzip), its own texture set, the same lifecycle as
+`design/refs/produce-stainless-skylight.png` and `cut-fruit-case.png`; the juice matched to `juice.png` the same day. Its own chunk (`ProduceZone.tsx`, 23 KB gzip), its own texture set, the same lifecycle as
 Bulk: prepared on the list or during the stop before with nothing on the GPU, uploaded once the zone before it is
 freed, off the GPU the moment it is left.
 - **The recipe** (`recipe.ts`, pure data): 93 kinds of fruit and vegetable (`KINDS`: model, size in metres,
