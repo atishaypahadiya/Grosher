@@ -731,8 +731,9 @@ ready (the camera starts) 19–29 ms for every stop after the first, 300 ms for 
   (SwiftShader, 390 × 844): Bulk arriving 61 calls / 205k triangles, eye level 47 / 190k (with the target's
   real grains), along the aisle 49 / 160k, scoop bins 56 / 164k, 9.1 MB textures with the gloss's environment,
   2,301 KB download; standard A4-R16 arriving 46 / 179k, eye level 40 / 179k, along the aisle 35 / 178k, 8.0 MB,
-  1,521 KB; prepared zones ready 1 ms after they are asked for. (BC textures on a desktop; ASTC on an iPhone can
-  be up to twice.) On the M4 Pro's GPU (Metal) at 390 × 844 × 3, uncapped, Bulk: 2.5 ms a frame median, 3.8 ms
+  1,521 KB; prepared zones ready 1 ms after they are asked for. CI's runner (run 39373677448) reads the same
+  calls and triangles and larger textures, 11.9 MB (Bulk) and 13.7 MB (standard): its renderer transcodes to
+  bigger formats. (BC on a desktop GPU; ASTC on an iPhone can be up to twice.) On the M4 Pro's GPU (Metal) at 390 × 844 × 3, uncapped, Bulk: 2.5 ms a frame median, 3.8 ms
   p95 (an iPhone's GPU is several times slower: check it there with `?debug=perf`). SwiftShader frame times
   (CI) are software rendering, not a device number.
 - **References** for the look are kept in `design/refs/` (git-ignored: third-party photos, not ours to
