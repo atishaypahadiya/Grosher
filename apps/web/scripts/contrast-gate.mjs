@@ -327,6 +327,8 @@ try {
   {
     const cctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
     const cp = await cctx.newPage();
+    // a software renderer (CI) compiles the zone's lighting shaders slowly: allow it, the gate measures contrast
+    cp.setDefaultTimeout(180_000);
     cp.on("pageerror", (e) => errors.push(e.message));
     await cp.goto(`${BASE}/?perf=1&tier=hi`, { waitUntil: "load" });
     await cp.evaluate(() => document.fonts.ready);
@@ -334,8 +336,11 @@ try {
     await ci.fill("toor dal (bulk)");
     await ci.press("Enter");
     await cp.getByRole("button", { name: /route 1 item/i }).click({ timeout: 60_000 });
-    await cp.waitForFunction(() => window.__grosherCloseUp?.state === "open" && window.__grosherPerf?.hero?.tier, null, { timeout: 120_000 });
+    await cp.waitForFunction(() => window.__grosherCloseUp?.state === "open" && window.__grosherPerf?.hero?.tier, null, { timeout: 180_000 });
+    // the arrival over and frames flowing again (the page draws continuously with ?perf=1) before the shot
     await cp.waitForTimeout(1500);
+    await cp.evaluate(() => (window.__grosherPerf.frames = 0));
+    await cp.waitForFunction(() => (window.__grosherPerf?.frames ?? 0) >= 8, null, { timeout: 180_000 });
     all.push(...(await measure(cp, "trip close-up")));
     await cctx.close();
   }
