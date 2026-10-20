@@ -1,6 +1,6 @@
-// Resolver settings the shopper can change at runtime (the gear on the list
-// screen): which LLM provider answers, where it is, which model. Stored in
-// localStorage; the defaults come from the VITE_ variables at build time.
+// Settings the shopper can change at runtime (the gear on the list screen): which LLM provider answers,
+// where it is, which model; and the off-list guard on a trip (lib/guard.ts). Stored in localStorage
+// (versioned, lib/persist.ts); the resolver's defaults come from the VITE_ variables at build time.
 //
 //   ollama  straight to an Ollama over http (dev: localhost on the Mac; Ollama listens on loopback only).
 //           An installed app served over https cannot call plain http, so
@@ -9,6 +9,7 @@
 //           model through its tunnel, or Claude. Production.
 
 import { load, remove, save } from "./storage.ts";
+import { GUARD_MODES, type GuardMode } from "./guard.ts";
 
 export type ProviderName = "ollama" | "worker";
 
@@ -19,6 +20,8 @@ export interface ResolverSettings {
   workerUrl: string;
   /** survey mode's aisle signs, on the direct Ollama path (the worker uses its OLLAMA_VISION_MODEL) */
   visionModel: string;
+  /** the off-list guard on a trip: off, gentle (the default), strict */
+  guard: GuardMode;
 }
 
 export const SETTINGS_KEY = "grosher.resolver";
@@ -35,6 +38,7 @@ export const DEFAULT_SETTINGS: ResolverSettings = {
   model: (env.VITE_OLLAMA_MODEL ?? OLLAMA_DEFAULT_MODEL).trim(),
   workerUrl: trimUrl(env.VITE_RESOLVER_URL ?? "/api"),
   visionModel: (env.VITE_VISION_MODEL ?? VISION_DEFAULT_MODEL).trim(),
+  guard: "gentle",
 };
 
 /** anything stored is coerced back onto the defaults field by field */
@@ -47,6 +51,7 @@ export function sanitize(raw: unknown, defaults: ResolverSettings = DEFAULT_SETT
     model: str(o.model, defaults.model),
     workerUrl: str(o.workerUrl, defaults.workerUrl),
     visionModel: str(o.visionModel, defaults.visionModel),
+    guard: GUARD_MODES.includes(o.guard as GuardMode) ? (o.guard as GuardMode) : defaults.guard,
   };
 }
 

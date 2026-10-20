@@ -115,11 +115,11 @@ describe("llm providers", () => {
       sent = { url: String(u), model: init?.body ? (JSON.parse(String(init.body)) as { model?: string }).model : undefined };
       return new Response(JSON.stringify({ message: { content: JSON.stringify({ results: [] }) }, results: [] }));
     }) as typeof fetch;
-    const o = providerFor({ provider: "ollama", ollamaUrl: "http://10.0.0.9:11434/", model: "qwen3:14b", workerUrl: "/api", visionModel: "qwen2.5vl:7b" }, fake);
+    const o = providerFor({ provider: "ollama", ollamaUrl: "http://10.0.0.9:11434/", model: "qwen3:14b", workerUrl: "/api", visionModel: "qwen2.5vl:7b", guard: "gentle" }, fake);
     expect(o.name).toBe("ollama");
     await o.classify(["a"], depts);
     expect(sent).toEqual({ url: "http://10.0.0.9:11434/api/chat", model: "qwen3:14b" });
-    const w = providerFor({ provider: "worker", ollamaUrl: "http://localhost:11434", model: "qwen3:8b", workerUrl: "https://r.example", visionModel: "qwen2.5vl:7b" }, fake);
+    const w = providerFor({ provider: "worker", ollamaUrl: "http://localhost:11434", model: "qwen3:8b", workerUrl: "https://r.example", visionModel: "qwen2.5vl:7b", guard: "gentle" }, fake);
     expect(w.name).toBe("worker");
     await w.classify(["a"], depts);
     expect(sent!.url).toBe("https://r.example/resolve");
@@ -132,7 +132,7 @@ describe("llm providers", () => {
       calls.push({ url: String(u), body: JSON.parse(String(init?.body)) });
       return new Response(JSON.stringify(reply));
     }) as typeof fetch;
-    const base = { ollamaUrl: "http://10.0.0.9:11434", model: "qwen3:8b", workerUrl: "https://r.example/", visionModel: "qwen2.5vl:3b" };
+    const base = { ollamaUrl: "http://10.0.0.9:11434", model: "qwen3:8b", workerUrl: "https://r.example/", visionModel: "qwen2.5vl:3b", guard: "gentle" as const };
     expect(await signReaderFor({ ...base, provider: "ollama" }, fake).read("QUJD")).toEqual(["Aisle 12", "Cereal"]);
     expect(calls[0].url).toBe("http://10.0.0.9:11434/api/chat");
     expect(calls[0].body).toMatchObject({ model: "qwen2.5vl:3b", stream: false });

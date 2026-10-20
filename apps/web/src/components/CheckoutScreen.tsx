@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { band, type Router, type StoreGraph } from "@grosher/core";
 import { aislesNeverEntered, elapsedMs, summarize, type TripState } from "../lib/trip.ts";
+import { detourLine } from "../lib/guard.ts";
 import type { TripRecord } from "../lib/history.ts";
 import { clock, laneName, WALK_MPS } from "../lib/format.ts";
 import { renderCardPng, shareOrDownload } from "../lib/share.ts";
@@ -135,6 +136,13 @@ export function CheckoutScreen({ store, router, trip, record, previous, usualSav
       </header>
 
       <ShareCard data={data} />
+
+      {/* the off-list guard's honest line: how often it nudged, how long the trip was off route (no "time saved") */}
+      {trip && detourLine(trip.detours ?? 0, trip.offRouteMs ?? 0) && (
+        <p className="done-detours glass-deep" data-testid="detours">
+          {detourLine(trip.detours ?? 0, trip.offRouteMs ?? 0)}
+        </p>
+      )}
 
       {asks.length > 0 && (
         <section className="improve">

@@ -350,6 +350,29 @@ try {
     await cctx.close();
   }
 
+  // ---- the off-list guard (lib/guard.ts), from the demo walk: its card above the bottom card on the map, and
+  // docked at the top in a close-up; then the checkout's detour line
+  for (const [query, label, finish] of [
+    ["?demo=walk&speed=12&perf=1&closeup=0", "guard card (map)", true],
+    ["?demo=walk&speed=12&perf=1&tier=hi", "guard card (close-up)", false],
+  ]) {
+    const gctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
+    const gp = await gctx.newPage();
+    gp.setDefaultTimeout(240_000);
+    gp.on("pageerror", (e) => errors.push(e.message));
+    await gp.goto(`${BASE}/${query}`, { waitUntil: "load" });
+    await gp.evaluate(() => document.fonts.ready);
+    await gp.getByTestId("guard-card").waitFor({ timeout: 300_000 });
+    await gp.waitForTimeout(500);
+    all.push(...(await measure(gp, label)));
+    if (finish) {
+      await gp.getByTestId("detours").waitFor({ timeout: 300_000 });
+      await gp.waitForTimeout(600);
+      all.push(...(await measure(gp, "checkout (detours)")));
+    }
+    await gctx.close();
+  }
+
   // ---- the sheets, and a list with an unknown item (no model answers here, so it stays unknown)
   const sctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
   const sp = await sctx.newPage();

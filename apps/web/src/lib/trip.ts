@@ -24,6 +24,9 @@ export interface TripState {
   doneNodeIds: string[];
   /** typed names the catalog could not place; asked about on the checkout screen */
   unplaced: string[];
+  /** the off-list guard's two counts for this trip (lib/guard.ts): nudges shown, time off route; nothing else */
+  detours?: number;
+  offRouteMs?: number;
 }
 
 /**
@@ -153,6 +156,8 @@ export interface TripSnapshot {
   visited?: string[];
   doneNodeIds?: string[];
   unplaced?: string[];
+  detours?: number;
+  offRouteMs?: number;
 }
 
 export function toSnapshot(t: TripState): TripSnapshot {
@@ -169,6 +174,8 @@ export function toSnapshot(t: TripState): TripSnapshot {
     visited: t.visited,
     doneNodeIds: t.doneNodeIds,
     unplaced: t.unplaced,
+    detours: t.detours,
+    offRouteMs: t.offRouteMs,
   };
 }
 
@@ -192,6 +199,8 @@ export function fromSnapshot(router: Router, catalog: Stop[], snap: TripSnapshot
       visited: snap.visited ?? [snap.positionNodeId],
       doneNodeIds: snap.doneNodeIds ?? [],
       unplaced: r.unplaced,
+      detours: snap.detours,
+      offRouteMs: snap.offRouteMs,
     };
   } catch {
     return null;

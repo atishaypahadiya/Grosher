@@ -653,3 +653,38 @@ a.pill-s { text-decoration: none; }
 .is-closeup .trip-head .trip-store { color: #fff; }
 /* the close-up's interior is warm and, under the spots, bright: the sheet takes the warm half's deep glass */
 .is-closeup .trip-sheet.glass { background: linear-gradient(rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.08)), var(--glass-deep-warm); }
+
+/* ---- the off-list guard (TripScreen, lib/guard.ts): a small card over the map, above the bottom card; docked
+   at the top in a close-up, so it never covers the lit slot. On the plate (it sits over the 3D scene), white ink,
+   lime only on its primary action, the distance in Doto */
+.guard-card {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  z-index: 4;
+  padding: 14px 16px 14px;
+  border-radius: 20px;
+  background: var(--plate);
+  box-shadow: inset 0 0 0 1px var(--plate-line);
+  color: #fff;
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
+  animation: guard-in 240ms ease-out both;
+}
+.guard-card.docked { top: calc(max(58px, env(safe-area-inset-top)) + 128px); animation-name: guard-down; }
+.guard-title { margin: 0; font-weight: 600; font-size: 17px; line-height: 1.3; color: #fff; }
+.guard-line { margin: 4px 0 0; font-size: 15px; color: rgba(255, 255, 255, 0.92); }
+.guard-line .num { font-size: 20px; color: #fff; }
+.guard-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; align-items: center; }
+.guard-actions .pill:not(.lime) { background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.28); color: #fff; }
+@keyframes guard-in { from { transform: translateY(12px); opacity: 0; } }
+@keyframes guard-down { from { transform: translateY(-12px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .guard-card, .guard-card.docked { animation: none; } }
+/* ?demo=walk: a tiny badge under the progress strip */
+.demo-badge { position: absolute; right: var(--gutter); top: calc(max(58px, env(safe-area-inset-top)) + 72px); z-index: 4; padding: 3px 9px; border-radius: 999px; background: var(--plate); box-shadow: inset 0 0 0 1px var(--plate-line); color: #fff; font: 600 11px/1.4 var(--font); letter-spacing: 0.04em; text-transform: uppercase; }
+/* the checkout's one line from the off-list guard: under the share card, on deep glass (warm: the page starts on haze) */
+.done-detours { margin: 12px 0 0; padding: 10px 14px; border-radius: 14px; background: var(--glass-deep-warm); color: #fff; font-size: 14px; }
+.st-section { margin-top: 18px; font-size: 18px; }
+/* while the guard asks, the map shows only the next stop and the checkout: the later stops' cards, dots and
+   chips step back (the projector sets each item's visibility inline, hence !important) */
+.guard-up .m-overlay [data-key^="stop-"] { visibility: hidden !important; }

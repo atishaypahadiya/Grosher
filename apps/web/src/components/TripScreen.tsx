@@ -13,10 +13,13 @@ import { webglAvailable } from "../map3d/webgl.ts";
 import { StoreMap } from "./StoreMap.tsx";
 import { AddItem } from "./AddItem.tsx";
 import { Num } from "./Num.tsx";
-import { IconArrowLeft, IconCheck, IconLayers, IconPlus } from "./Icons.tsx";
+import { IconArrowLeft, IconCheck, IconClose, IconLayers, IconPlus } from "./Icons.tsx";
 
 import { FallbackBoundary } from "./ErrorBoundary.tsx";
 import { closeUpAt } from "../hero/index.ts";
+import { GUARD, type GuardMode } from "../lib/guard.ts";
+import { motionFeed, useGuard, type GuardFeed } from "../lib/useGuard.ts";
+import { DemoWalk } from "../lib/demoWalk.ts";
 
 const TripMap3D = lazy(() => import("../map3d/TripMap3D.tsx"));
 
@@ -30,10 +33,19 @@ export interface TripScreenProps {
   onSkip: () => void;
   onAdd: (stop: Stop) => void;
   onBack: () => void;
+  /** the off-list guard (Settings), and the demo walk (?demo=walk) */
+  guardMode?: GuardMode;
+  demo?: boolean;
+  /** the guard's counts for this trip, onto the trip (the checkout line) */
+  onGuardCounts?: (detours: number, offRouteMs: number) => void;
+  /** "Can't find it?" → Tell me where: the picker for the stop's item */
+  onTellWhere?: (name: string) => void;
+  /** the demo walk checks stops off itself (no learning: it is not the shopper's word) */
+  onDemoGotIt?: () => void;
 }
 
 
-export function TripScreen({ bundle, router, trip, flat, onFlatChange, onGotIt, onSkip, onAdd, onBack }: TripScreenProps) {
+export function TripScreen({ bundle, router, trip, flat, onFlatChange, onGotIt, onSkip, onAdd, onBack, guardMode = "gentle", demo = false, onGuardCounts, onTellWhere, onDemoGotIt }: TripScreenProps) {
   const { store, catalog } = bundle;
   const [, tick] = useState(0);
   useEffect(() => {
@@ -68,7 +80,31 @@ export function TripScreen({ bundle, router, trip, flat, onFlatChange, onGotIt, 
   // without WebGL the hero zone's flat shelf image stands in for the close-up (closed per stop)
   const [shelfOpenFor, setShelfOpenFor] = useState<string | null>(null);
   const perf = typeof location !== "undefined" && new URLSearchParams(location.search).has("perf");
+  // the off-list guard: the phone's motion for this trip (in memory only), or the demo's scripted walk
+  const [animating, setAnimating] = useState(false);
+  const [feed, setFeed] = useState<GuardFeed | null>(null);
+  useEffect(() => {
+    const f = demo ? new DemoWalk() : guardMode !== "off" ? motionFeed() : null;
+    setFeed(f);
+    return () => f?.stop();
+  }, [trip.startedAt, demo, guardMode]);
+  // the card takes part of the map's area: docked at the top in a close-up (the close-up camera frames the lit
+  // slot below it), above the bottom card on the map (the overview frames above it, and a stop it would cover
+  // becomes an edge chip): both follow the safe area
+  const guardRef = useRef<HTMLElement>(null);
+  const [guardEdge, setGuardEdge] = useState<number | null>(null);
+  const guard = useGuard({ store, trip, mode: demo ? "gentle" : guardMode, animating, feed, onCounts: (d, ms) => onGuardCounts?.(d, ms), onGotIt: onDemoGotIt, walker: demo ? { strideM: GUARD.strideM, speedMps: GUARD.speedMps } : undefined });
+  const mapSafe = useMemo(() => (guardEdge === null ? safe : closeUp ? { ...safe, top: Math.max(safe.top, guardEdge) } : { ...safe, bottom: Math.max(safe.bottom, guardEdge) }), [safe, guardEdge, closeUp]);
 
+  useEffect(() => {
+    const el = guardRef.current;
+    const screen = screenRef.current;
+    if (!guard.show || !el || !screen) return setGuardEdge(null);
+    const h = screen.clientHeight || 844;
+    const box = screen.getBoundingClientRect();
+    const card = el.getBoundingClientRect();
+    setGuardEdge(closeUp ? (card.bottom - box.top + 8) / h : (box.bottom - card.top + 8) / h);
+  }, [guard.show, closeUp]);
   const leg = nextLeg(trip);
   const stop = nextStop(trip);
   const position = trip.got.length + trip.skipped.length + 1;
@@ -109,12 +145,12 @@ export function TripScreen({ bundle, router, trip, flat, onFlatChange, onGotIt, 
   const vignette = <div className="trip-vignette" aria-hidden />;
 
   return (
-    <div className={closeUp ? "trip-screen is-closeup" : "trip-screen"} ref={screenRef}>
+    <div className={[closeUp ? "trip-screen is-closeup" : "trip-screen", guard.show && !closeUp ? "guard-up" : ""].filter(Boolean).join(" ")} ref={screenRef}>
       <div className="trip-map">
         {webgl ? (
           <FallbackBoundary name="3D map" fallback={<>{flatMap}{vignette}</>}>
             <Suspense fallback={flatMap}>
-              <TripMap3D bundle={bundle} trip={trip} flat={flat} onFlatChange={onFlatChange} nextLabel={nextLabel} checkoutLabel={checkoutLabel} perf={perf} safe={safe} onCloseUpChange={setCloseUp} />
+              <TripMap3D bundle={bundle} trip={trip} flat={flat} onFlatChange={onFlatChange} nextLabel={nextLabel} checkoutLabel={checkoutLabel} perf={perf} safe={mapSafe} onCloseUpChange={setCloseUp} onAnimatingChange={setAnimating} />
             </Suspense>
           </FallbackBoundary>
         ) : (
@@ -154,6 +190,75 @@ export function TripScreen({ bundle, router, trip, flat, onFlatChange, onGotIt, 
           <i key={i} className={`seg ${i < doneCount ? "done" : i === doneCount ? "current" : ""}`} />
         ))}
       </div>
+
+      {demo && (
+        <span className="demo-badge" data-testid="demo-walk">
+          demo walk
+        </span>
+      )}
+
+      {/* the off-list guard: above the bottom card on the map; at the top in a close-up, clear of the lit slot */}
+      {guard.show && !isDone(trip) && (
+        <section ref={guardRef} className={`guard-card${closeUp ? " docked" : ""}`} role="status" aria-live="polite" data-testid="guard-card" style={closeUp ? undefined : { bottom: `calc(${(safe.bottom * 100).toFixed(1)}% + 4px)` }}>
+          {guard.show.kind === "guard" ? (
+            <>
+              <p className="guard-title">Nothing on your list here.</p>
+              {guard.show.item && (
+                <p className="guard-line">
+                  {guard.show.item} is <Num value={guard.show.aheadM} /> m ahead.
+                </p>
+              )}
+              <div className="guard-actions">
+                <button type="button" className="pill lime" onClick={guard.back}>
+                  Back on route
+                </button>
+                <button
+                  type="button"
+                  className="pill"
+                  onClick={() => {
+                    guard.dismiss();
+                    setAddOpen(true);
+                  }}
+                >
+                  I'm grabbing something
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="guard-title">Can't find {guard.show.item ?? "it"}?</p>
+              <div className="guard-actions">
+                {onTellWhere && guard.show.item && (
+                  <button
+                    type="button"
+                    className="pill lime"
+                    onClick={() => {
+                      const name = guard.show?.item;
+                      guard.dismiss();
+                      if (name) onTellWhere(name);
+                    }}
+                  >
+                    Tell me where
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="pill"
+                  onClick={() => {
+                    guard.dismiss();
+                    onSkip();
+                  }}
+                >
+                  Not here
+                </button>
+                <button type="button" className="pill circle" aria-label="Close" onClick={guard.dismiss}>
+                  <IconClose />
+                </button>
+              </div>
+            </>
+          )}
+        </section>
+      )}
 
       {!isDone(trip) && leg && stop && (
         <section className="trip-sheet glass sheet" aria-label="Trip" ref={sheetRef}>

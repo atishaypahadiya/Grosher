@@ -1,9 +1,10 @@
-// Resolver settings: provider (direct Ollama for dev, the worker for
-// production), its URL and, for Ollama, the model. Saved per device in
-// localStorage; defaults from the build. Deep glass, like the other sheets.
+// Settings: the item resolver's provider (direct Ollama for dev, the worker for production), its URL and,
+// for Ollama, the model; and the off-list guard on a trip (lib/guard.ts). Saved per device in localStorage;
+// defaults from the build. Deep glass, like the other sheets.
 
 import { useState, type FormEvent } from "react";
 import { DEFAULT_SETTINGS, mixedContent, type ProviderName, type ResolverSettings } from "../lib/settings.ts";
+import type { GuardMode } from "../lib/guard.ts";
 import { IconClose } from "./Icons.tsx";
 
 export interface SettingsSheetProps {
@@ -12,6 +13,12 @@ export interface SettingsSheetProps {
   onReset: () => void;
   onClose: () => void;
 }
+
+const GUARDS: { id: GuardMode; label: string; note: string }[] = [
+  { id: "off", label: "Off", note: "No nudges on a trip." },
+  { id: "gentle", label: "Gentle", note: "A quiet nudge when you drift off your route: once a leg, never in a queue or at a counter." },
+  { id: "strict", label: "Strict", note: "Sooner, and up to twice a leg." },
+];
 
 const PROVIDERS: { id: ProviderName; label: string; note: string }[] = [
   { id: "ollama", label: "Local Ollama", note: "Straight to Ollama on this Mac (localhost): for development on the Mac. Ollama listens on the Mac only, so a phone uses the worker." },
@@ -73,6 +80,17 @@ export function SettingsSheet({ settings, onSave, onReset, onClose }: SettingsSh
             <input type="text" inputMode="url" autoCapitalize="off" autoCorrect="off" spellCheck={false} value={draft.workerUrl} onChange={(e) => set("workerUrl", e.target.value)} placeholder="https://grosher-resolver.example.workers.dev" />
           </label>
         )}
+
+        <h2 className="title st-section">Off-list guard</h2>
+        <div className="st-seg" role="radiogroup" aria-label="Off-list guard">
+          {GUARDS.map((g) => (
+            <button key={g.id} type="button" role="radio" aria-checked={draft.guard === g.id} className={`pill${draft.guard === g.id ? " white" : ""}`} onClick={() => set("guard", g.id)}>
+              {g.label}
+            </button>
+          ))}
+        </div>
+        <p className="st-note">{(GUARDS.find((g) => g.id === draft.guard) ?? GUARDS[1]).note}</p>
+        <p className="st-note">Your phone's motion stays on this phone: it is never sent anywhere, and only this trip's counts are kept.</p>
 
         <div className="picker-foot">
           <button type="button" className="pill ghost" disabled={!changed} onClick={onReset}>

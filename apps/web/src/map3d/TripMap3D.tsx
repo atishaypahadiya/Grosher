@@ -31,7 +31,12 @@ export interface TripMap3DProps {
   safe?: SafeArea;
   /** a hero close-up opened or closed (the trip header turns to plates over the zone's dark ceiling) */
   onCloseUpChange?: (open: boolean) => void;
+  /** a close-up is loading, arriving or on its way out (the off-list guard waits) */
+  onAnimatingChange?: (animating: boolean) => void;
 }
+
+/** how long a close-up's arrival lasts once it opens, at most (descent and walk in; Produce's stroll the longest) */
+const ARRIVAL_MS = 3200;
 
 interface Pt {
   x: number;
@@ -72,7 +77,7 @@ export function footprintOf(store: StoreGraph) {
 export const HOLD_MS = 1100;
 const PRELOAD_DELAY_MS = 1200;
 
-export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel, checkoutLabel, perf = false, className, safe = { top: 0.16, bottom: 0.36 }, onCloseUpChange }: TripMap3DProps) {
+export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel, checkoutLabel, perf = false, className, safe = { top: 0.16, bottom: 0.36 }, onCloseUpChange, onAnimatingChange }: TripMap3DProps) {
   const { store } = bundle;
   const graph = useMemo(() => new WalkGraph(store), [store]);
   const nodes = graph.nodes;
@@ -373,6 +378,15 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
   };
   const debugPerf = useMemo(() => debugPerfOn(), []);
   useEffect(() => onCloseUpChange?.(inside), [inside, onCloseUpChange]);
+  // the arrival and the way out are moving pictures: nothing should pop up over them
+  const phase = closeUp ? (closeUp.exiting ? "leaving" : closeUp.target ? "open" : "loading") : "none";
+  useEffect(() => {
+    if (!onAnimatingChange) return;
+    onAnimatingChange(phase !== "none");
+    if (phase !== "open") return;
+    const t = window.setTimeout(() => onAnimatingChange(false), ARRIVAL_MS);
+    return () => clearTimeout(t);
+  }, [phase, closeUp?.stopId, onAnimatingChange]);
   // the close-up's state for the gates and ?debug=perf: none, loading (zone not ready), open, leaving
   // and its log (request → ready → leaving → closed, performance.now()), for the gates' timings
   const logged = useRef<{ stopId: string | null; state: string }>({ stopId: null, state: "none" });

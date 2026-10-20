@@ -15,6 +15,8 @@ import { PickerSheet } from "./components/PickerSheet.tsx";
 import { ListsSheet } from "./components/ListsSheet.tsx";
 import { SettingsSheet } from "./components/SettingsSheet.tsx";
 import { loadSettings, resetSettings, saveSettings } from "./lib/settings.ts";
+import { DEMO_LIST, demoWalkOn } from "./lib/demoWalk.ts";
+import { requestSensors } from "./survey/sensors.ts";
 import { providerFor } from "./lib/resolver.ts";
 import { useLists } from "./lib/useLists.ts";
 import { useHistory } from "./lib/useHistory.ts";
@@ -126,6 +128,27 @@ export function App({ bundle = DEFAULT_STORE }: { bundle?: StoreBundle } = {}) {
     />
   );
 
+  // ?demo=walk: the off-list guard on a desk (lib/demoWalk.ts): load "Friday night in", start the trip once
+  // every item is placed; the trip screen replays the walk
+  const demo = useMemo(() => demoWalkOn(), []);
+  const demoStage = useRef<"list" | "route" | "done">("list");
+  useEffect(() => {
+    if (!demo) return;
+    const list = bundle.lists?.find((l) => l.name === DEMO_LIST);
+    if (!list) return;
+    if (demoStage.current === "list" && listsState.loaded) {
+      demoStage.current = "route";
+      setItems(list.items);
+      return;
+    }
+    if (demoStage.current === "route" && !trip && res.catalogReady && items.length === list.items.length && stops.length + notFound.length >= list.items.length && !res.asking) {
+      demoStage.current = "done";
+      const t = window.setTimeout(() => setTrip(startTrip(router, stops, notFound)), 1200);
+      return () => clearTimeout(t);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [demo, listsState.loaded, res.catalogReady, stops.length, notFound.length, items.length, res.asking, trip]);
+
   const addItems = (names: string[]) =>
     setItems((cur) => {
       const seen = new Set(cur.map((n) => n.toLowerCase()));
@@ -195,7 +218,13 @@ export function App({ bundle = DEFAULT_STORE }: { bundle?: StoreBundle } = {}) {
           }}
           onAdd={(stop: Stop) => setTrip(addItem(router, trip, stop))}
           onBack={() => setPaused(true)}
+          guardMode={settings.guard}
+          demo={demo}
+          onGuardCounts={(detours, offRouteMs) => setTrip((t) => (t ? { ...t, detours, offRouteMs } : t))}
+          onTellWhere={(name) => setPicking({ name, promote: false })}
+          onDemoGotIt={() => setTrip((t) => (t ? gotIt(router, t) : t))}
         />
+        {picker}
       </>
     );
   }
@@ -274,6 +303,8 @@ export function App({ bundle = DEFAULT_STORE }: { bundle?: StoreBundle } = {}) {
         onTellWhere={(name) => setPicking({ name, promote: false })}
         resume={trip && paused ? { remaining: trip.remaining.length, distanceM: trip.route.legs.reduce((s, l) => s + l.distanceM, 0) } : null}
         onRoute={() => {
+          // the off-list guard reads the phone's motion; iOS asks for it, and only inside a tap
+          if (settings.guard !== "off") void requestSensors();
           if (trip && paused) setPaused(false);
           else if (stops.length) setTrip(startTrip(router, stops, notFound));
         }}

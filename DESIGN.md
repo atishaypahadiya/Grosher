@@ -157,6 +157,16 @@ Phone screens render in a centred column, max-width 430px, full viewport height;
 
 **Trip** (`/trip`): full-screen 3D map; glass header row (back circle · glass pill with store name and Doto timer · flatten circle); 8-segment progress strip (done white, current lime with glow, ahead white 30%); glass bottom sheet (radius 26, inset 12): eyebrow `NEXT · 6 OF 8`, name Outfit 300 26, location line, Doto distance right with "meters" caption, buttons **Got it** (lime pill, check icon, glow) · **Not here** (glass pill) · **+** (glass circle).
 
+**Off-list guard** (on the trip, `lib/guard.ts`): a small card that slides up (240 ms; none under reduced motion)
+when the shopper has clearly drifted off the route: "Nothing on your list here." (Outfit 600 17, white) / "<item>
+is <N> m ahead." (the distance in Doto) / **Back on route** (the card's one lime action) · I'm grabbing
+something (white glass pill). On the `--plate` (it sits over the 3D scene), radius 20, white hairline. On the map
+it sits above the bottom card and the later stops step back, so only the next stop and the checkout stay
+labelled; in a close-up it docks at the top below the back pill and the camera frames the lit slot below it. When
+the shopper has reached the stop and stays, the same card asks "Can't find <item>?" (Tell me where · Not here)
+instead: lost and wandering are different problems. The checkout adds one line on deep glass, "2 detours ·
+off-route 3 min", only when there were any. Helpful, never naggy: once a leg in Gentle.
+
 **Checkout** (`/done`): gradient ground; "Trip done" / "Close" in warm ink on the haze; the share card = glass, radius 28: eyebrow row (`IN AND OUT` · `STORY RD · THU`), Doto hero time centered 96px, "9 of 9 items · lane 5", hairline torus art (SVG ellipses at white 55%, .8px, one lime dot at the center) as the card's middle band, two glass tiles (icon circle + label, Doto number + unit, caption): **Walked 408 m / 7 aisles never entered** and **Vs list in order −36 % / about 4 minutes saved** (the −36 in lime), footer strip: lime-dot wordmark "grosher" · "Get in. Get it. Get out." Below: "Make the map better" glass row(s) with a lime "Pick aisle" pill. Bottom: **Share card** (white pill, soil text) · **Save as usual trip** (glass pill). Share exports the card as a 1080×1920 PNG (html-to-image), gradient included.
 
 **Editor** (`/edit`, desktop 1280): cream chrome; top bar (lime-dot wordmark / editor, store · #5435 · map v3, stats incl. texture count, Validate pill, lime-on-soil Export JSON); 64px rail (select, corridor, fixture, location, entrance/exit/checkout, **texture**, measure; "Preview in 3D" at the bottom opens the trip renderer on the current map); flat map; layer pills top-right (Graph · Fixtures · Locations · Textures · Underlay); scale bar + cursor meters bottom-left; 320px inspector: location id · wall, Aisle / Section / Modular, Side segmented (Left / Right / Endcap), Walmart zone select (GR/MD/GM/BK/FT), tag pills, **Fixture texture** slot (thumbnail, filename, size, shot date, Replace), Items here with confidence, Save (soil/lime) · Delete (rose text).

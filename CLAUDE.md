@@ -372,6 +372,36 @@ the in-memory fallback of `lib/db.ts` where IndexedDB is blocked.
   JSON recognises both shapes and merges by id (a `draft` is never imported). `buildExport` takes a
   `Personal` = `{memory, lists, history}`.
 
+**The off-list guard** (`lib/guard.ts`, `lib/useGuard.ts`, `lib/demoWalk.ts`; 21 Oct 2026): a gentle nudge when
+the shopper drifts off the route mid-trip, and help, not a nudge, when they have reached the stop but stay. No
+indoor positioning: per leg (the last check-off to the next stop) it compares the steps since the leg began
+(survey mode's `StepDetector` on DeviceMotion) and whether the shopper is standing still (`MotionTracker`: no
+step for 4 s and |a| quiet over 2 s) with the leg's route distance ÷ the walker (survey mode's calibration on
+this phone, `grosher.calibration`, else 0.72 m stride and 1.2 m/s) plus a dwell by stop kind (`stopKind`, from
+the fixture's department: shelf 20 s, bulk 60, counters, food hall and pharmacy 180). Wandering: steps > 1.8 ×
+the leg's + 30 → the guard. Browsing: stationary > 90 s under 60% of the leg's steps → the guard. At the stop
+(≥ 85% of the leg's steps) and stationary past the dwell + 40 s → "Can't find <item>?" (Tell me where opens the
+picker; Not here skips). No motion sensor: time only, > 2.5 × the expected leg and > expected + 2 min. Never in
+the trip's first minute, while a close-up loads, arrives or leaves (`TripMap3D onAnimatingChange`), at a
+counter, the food hall or the pharmacy inside its allowance, on the leg to checkout, nor more than once a leg in
+Gentle. Every threshold is in `GUARD`. Settings: Off · Gentle (default) · Strict (the × thresholds at 70%, a
+second nudge a leg), stored with the settings (`ResolverSettings.guard`, `grosher.resolver`). The card ("Nothing
+on your list here." / "<item> is <N> m ahead." / Back on route · I'm grabbing something) sits on the plate above
+the bottom card on the map, where it counts in the map's safe area and the later stops step back
+(`.guard-up`), and docks at the top in a close-up, below the back pill, where it raises the close-up camera's
+safe area so the lit slot stays clear. Back on route: quiet for the rest of the leg (Strict re-arms from there).
+I'm grabbing something: the add-item input (the existing re-solve). Privacy: the motion stays in the hook's
+memory for the trip; only `TripState.detours` and `offRouteMs` are kept (the snapshot carries them, history does
+not), and the checkout shows one line, "2 detours · off-route 3 min" (`detourLine`), only when there were any.
+iOS asks for motion inside the Route tap (`requestSensors`). **`?demo=walk`** (for a desk): loads "Friday night
+in", routes it, replays a scripted walk six times faster (`?speed=N`, 1–30), one deliberate detour on the third
+leg (the guard fires, the demo taps Back on route after 4 s) and long waits at the food hall's counters (quiet),
+with a "demo walk" badge; it checks stops off without writing memory; what happened is in
+`window.__grosherGuardDemo`. Tests: `test/guard.test.ts` (synthetic walks: normal, wander, browse, deli wait,
+checkout queue, arrived-and-stuck, no motion, the first minute, an arrival, Gentle vs Strict, Off, the line,
+stop kinds, standing still), `scripts/guard-demo.mjs` in CI (once, on the detour, quiet at the counters), and the
+contrast gate's guard card (map and close-up) and detour line.
+
 **Voice entry** (`lib/speech.ts`). Hold the mic, release to stop: Web Speech API (`SpeechRecognition` or
 `webkitSpeechRecognition`), `interimResults` and `continuous` on; interim words show in the add pill in
 warm ink with a lime underline, each final result (a pause) is split on "and", "then", commas and semicolons and added as items.
