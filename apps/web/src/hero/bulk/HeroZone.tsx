@@ -181,6 +181,9 @@ export default function HeroZone({ store, category, itemName, active = true, onT
         if (textures) for (const t of Object.values(textures)) gl.initTexture(t);
         const was = wrapper.visible;
         wrapper.visible = true;
+        // the overview's fixtures as they will be once the close-up shows (Fixtures keeps them hidden till then)
+        const warmFixtures = scene.getObjectByName("fixtures-warm");
+        if (warmFixtures) warmFixtures.visible = true;
         const eye = new PerspectiveCamera(80, 1, 0.05, 120);
         eye.position.set(...target.door);
         eye.lookAt(...target.center);
@@ -190,6 +193,7 @@ export default function HeroZone({ store, category, itemName, active = true, onT
         gl.render(scene, eye);
         gl.setRenderTarget(prev);
         rt.dispose();
+        if (warmFixtures) warmFixtures.visible = false;
         wrapper.visible = was;
       }
       setCompiled(mats);

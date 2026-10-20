@@ -614,10 +614,14 @@ real frame compiled them all again, synchronously (the 1 × 1 draw took 177 ms o
 - *the next stop* (TripMap3D `preload` → Scene, `active={false}` on the zone): during the current leg, 1.2 s
   after it starts, then the next idle period; a route change cancels it, another item in the same zone only
   retargets; `?preload=0` turns it off. Its fixtures' other merge is made in idle time too (`prepareHide`).
-- The overview hides the zone's fixtures only once the close-up shows (they used to vanish while it loaded).
+- The overview hides the zone's fixtures only once the close-up shows (they used to vanish while it loaded);
+  the variant without them waits, merged and in meshes, in a hidden `fixtures-warm` group that the zone's
+  warm-up draw shows for its one 1 × 1 frame, so its buffers are on the GPU before the switch.
 Measured on an M4 Pro (Metal) at 390 × 844 × 3, the camera's first visible movement after the map appears:
-first stop prepared 200–270 ms (`?prepare=0`: 550–650); "Got it" → open for the next stop 62 ms, worst frame
-17 ms (`?preload=0`: 620–780 ms, a 150–180 ms frame). The descent eases out (DESIGN.md §3), so it moves at once.
+first stop prepared 133–250 ms (`?prepare=0`: 600–650); "Got it" → open for the next stop 53–67 ms, worst
+frame 17 ms (`?preload=0`: 620–780 ms, a 150–180 ms frame). Once the camera moves no frame is over 17 ms; the
+one frame that switches the scene to the close-up (before the camera moves) takes 33–50 ms. The descent eases
+out (DESIGN.md §3), so it moves at once.
 - **The arrival** (`CloseUpCamera`, two moves, each eased on its own; DESIGN.md §7's one exception, at most
   1.24 s, a tap anywhere skips to the end, reduced motion cuts): a descent of 480 ms on a curve that stays out
   over the walkway, never above the zone, its view on a point gliding from where the overview looked to the

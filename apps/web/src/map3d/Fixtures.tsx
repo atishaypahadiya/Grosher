@@ -8,7 +8,7 @@
 // finish's material and its uprights and rails in black steel under wood.
 // The next stop's slot is lit separately (LitSlot).
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import { BoxGeometry, Color, DoubleSide, EdgesGeometry, LineBasicMaterial, LineSegments, Mesh, MeshStandardMaterial, PlaneGeometry, RepeatWrapping, SRGBColorSpace, Texture, TextureLoader, type BufferGeometry } from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
@@ -159,6 +159,23 @@ function edgesGeometryFor(store: StoreGraph, repeatMeters: number, hideKey: stri
   return geo;
 }
 
+/** whether a variant's merges are all cached already (wrapping them in meshes is then cheap) */
+function mergedReady(store: StoreGraph, repeatMeters: number, hideKey: string): boolean {
+  const cache = MERGED.get(store);
+  if (!cache) return false;
+  const departments = store.departments ?? [];
+  const hidden = new Set(hideKey ? hideKey.split("|") : []);
+  const byKey = new Map<string, string[]>();
+  for (const b of builtFor(store, repeatMeters)) {
+    if (hidden.has(b.f.id)) continue;
+    const finish = departments.find((d) => d.id === b.f.department)?.finish;
+    const k = finish ? `finish:${finish}` : b.f.department ?? "_none";
+    byKey.set(k, [...(byKey.get(k) ?? []), b.f.id]);
+  }
+  for (const [k, ids] of byKey) if (!cache.has(`${repeatMeters}:${k}#${ids.join(",")}`)) return false;
+  return true;
+}
+
 /**
  * The 3D map's fixture geometry, prepared before the map exists (the list screen, idle time, when the route
  * starts in a hero zone): the whole store merged, and merged again without `hide` (the close-up's own and its
@@ -252,13 +269,23 @@ export function Fixtures({ store, textureUrl, repeatMeters = 2, nodes, fromEntra
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const groups = useMemo(() => groupsFor(hideKey), [built, departments, textureFor, hideKey]);
-  // prepared ahead in the trip (the next stop's close-up): the variant without the soon-hidden fixtures, in idle time
+  // prepared ahead (a close-up on its way): the variant without the soon-hidden fixtures. Its merges are made in
+  // idle time (or were, on the list screen); its new meshes wait in a hidden group that a close-up's warm-up
+  // draw shows for one 1 × 1 frame (HeroZone), so their buffers are on the GPU before the switch
+  const [prepTick, setPrepTick] = useState(0);
+  const warm = useMemo(() => {
+    if (!prepareKey || prepareKey === hideKey || !mergedReady(store, repeatMeters, prepareKey)) return [];
+    return groupsFor(prepareKey).filter((g) => !groups.includes(g));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prepareKey, hideKey, groups, prepTick]);
   useEffect(() => {
     if (!prepareKey || prepareKey === hideKey) return;
+    if (mergedReady(store, repeatMeters, prepareKey)) return;
     const w = window as Window & { requestIdleCallback?: (f: () => void, o?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
     const run = () => {
       groupsFor(prepareKey);
       edgesFor(prepareKey);
+      setPrepTick((t) => t + 1);
     };
     const id = w.requestIdleCallback ? w.requestIdleCallback(run, { timeout: 2000 }) : window.setTimeout(run, 100);
     return () => (w.cancelIdleCallback ?? clearTimeout)(id);
@@ -344,6 +371,13 @@ export function Fixtures({ store, textureUrl, repeatMeters = 2, nodes, fromEntra
       ))}
       {edges && <primitive object={edges} />}
       {signs && <primitive object={signs} />}
+      <group name="fixtures-warm" visible={false}>
+        {warm.map((g) => (
+          <group key={g.key}>
+            {[g.opaque, g.trim, g.glow, g.frame, g.glass].map((m) => m && <primitive key={m.uuid} object={m} />)}
+          </group>
+        ))}
+      </group>
     </group>
   );
 }
