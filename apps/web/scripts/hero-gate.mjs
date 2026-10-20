@@ -40,11 +40,21 @@ const download = {
 const downloadKB = (download.chunk + download.textures + download.transcoder) / 1024;
 
 const browser = await chromium.launch({ args: GL });
-const page = await (await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, serviceWorkers: "block" })).newPage();
+// every scenario in a fresh context: clean storage, and nothing left rendering from the one before (a busy
+// software-rendered page can keep the next navigation from loading on CI's runners)
+let ctx = null;
+let page = null;
+const fresh = async (query) => {
+  if (ctx) await ctx.close();
+  ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, serviceWorkers: "block" });
+  page = await ctx.newPage();
+  page.setDefaultTimeout(90_000);
+  page.on("pageerror", (e) => errors.push(String(e)));
+  page.on("request", (r) => fetched.push(r.url()));
+  await page.goto(`${BASE}/${query}`, { waitUntil: "load", timeout: 120_000 });
+};
 const errors = [];
-page.on("pageerror", (e) => errors.push(String(e)));
 const fetched = [];
-page.on("request", (r) => fetched.push(r.url()));
 const heroish = (u) => /HeroZone-|\.ktx2|basis_transcoder/.test(u);
 
 const steady = async (n) => {
@@ -57,7 +67,7 @@ const rows = [];
 let lazy;
 const preload = { prepared: false, openMs: 0 };
 try {
-  await page.goto(`${BASE}/?perf=1`, { waitUntil: "load" });
+  await fresh("?perf=1");
   const input = page.getByLabel(/add items/i);
   await input.waitFor({ timeout: 30_000 });
   // an ordinary trip first: the overview must not touch the zone
@@ -68,12 +78,7 @@ try {
   await steady(20);
   lazy = !fetched.some(heroish);
   // now, in a fresh visit, a bulk item: the next stop is in the zone and the close-up opens on its own
-  await page.goto(`${BASE}/?perf=1`, { waitUntil: "load" });
-  await page.evaluate(() => {
-    localStorage.clear();
-    indexedDB.deleteDatabase("grosher");
-  });
-  await page.goto(`${BASE}/?perf=1&tier=hi`, { waitUntil: "load" });
+  await fresh("?perf=1&tier=hi");
   const again = page.getByLabel(/add items/i);
   await again.fill("toor dal (bulk)");
   await again.press("Enter");
@@ -117,12 +122,7 @@ try {
   rows.push({ view: "down the aisle", ...(await steady(30)), patched: true });
   if (SHOTS) await page.screenshot({ path: join(SHOTS, "hero-aisle.png") });
   // a scoop bin on the island's north face: the shopper looks south, out over the rest of the store
-  await page.goto(`${BASE}/?perf=1&tier=hi`, { waitUntil: "load" });
-  await page.evaluate(() => {
-    localStorage.clear();
-    indexedDB.deleteDatabase("grosher");
-  });
-  await page.goto(`${BASE}/?perf=1&tier=hi`, { waitUntil: "load" });
+  await fresh("?perf=1&tier=hi");
   const third = page.getByLabel(/add items/i);
   await third.fill("bulk granola");
   await third.press("Enter");
@@ -132,12 +132,7 @@ try {
   rows.push({ view: "scoop bins, facing out", ...(await steady(30)) });
   // prepared ahead: a floral stop, then toor dal; during the first leg the zone is prepared in the
   // background (its textures in before any close-up opened), and "Got it" opens it without the pause
-  await page.goto(`${BASE}/?perf=1&tier=hi`, { waitUntil: "load" });
-  await page.evaluate(() => {
-    localStorage.clear();
-    indexedDB.deleteDatabase("grosher");
-  });
-  await page.goto(`${BASE}/?perf=1&tier=hi`, { waitUntil: "load" });
+  await fresh("?perf=1&tier=hi");
   const fourth = page.getByLabel(/add items/i);
   await fourth.fill("bouquet, toor dal (bulk)");
   await fourth.press("Enter");
