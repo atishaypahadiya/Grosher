@@ -127,10 +127,12 @@ function Background({ envRef }: { envRef: { current: number } }) {
  * fog thickens into the warm dark, the overview's own lights and the skylight's daylight spots fade, so the
  * store goes from the overview's haze to the zone's lamplight as the camera comes down, never in one cut.
  */
-function EnvDriver({ envRef, fog, hemi, sun, sky, daylit }: { envRef: { current: number }; fog: RefObject<FogExp2 | null>; hemi: RefObject<HemisphereLight | null>; sun: RefObject<DirectionalLight | null>; sky: RefObject<Group | null>; daylit: boolean }) {
+function EnvDriver({ envRef, fog, hemi, sun, sky, daylit, ambient }: { envRef: { current: number }; fog: RefObject<FogExp2 | null>; hemi: RefObject<HemisphereLight | null>; sun: RefObject<DirectionalLight | null>; sky: RefObject<Group | null>; daylit: boolean; ambient?: HeroZoneEntry["ambient"] }) {
   const last = useRef(-1);
   const haze = useMemo(() => new Color(HAZE), []);
   const dark = useMemo(() => new Color(CLOSE_DARK), []);
+  const deep = useMemo(() => new Color(DEEP), []);
+  const fill = useMemo(() => (ambient ? { sky: new Color(ambient.sky), ground: new Color(ambient.ground), intensity: ambient.intensity } : null), [ambient]);
   useFrame(() => {
     const k = envRef.current;
     if (Math.abs(k - last.current) < 0.003) return;
@@ -139,7 +141,12 @@ function EnvDriver({ envRef, fog, hemi, sun, sky, daylit }: { envRef: { current:
       fog.current.color.copy(haze).lerp(dark, k);
       fog.current.density = 0.006 + (CLOSE_FOG - 0.006) * k;
     }
-    if (hemi.current) hemi.current.intensity = 0.9 * (1 - k);
+    // the one hemisphere: the overview's haze, blended to the zone's warm fill (never a second light)
+    if (hemi.current) {
+      hemi.current.color.copy(haze).lerp(fill?.sky ?? haze, k);
+      hemi.current.groundColor.copy(deep).lerp(fill?.ground ?? deep, k);
+      hemi.current.intensity = 0.9 + ((fill?.intensity ?? 0) - 0.9) * k;
+    }
     if (sun.current) sun.current.intensity = (daylit ? 0.6 : 0.5) * (1 - k);
     // the skylights' frame and panes go, their spots fade: a light never leaves the scene (that would
     // recompile every material mid-move), it only dims
@@ -313,7 +320,7 @@ export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, fo
       <fogExp2 ref={fogRef} attach="fog" args={[HAZE, 0.006]} />
       <hemisphereLight ref={hemi} args={[HAZE, DEEP, 0.9]} />
       <directionalLight ref={sun} position={[-20, 30, 40]} intensity={daylit ? 0.6 : 0.5} color={daylit ? "#FFD9B0" : "#FFFFFF"} />
-      <EnvDriver envRef={envRef} fog={fogRef} hemi={hemi} sun={sun} sky={skyRef} daylit={daylit} />
+      <EnvDriver envRef={envRef} fog={fogRef} hemi={hemi} sun={sun} sky={skyRef} daylit={daylit} ambient={closeUp?.zone.ambient} />
 
       {near ? null : floor ? (
         <mesh rotation-x={-Math.PI / 2} geometry={floor} name="floor">
@@ -331,7 +338,7 @@ export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, fo
       {!near && <Line points={edge} color="#FFFFFF" transparent opacity={0.3} lineWidth={1} />}
 
       <Suspense fallback={null}>
-        <Fixtures store={store} textureUrl={textureUrl} repeatMeters={repeatMeters} nodes={nodes} fromEntrance={fromEntrance} hide={near ? closeUp?.zone.hideFixtures : undefined} prepareHide={zoneProps?.zone.hideFixtures} dimRef={closeUp ? envRef : undefined} />
+        <Fixtures store={store} textureUrl={textureUrl} repeatMeters={repeatMeters} nodes={nodes} fromEntrance={fromEntrance} hide={near ? closeUp?.zone.hideFixtures : undefined} prepareHide={zoneProps?.zone.hideFixtures} prepareNow={!!closeUp} dimRef={closeUp ? envRef : undefined} />
         {!near && <Products store={store} textureUrl={textureUrl} settled={settled} priority={legFixtureIds} you={{ x: focus.you.x, z: focus.you.y }} />}
       </Suspense>
       {Zone && zoneProps && (

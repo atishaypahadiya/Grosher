@@ -200,6 +200,8 @@ export interface FixturesProps {
   /** fixtures that will be left out soon (a close-up being prepared): their departments are re-merged
    * without them in idle time, so the switch costs nothing when it comes */
   prepareHide?: string[];
+  /** a close-up is opening now (not one prepared for later): merge at once, while the zone loads, not in idle time */
+  prepareNow?: boolean;
   /** a close-up's blend (0 … 1): the rest of the store dims into a backdrop (darker, no glow, no outlines) */
   dimRef?: { current: number };
 }
@@ -211,7 +213,7 @@ interface Built {
   parts: Parts;
 }
 
-export function Fixtures({ store, textureUrl, repeatMeters = 2, nodes, fromEntrance, hide, prepareHide, dimRef }: FixturesProps) {
+export function Fixtures({ store, textureUrl, repeatMeters = 2, nodes, fromEntrance, hide, prepareHide, prepareNow = false, dimRef }: FixturesProps) {
   const hideKey = (hide ?? []).join("|");
   const prepareKey = (prepareHide ?? []).join("|");
   const departments = useMemo(() => store.departments ?? [], [store]);
@@ -287,10 +289,14 @@ export function Fixtures({ store, textureUrl, repeatMeters = 2, nodes, fromEntra
       edgesFor(prepareKey);
       setPrepTick((t) => t + 1);
     };
+    if (prepareNow) {
+      const t = window.setTimeout(run, 0);
+      return () => clearTimeout(t);
+    }
     const id = w.requestIdleCallback ? w.requestIdleCallback(run, { timeout: 2000 }) : window.setTimeout(run, 100);
     return () => (w.cancelIdleCallback ?? clearTimeout)(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prepareKey, hideKey, built]);
+  }, [prepareKey, hideKey, built, prepareNow]);
 
   // Every hull outline in one line batch: one draw call for the whole store instead of one per department
   // (thirteen departments would otherwise spend thirteen of the seventy-call budget on outlines).

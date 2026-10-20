@@ -42,6 +42,9 @@ export interface HeroZoneEntry {
   load: () => Promise<{ default: ComponentType<HeroZoneComponentProps> }>;
   /** the same chunk's preparation: geometry and textures ahead of the trip's canvas, and its undo */
   prepare: () => Promise<{ default: ComponentType<HeroZoneComponentProps>; prepare: (store: StoreGraph) => Promise<void>; unprepare: () => void }>;
+  /** the zone's ambient fill: the scene's one hemisphere light blends to it as the camera comes down (the
+   * zone brings no light of its own: a light joining the scene would recompile every material in it) */
+  ambient: { sky: string; ground: string; intensity: number };
   /** the flat shelf images for devices without the 3D close-up, by category (public/hero/<id>/<category>.webp) */
   flatImage: (category: string) => string;
 }
@@ -55,6 +58,8 @@ export const HERO_ZONES: HeroZoneEntry[] = [
     hideFixtures: ["f-bulk-wall", "f-bulk-run", "f-bulk-display", "f-island3", "f-island4", "f-island7", "f-island8", "f-produce-wall", "f-run0", "f-run0-capE", "f-bws0", "f-bws0-capW", "f-bws0-capE"],
     load: () => import("./bulk/HeroZone.tsx"),
     prepare: () => import("./bulk/HeroZone.tsx"),
+    // the reference's even, warm fill: most of the light; the spots are accents on top of it
+    ambient: { sky: "#FFE6CC", ground: "#C29E7C", intensity: 2.5 },
     flatImage: (category) => `${import.meta.env.BASE_URL}hero/bulk/${category}.webp`,
   },
 ];

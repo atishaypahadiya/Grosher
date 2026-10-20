@@ -601,7 +601,13 @@ overview until the zone's chunk and textures are in, its programs compiled (`com
 uploaded (textures, then one draw into a 1 × 1 target from the door), so no frame of the arrival stalls. The
 programs are compiled with a render target bound: the scene is drawn into the post-processing composer's
 target, so its programs have no tone mapping and linear output; compiled for the screen instead, the first
-real frame compiled them all again, synchronously (the 1 × 1 draw took 177 ms on an M4; now ~20).
+real frame compiled them all again, synchronously (the 1 × 1 draw took 177 ms on an M4; now ~20). The 1 × 1
+draw turns frustum culling off for the zone's objects: on a GPU without parallel shader compiling (software
+rendering, possibly some phones) a program finishes compiling on its first use, which must happen there, not
+in the descent. **The zone brings no light**: three keys every program on the scene's light count, so a light
+joining the scene recompiled every overview material on the first close-up frame (seconds in CI's software
+renderer); the scene's one hemisphere blends from the overview's haze to the zone's fill
+(`HeroZoneEntry.ambient`) on `envRef` instead, and lights only ever fade.
 **Prepared ahead**, so no descent waits:
 - *the first stop* (`hero/usePrepareFirst.ts`, in App): while the list screen is open and the planned route
   starts in a hero zone, after 0.8 s and one step per idle period: the 3D map's chunk and the zone's, the

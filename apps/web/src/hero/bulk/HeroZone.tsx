@@ -187,12 +187,24 @@ export default function HeroZone({ store, category, itemName, active = true, onT
         const eye = new PerspectiveCamera(80, 1, 0.05, 120);
         eye.position.set(...target.door);
         eye.lookAt(...target.center);
+        // every object drawn once, in view of the door or not: on a GPU without parallel shader compiling
+        // (software rendering, some phones) a program finishes compiling on its first use, and that use
+        // must be here, not the frame the descending camera first sees the object
+        const culled: { frustumCulled: boolean }[] = [];
+        for (const root of [g, warmFixtures])
+          root?.traverse((o) => {
+            if (o.frustumCulled) {
+              o.frustumCulled = false;
+              culled.push(o);
+            }
+          });
         const rt = new WebGLRenderTarget(1, 1);
         const prev = gl.getRenderTarget();
         gl.setRenderTarget(rt);
         gl.render(scene, eye);
         gl.setRenderTarget(prev);
         rt.dispose();
+        for (const o of culled) o.frustumCulled = true;
         if (warmFixtures) warmFixtures.visible = false;
         wrapper.visible = was;
       }
@@ -261,8 +273,6 @@ export default function HeroZone({ store, category, itemName, active = true, onT
   return (
     <group name="hero-bulk" ref={group}>
       {/* the ambient: warm bounce from the clay above, the floor below */}
-      {/* the reference's even, warm fill: most of the light; the spots are accents on top of it */}
-      <hemisphereLight args={["#FFE6CC", "#C29E7C", 2.5]} />
       <primitive object={decals} />
       {grains && <primitive object={grains} />}
       {statics.map((m, i) => (
