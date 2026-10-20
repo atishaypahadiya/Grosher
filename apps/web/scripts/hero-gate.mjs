@@ -286,6 +286,8 @@ for (const r of rows) {
   const over = r.calls > B.drawCalls || r.triangles > B.triangles || mb > B.gpuTextureMB;
   failed ||= over;
   console.log(`${pad(r.view, 28)} ${pad(r.calls, 7)} ${pad(r.triangles.toLocaleString("en-US"), 11)} ${pad(mb.toFixed(1) + " MB", 10)} ${r.patched ? "–" : r.frameMs.toFixed(1)}${over ? "   OVER BUDGET" : ""}`);
+  // over: what drew it, the biggest first
+  if (over && r.breakdown) console.log(`    ${Object.entries(r.breakdown).sort((x, y) => y[1] - x[1]).slice(0, 10).map(([k, v]) => `${k} ${v.toLocaleString("en-US")}`).join(" · ")}`);
 }
 console.log("");
 for (const [zone, d] of Object.entries(downloads)) {
