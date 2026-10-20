@@ -64,7 +64,8 @@ export function tiledBox(w: number, h: number, d: number, tile = 1): BufferGeome
 
 /** A plank with slightly rounded edges; its grain runs along x. */
 export function roundedPlank(len: number, thick: number, depth: number, radius: number, tile = 1.2): BufferGeometry {
-  const g = clean(new RoundedBoxGeometry(len, thick, depth, 2, radius));
+  // one bevel segment: at eye level it reads as a rounded edge, at a third of the triangles
+  const g = clean(new RoundedBoxGeometry(len, thick, depth, 1, radius));
   // planar UVs: u along the length, v across (top and bottom), so the grain follows the plank
   const pos = g.getAttribute("position");
   const nor = g.getAttribute("normal");

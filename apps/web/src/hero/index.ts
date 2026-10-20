@@ -15,12 +15,18 @@ export interface HeroTargetInfo {
   bounds: { x0: number; x1: number };
   /** where the walk in starts: eye level, outside the zone's ceiling (the descent ends there) */
   door: [number, number, number];
+  /** the walk's turns on the way from the door to where the shopper stands */
+  via: [number, number, number][];
+  /** metres from the bin's centre to the shopper */
+  stand: number;
 }
 
 export interface HeroZoneComponentProps {
   store: StoreGraph;
   category: string;
   itemName: string;
+  /** false while it is only being prepared in the background (the next stop's zone): no camera hand-off yet */
+  active?: boolean;
   onTarget: (t: HeroTargetInfo) => void;
   onLit?: (m: Mesh | null) => void;
   onError: (e: Error) => void;
@@ -44,7 +50,7 @@ export const HERO_ZONES: HeroZoneEntry[] = [
     storeId: "grosher",
     aisle: "BULK",
     // its own three fixtures, and the ones it redraws as the backdrop seen from inside it
-    hideFixtures: ["f-bulk-wall", "f-bulk-island", "f-bulk-display", "f-island3", "f-island4", "f-island7", "f-island8", "f-produce-wall", "f-run0", "f-run0-capE", "f-bws0", "f-bws0-capW", "f-bws0-capE"],
+    hideFixtures: ["f-bulk-wall", "f-bulk-run", "f-bulk-display", "f-island3", "f-island4", "f-island7", "f-island8", "f-produce-wall", "f-run0", "f-run0-capE", "f-bws0", "f-bws0-capW", "f-bws0-capE"],
     load: () => import("./bulk/HeroZone.tsx"),
     flatImage: (category) => `${import.meta.env.BASE_URL}hero/bulk/${category}.webp`,
   },

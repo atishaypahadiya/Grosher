@@ -108,6 +108,39 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
     else if (closeUp && !closeUp.exiting && closeUp.stopId !== stopId) leaveCloseUp(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [current?.stopId, current?.locationId]);
+  // the stop after this one, when it is in a hero zone: its close-up is prepared in the background during this
+  // leg (in idle time, after the map has settled), so it opens with no pause; a route change cancels it, the
+  // same zone with another item only retargets
+  const upcoming = useMemo(() => {
+    const leg = legs.slice(1).find((l) => l.stopId);
+    const h = leg ? heroStopAt(store, bundle.categories, leg.locationId) : null;
+    return h && leg ? { zone: h.zone, category: h.category, itemName: leg.label } : null;
+  }, [legs, store, bundle.categories]);
+  const [preload, setPreload] = useState<typeof upcoming>(null);
+  // ?preload=0 turns it off: the measurement's baseline
+  const preloading = useMemo(() => typeof location === "undefined" || new URLSearchParams(location.search).get("preload") !== "0", []);
+  useEffect(() => {
+    if (!upcoming || !preloading) {
+      setPreload(null);
+      return;
+    }
+    if (preload && preload.zone.id === upcoming.zone.id) {
+      setPreload(upcoming);
+      return;
+    }
+    const w = window as Window & { requestIdleCallback?: (f: () => void, o?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
+    let id = 0;
+    const start = () => setPreload(upcoming);
+    // a moment for the leg's framing to settle, then the browser's next idle period (Safari: a timer)
+    const t = window.setTimeout(() => {
+      id = w.requestIdleCallback ? w.requestIdleCallback(start, { timeout: 3000 }) : window.setTimeout(start, 200);
+    }, 1200);
+    return () => {
+      clearTimeout(t);
+      if (id) (w.cancelIdleCallback ?? clearTimeout)(id);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [upcoming?.zone.id, upcoming?.category, upcoming?.itemName]);
   const nextNode = current ? nodes.get(current.nodeId) : undefined;
   const litFixtureId = useMemo(() => (nextIsStop ? fixtureForLocation(store, current?.locationId, nextNode)?.id ?? null : null), [store, current, nextNode, nextIsStop]);
   const litSlot = useMemo(() => {
@@ -269,6 +302,8 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
     const dy = e.clientY - p.y;
     const dt = performance.now() - p.t;
     if (p.multi) return;
+    // a tap during the arrival (or the way out) skips to its end
+    if (closeUp && Math.hypot(dx, dy) < 8 && dt < 350 && closeUpRef.current?.skip()) return;
     // a quick flick down leaves a close-up
     if (near && dy > 90 && dt < 450 && Math.abs(dx) < dy * 0.6) {
       leaveCloseUp(true);
@@ -335,9 +370,11 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
           onOverZoomOut={() => onFlatChange(true)}
           perf={perf || debugPerf}
           closeUp={closeUp}
+          preload={closeUp ? null : preload}
           closeUpRef={closeUpRef}
           onHeroTarget={(t: HeroTargetInfo) => setCloseUp((c) => (c && !c.exiting ? { ...c, target: t } : c))}
           onHeroError={() => {
+            setPreload(null);
             // no close-up on this device (no compressed textures, the chunk failed): the flat shelf image instead
             setCloseUp((c) => {
               if (c) setFlatShelf({ image: c.zone.flatImage(c.category), name: c.itemName });

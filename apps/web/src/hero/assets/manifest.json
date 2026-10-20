@@ -134,37 +134,37 @@
       "h": 256
     },
     "labels": {
-      "bytes": 694649,
+      "bytes": 826366,
       "kind": "uastc",
       "w": 2048,
-      "h": 1280
+      "h": 1536
     },
     "labels.lo": {
-      "bytes": 246230,
+      "bytes": 292515,
       "kind": "uastc",
       "w": 1024,
-      "h": 640
+      "h": 768
     },
     "headers": {
-      "bytes": 46690,
+      "bytes": 75478,
       "kind": "uastc",
       "w": 1024,
-      "h": 512
+      "h": 768
     },
     "headers.lo": {
-      "bytes": 20469,
+      "bytes": 33122,
       "kind": "uastc",
       "w": 512,
-      "h": 256
+      "h": 384
     },
     "cutouts": {
-      "bytes": 169369,
+      "bytes": 169488,
       "kind": "uastc",
       "w": 1024,
       "h": 512
     },
     "cutouts.lo": {
-      "bytes": 57661,
+      "bytes": 57561,
       "kind": "uastc",
       "w": 512,
       "h": 256

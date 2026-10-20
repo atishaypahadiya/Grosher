@@ -1,7 +1,9 @@
-// Grosher's Bulk & pulses zone, assembled from the shelf kit: the wall shelving (five sections under their
-// header boards: woven sacks low, kraft bags, pouches, cartons, jars, ghee tins, oil bottles and spice jars
-// above, gravity bins at eye level, clay pots stacked on top), the scoop-bin island, the centerpiece on the
-// floor (open jute sacks, a stone chakki in its tray, a big clay pot of dried wheat), the clay-plaster wall,
+// Grosher's Bulk & pulses zone, assembled from the shelf kit: an aisle with shelving both sides, as in the
+// reference pulses store. The wall run (five sections under their header boards: woven sacks low, kraft bags,
+// pouches, cartons, jars, ghee tins, oil bottles and spice jars above, gravity bins at eye level, clay pots
+// stacked on top) faces the south run across 2.6 m (a waist-high counter of scoop bins, three tiers of snack
+// packs above, four header boards); the centerpiece stands in the aisle's mouth (open jute sacks, a stone
+// chakki in its tray, a big clay pot of dried wheat); the clay-plaster wall,
 // a ceiling over the zone only (copper conduit, black tracks of spots, recessed downlights) and, beyond it,
 // the next fixtures as the shopper would see them: produce stands under the skylight, the aisle 1 gondola,
 // the beer aisle. Light is per pixel (light.ts); this file only places the lights and the slabs that cast
@@ -18,20 +20,25 @@ import { matka, TEMPLATES, type ProductPart, type Template } from "../kit/produc
 import { DAYLIGHT, scaled, WARM_3000K, type LightRig, type ZoneLightDef } from "../kit/light.ts";
 import type { Decal } from "../kit/decals.ts";
 import type { KitMaterialKey } from "../kit/materials.ts";
-import { earRect, fringeRect, GRAIN_SHAPES, GRAINS, HEADERS, labelCells, labelKey, labelRect, SACK_STENCILS, SACKS, SCOOP_BINS, SCOOP_CATEGORY, SECTIONS, shapeIndex, stencilRect, tagRect, type BinItem, type GrainShape, type Stock } from "./recipe.ts";
+import { earRect, fringeRect, GRAIN_SHAPES, GRAINS, headerRect, labelCells, labelKey, labelRect, RUN_SECTIONS, SACKS, SCOOP_BINS, SCOOP_CATEGORY, SECTIONS, shapeIndex, stencilRect, tagRect, type BinItem, type GrainShape, type Stock } from "./recipe.ts";
 
 // ---------------------------------------------------------------- the plan (map metres; z is the map's y)
 const WALL_Z = 1.5;
 const PLANK = 0.034;
 export const SHELF = { x0: 50, x1: 68, zBack: 1.55, zFront: 2.2, bays: 15, tiers: [0.06, 0.62, 0.97, 1.3, 2.06], top: 2.1 };
-const ISLAND = { x0: 52.6, x1: 67.4, z0: 5.0, z1: 6.4, top: 0.9 };
+/** the south run, facing the wall (−z): a counter of scoop bins, three tiers of packs set back above it */
+export const RUN = { x0: 52.4, x1: 68, zFront: 4.8, zBack: 5.45, shelfFront: 5.08, counter: 0.9, tiers: [1.5, 1.82, 2.14], top: 2.18, bays: 13 };
+/** the centerpiece, in the aisle's mouth, south of the walking line (y 3.5) */
+export const MOUTH = { x0: 50.3, x1: 52.1, z0: 3.75, z1: 4.7 };
+/** the walking line down the aisle (the map's corridor) */
+const AISLE_Z = 3.5;
 export const CEILING = 4.4;
-/** the zone's own ceiling: over the shelving, the aisle, the island and the centerpiece, nowhere else */
-export const CEIL = { x0: 49.4, x1: 68.6, z0: WALL_Z, z1: 7.6 };
+/** the zone's own ceiling: over both runs, the aisle and the centerpiece, nowhere else */
+export const CEIL = { x0: 49.4, x1: 68.6, z0: WALL_Z, z1: 6.0 };
 /** the floor drawn at the zone's finish (the rest of the store's floor around it) */
 const ZONE = { x0: 46, x1: 72, z0: 0, z1: 9.6 };
 /** overview fixtures the close-up replaces: its own three, and the backdrop it redraws */
-export const HIDE_FIXTURES = ["f-bulk-wall", "f-bulk-island", "f-bulk-display", "f-island3", "f-island4", "f-island7", "f-island8", "f-produce-wall", "f-run0", "f-run0-capE", "f-bws0", "f-bws0-capW", "f-bws0-capE"];
+export const HIDE_FIXTURES = ["f-bulk-wall", "f-bulk-run", "f-bulk-display", "f-island3", "f-island4", "f-island7", "f-island8", "f-produce-wall", "f-run0", "f-run0-capE", "f-bws0", "f-bws0-capW", "f-bws0-capE"];
 export const EYE = 1.6;
 
 /** the plain parts merged into the "steel" mesh (a white material), each with its own colour */
@@ -44,33 +51,36 @@ const grainAttr = (grain: keyof typeof GRAINS): [number, number] => {
 };
 
 // ---------------------------------------------------------------- light
+/**
+ * The light, as in the reference: an even, warm fill (the zone's hemisphere, HeroZone.tsx) that does most of
+ * the work, and the track spots as accents on the shelf faces, their pools crisp but not stark.
+ */
+export const ACCENT = 0.62;
 export function bulkRig(): LightRig {
   const lights: ZoneLightDef[] = [];
   const spot = (pos: V3, target: V3, angle: number, k: number, softness = 0.1, color: V3 = WARM_3000K, reach = 5): ZoneLightDef => ({ pos, target, angle, softness, color: scaled(color, k), reach });
-  // track A over the wall aisle: a spot per 1.8 m aimed at the shelf's middle; pools with gaps between
+  // track A, over the aisle's north half: a spot per 1.8 m on the wall run's face
   for (let k = 0; k < 10; k++) {
     const x = 50.9 + k * 1.8;
-    lights.push(spot([x, CEILING - 0.2, 3.35], [x, 1.2, SHELF.zFront], 0.3, 9.5));
+    lights.push(spot([x, CEILING - 0.2, 3.15], [x, 1.2, SHELF.zFront], 0.3, 9.5 * ACCENT));
   }
-  // track B over the island: straight down on its top and its scoop bins
-  for (let k = 0; k < 8; k++) {
-    const x = 53.6 + k * 1.8;
-    lights.push(spot([x, CEILING - 0.2, 5.7], [x, ISLAND.top, 5.7], 0.34, 7.5));
+  // track B, over its south half: a spot per 1.8 m on the south run's face
+  for (let k = 0; k < 9; k++) {
+    const x = 53.2 + k * 1.8;
+    lights.push(spot([x, CEILING - 0.2, 3.85], [x, 1.35, RUN.zFront], 0.3, 9 * ACCENT));
   }
   // the centerpiece: one on the chakki, one on the pot of wheat
-  lights.push(spot([50.6, CEILING - 0.2, 4.7], [51.2, 0.4, 5.95], 0.24, 7.5));
-  lights.push(spot([52.3, CEILING - 0.2, 5.6], [51.95, 0.7, 6.55], 0.22, 7));
-  // recessed downlights between the tracks: round, sharp pools on the floor
-  for (let k = 0; k < 5; k++) {
-    lights.push(spot([51.8 + k * 3.6, CEILING, 3.9], [51.8 + k * 3.6, 0, 3.9], 0.2, 3.6, 0.06));
-    lights.push(spot([51.8 + k * 3.6, CEILING, 7.1], [51.8 + k * 3.6, 0, 7.1], 0.2, 3.2, 0.06));
-  }
+  lights.push(spot([50.8, CEILING - 0.2, 3.1], [51.2, 0.4, 4.22], 0.24, 8 * ACCENT));
+  lights.push(spot([52.4, CEILING - 0.2, 3.5], [52.0, 0.7, 4.42], 0.22, 7.5 * ACCENT));
+  // recessed downlights down the middle of the aisle: round pools on the floor
+  for (let k = 0; k < 5; k++) lights.push(spot([51.8 + k * 3.6, CEILING, AISLE_Z], [51.8 + k * 3.6, 0, AISLE_Z], 0.2, 3.6 * ACCENT, 0.1));
   // beyond the zone: daylight on the produce under the skylight, and a warm wash on the aisle 1 gondola
   lights.push(spot([31, 18, 8], [31, 0, 8], 0.78, 34, 0.55, DAYLIGHT, 40));
   for (const x of [40, 46, 52]) lights.push(spot([x, 5.6, 13.6], [x, 0.9, 15.8], 0.55, 5.5, 0.4, WARM_3000K, 8));
   const slabs = [
     ...SHELF.tiers.map((y) => ({ x0: SHELF.x0 + 0.02, x1: SHELF.x1 - 0.02, z0: SHELF.zBack, z1: SHELF.zFront - 0.004, y: y + PLANK / 2 })),
-    { x0: ISLAND.x0, x1: ISLAND.x1, z0: ISLAND.z0, z1: ISLAND.z1, y: ISLAND.top },
+    ...RUN.tiers.map((y) => ({ x0: RUN.x0 + 0.02, x1: RUN.x1 - 0.02, z0: RUN.shelfFront + 0.004, z1: RUN.zBack, y: y + PLANK / 2 })),
+    { x0: RUN.x0, x1: RUN.x1, z0: RUN.zFront, z1: RUN.zBack, y: RUN.counter },
   ];
   return { lights, slabs, reference: 2.6 };
 }
@@ -82,6 +92,12 @@ const occlusion: Occlusion = (p, n) => {
   if (inShelf && p.y < SHELF.top + 0.05) {
     for (const t of SHELF.tiers) if (p.y < t && t - p.y < 0.14) o *= 0.62 + ((t - p.y) / 0.14) * 0.38;
     o *= 0.72 + 0.28 * Math.min(1, Math.max(0, (p.z - SHELF.zBack) / (SHELF.zFront - SHELF.zBack)));
+  }
+  // the south run's upper tiers: under each plank, and deeper toward its back
+  const inRun = p.x > RUN.x0 - 0.05 && p.x < RUN.x1 + 0.05 && p.z > RUN.shelfFront - 0.02 && p.z < RUN.zBack + 0.01;
+  if (inRun && p.y > RUN.counter && p.y < RUN.top + 0.05) {
+    for (const t of RUN.tiers) if (p.y < t && t - p.y < 0.14) o *= 0.62 + ((t - p.y) / 0.14) * 0.38;
+    o *= 0.72 + 0.28 * Math.min(1, Math.max(0, (RUN.zBack - p.z) / (RUN.zBack - RUN.shelfFront)));
   }
   if (n.y < -0.5 && p.y > CEILING - 0.05) o *= 0.9;
   return o;
@@ -117,6 +133,12 @@ export interface Target {
   level: number;
   /** where the walk in starts: eye level, outside the zone's ceiling */
   door: V3;
+  /** the walk's turns between the door and where the shopper stands (along the aisle's walking line) */
+  via: V3[];
+  /** metres from the bin's centre to the shopper */
+  stand: number;
+  /** where an eye-level camera may pan along x, from this bin (never through the centerpiece) */
+  bounds: { x0: number; x1: number };
 }
 
 export interface ZoneBuild {
@@ -252,13 +274,28 @@ export function buildBulkZone(outline: [number, number][] | undefined): ZoneBuil
   const bay = (SHELF.x1 - SHELF.x0) / SHELF.bays;
   const front = SHELF.zFront;
   const tierY = (t: number) => SHELF.tiers[t] + PLANK;
-  const doorFor = (x: number, standZ: number): V3 => (standZ < CEIL.z1 ? [x - CEIL.x0 < CEIL.x1 - x ? CEIL.x0 - 1.4 : CEIL.x1 + 1.4, EYE, standZ] : [x, EYE, standZ + 2.1]);
-  const STAND = 2.45;
+  /**
+   * How the shopper reaches a bin: from the nearer end of the aisle (a door at eye level, outside the ceiling,
+   * on the walking line), along that line, then a step across to stand `stand` metres from the bin. Beside
+   * the centerpiece they stand closer, on its north side; past it, panning never takes them through it.
+   */
+  const approach = (x: number, standZ: number) => {
+    const west = x - CEIL.x0 < CEIL.x1 - x;
+    const door: V3 = [west ? CEIL.x0 - 1.4 : CEIL.x1 + 1.4, EYE, AISLE_Z];
+    // turn off the walking line 0.9 m before the bin, but never before clearing the centerpiece
+    const vx = west && standZ > AISLE_Z + 0.2 ? Math.max(x - 0.9, MOUTH.x1 + 0.2) : x + (west ? -0.9 : 0.9);
+    const via: V3[] = Math.abs(standZ - AISLE_Z) > 0.05 && (west ? vx > door[0] + 0.3 : vx < door[0] - 0.3) ? [[vx, EYE, AISLE_Z]] : [];
+    const bounds = standZ > MOUTH.z0 - 0.15 ? { x0: MOUTH.x1 + 0.4, x1: CEIL.x1 - 0.2 } : { x0: CEIL.x0 + 0.2, x1: CEIL.x1 - 0.2 };
+    return { door, via, bounds };
+  };
+  const STAND = 2.0;
+  const STAND_MOUTH = 1.55;
 
   // ---- packs on the tiers: rows of every kind, no two neighbours alike
-  const products: { kind: Stock["kind"]; t: Template; m: Matrix4; stock: Stock; band: string; at: V3; row: string }[] = [];
+  const products: { kind: Stock["kind"]; t: Template; m: Matrix4; stock: Stock; band: string; at: V3; row: string; facing: 1 | -1 }[] = [];
   const LIDS: V3[] = [hex("#8C6A48"), hex("#C9A24A"), hex("#2A2622"), hex("#EDE7DA"), hex("#9E3A2A")];
-  const placeRow = (stock: Stock[], x0: number, x1: number, y: number, zf: number, band: string, seed: number, maxDepth: number) => {
+  /** a row of packs from x0 to x1 on a tier, their fronts at zf, facing +z (the wall run) or −z (the south run) */
+  const placeRow = (stock: Stock[], x0: number, x1: number, y: number, zf: number, band: string, seed: number, maxDepth: number, facing: 1 | -1 = 1) => {
     const r = rng(seed);
     let x = x0 + r() * 0.03;
     let k = Math.floor(r() * stock.length);
@@ -281,8 +318,8 @@ export function buildBulkZone(outline: [number, number][] | undefined): ZoneBuil
       const yaw = (r() - 0.5) * (flexible ? 0.16 : 0.08);
       const lean = flexible ? (r() - 0.5) * 0.06 : 0;
       const fill = flexible ? 0.93 + r() * 0.1 : 1;
-      const at: V3 = [x + w / 2, y, zf - d / 2 - r() * 0.02];
-      products.push({ kind: st.kind, t, m: M(at, yaw, [1, fill, 1], lean), stock: st, band, at, row: `${seed}` });
+      const at: V3 = [x + w / 2, y, zf - facing * (d / 2 + r() * 0.02)];
+      products.push({ kind: st.kind, t, m: M(at, yaw + (facing === 1 ? 0 : Math.PI), [1, fill, 1], lean), stock: st, band, at, row: `${facing}:${seed}`, facing });
       deepest = Math.max(deepest, d);
       prev = labelKey(st.kind, st.name);
       x += w + 0.006 + r() * 0.02;
@@ -319,8 +356,9 @@ export function buildBulkZone(outline: [number, number][] | undefined): ZoneBuil
         { set: "bin-trim", index: put("bin-trim", M([cx, y, cz]), shade) },
         { set: "bin-tag", index: put("bin-tag", M([cx, y, cz]), [1, 1, 1], tagCell(it.name)) },
       ];
-      const standZ = cz + STAND;
-      targets.push({ category: s.category, name: it.name, grain: it.grain, parts, center: [cx, y + 0.36, cz], size: [BIN.w + 0.06, 0.74, BIN.d + 0.04], facing: 1, kind: "gravity", level, door: doorFor(cx, standZ) });
+      const stand = cx < MOUTH.x1 + 0.3 ? STAND_MOUTH : STAND;
+      const standZ = cz + stand;
+      targets.push({ category: s.category, name: it.name, grain: it.grain, parts, center: [cx, y + 0.36, cz], size: [BIN.w + 0.06, 0.74, BIN.d + 0.04], facing: 1, kind: "gravity", level, stand, ...approach(cx, standZ) });
       decals.push({ pos: [cx, y + 0.002, cz - 0.04], size: [BIN.w * 1.1, BIN.d * 1.2], shade: 0.4 });
     });
     // tier 4, the top: clay pots, some stacked with lids, and a tin or two
@@ -344,63 +382,72 @@ export function buildBulkZone(outline: [number, number][] | undefined): ZoneBuil
     placeRow(tins, x1 - 0.32, x1, yTop, front - 0.03, s.band, b * 13 + 5, 0.2);
   }
 
-  // ---- the island: a pine body on a black steel frame, scoop bins on both long faces
-  const iw = ISLAND.x1 - ISLAND.x0;
-  const id = ISLAND.z1 - ISLAND.z0;
-  const icx = (ISLAND.x0 + ISLAND.x1) / 2;
-  const icz = (ISLAND.z0 + ISLAND.z1) / 2;
-  add([{ key: "pine", geo: place(tiledBox(iw - 0.1, ISLAND.top - 0.14, id - 0.1, 1.2), { pos: [icx, 0.1 + (ISLAND.top - 0.14) / 2, icz] }), tint: [0.86, 0.8, 0.74] }]);
-  add([{ key: "pine", geo: place(tiledBox(iw, 0.04, id, 1.2), { pos: [icx, ISLAND.top - 0.02, icz] }) }]);
-  add([{ key: "steel", geo: place(tiledBox(iw - 0.12, 0.1, id - 0.12, 1), { pos: [icx, 0.05, icz] }) }]);
-  for (const x of [ISLAND.x0 + 0.02, ISLAND.x1 - 0.02]) for (const z of [ISLAND.z0 + 0.02, ISLAND.z1 - 0.02]) add([{ key: "steel", geo: place(tiledBox(0.04, ISLAND.top, 0.04, 1), { pos: [x, ISLAND.top / 2, z] }) }]);
-  for (const z of [ISLAND.z0 + 0.02, ISLAND.z1 - 0.02]) add([{ key: "steel", geo: beam([ISLAND.x0, ISLAND.top - 0.05, z], [ISLAND.x1, ISLAND.top - 0.05, z], 0.04) }]);
-  for (const x of [icx - 1.6, icx + 1.6]) add([{ key: "steel", geo: place(tiledBox(0.04, 0.9, 0.04, 1), { pos: [x, ISLAND.top + 0.45, icz] }) }]);
-  add(headerBoard({ x0: icx - 1.7, x1: icx + 1.7, y0: ISLAND.top + 0.78, y1: ISLAND.top + 1.02, z: icz, rect: headerRectOf(HEADERS.length - 1), facing: -1 }));
-  add(headerBoard({ x0: icx - 1.7, x1: icx + 1.7, y0: ISLAND.top + 0.78, y1: ISLAND.top + 1.02, z: icz + 0.03, rect: headerRectOf(HEADERS.length - 1), facing: 1 }));
-  decals.push({ pos: [icx, 0.004, icz], size: [iw + 0.3, id + 0.3], shade: 0.55 });
-  const perRow = 28;
-  const step = (iw - 0.3) / perRow;
-  for (const [facing, z] of [
-    [-1, ISLAND.z0 + SCOOP.d / 2 + 0.04],
-    [1, ISLAND.z1 - SCOOP.d / 2 - 0.04],
-  ] as const) {
-    for (let k = 0; k < perRow; k++) {
-      const it = SCOOP_BINS[(k + (facing === 1 ? 3 : 0)) % SCOOP_BINS.length];
-      const cx = ISLAND.x0 + 0.15 + (k + 0.5) * step;
-      const y = ISLAND.top;
-      const rot = facing === 1 ? 0 : Math.PI;
-      const tint = hex(GRAINS[it.grain].tint);
-      const parts = [
-        { set: "scoop-acrylic", index: put("scoop-acrylic", M([cx, y, z], rot), [1, 1, 1]) },
-        { set: "scoop-fill", index: put("scoop-fill", M([cx, y, z], rot), tint, grainAttr(it.grain)) },
-        { set: "scoop-trim", index: put("scoop-trim", M([cx, y, z], rot), [1, 1, 1]) },
-        { set: "scoop-tag", index: put("scoop-tag", M([cx, y, z], rot), [1, 1, 1], tagCell(it.name)) },
-      ];
-      const standZ = z + facing * STAND;
-      targets.push({ category: SCOOP_CATEGORY, name: it.name, grain: it.grain, parts, center: [cx, y + 0.2, z], size: [SCOOP.w + 0.04, 0.46, SCOOP.d + 0.04], facing, kind: "scoop", level: 0, door: doorFor(cx, standZ) });
+  // ---- the south run, facing the wall across the aisle: a pine counter of scoop bins (two a bay), three
+  // tiers of snack packs set back above it on the same black steel and pine, header boards on top
+  const rw = RUN.x1 - RUN.x0;
+  const rcx = (RUN.x0 + RUN.x1) / 2;
+  const rd = RUN.zBack - RUN.zFront;
+  const rcz = (RUN.zFront + RUN.zBack) / 2;
+  add([{ key: "pine", geo: place(tiledBox(rw - 0.04, RUN.counter - 0.14, rd - 0.06, 1.2), { pos: [rcx, 0.1 + (RUN.counter - 0.14) / 2, rcz] }), tint: [0.86, 0.8, 0.74] }]);
+  add([{ key: "pine", geo: place(tiledBox(rw, 0.04, rd, 1.2), { pos: [rcx, RUN.counter - 0.02, rcz] }) }]);
+  add([{ key: "steel", geo: place(tiledBox(rw - 0.06, 0.1, rd - 0.08, 1), { pos: [rcx, 0.05, rcz] }) }]);
+  add(shelving({ x0: RUN.x0, x1: RUN.x1, zBack: RUN.shelfFront, zFront: RUN.zBack, bays: RUN.bays, tiers: RUN.tiers, top: RUN.top, plank: PLANK }));
+  // its back, toward the south walkway: a plain pine panel
+  add([{ key: "pine", geo: place(tiledBox(rw, RUN.top - RUN.counter, 0.02, 1.2), { pos: [rcx, (RUN.top + RUN.counter) / 2, RUN.zBack + 0.01] }), tint: [0.8, 0.74, 0.68] }]);
+  decals.push({ pos: [rcx, 0.004, RUN.zFront - 0.1], size: [rw + 0.2, 0.32], shade: 0.5 });
+  const rbay = rw / RUN.bays;
+  let bayAt = 0;
+  RUN_SECTIONS.forEach((sec, si) => {
+    const sx0 = RUN.x0 + bayAt * rbay;
+    add(headerBoard({ x0: sx0 + 0.05, x1: sx0 + sec.bays * rbay - 0.05, y0: RUN.top + 0.12, y1: RUN.top + 0.42, z: RUN.shelfFront - 0.04, rect: headerRectOf(SECTIONS.length + si), facing: -1, tilt: 0.32 }));
+    for (let b = 0; b < sec.bays; b++) {
+      const bx0 = sx0 + b * rbay + 0.03;
+      const bx1 = bx0 + rbay - 0.06;
+      const seed = (bayAt + b) * 29 + 3;
+      RUN.tiers.forEach((ty, t) => {
+        // one row: from across the aisle the back of a 37 cm shelf is in its own shadow (the budget's choice)
+        placeRow(sec.tiers[t], bx0, bx1, ty + PLANK, RUN.shelfFront + 0.01, sec.band, seed + t * 5, RUN.zBack - RUN.shelfFront - 0.04, -1);
+      });
+      // two scoop bins a bay on the counter, at its front
+      for (let k = 0; k < 2; k++) {
+        const it = sec.bins[(b * 2 + k) % sec.bins.length];
+        const cx = bx0 - 0.03 + rbay * (k === 0 ? 0.27 : 0.73);
+        const z = RUN.zFront + SCOOP.d / 2 + 0.02;
+        const y = RUN.counter;
+        const tint = hex(GRAINS[it.grain].tint);
+        const parts = [
+          { set: "scoop-acrylic", index: put("scoop-acrylic", M([cx, y, z], Math.PI), [1, 1, 1]) },
+          { set: "scoop-fill", index: put("scoop-fill", M([cx, y, z], Math.PI), tint, grainAttr(it.grain)) },
+          { set: "scoop-trim", index: put("scoop-trim", M([cx, y, z], Math.PI), [1, 1, 1]) },
+          { set: "scoop-tag", index: put("scoop-tag", M([cx, y, z], Math.PI), [1, 1, 1], tagCell(it.name)) },
+        ];
+        const standZ = z - STAND;
+        targets.push({ category: SCOOP_CATEGORY, name: it.name, grain: it.grain, parts, center: [cx, y + 0.2, z], size: [SCOOP.w + 0.04, 0.46, SCOOP.d + 0.04], facing: -1, kind: "scoop", level: 0, stand: STAND, ...approach(cx, standZ) });
+      }
     }
-  }
+    bayAt += sec.bays;
+  });
 
-  // ---- the centerpiece on the floor: four open jute sacks, a chakki in its tray, a big pot of dried wheat
-  const sackAt: [number, number, number][] = [
-    [50.55, 5.2, 0.21],
-    [50.42, 5.92, 0.19],
-    [51.78, 5.15, 0.2],
-    [50.55, 6.62, 0.22],
+  // ---- the centerpiece, in the aisle's mouth as in the reference: open jute sacks round a stone chakki in its
+  // tray, a big clay pot of dried wheat behind; south of the walking line, so the aisle stays open
+  const sackAt: [number, number, number, number][] = [
+    [50.52, 4.02, 0.17, 0],
+    [50.56, 4.5, 0.16, 1],
+    [51.68, 3.98, 0.15, 3],
   ];
-  SACKS.forEach((it, i) => {
-    const [x, z, r] = sackAt[i];
-    // the stencil faces the aisle the shopper walks in (north) or the walkway (west)
-    add(sack({ x, z, r, h: 0.5 + (i % 3) * 0.05, grain: grainAttr(it.grain), tint: hex(GRAINS[it.grain].tint), stencil: i === 3 ? null : stencilRect(i), fringe: fringeRect, turn: i === 1 ? -Math.PI / 2 : Math.PI, seed: 40 + i }));
+  sackAt.forEach(([x, z, r, i], n) => {
+    const it = SACKS[i];
+    // the stencils face the walking line (north) and the door (west)
+    add(sack({ x, z, r, h: 0.44 + (n % 2) * 0.05, grain: grainAttr(it.grain), tint: hex(GRAINS[it.grain].tint), stencil: stencilRect(n), fringe: fringeRect, turn: n === 1 ? -Math.PI / 2 : Math.PI, seed: 40 + n }));
     decals.push({ pos: [x, 0.004, z], size: [r * 3.2, r * 3.2], shade: 0.6, round: true });
   });
-  add(chakki({ x: 51.2, z: 5.95, grain: grainAttr("toor"), flour: grainAttr("besan"), tint: hex(GRAINS.toor.tint), flourTint: hex(GRAINS.besan.tint), spoutTurn: Math.PI * 0.75 }));
-  decals.push({ pos: [51.2, 0.004, 5.95], size: [1.35, 1.35], shade: 0.55, round: true });
+  add(chakki({ x: 51.12, z: 4.3, scale: 0.8, grain: grainAttr("toor"), flour: grainAttr("besan"), tint: hex(GRAINS.toor.tint), flourTint: hex(GRAINS.besan.tint), spoutTurn: Math.PI * 0.25 }));
+  decals.push({ pos: [51.12, 0.004, 4.3], size: [1.1, 1.1], shade: 0.55, round: true });
   // the big pot: dark, unglazed, a rope round its lip; the sheaf of dried wheat out of its neck
   // (the clay plaster's tan, darkened to the reference pot's grey-brown: terracotta would stay orange)
-  add(clayPot({ x: 51.95, z: 6.55, r: 0.33, h: 0.86, tint: [0.44, 0.45, 0.52], rope: true, seg: 28, key: "plaster" }));
-  add(wheatSheaf({ x: 51.95, y: 0.8, z: 6.55, count: 230, height: 0.85, spread: 0.7, ears: Array.from({ length: 8 }, (_, i) => earRect(i)), rand }));
-  decals.push({ pos: [51.95, 0.004, 6.55], size: [1, 1], shade: 0.6, round: true });
+  add(clayPot({ x: 51.86, z: 4.46, r: 0.24, h: 0.72, tint: [0.44, 0.45, 0.52], rope: true, seg: 28, key: "plaster" }));
+  add(wheatSheaf({ x: 51.86, y: 0.67, z: 4.46, count: 200, height: 0.78, spread: 0.6, ears: Array.from({ length: 8 }, (_, i) => earRect(i)), rand }));
+  decals.push({ pos: [51.86, 0.004, 4.46], size: [0.8, 0.8], shade: 0.6, round: true });
 
   // ---- products: every pack merged per material, labels and grain through their attributes
   const partKey: Record<ProductPart, MaterialKey> = { label: "label", glass: "glass", grain: "grain", lid: "lid", metal: "metal", terracotta: "terracotta" };
@@ -416,7 +463,7 @@ export function buildBulkZone(outline: [number, number][] | undefined): ZoneBuil
     }
     // its shadow on the plank, thrown back by the spots in front and above
     const [w, h, d] = t.size;
-    decals.push({ pos: [p.at[0], p.at[1] + 0.002, p.at[2] - d * 0.25 - h * 0.12], size: [w * 1.05, d * 0.8 + h * 0.3], shade: 0.38 });
+    decals.push({ pos: [p.at[0], p.at[1] + 0.002, p.at[2] - p.facing * (d * 0.25 + h * 0.12)], size: [w * 1.05, d * 0.8 + h * 0.3], shade: 0.38 });
   }
 
   // ---- beyond the zone: produce stands under the skylight, the produce wall, the aisle 1 gondola, the beer aisle
@@ -524,10 +571,7 @@ function backdrop(add: (p: Piece[]) => void, decals: Decal[], rand: () => number
   for (let x = 18; x < 46; x += 4) strip(x, 8, 0.1, 10);
 }
 
-const headerRectOf = (i: number): Rect => {
-  const top = i * 80 + 4;
-  return [0, 1 - (top + 72) / 512, 1, 1 - top / 512];
-};
+const headerRectOf = (i: number): Rect => headerRect(i);
 
 function flipWinding(g: BufferGeometry) {
   const pos = g.getAttribute("position") as BufferAttribute;

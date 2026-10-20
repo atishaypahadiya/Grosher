@@ -124,20 +124,18 @@ function jar(r = 0.05, h = 0.14, seg = 8): Template {
   return { glass, grain: fill, label: labelBand(r * 1.012, lh, h * 0.44, seg + 4), lid, size: [r * 2, h + 0.024, r * 2], front: [Math.PI * r, lh] };
 }
 
-/** A tin with its label wrapped round and a metal lid. */
+/** A tin with its label wrapped round and a metal lid (its base stands on the shelf: never seen). */
 function tin(r = 0.055, h = 0.12): Template {
   const body = labelBand(r, h, h / 2, 12);
-  const top = cylinder(r * 1.01, r * 1.01, 0.012, 12);
+  const top = cylinder(r * 1.01, r * 1.01, 0.012, 10);
   place(top, { pos: [0, h + 0.006, 0] });
-  const base = cylinder(r * 1.01, r * 1.01, 0.006, 12);
-  place(base, { pos: [0, 0.003, 0] });
-  return { label: body, metal: mergeGeometries([top, base])!, size: [r * 2, h + 0.012, r * 2], front: [Math.PI * r, h] };
+  return { label: body, metal: top, size: [r * 2, h + 0.012, r * 2], front: [Math.PI * r, h] };
 }
 
 /** A ghee tin: a squat gold tin with a ring-pull lid. */
 function gheeTin(r = 0.062, h = 0.15): Template {
   const t = tin(r, h);
-  const ring = cylinder(r * 0.7, r * 0.7, 0.008, 12);
+  const ring = cylinder(r * 0.7, r * 0.7, 0.008, 8);
   place(ring, { pos: [0, h + 0.014, 0] });
   return { ...t, metal: mergeGeometries([t.metal!, ring])!, size: [r * 2, h + 0.018, r * 2] };
 }

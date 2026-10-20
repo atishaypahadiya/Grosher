@@ -358,7 +358,68 @@ export const SCOOP_BINS: BinItem[] = [
   { name: "Masala Peanuts", grain: "peanut" },
 ];
 export const SCOOP_CATEGORY = "bulk-snacks";
-export const SCOOP_HEADER = "SCOOP BINS";
+
+/**
+ * The south run, facing the wall across the aisle (x 52.4–68): a waist-high counter of scoop bins, two per
+ * 1.2 m bay, with three tiers of packs above it under its own header boards, west to east.
+ */
+export interface RunSection {
+  header: string;
+  band: string;
+  /** bays of 1.2 m */
+  bays: number;
+  /** the scoop bins' contents, in turn along the section */
+  bins: BinItem[];
+  /** the three tiers above the counter, bottom up */
+  tiers: [Stock[], Stock[], Stock[]];
+}
+const sb = (name: string) => SCOOP_BINS.find((b) => b.name === name)!;
+export const RUN_SECTIONS: RunSection[] = [
+  {
+    header: "GRANOLA & MUESLI",
+    band: "#6E7E3A",
+    bays: 4,
+    bins: [sb("House Granola"), sb("Muesli"), sb("Banana Chips")],
+    tiers: [
+      [s("kraft", "House Granola", "granola"), s("kraft", "Muesli", "muesli"), s("pouchM", "House Granola", "granola"), s("carton", "Muesli", "muesli")],
+      [s("pouchM", "Muesli", "muesli"), s("pouchS", "Banana Chips", "bananaChips"), s("jar", "House Granola", "granola"), s("pouchM", "Banana Chips", "bananaChips")],
+      [s("tin", "House Granola", "granola"), s("carton", "House Granola", "granola"), s("pouchS", "Muesli", "muesli")],
+    ],
+  },
+  {
+    header: "NUTS & TRAIL MIX",
+    band: "#8A5A3A",
+    bays: 3,
+    bins: [sb("Trail Mix"), sb("Masala Peanuts"), sb("Roasted Chana")],
+    tiers: [
+      [s("kraft", "Trail Mix", "trailMix"), s("pouchM", "Trail Mix", "trailMix"), s("kraft", "Masala Peanuts", "peanut"), s("pouchM", "Masala Peanuts", "peanut")],
+      [s("jar", "Trail Mix", "trailMix"), s("jar", "Masala Peanuts", "peanut"), s("pouchS", "Roasted Chana", "roastedChana")],
+      [s("tin", "Trail Mix", "trailMix"), s("pouchM", "Roasted Chana", "roastedChana"), s("tin", "Masala Peanuts", "peanut")],
+    ],
+  },
+  {
+    header: "COFFEE & SWEETS",
+    band: "#5A3A2E",
+    bays: 3,
+    bins: [sb("Coffee Beans"), sb("Chocolate Chips"), sb("Yogurt Raisins")],
+    tiers: [
+      [s("kraft", "Coffee Beans", "coffee"), s("pouchM", "Coffee Beans", "coffee"), s("pouchM", "Chocolate Chips", "chocChips")],
+      [s("jar", "Chocolate Chips", "chocChips"), s("jar", "Yogurt Raisins", "yogurtRaisin"), s("tin", "Coffee Beans", "coffee")],
+      [s("pouchS", "Yogurt Raisins", "yogurtRaisin"), s("pouchS", "Chocolate Chips", "chocChips"), s("tin", "Chocolate Chips", "chocChips")],
+    ],
+  },
+  {
+    header: "MAKHANA & SNACKS",
+    band: "#9E6A2E",
+    bays: 3,
+    bins: [sb("Makhana"), sb("Roasted Chana"), sb("Masala Peanuts")],
+    tiers: [
+      [s("pouchL", "Makhana", "makhana"), s("kraft", "Makhana", "makhana"), s("kraft", "Roasted Chana", "roastedChana")],
+      [s("jar", "Makhana", "makhana"), s("pouchM", "Makhana", "makhana"), s("jar", "Roasted Chana", "roastedChana")],
+      [s("tin", "Makhana", "makhana"), s("pouchS", "Makhana", "makhana"), s("tin", "Roasted Chana", "roastedChana")],
+    ],
+  },
+];
 
 /** The centerpiece's open jute sacks, and what each holds (the reference's white, green, yellow and orange). */
 export const SACKS: BinItem[] = [
@@ -375,7 +436,7 @@ export const SACK_STENCILS = [
   ["NAGPUR (M.H.)", "LOT NO: 0312-07", "NET WT 30 KG"],
 ];
 
-export const HEADERS = [...SECTIONS.map((s) => s.header), SCOOP_HEADER];
+export const HEADERS = [...SECTIONS.map((s) => s.header), ...RUN_SECTIONS.map((r) => r.header)];
 
 // ---------------------------------------------------------------- the labels atlas
 
@@ -390,13 +451,13 @@ export interface LabelCell {
 }
 
 /**
- * The labels atlas, 2048 × 1280: product labels in 16 × 9 cells of 128 × 128 (the top 1152 px) and bin tags in
+ * The labels atlas, 2048 × 1536: product labels in 16 × 11 cells of 128 × 128 (the top 1408 px) and bin tags in
  * 16 × 4 cells of 128 × 32 (the bottom 128 px). A label's front is drawn at its pack's aspect, squeezed into
  * the cell, so it reads true once wrapped onto the pack.
  */
-export const LABEL_ATLAS: [number, number] = [2048, 1280];
+export const LABEL_ATLAS: [number, number] = [2048, 1536];
 export const LABEL_COLS = 16;
-export const LABEL_ROWS = 9;
+export const LABEL_ROWS = 11;
 export const TAG_COLS = 16;
 export const TAG_ROWS = 4;
 export const TAG_H = 32;
@@ -412,6 +473,7 @@ export function labelCells(): { labels: LabelCell[]; tags: LabelCell[]; index: M
     labels.push({ kind: k, name, band, weight: WEIGHTS[k], tint: GRAINS[grain].tint });
   };
   for (const sec of SECTIONS) for (const row of [...sec.tiers, sec.top]) for (const st of row) push(st.kind, st.name, sec.band, st.grain);
+  for (const run of RUN_SECTIONS) for (const row of run.tiers) for (const st of row) push(st.kind, st.name, run.band, st.grain);
   for (const b of SCOOP_BINS) push("pouchM", b.name, "#5E6A3A", b.grain);
   if (labels.length > LABEL_COLS * LABEL_ROWS) throw new Error(`labels atlas full: ${labels.length} > ${LABEL_COLS * LABEL_ROWS}`);
   const tag = (b: BinItem, band: string): LabelCell => ({ kind: "tag", name: b.name, band, weight: "", tint: GRAINS[b.grain].tint });
@@ -437,11 +499,12 @@ export function tagRect(i: number): [number, number, number, number] {
   return [(c * 128) / W, 1 - (top + TAG_H) / H, ((c + 1) * 128) / W, 1 - top / H];
 }
 
-/** The header atlas, 1024 × 512: one 1024 × 80 board per header, top to bottom. */
+/** The header atlas, 1024 × 768: one 1024 × 80 board per header, top to bottom. */
 export const HEADER_ROW_PX = 80;
+export const HEADER_ATLAS_H = 768;
 export function headerRect(i: number): [number, number, number, number] {
   const top = i * HEADER_ROW_PX + 4;
-  return [0, 1 - (top + HEADER_ROW_PX - 8) / 512, 1, 1 - top / 512];
+  return [0, 1 - (top + HEADER_ROW_PX - 8) / HEADER_ATLAS_H, 1, 1 - top / HEADER_ATLAS_H];
 }
 
 // ---------------------------------------------------------------- the cutouts atlas

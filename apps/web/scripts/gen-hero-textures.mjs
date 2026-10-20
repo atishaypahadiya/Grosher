@@ -709,10 +709,10 @@ const images = await page.evaluate(
     }
     // ---------------------------------------------------------------- header boards: black, white uppercase
     {
-      const c = canvas(1024, 512);
+      const c = canvas(1024, 768);
       const ctx = c.getContext("2d");
       ctx.fillStyle = "#1C1A18";
-      ctx.fillRect(0, 0, 1024, 512);
+      ctx.fillRect(0, 0, 1024, 768);
       headers.forEach((h, i) => {
         const y = i * 80;
         ctx.fillStyle = "#1C1A18";

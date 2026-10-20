@@ -49,11 +49,16 @@ export function scoopBin(): { acrylic: BufferGeometry; fill: BufferGeometry; tri
   const tub = clean(new BoxGeometry(w, h, d));
   place(tub, { pos: [0, h / 2, 0] });
   const lid = clean(new BoxGeometry(w, 0.008, d * 0.9));
-  // hinged at the back edge, tipped up 70°
-  place(lid, { pos: [0, h + Math.sin(1.22) * d * 0.45, -d / 2 + Math.cos(1.22) * d * 0.45], rot: [1.22, 0, 0] });
+  // hinged at the back edge, propped open 30° (it clears the shelf above the counter)
+  const LID = 0.55;
+  place(lid, { pos: [0, h + Math.sin(LID) * d * 0.45, -d / 2 + Math.cos(LID) * d * 0.45], rot: [LID, 0, 0] });
   const acrylic = mergeGeometries([tub, lid])!;
-  const fill = grainMound({ w: w - 0.02, d: d - 0.02, peak: SCOOP.peak, seg: 8 });
-  place(fill, { pos: [0, h * SCOOP.level, 0] });
+  // the grain: a body to the level (its sides show through the acrylic, in layers) and the mound on top
+  const top = grainMound({ w: w - 0.02, d: d - 0.02, peak: SCOOP.peak, seg: 8 });
+  place(top, { pos: [0, h * SCOOP.level, 0] });
+  const body = clean(new BoxGeometry(w - 0.02, h * SCOOP.level - 0.01, d - 0.02));
+  place(body, { pos: [0, (h * SCOOP.level + 0.01) / 2, 0] });
+  const fill = mergeGeometries([body, top])!;
   const rim = clean(new BoxGeometry(w + 0.01, 0.02, 0.02));
   place(rim, { pos: [0, h, d / 2] });
   const hinge = clean(new BoxGeometry(w, 0.02, 0.02));

@@ -170,20 +170,22 @@ Phone screens render in a centred column, max-width 430px, full viewport height;
 A zone with a close-up (today Grosher's Bulk & pulses) is drawn at full detail at eye level; everything else
 stays at overview detail and, from inside the zone, reads as a backdrop of recognisable fixtures fading into a
 warm dark. The look follows an earthy Indian pulses store (the reference photos are kept locally in
-`design/refs/`): warm tan clay-plaster walls and ceiling, khaki polished concrete, exposed copper conduit;
-black ceiling tracks whose spots throw sharp-edged warm (~3000 K) pools, recessed round downlights, darker
-between the pools; black square-steel shelving with five tiers of thick light pine (visible grain, rounded
-edges); black header boards tilted toward the aisle, white uppercase Outfit lettering; woven 1 / 5 / 10 kg
-sacks, kraft bags, pouches, cartons, glass jars, spice jars, ghee tins, oil bottles and stacked orange clay
-pots, all fictional Grosher house-brand, no two neighbours alike; clear acrylic gravity bins and scoop bins
-with the grain in layers against the acrylic, at its real size (a lentil is 4 mm); open pale-jute sacks with
-rolled, frayed rims and a mill's stencil, a grey stone chakki in a round wooden tray, a large grey-brown clay
-pot of dried wheat. Light is per pixel with analytic plank shadows and contact decals, never baked blobs.
-The stop's bin is lit lime by its rim (a faint fill, so the grain keeps its colour) and lifted a little: lime
-still means now. Over the zone every control is on the soil plate with white text, and the sheet takes the
-warm deep glass. The arrival is two moves: a 480 ms descent outside the zone and a walk in under its
-ceiling's edge (360–760 ms by its length). Budget: ≤ 70 draw calls, ≤ 250k triangles, ≤ 16 MB textures,
-≤ 2.5 MB download, in every frame of the arrival too (the close-up gate).
+`design/refs/`): an **aisle with shelving both sides**, the centerpiece in its mouth; warm tan clay-plaster
+walls and ceiling, khaki polished concrete with a soft gloss, exposed copper conduit; an **even, warm, bright
+fill** like the reference's, with black tracks of spots (~3000 K) as accents: crisp pools on the shelf faces
+and the floor, subtle rather than stark; black square-steel shelving with thick light pine (visible grain,
+rounded edges); black header boards tilted toward the aisle, white uppercase Outfit lettering; woven
+1 / 5 / 10 kg sacks, kraft bags, pouches, cartons, glass jars, spice jars, ghee tins, oil bottles and stacked
+orange clay pots, all fictional Grosher house-brand, no two neighbours alike; clear acrylic gravity bins and a
+counter of scoop bins with the grain in layers against the acrylic, at its real size (a lentil is 4 mm); open
+pale-jute sacks with rolled, frayed rims and a mill's stencil, a grey stone chakki in a round wooden tray, a
+grey-brown clay pot of dried wheat. Light is per pixel with analytic plank shadows and contact decals, never
+baked blobs. The stop's bin is lit lime by its rim (a faint fill, so the grain keeps its colour) and lifted a
+little: lime still means now. Over the zone every control is on the soil plate with white text, and the
+sheet takes the warm deep glass. The arrival is §7's one exception: a 480 ms descent outside the zone and a
+walk in down the aisle (360–760 ms), at most 1.24 s, a tap skips it, reduced motion cuts. When the next stop
+is in a close-up's zone, the close-up is prepared during the leg before it, so it opens with no pause. Budget:
+≤ 70 draw calls, ≤ 250k triangles, ≤ 16 MB textures, ≤ 2.5 MB download, in every frame of the arrival too.
 
 ## 6. Data additions
 
@@ -213,4 +215,8 @@ departments?: Department[];
 - No status color on the map; the map only knows white, lime, and the photos.
 - No map label other than the next stop and the checkout callout.
 - Don't scale markers or labels with zoom. Don't animate longer than 480ms; the user is walking.
+  **One exception, a scene transition:** a hero close-up's arrival (§5b), from the map down to eye level and
+  in, and its way back out, may take up to **1.24 s** (a 480 ms descent, then a walk of 360–760 ms by its
+  length). A tap anywhere skips it to the end; under `prefers-reduced-motion` it is an instant cut. Nothing
+  else may borrow this.
 - No "amazing / smart / optimized". The numbers say it.

@@ -292,7 +292,7 @@ function alongStalk(g: BufferGeometry, at: Vector3, dir: Vector3): BufferGeometr
  * rims, the gap between them), grain heaped round the upper stone's eye, a tall pale wooden peg near its
  * rim, a spout where the flour leaves, all in a round wooden tray on four chunky posts.
  */
-export function chakki(o: { x: number; y?: number; z: number; grain: [number, number]; flour: [number, number]; tint: V3; flourTint: V3; spoutTurn: number }): Piece[] {
+export function chakki(o: { x: number; y?: number; z: number; scale?: number; grain: [number, number]; flour: [number, number]; tint: V3; flourTint: V3; spoutTurn: number }): Piece[] {
   const out: Piece[] = [];
   const y0 = o.y ?? 0;
   const R = 0.5; // the tray's radius
@@ -348,7 +348,8 @@ export function chakki(o: { x: number; y?: number; z: number; grain: [number, nu
   out.push({ key: "stone", geo: place(tiledBox(0.07, 0.03, 0.08, 0.3), { pos: [Math.cos(o.spoutTurn) * (stoneR + 0.03), trayY + 0.03, Math.sin(o.spoutTurn) * (stoneR + 0.03)], rot: [0, -o.spoutTurn, 0] }) });
   // the peg handle: pale, worn wood, upright near the rim
   out.push({ key: "pine", geo: place(cylinder(0.019, 0.022, 0.36, 10), { pos: [stoneR - 0.06, topY + 0.18, 0] }), tint: [1.05, 1.02, 0.96] });
-  for (const p of out) place(p.geo, { pos: [o.x, y0, o.z] });
+  const k = o.scale ?? 1;
+  for (const p of out) place(p.geo.scale(k, k, k), { pos: [o.x, y0, o.z] });
   return out;
 }
 

@@ -267,13 +267,13 @@ F("f-winebar-e", "counter", [70.2, 37.8, 71, 43.2], "winebar", { height: 1.1 });
 // produce: the wet wall along the north wall, two rows of four islands under the skylight
 F("f-produce-wall", "wall", [13, 1, 48, 2.2], "produce", { aisle: "PRODUCE", fixtureKind: "gondola", height: 1.7, shelves: 4 });
 ISLAND_ROWS.forEach(([y0, y1], row) => ISLAND_X.forEach(([x0, x1], i) => F(`f-island${row * 4 + i + 1}`, "shelf", [x0, y0, x1, y1], "produce", { fixtureKind: "produce" })));
-// bulk: gravity bins on the wall, scoop bins on the island
-// the bulk wall is 0.65 m deep shelving in front of a plaster wall (the close-up, apps/web/src/hero/bulk, builds
-// it in detail); the island is waist-high scoop bins; the centerpiece (sacks, a chakki, a clay pot) stands at
-// its west end
+// bulk: an aisle with shelving both sides, as in a pulses store: gravity bins on the wall run, scoop bins on a
+// waist-high counter along the south run with three tiers of packs above it; the centerpiece (sacks, a chakki,
+// a clay pot) stands in the aisle's mouth, south of the walking line (the close-up, apps/web/src/hero/bulk,
+// builds all of it in detail)
 F("f-bulk-wall", "wall", [50, 1.55, 68, 2.2], "bulk", { aisle: "BULK", height: 2.1, shelves: 5 });
-F("f-bulk-island", "shelf", [52.6, 5.0, 67.4, 6.4], "bulk", { height: 1.0, shelves: 2 });
-F("f-bulk-display", "other", [50.3, 4.9, 52.2, 6.9], "bulk", { height: 0.9, fixtureKind: "bakery" });
+F("f-bulk-run", "shelf", [52.4, 4.8, 68, 5.45], "bulk", { height: 2.15, shelves: 4 });
+F("f-bulk-display", "other", [50.3, 3.75, 52.1, 4.7], "bulk", { height: 0.9, fixtureKind: "bakery" });
 // west column
 F("f-floral", "shelf", [3, 1.6, 9.5, 4.4], "floral", { aisle: "FLORAL", height: 1.0 });
 F("f-service", "counter", [3, 7.6, 9, 8.6], "service", { aisle: "SERVICE", height: 1.1 });
@@ -490,7 +490,8 @@ const outline: [number, number][] = [
 const store: StoreGraph = {
   storeId: "grosher",
   // 2: the bulk zone at real proportions (wall shelving, scoop-bin island, centerpiece), 18 Oct 2026
-  version: 2,
+  // 3: bulk is an aisle, shelving both sides, the centerpiece in its mouth, 19 Oct 2026
+  version: 3,
   name: "Grosher",
   address: "Demo market",
   nodes: [...nodes.values()],

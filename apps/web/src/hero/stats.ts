@@ -7,6 +7,8 @@ export const heroStats = {
   /** the hero textures on the GPU, every mip level, as transcoded on this device */
   gpuBytes: 0,
   textures: 0,
+  /** the gloss's baked environment map on the GPU (kit/env.ts) */
+  envBytes: 0,
   /** ms to fetch and transcode them */
   loadMs: 0,
   /** the zone's triangles (static + every instance) */

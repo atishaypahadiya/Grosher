@@ -19,7 +19,7 @@ export function DebugPerf({ mode }: { mode: string }) {
         `${mode} · ${fps.toFixed(0)} fps · ${p.frameMs.toFixed(1)} ms`,
         `${p.calls} calls · ${(p.triangles / 1000).toFixed(0)}k tris`,
         `${p.textures} textures · ${p.geometries} geometries`,
-        p.hero.tier ? `hero ${p.hero.tier} · ${(p.hero.gpuBytes / 2 ** 20).toFixed(1)} MB tex · ${(p.hero.triangles / 1000).toFixed(0)}k tris · ${p.hero.loadMs} ms load` : "no hero zone open",
+        p.hero.tier ? `hero ${p.hero.tier} · ${((p.hero.gpuBytes + p.hero.envBytes) / 2 ** 20).toFixed(1)} MB tex · ${(p.hero.triangles / 1000).toFixed(0)}k tris · ${p.hero.loadMs} ms load` : "no hero zone open",
         mem ? `heap ${(mem.usedJSHeapSize / 2 ** 20).toFixed(0)} MB` : "heap n/a",
       ];
       setText(lines.join("\n"));

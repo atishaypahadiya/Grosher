@@ -1,6 +1,6 @@
 {
   "storeId": "grosher",
-  "version": 2,
+  "version": 3,
   "name": "Grosher",
   "address": "Demo market",
   "nodes": [
@@ -6421,29 +6421,29 @@
       "shelves": 5
     },
     {
-      "id": "f-bulk-island",
+      "id": "f-bulk-run",
       "kind": "shelf",
       "polygon": [
         [
-          52.6,
-          5
+          52.4,
+          4.8
         ],
         [
-          67.4,
-          5
+          68,
+          4.8
         ],
         [
-          67.4,
-          6.4
+          68,
+          5.45
         ],
         [
-          52.6,
-          6.4
+          52.4,
+          5.45
         ]
       ],
       "department": "bulk",
-      "height": 1,
-      "shelves": 2
+      "height": 2.15,
+      "shelves": 4
     },
     {
       "id": "f-bulk-display",
@@ -6451,19 +6451,19 @@
       "polygon": [
         [
           50.3,
-          4.9
+          3.75
         ],
         [
-          52.2,
-          4.9
+          52.1,
+          3.75
         ],
         [
-          52.2,
-          6.9
+          52.1,
+          4.7
         ],
         [
           50.3,
-          6.9
+          4.7
         ]
       ],
       "department": "bulk",

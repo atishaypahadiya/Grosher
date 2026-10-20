@@ -253,13 +253,15 @@ export interface SceneProps {
   perf: boolean;
   /** an open hero close-up: its zone at full detail, the eye-level camera, its own light */
   closeUp?: CloseUpState | null;
+  /** the next stop's zone, prepared in the background during the current leg (hidden, no camera) */
+  preload?: { zone: HeroZoneEntry; category: string; itemName: string } | null;
   closeUpRef?: RefObject<CloseUpCameraHandle | null>;
   onHeroTarget?: (t: HeroTargetInfo) => void;
   onHeroError?: (e: Error) => void;
   onCloseUpExited?: () => void;
 }
 
-export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, footprint, litSlot, legFixtureIds, ribbon, overlay, focus, safe, flat, reducedMotion, cameraRef, onOverZoomOut, perf, closeUp, closeUpRef, onHeroTarget, onHeroError, onCloseUpExited }: SceneProps) {
+export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, footprint, litSlot, legFixtureIds, ribbon, overlay, focus, safe, flat, reducedMotion, cameraRef, onOverZoomOut, perf, closeUp, preload, closeUpRef, onHeroTarget, onHeroError, onCloseUpExited }: SceneProps) {
   const [litMesh, setLitMesh] = useState<Mesh | null>(null);
   const [heroLit, setHeroLit] = useState<Mesh | null>(null);
   // the zone loads (and picks its bin) while the overview stays as it is; the scene turns to the close-up, and
@@ -270,7 +272,9 @@ export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, fo
   if (!closeUp) envRef.current = 0;
   const fogRef = useRef<FogExp2>(null);
   const skyRef = useRef<Group>(null);
-  const Zone = closeUp ? zoneComponent(closeUp.zone) : null;
+  // the open close-up's zone, or the next stop's being prepared: one mounted zone, handed over when it opens
+  const zoneProps = closeUp ?? preload ?? null;
+  const Zone = zoneProps ? zoneComponent(zoneProps.zone) : null;
   const [glowLine, setGlowLine] = useState<Object3D | null>(null);
   const bloomRef = useRef<SelectiveBloomEffect | null>(null);
   const distanceRef = useRef(36);
@@ -329,12 +333,12 @@ export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, fo
         <Fixtures store={store} textureUrl={textureUrl} repeatMeters={repeatMeters} nodes={nodes} fromEntrance={fromEntrance} hide={closeUp?.zone.hideFixtures} dimRef={closeUp ? envRef : undefined} />
         {!near && <Products store={store} textureUrl={textureUrl} settled={settled} priority={legFixtureIds} you={{ x: focus.you.x, z: focus.you.y }} />}
       </Suspense>
-      {Zone && closeUp && (
-        <ZoneBoundary onError={(e) => onHeroError?.(e)}>
+      {Zone && zoneProps && (
+        <ZoneBoundary key={zoneProps.zone.id} onError={(e) => onHeroError?.(e)}>
           {/* hidden until the scene turns to the close-up: never drawn over the overview's products and ribbon */}
           <group visible={near}>
             <Suspense fallback={null}>
-              <Zone store={store} category={closeUp.category} itemName={closeUp.itemName} onTarget={(t) => onHeroTarget?.(t)} onLit={setHeroLit} onError={(e) => onHeroError?.(e)} />
+              <Zone store={store} category={zoneProps.category} itemName={zoneProps.itemName} active={!!closeUp} onTarget={(t) => onHeroTarget?.(t)} onLit={setHeroLit} onError={(e) => onHeroError?.(e)} />
             </Suspense>
           </group>
         </ZoneBoundary>

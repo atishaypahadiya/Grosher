@@ -10,6 +10,7 @@ import { BoxGeometry, Color, EdgesGeometry, Group, InstancedBufferAttribute, Ins
 import type { StoreGraph } from "@grosher/core";
 import { buildBulkZone, bulkRig, grainSurface, pickTarget, shapeOf, type Target } from "./zone.ts";
 import { decalMesh } from "../kit/decals.ts";
+import { bakeEnv } from "../kit/env.ts";
 import { grainLayer } from "../kit/grains.ts";
 import { hex } from "../kit/bake.ts";
 import { GRAINS } from "./recipe.ts";
@@ -26,13 +27,15 @@ export interface HeroZoneProps {
   store: StoreGraph;
   category: string;
   itemName: string;
+  /** false while it is only being prepared in the background */
+  active?: boolean;
   /** where the camera should stand: the target bin and the pan bounds */
   onTarget: (t: HeroTargetInfo) => void;
   onLit?: (m: Mesh | null) => void;
   onError: (e: Error) => void;
 }
 
-export default function HeroZone({ store, category, itemName, onTarget, onLit, onError }: HeroZoneProps) {
+export default function HeroZone({ store, category, itemName, active = true, onTarget, onLit, onError }: HeroZoneProps) {
   const gl = useThree((s) => s.gl);
   const camera = useThree((s) => s.camera);
   const scene = useThree((s) => s.scene);
@@ -68,11 +71,18 @@ export default function HeroZone({ store, category, itemName, onTarget, onLit, o
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gl, tier]);
   const rig = useMemo(() => bulkRig(), []);
-  const mats = useMemo<KitMaterials | null>(() => (textures ? kitMaterials(textures, rig) : null), [textures, rig]);
+  // the gloss's environment, baked once per zone (env.ts)
+  const env = useMemo(() => {
+    const e = bakeEnv(gl);
+    heroStats.envBytes = e.bytes;
+    return e;
+  }, [gl]);
+  useEffect(() => () => env.dispose(), [env]);
+  const mats = useMemo<KitMaterials | null>(() => (textures ? kitMaterials(textures, rig, env.texture) : null), [textures, rig, env]);
   const decals = useMemo(() => decalMesh(zone.decals), [zone]);
   useFrame(() => {
     const f = frames.current;
-    if (!mats || f.decided || tier === "lo" || pinnedTier()) return;
+    if (!active || !mats || f.decided || tier === "lo" || pinnedTier()) return;
     const now = performance.now();
     if (f.last && now - f.last < 400) f.deltas.push(now - f.last); // idle gaps (on-demand rendering) do not count
     f.last = now;
@@ -189,9 +199,10 @@ export default function HeroZone({ store, category, itemName, onTarget, onLit, o
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mats, gl, camera, scene, compiled, instanced]);
   useEffect(() => {
-    if (target && mats && compiled === mats) onTarget({ center: target.center, facing: target.facing, name: target.name, bounds: zone.bounds, door: target.door });
+    // prepared in the background, it waits; made active (its stop is next), it hands over at once
+    if (active && target && mats && compiled === mats) onTarget({ center: target.center, facing: target.facing, name: target.name, bounds: target.bounds, door: target.door, via: target.via, stand: target.stand });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [target, zone, mats, compiled]);
+  }, [target, zone, mats, compiled, active]);
 
   const lit = useMemo(() => {
     if (!target) return null;
@@ -236,7 +247,8 @@ export default function HeroZone({ store, category, itemName, onTarget, onLit, o
   return (
     <group name="hero-bulk" ref={group}>
       {/* the ambient: warm bounce from the clay above, the floor below */}
-      <hemisphereLight args={["#FFE4C8", "#B08A6A", 1.7]} />
+      {/* the reference's even, warm fill: most of the light; the spots are accents on top of it */}
+      <hemisphereLight args={["#FFE6CC", "#C29E7C", 2.5]} />
       <primitive object={decals} />
       {grains && <primitive object={grains} />}
       {statics.map((m, i) => (

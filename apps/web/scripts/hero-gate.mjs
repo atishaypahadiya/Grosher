@@ -55,6 +55,7 @@ const steady = async (n) => {
 
 const rows = [];
 let lazy;
+const preload = { prepared: false, openMs: 0 };
 try {
   await page.goto(`${BASE}/?perf=1`, { waitUntil: "load" });
   const input = page.getByLabel(/add items/i);
@@ -129,6 +130,27 @@ try {
   await page.waitForFunction(() => window.__grosherCloseUp?.state === "open" && window.__grosherPerf?.hero?.tier, null, { timeout: 90_000 });
   await page.waitForTimeout(3000);
   rows.push({ view: "scoop bins, facing out", ...(await steady(30)) });
+  // prepared ahead: a floral stop, then toor dal; during the first leg the zone is prepared in the
+  // background (its textures in before any close-up opened), and "Got it" opens it without the pause
+  await page.goto(`${BASE}/?perf=1&tier=hi`, { waitUntil: "load" });
+  await page.evaluate(() => {
+    localStorage.clear();
+    indexedDB.deleteDatabase("grosher");
+  });
+  await page.goto(`${BASE}/?perf=1&tier=hi`, { waitUntil: "load" });
+  const fourth = page.getByLabel(/add items/i);
+  await fourth.fill("bouquet, toor dal (bulk)");
+  await fourth.press("Enter");
+  await page.getByRole("button", { name: /route 2 items/i }).click({ timeout: 30_000 });
+  await page.getByTestId("map3d").waitFor({ timeout: 60_000 });
+  preload.prepared = await page
+    .waitForFunction(() => window.__grosherCloseUp === null && !!window.__grosherPerf?.hero?.tier, null, { timeout: 60_000 })
+    .then(() => true, () => false);
+  await page.waitForTimeout(3000); // the compile and the upload, in the background
+  const t0 = Date.now();
+  await page.getByRole("button", { name: /got it/i }).click();
+  await page.waitForFunction(() => window.__grosherCloseUp?.state === "open", null, { timeout: 90_000 });
+  preload.openMs = Date.now() - t0;
 } finally {
   await browser.close();
 }
@@ -137,7 +159,8 @@ const pad = (s, n) => String(s).padEnd(n);
 console.log(`\n${pad("view", 28)} ${pad("calls", 7)} ${pad("triangles", 11)} ${pad("GPU tex", 10)} frame ms (SwiftShader)`);
 let failed = !lazy || errors.length > 0;
 for (const r of rows) {
-  const mb = r.hero.gpuBytes / 2 ** 20;
+  // the KTX2 textures and the gloss's baked environment map
+  const mb = (r.hero.gpuBytes + (r.hero.envBytes ?? 0)) / 2 ** 20;
   const over = r.calls > B.drawCalls || r.triangles > B.triangles || mb > B.gpuTextureMB;
   failed ||= over;
   console.log(`${pad(r.view, 28)} ${pad(r.calls, 7)} ${pad(r.triangles.toLocaleString("en-US"), 11)} ${pad(mb.toFixed(1) + " MB", 10)} ${r.patched ? "–" : r.frameMs.toFixed(1)}${over ? "   OVER BUDGET" : ""}`);
@@ -146,6 +169,9 @@ const dlOver = downloadKB > B.downloadKB;
 failed ||= dlOver;
 console.log(`\ndownload: ${downloadKB.toFixed(0)} KB (zone chunk ${(download.chunk / 1024).toFixed(0)} KB gzip, textures ${(download.textures / 1024).toFixed(0)} KB, transcoder ${(download.transcoder / 1024).toFixed(0)} KB gzip)${dlOver ? "   OVER BUDGET" : ""}`);
 console.log(`lazy: ${lazy ? "nothing of the zone fetched before the close-up" : "FETCHED BEFORE THE CLOSE-UP: " + fetched.filter(heroish).join(", ")}`);
+// (SwiftShader: the opening time is software rendering's; on a GPU it is ~0.1 s, see CLAUDE.md)
+console.log(`prepared ahead: ${preload.prepared ? `yes, during the previous leg; "Got it" to open ${preload.openMs} ms` : "NO: the next stop's zone was not prepared during the leg before it"}`);
+failed ||= !preload.prepared;
 console.log(`tier: ${rows[0]?.hero.tier}, zone ${rows[0]?.hero.triangles.toLocaleString("en-US")} triangles, textures in ${rows[0]?.hero.loadMs} ms`);
 console.log(`budget: ≤ ${B.drawCalls} draw calls, ≤ ${B.triangles.toLocaleString("en-US")} triangles, ≤ ${B.gpuTextureMB} MB GPU textures, ≤ ${B.downloadKB.toLocaleString("en-US")} KB download`);
 if (errors.length) console.log(`page errors:\n  ${errors.slice(0, 5).join("\n  ")}`);

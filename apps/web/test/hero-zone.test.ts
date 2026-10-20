@@ -6,7 +6,7 @@
 import { expect, test } from "vitest";
 import { MeshBasicMaterial } from "three";
 import { grosher } from "@grosher/stores";
-import { buildBulkZone, bulkRig, CEIL, EYE, grainSurface, HIDE_FIXTURES, pickTarget, SHELF, shapeOf } from "../src/hero/bulk/zone.ts";
+import { buildBulkZone, bulkRig, CEIL, EYE, grainSurface, HIDE_FIXTURES, MOUTH, pickTarget, SHELF, shapeOf } from "../src/hero/bulk/zone.ts";
 import { GRAINS, GRAIN_SHAPES, LABEL_COLS, LABEL_ROWS, SECTIONS, TAG_COLS, TAG_ROWS, labelCells, labelKey } from "../src/hero/bulk/recipe.ts";
 import { HERO_ZONES } from "../src/hero/index.ts";
 import { lightAt, shadowAt } from "../src/hero/kit/light.ts";
@@ -19,7 +19,8 @@ const rig = bulkRig();
 
 test("every bin is a target; an item finds its own bin, a category without a match its first", () => {
   expect(zone.targets.filter((t) => t.category !== "bulk-snacks")).toHaveLength(45);
-  expect(zone.targets.filter((t) => t.category === "bulk-snacks")).toHaveLength(56);
+  // the south run: two scoop bins a bay, 13 bays
+  expect(zone.targets.filter((t) => t.category === "bulk-snacks")).toHaveLength(26);
   expect(pickTarget(zone.targets, "bulk-pulses", "Bulk toor dal")?.name).toBe("Toor Dal");
   expect(pickTarget(zone.targets, "bulk-pulses", "toor dal (bulk)")?.name).toBe("Toor Dal");
   expect(pickTarget(zone.targets, "bulk-rice-grains", "Bulk basmati rice")?.name).toBe("Basmati Rice");
@@ -36,13 +37,24 @@ test("every bin is a target; an item finds its own bin, a category without a mat
   expect(HERO_ZONES.find((z) => z.id === "bulk")!.hideFixtures).toEqual(HIDE_FIXTURES);
 });
 
-test("every walk in starts at eye level outside the zone's ceiling: the descent never comes down through it", () => {
+test("every walk in starts at eye level outside the zone's ceiling and never goes through the centerpiece", () => {
   const under = (x: number, z: number) => x > CEIL.x0 && x < CEIL.x1 && z > CEIL.z0 && z < CEIL.z1;
+  const inMouth = (x: number, z: number) => x > MOUTH.x0 - 0.05 && x < MOUTH.x1 + 0.05 && z > MOUTH.z0 - 0.05 && z < MOUTH.z1 + 0.05;
   for (const t of zone.targets) {
     expect(t.door[1]).toBe(EYE);
     expect(under(t.door[0], t.door[2]), t.name).toBe(false);
-    // and it is no further than the aisle's length from where the shopper ends up
-    expect(Math.hypot(t.door[0] - t.center[0], t.door[2] - t.center[2])).toBeLessThan(12);
+    // the walk: the door, its turns, where the shopper stands; sampled every 5 cm
+    const stand: [number, number] = [t.center[0], t.center[2] + t.facing * t.stand];
+    const pts: [number, number][] = [[t.door[0], t.door[2]], ...t.via.map((v) => [v[0], v[2]] as [number, number]), stand];
+    for (let i = 0; i + 1 < pts.length; i++) {
+      const [a, b] = [pts[i], pts[i + 1]];
+      const n = Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / 0.05);
+      for (let k = 0; k <= n; k++) expect(inMouth(a[0] + ((b[0] - a[0]) * k) / n, a[1] + ((b[1] - a[1]) * k) / n), `${t.name} walks through the centerpiece`).toBe(false);
+    }
+    // and panning along the aisle from where they stand never does either
+    if (stand[1] > MOUTH.z0 - 0.05 && stand[1] < MOUTH.z1 + 0.05) expect(t.bounds.x0, t.name).toBeGreaterThan(MOUTH.x1);
+    // the arrival's walk stays short enough for its 760 ms
+    expect(Math.hypot(t.door[0] - stand[0], t.door[2] - stand[1])).toBeLessThan(12);
   }
 });
 
@@ -101,7 +113,7 @@ test("the zone, its real grains and the overview around it fit the close-up budg
   expect(zone.triangles + GRAIN_TRIANGLES).toBeLessThan(CLOSE_UP_BUDGET.triangles - 30_000);
   const counts = Object.fromEntries(zone.instances.map((i) => [i.name, i.matrices.length]));
   expect(counts["bin-fill"]).toBe(45);
-  expect(counts["scoop-fill"]).toBe(56);
+  expect(counts["scoop-fill"]).toBe(26);
 });
 
 test("the Basis transcoder served from /basis/ is the one this three.js expects", async () => {

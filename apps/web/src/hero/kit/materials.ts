@@ -178,7 +178,7 @@ export type KitMaterialKey =
   | "grainSolid"
   | "glow";
 
-export function kitMaterials(t: Record<TextureName, Texture>, rig: LightRig): KitMaterials {
+export function kitMaterials(t: Record<TextureName, Texture>, rig: LightRig, env?: Texture): KitMaterials {
   const uniforms = rigUniforms(rig);
   const zone = zoneLightPatch(rig, uniforms);
   const key = `zone${rig.lights.length}-${rig.slabs.length}`;
@@ -188,7 +188,8 @@ export function kitMaterials(t: Record<TextureName, Texture>, rig: LightRig): Ki
     plaster: std({ map: t.plaster, normalMap: t.plaster_n, roughness: 0.95 }),
     // the reference's ceiling is lit by what bounces off the shelves and floor: a little light of its own
     ceiling: std({ map: t.plaster, normalMap: t.plaster_n, color: new Color("#C8A684"), emissiveMap: t.plaster, emissive: new Color("#6E5642"), emissiveIntensity: 1, roughness: 1 }),
-    concrete: std({ map: t.concrete, roughness: 0.3 }),
+    // polished: a soft gloss from the room's baked environment (env.ts), the spots' highlights per pixel
+    concrete: std({ map: t.concrete, roughness: 0.32, envMap: env, envMapIntensity: 0.55 }),
     pine: std({ map: t.pine, roughness: 0.66 }),
     // black steel, copper, paint, caps and tin lids: one mesh, each part's colour in its vertices (zone.ts)
     steel: std({ color: new Color("#FFFFFF"), roughness: 0.42 }),
@@ -202,12 +203,12 @@ export function kitMaterials(t: Record<TextureName, Texture>, rig: LightRig): Ki
     straw: std({ color: new Color("#E6CA8A"), roughness: 0.85, side: DoubleSide }),
     cutout: std({ map: t.cutouts, alphaTest: 0.5, side: DoubleSide, roughness: 0.9 }),
     label: std({ map: t.labels, roughness: 0.55 }, "cells", cells),
-    glass: std({ color: new Color("#F6F6F2"), transparent: true, opacity: 0.2, roughness: 0.04, depthWrite: false }),
+    glass: std({ color: new Color("#F6F6F2"), transparent: true, opacity: 0.2, roughness: 0.04, depthWrite: false, envMap: env, envMapIntensity: 0.5 }),
     grain: std({ roughness: 0.8 }, "tiles", tiles(t.grains, t.grains_n)),
     lid: std({ color: new Color("#FFFFFF"), roughness: 0.45 }),
     metal: std({ color: new Color("#FFFFFF"), roughness: 0.3, metalness: 0.35 }),
     produce: std({ color: new Color("#FFFFFF"), roughness: 0.6 }),
-    acrylic: std({ color: new Color("#F4F6F2"), transparent: true, opacity: 0.07, roughness: 0.03, depthWrite: false, side: DoubleSide }),
+    acrylic: std({ color: new Color("#F4F6F2"), transparent: true, opacity: 0.07, roughness: 0.03, depthWrite: false, side: DoubleSide, envMap: env, envMapIntensity: 0.4 }),
     binTrim: std({ color: new Color("#262422"), roughness: 0.45 }),
     grainSolid: std({ color: new Color("#FFFFFF"), roughness: 0.5 }),
     // light sources seen directly: lenses, downlight discs, the skylight; their own colour, never tone-mapped

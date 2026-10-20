@@ -598,28 +598,41 @@ Two zoom levels. The overview stays as above; a zone that has a **hero close-up*
 `src/hero/index.ts`: today Grosher's Bulk & pulses, `aisle: "BULK"`) opens at eye level when the next stop is
 in it (or a stop in it is tapped: `stopUnder` hit-tests the overlay's `data-key` items). The scene keeps the
 overview until the zone's chunk and textures are in, its programs compiled (`compileAsync`) and every buffer
-uploaded (one draw into a 1 × 1 target from the door), so no frame of the arrival stalls (measured on an M4
-Pro at 390 × 844 × 3: a 120–450 ms pause before the camera moves, then 84 frames none over 17 ms).
-- **The arrival** (`CloseUpCamera`, two moves, each eased on its own): a descent of 480 ms on a curve that
-  stays out over the walkway, never above the zone, its view on a point gliding from where the overview
-  looked to the aisle mouth (never the sky), to the **door** (`Target.door`: eye level, outside the zone's
-  ceiling, at the nearer open end of the aisle, or 2.1 m out from a south-facing island bin); then a walk in
-  (360–760 ms by its length, a 1.2 cm head bob, both off under reduced motion, which cuts) to stand 2.45 m
-  from the bin, turned to face it, the bin in the middle of the band between the strip and the sheet. The
-  way out walks back to the door and rises to the overview's pose. `envRef` (0 overview … 1 eye level, from
+uploaded (one draw into a 1 × 1 target from the door), so no frame of the arrival stalls. **Prepared ahead:**
+when the stop after the current one is in a hero zone, the 3D map mounts that zone hidden during the current
+leg (`preload` in TripMap3D → Scene, `active={false}` on the zone: 1.2 s after the leg starts, then the next
+idle period; a route change cancels it, another item in the same zone only retargets), so when its stop
+becomes next the close-up opens at once. Measured on an M4 Pro (Metal) at 390 × 844 × 3, a floral stop then
+toor dal: "Got it" → open 94 ms, worst frame 17 ms; with `?preload=0` (the baseline) 621–779 ms with a
+167–183 ms frame. The preparing costs three long frames (50–150 ms) during the previous leg, while the map is
+still. A first stop in a hero zone still pays the pause (~0.6–1.1 s on the M4).
+- **The arrival** (`CloseUpCamera`, two moves, each eased on its own; DESIGN.md §7's one exception, at most
+  1.24 s, a tap anywhere skips to the end, reduced motion cuts): a descent of 480 ms on a curve that stays out
+  over the walkway, never above the zone, its view on a point gliding from where the overview looked to the
+  aisle mouth (never the sky), to the **door** (`Target.door`: eye level, outside the zone's ceiling, on the
+  aisle's walking line at its nearer end); then a walk in (360–760 ms by its length, a 1.2 cm head bob) along
+  that line, turning off it (`Target.via`) to stand `Target.stand` from the bin (2.0 m; 1.55 m beside the
+  centerpiece, on its north side), turned to face it, the bin in the middle of the band between the strip and
+  the sheet. No walk or pan goes through the centerpiece (tested). The way out walks back to the door and
+  rises to the overview's pose. `envRef` (0 overview … 1 eye level, from
   the camera's height between 9 m and 2.2 m) blends the scene: the fog and background to a warm dark
   (`#2A1F17`, .03), the overview's lights and skylight spots down (lights fade, never leave the scene: that
   recompiles every program), the overview's fixtures to 40% (`Fixtures dimRef`). Look ±57° yaw / ±17° pitch,
-  pan along the zone, dolly −0.9…+1.75 m (to arm's length, 0.7 m); no free flight. Back: the pill or a flick
+  pan along the aisle (per target `bounds`), dolly to arm's length (0.7 m); no free flight. Back: the pill or a flick
   down (> 90 px in < 450 ms), remembered for that stop; the next stop leaving the zone walks out on its own.
   While it is open the products, ribbon, lit slot and overlay are off, the zone's and its backdrop's overview
   fixtures (`hideFixtures`) are left out, and the trip header and sheet turn to plates and warm deep glass.
-- **Light is per pixel** (`kit/light.ts`, one patch on every kit material): 35 lights (19 track spots aimed at
-  the shelf and island at 3000 K, 2 on the centerpiece, 10 recessed downlights, the skylight's daylight over
-  produce, 3 washes on the aisle 1 gondola), each a cone with a sharp edge (softness 6–12% of its angle)
+- **Light is per pixel** (`kit/light.ts`, one patch on every kit material). As in the reference, an even warm
+  fill does most of the work (the zone's hemisphere, 2.5) and the spots are accents (`ACCENT` = 0.62 of their
+  old strength): 31 lights (19 track spots on the two shelf faces at 3000 K, 2 on the centerpiece, 5 recessed
+  downlights down the aisle, the skylight's daylight over produce, 3 washes on the aisle 1 gondola), each a
+  cone with a sharp edge (softness 10–12% of its angle)
   through three's own `RE_Direct`, so the pools are crisp and the polished concrete and glass catch real
   highlights; shadows are analytic: a fragment is dark where its line to a light crosses a listed slab (the
-  five shelf planks, the island top), so every plank throws a shadow line onto what is under it. No shadow
+  wall run's five planks, the south run's three and its counter), so every plank throws a shadow line onto
+  what is under it. **The gloss** (`kit/env.ts`): an environment map baked once from a sketch of the room (its
+  clay, its light rows, its lit shelf faces) through PMREM at 64 px, on the concrete (roughness .32, .55), the
+  glass and the acrylic: blurred reflections, no planar reflection, ~0.7 MB on the GPU (`heroStats.envBytes`). No shadow
   maps, no extra passes. Contact shadows are decals (`kit/decals.ts`: one instanced, multiplied quad per
   pack on its plank, per sack and pot, at the foot of the shelving and the island; one draw call). Vertex /
   instance colours carry only a tint and corner occlusion. The ambient is one hemisphere (warm bounce); the
@@ -649,10 +662,15 @@ Pro at 390 × 844 × 3: a 120–450 ms pause before the camera moves, then 84 fr
   east under PULSES & DALS · RICE & GRAINS · FLOURS & ATTA · NUTS & SEEDS · DRIED FRUIT, each three 1.2 m bays:
   per section what its floor tier, its two middle tiers and its top stock (`Section.tiers`, `top`), front row
   and a second row behind, no two neighbours alike (the test checks every row), sizes, lean and gaps
-  varied; three gravity bins at eye level; matkas, some stacked and lidded, on top. The island's 56 scoop
-  bins; the centerpiece on the floor (four sacks: white, green, yellow and orange as in the reference, the
-  chakki, the pot of wheat); the clay-plaster wall; a ceiling over the zone only (x 49.4–68.6, y 1.5–7.6) with
-  a fascia round its open sides, facing down only (from above it is not there). **The backdrop**: beyond it,
+  varied; three gravity bins at eye level; matkas, some stacked and lidded, on top. Across the 2.6 m aisle the
+  **south run** (`RUN`, `RUN_SECTIONS`: x 52.4–68, y 4.8–5.45): a pine counter with 26 scoop bins (two a bay,
+  lids propped 30° to clear the shelf above), three tiers of snack packs set back above it (one row: the back
+  of a 37 cm shelf is in its own shadow from the aisle), four header boards (GRANOLA & MUESLI · NUTS & TRAIL
+  MIX · COFFEE & SWEETS · MAKHANA & SNACKS). **The centerpiece in the aisle's mouth** (`MOUTH`, x 50.3–52.1,
+  y 3.75–4.7, south of the walking line y 3.5): three sacks (white, green, orange), the chakki at 0.8 scale,
+  the pot of wheat. The clay-plaster wall; a ceiling over the zone only (x 49.4–68.6, y 1.5–6.0) with a fascia
+  round its open sides, facing down only (from above it is not there). The overview map matches (store v3:
+  `f-bulk-run`, `f-bulk-display` in the mouth). **The backdrop**: beyond it,
   the four produce stands nearest (tilted crates of fruit drawn as grain piles at fruit size) under the
   skylight's frame and glow, the produce wall's near end, the aisle 1 gondola's face full of packs, the beer
   aisle's cases; the rest of the store's floor; everything further fades into the warm dark.
@@ -669,9 +687,10 @@ Pro at 390 × 844 × 3: a 120–450 ms pause before the camera moves, then 84 fr
 - **Close-up budget** (`src/hero/budget.ts`, `scripts/hero-gate.mjs` in CI): ≤ 70 draw calls, ≤ 250,000
   triangles, ≤ 16 MB GPU textures, ≤ 2,500 KB download, nothing fetched before a close-up opens. The gate reads
   the worst frame of the arrival (the page's clock slowed 40×), eye level, down the aisle, and a scoop bin
-  facing out over the store. Measured 19 Oct 2026: arriving 61 calls / 206k triangles, eye level 47 / 184k
-  (with the target's real grains), down the aisle 47 / 154k, scoop bins 56 / 166k; 7.5 MB textures (BC on a
-  desktop; ASTC on an iPhone can be up to twice); 2,140 KB download. On the M4 Pro's GPU (Metal) at 390 × 844
+  facing out over the store, and checks the next stop's zone is prepared during the leg before it. Measured
+  19 Oct 2026 (the aisle, store v3): arriving 61 calls / 205k triangles, eye level 47 / 190k (with the target's
+  real grains), down the aisle 49 / 160k, scoop bins 55 / 160k; 9.1 MB textures with the gloss's environment
+  (BC on a desktop; ASTC on an iPhone can be up to twice); 2,298 KB download. On the M4 Pro's GPU (Metal) at 390 × 844
   × 3, uncapped: 2.5 ms a frame median, 3.8 ms p95 (an iPhone's GPU is several times slower: check it there
   with `?debug=perf`). SwiftShader frame times (CI) are software rendering, not a device number.
 - **References** for the look are kept in `design/refs/` (git-ignored: third-party photos, not ours to
@@ -922,7 +941,8 @@ the precache filled, manifest with name / icons 192 + 512 + maskable / `standalo
 - Outfit for words, Doto for every number that matters. No emoji, no Inter / Roboto, no drop shadows (glows
   and blur only).
 - Only two labels on the map: the next stop and the checkout callout. Markers and labels never scale with zoom.
-- No animation longer than 480 ms; everything respects `prefers-reduced-motion`.
+- No animation longer than 480 ms; everything respects `prefers-reduced-motion`. One exception (DESIGN.md §7):
+  a hero close-up's arrival and way out, at most 1.24 s, a tap skips it, reduced motion cuts.
 - No "amazing / smart / optimized" copy. Numbers say it.
 - Phone screens are a centred column, max 430px; verify at 390×844 and 1440×900.
 - Keep the solver's penalties position-and-mask only (exactness), keep Fixture/Department optional (the

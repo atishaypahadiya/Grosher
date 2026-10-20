@@ -1,10 +1,11 @@
 // The eye-level camera of a hero close-up. The way in has two moves: it descends from the overview over the
 // walkway outside the zone (a curve that stays out over the store, never above the zone's ceiling) to eye
-// level at the zone's open side, then walks in under the ceiling's edge to stand ~2.45 m from the stop's
-// bin, turning to face the shelf, with a slight head bob (480 ms down, then a walk of 360–760 ms by its
-// length; a cut under reduced motion). At eye level it allows a limited look around (±57° yaw, ±17° pitch),
-// a pan along the zone and a short dolly, down to arm's length. No free flight. On exit it walks back out
-// and rises to the overview camera's pose, and hands over.
+// level at the aisle's open end, then walks in under the ceiling's edge, down the aisle's walking line and
+// across to stand a couple of metres from the stop's bin, turning to face it, with a slight head bob (480 ms
+// down, then a walk of 360–760 ms by its length: at most 1.24 s, DESIGN.md §7's one exception, a scene
+// transition; a tap skips to the end; a cut under reduced motion). At eye level it allows a limited look
+// around (±57° yaw, ±17° pitch), a pan along the aisle and a dolly down to arm's length. No free flight. On
+// exit it walks back out and rises to the overview camera's pose, and hands over.
 //
 // `envRef` carries how far the scene is into the close-up (0 overview … 1 eye level), from the camera's
 // height: the fog, the background, the overview's lights and fixtures blend on it (Scene.tsx).
@@ -16,11 +17,10 @@ import type { HeroTargetInfo } from "./index.ts";
 import type { SafeArea } from "../map3d/CameraRig.tsx";
 
 export const EYE_HEIGHT = 1.6;
-const STAND_OFF = 2.45; // metres from the bin's centre to the shopper
 const DESCENT_MS = 480;
+const ARM = 0.7; // the closest the dolly comes: arm's length from the bin's centre
 const YAW = 1.0; // ±57°: enough to look down the aisle, never behind
 const PITCH = 0.3;
-const DOLLY: [number, number] = [-0.9, 1.75]; // to arm's length (0.7 m from the bin)
 const BOB = 0.012; // metres, a step's rise and fall
 
 /** the walk's duration for its length: a stroll, never a dash, never past 760 ms */
@@ -30,6 +30,8 @@ export interface CloseUpCameraHandle {
   look: (dxPx: number, dyPx: number) => void;
   pan: (dxPx: number) => void;
   dolly: (factor: number) => void;
+  /** jump to the end of the move in progress (a tap during the arrival or the way out); false if none */
+  skip: () => boolean;
 }
 
 export interface CameraView {
@@ -97,7 +99,7 @@ export const CloseUpCamera = forwardRef<CloseUpCameraHandle, CloseUpCameraProps>
     const aspect = size.width / size.height;
     const fov = closeUpFov(aspect);
     const u = user.current;
-    const back = STAND_OFF - u.dolly;
+    const back = target.stand - u.dolly;
     const x = Math.min(target.bounds.x1, Math.max(target.bounds.x0, target.center[0] + u.pan));
     const position = new Vector3(x, EYE_HEIGHT, target.center[2] + target.facing * back);
     // aim so the bin sits in the middle of the band the strip and the sheet leave clear
@@ -137,7 +139,19 @@ export const CloseUpCamera = forwardRef<CloseUpCameraHandle, CloseUpCameraProps>
     const end = eye();
     const door = new Vector3(...target.door);
     const stand = end.position.clone();
-    const doorPose = lookPose(door, stand.clone().lerp(new Vector3(...target.center), 0.25), end.fov);
+    // the walk: the door, its turns along the aisle's walking line, where the shopper stands
+    const path = [door, ...target.via.map((v) => new Vector3(...v)), stand];
+    const lengths = path.slice(1).map((p, i) => p.distanceTo(path[i]));
+    const metres = lengths.reduce((a, b) => a + b, 0);
+    const along = (d: number) => {
+      for (let i = 0; i < lengths.length; i++) {
+        if (d <= lengths[i] || i === lengths.length - 1) return path[i].clone().lerp(path[i + 1], lengths[i] ? Math.min(1, d / lengths[i]) : 1);
+        d -= lengths[i];
+      }
+      return stand.clone();
+    };
+    // at the door the shopper looks down the aisle toward the first turn (or the bin, when there is none)
+    const doorPose = lookPose(door, target.via.length ? path[1].clone().lerp(path[2], 0.5) : stand.clone().lerp(new Vector3(...target.center), 0.25), end.fov);
     // the curve's control point: above the door at the overview's height, so the path comes down outside
     const ctrl = new Vector3(door.x, high.position.y, door.z).lerp(high.position, 0.25);
     // the view stays on the store all the way down: it looks at a point that glides from where the overview
@@ -158,15 +172,15 @@ export const CloseUpCamera = forwardRef<CloseUpCameraHandle, CloseUpCameraProps>
         return { position, quaternion, fov: high.fov + (doorPose.fov - high.fov) * e };
       },
     };
-    const metres = door.distanceTo(stand);
     const walk: Segment = {
       ms: walkMs(metres),
       ease: easeInOut,
       at: (e) => {
-        const p = door.clone().lerp(stand, e);
+        const p = along(e * metres);
         // a step every ~0.7 m: the head rises and falls, fading in and out with the walk
         if (!reducedMotion) p.y += BOB * Math.sin(Math.PI * e) * Math.pow(Math.sin((Math.PI * e * metres) / 0.7), 2);
-        return { position: p, quaternion: doorPose.quaternion.clone().slerp(end.quaternion, easeInOut(Math.min(1, e * 1.15))), fov: end.fov };
+        // the head turns to the bin over the walk's second half, as the shopper comes off the walking line
+        return { position: p, quaternion: doorPose.quaternion.clone().slerp(end.quaternion, easeInOut(Math.max(0, Math.min(1, (e - 0.35) / 0.6)))), fov: end.fov };
       },
     };
     return { descent, walk };
@@ -266,9 +280,18 @@ export const CloseUpCamera = forwardRef<CloseUpCameraHandle, CloseUpCameraProps>
     dolly: (factor) => {
       if (anim.current) return;
       const u = user.current;
-      u.dolly = Math.max(DOLLY[0], Math.min(DOLLY[1], u.dolly + Math.log(factor) * 1.2));
+      u.dolly = Math.max(-0.9, Math.min(target.stand - ARM, u.dolly + Math.log(factor) * 1.2));
       apply(eye());
       invalidate();
+    },
+    skip: () => {
+      const a = anim.current;
+      if (!a) return false;
+      anim.current = null;
+      apply(a.segs[a.segs.length - 1].at(1, 1));
+      a.done?.();
+      invalidate();
+      return true;
     },
   }));
 

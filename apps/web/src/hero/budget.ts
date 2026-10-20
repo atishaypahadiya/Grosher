@@ -11,9 +11,10 @@
 // Why these: a recent iPhone holds 60 fps well under ~100 draw calls and ~500k triangles of simple lit
 // materials; the store map spends ~45 calls, so a close-up gets 70 in all, the overview's own ceiling. Every
 // frame counts, the arrival's too (high up, the overview is still drawn under the zone). On 19 Oct 2026 the
-// Bulk zone measured 61 calls / 206k triangles at the arrival's worst frame, 47 / 184k at eye level (the
-// target's real grains included), 7.5 MB of textures on a desktop GPU (BC; an iPhone transcodes to ASTC 4×4,
-// up to twice that) and a 2.1 MB download: each budget leaves the next zone room without letting it double.
+// Bulk aisle (shelving both sides) measured 61 calls / 205k triangles at the arrival's worst frame, 47 / 190k
+// at eye level (the target's real grains included), 9.1 MB of textures on a desktop GPU (BC; an iPhone
+// transcodes to ASTC 4×4, up to twice that) and a 2.3 MB download: each budget leaves the next zone room
+// without letting it double; the download has the least (200 KB), and the labels atlas is its biggest file.
 
 export const CLOSE_UP_BUDGET = {
   drawCalls: 70,
