@@ -97,7 +97,7 @@ export const PACKS = [
   // a far deck's row
   "bottlesRow", "headsRow", "herbsRow",
   // the chilled shelf under the juice: energy balls and bites in tubs
-  "bitesCocoa", "bitesCoconut", "bitesDate", "bitesMatcha",
+  "bitesCocoa", "bitesCoconut", "bitesDate", "bitesMatcha", "bitesLabel",
 ] as const;
 export type PackId = (typeof PACKS)[number];
 export const PACK_COLS = 8;
@@ -292,33 +292,40 @@ export const WALL: WallSection[] = [
 /** the cut fruit's tubs, mixed as in the reference: each cut fruit bay shows these, in its own order */
 export const CUT_FRUIT: PackId[] = ["fruitMedley", "watermelonCubes", "pineappleChunks", "mangoChunks", "cantaloupeCubes", "honeydewCubes", "kiwiSlices", "grapesMix", "berryCups", "papayaCubes", "citrusSegments", "dragonfruit"];
 
-/** under the juice, on the chilled well: energy balls and bites in tubs, mixed along each bay */
+/** under the juice, on the chilled well: energy balls rolled in chopped nuts, in round deli tubs, mixed along
+ * each bay (design/refs/juice.png), a white paper label on each lid */
 export const BITES: PackId[] = ["bitesCocoa", "bitesCoconut", "bitesDate", "bitesMatcha"];
 
-/** The Grosher Press line: 21 cold-pressed juices, each its colour and what the label's second line says. */
-export const JUICES: { n: number; name: string; color: string }[] = [
-  { n: 1, name: "Green", color: "#6E9A2E" },
-  { n: 2, name: "Orange Carrot Ginger", color: "#E8802A" },
-  { n: 3, name: "Beet Apple", color: "#8A1E3A" },
-  { n: 4, name: "Lemon Cayenne", color: "#E8D86A" },
-  { n: 5, name: "Watermelon Mint", color: "#E8505A" },
-  { n: 6, name: "Pineapple Turmeric", color: "#ECB82A" },
-  { n: 7, name: "Celery", color: "#A8C86A" },
-  { n: 8, name: "Cucumber Kale", color: "#5A8A3A" },
-  { n: 9, name: "Grapefruit", color: "#F0906A" },
-  { n: 10, name: "Carrot", color: "#EC7A1E" },
-  { n: 11, name: "Apple Ginger", color: "#D8B84A" },
-  { n: 12, name: "Strawberry Basil", color: "#C8303A" },
-  { n: 13, name: "Mango Lime", color: "#F0A830" },
-  { n: 14, name: "Coconut Water", color: "#ECE6D6" },
-  { n: 15, name: "Spinach Pear", color: "#7AA03A" },
-  { n: 16, name: "Blood Orange", color: "#C83A2A" },
-  { n: 17, name: "Pomegranate", color: "#7A1A2E" },
-  { n: 18, name: "Golden Milk", color: "#E8B23A" },
-  { n: 19, name: "Charcoal Lemonade", color: "#2A2A2A" },
-  { n: 20, name: "Tomato Basil", color: "#B8301E" },
-  { n: 21, name: "Tropical Greens", color: "#8AB040" },
+/**
+ * The Grosher Press line, as in design/refs/juice.png: 21 cold-pressed juices and plant milks in clear glass,
+ * opaque colours by flavour (the "mylk"s cream, cacao brown, matcha green, the charcoal black), a big white label
+ * with the code, the name in capitals and the ingredients. Our own names and codes; no real brand.
+ */
+export const JUICES: { n: number; name: string; color: string; ingredients: string }[] = [
+  { n: 1, name: "Blood Orange", color: "#B8261E", ingredients: "blood orange · orange · lemon" },
+  { n: 2, name: "Hot Lemon", color: "#E2CC36", ingredients: "lemon · ginger · cayenne · apple" },
+  { n: 3, name: "Green", color: "#8AA83A", ingredients: "kale · cucumber · celery · apple" },
+  { n: 4, name: "Carrot Ginger", color: "#E2782A", ingredients: "carrot · orange · ginger" },
+  { n: 5, name: "Beet Apple", color: "#7E1A34", ingredients: "beetroot · apple · lemon" },
+  { n: 6, name: "Pineapple Turmeric", color: "#E8B226", ingredients: "pineapple · turmeric · lime" },
+  { n: 7, name: "Watermelon Mint", color: "#D8464E", ingredients: "watermelon · mint · lime" },
+  { n: 8, name: "Celery", color: "#A2BE62", ingredients: "celery · lemon" },
+  { n: 9, name: "Grapefruit", color: "#E88A62", ingredients: "pink grapefruit · orange" },
+  { n: 10, name: "Apple Ginger", color: "#D2B450", ingredients: "apple · ginger · lemon" },
+  { n: 11, name: "Coconut Water", color: "#E6E0CE", ingredients: "young coconut water" },
+  { n: 12, name: "Almond Mylk", color: "#E6D8BC", ingredients: "almond · date · vanilla · salt" },
+  { n: 13, name: "Oat Mylk", color: "#DCCAA6", ingredients: "oat · date · sea salt" },
+  { n: 14, name: "Matcha Mylk", color: "#B2BA70", ingredients: "matcha · cashew · date" },
+  { n: 15, name: "Cashew Mylk", color: "#E8DEC8", ingredients: "cashew · date · cinnamon" },
+  { n: 16, name: "Golden Mylk", color: "#E2AA36", ingredients: "turmeric · cashew · pepper" },
+  { n: 17, name: "Charcoal", color: "#1C1C1C", ingredients: "lemon · charcoal · agave" },
+  { n: 18, name: "Strawberry Basil", color: "#C22E38", ingredients: "strawberry · apple · basil" },
+  { n: 19, name: "Mango Lime", color: "#EAA02C", ingredients: "mango · lime · orange" },
+  { n: 20, name: "Spinach Pear", color: "#76983A", ingredients: "spinach · pear · lemon" },
+  { n: 21, name: "Cacao Mylk", color: "#A8826E", ingredients: "cacao · almond · date · salt" },
 ];
+/** the juice label's front, width over height (kit: fruit.ts bottleParts), drawn at that aspect into its cell */
+export const JUICE_LABEL_ASPECT = 0.93;
 
 // ---------------------------------------------------------------- the chalk atlas
 

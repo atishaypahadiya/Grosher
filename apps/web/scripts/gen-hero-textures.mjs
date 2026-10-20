@@ -29,7 +29,7 @@ import { GRAIN_SHAPES, HEADERS, LABEL_ATLAS, LABEL_ROWS, LABEL_STYLE, SACK_STENC
 import { STANDARD_TEMPLATES, TEMPLATES } from "../src/hero/kit/products.ts";
 import { BAND, signKeys, signLabel, styleOf, CAT_COLS, CAT_CELL } from "../src/hero/standard/styles.ts";
 import CATEGORIES from "../../../packages/stores/grosher/categories.json" with { type: "json" };
-import { CHALK_ATLAS, FOLIAGE, HEADER, HEADERS as PRODUCE_HEADERS, JUICES, JUICE_LABEL, MOUNDS, PACKS, SIGN, signCells } from "../src/hero/produce/recipe.ts";
+import { CHALK_ATLAS, FOLIAGE, HEADER, HEADERS as PRODUCE_HEADERS, JUICES, JUICE_LABEL, JUICE_LABEL_ASPECT, MOUNDS, PACKS, SIGN, signCells } from "../src/hero/produce/recipe.ts";
 import { drawProduce } from "./produce-textures.mjs";
 
 const ROOT = join(import.meta.dirname, "..");
@@ -935,7 +935,7 @@ const images = await page.evaluate(
 );
 Object.assign(
   images,
-  await page.evaluate(`(${drawProduce.toString()})(${JSON.stringify({ font, CHALK_ATLAS, SIGN, SIGNS: signCells(), JUICE_LABEL, JUICES, HEADER, HEADERS: PRODUCE_HEADERS, PACKS, MOUNDS, FOLIAGE })})`),
+  await page.evaluate(`(${drawProduce.toString()})(${JSON.stringify({ font, CHALK_ATLAS, SIGN, SIGNS: signCells(), JUICE_LABEL, JUICE_LABEL_ASPECT, JUICES, HEADER, HEADERS: PRODUCE_HEADERS, PACKS, MOUNDS, FOLIAGE })})`),
 );
 await browser.close();
 

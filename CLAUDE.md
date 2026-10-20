@@ -767,8 +767,7 @@ ready (the camera starts) 19–29 ms for every stop after the first, 300 ms for 
 #### Produce (`src/hero/produce`): the daylit room
 
 Grosher's second hero zone (x 12–48, y 1–14.4), the one room in the store lit by day. Built 20 Oct 2026 against
-`design/refs/produce-stainless-skylight.png` and `cut-fruit-case.png` (there was no juice reference: the juice
-follows the brief). Its own chunk (`ProduceZone.tsx`, 23 KB gzip), its own texture set, the same lifecycle as
+`design/refs/produce-stainless-skylight.png` and `cut-fruit-case.png`; the juice matched to `juice.png` on 21 Oct. Its own chunk (`ProduceZone.tsx`, 23 KB gzip), its own texture set, the same lifecycle as
 Bulk: prepared on the list or during the stop before with nothing on the GPU, uploaded once the zone before it is
 freed, off the GPU the moment it is left.
 - **The recipe** (`recipe.ts`, pure data): 93 kinds of fruit and vegetable (`KINDS`: model, size in metres,
@@ -786,9 +785,12 @@ freed, off the GPU the moment it is left.
   where it would alias, and a roughness per instance (`deform` is the same maths in TypeScript, tested).
   Bananas, leafy heads and tied herb bunches (stems and twine, leaf cards from the foliage atlas) have templates
   of their own; punnets, tubs, clamshells and bags are unit boxes with their contents from the packs atlas;
-  juice bottles are glass, juice, a ribbed polished-steel cap (the `metal` material) and a label (the chalk
-  atlas's juice cells: white, the code big, the name); under the juice, on the chilled well, tubs of energy balls
-  and bites (`BITES`, four flavours, mixed). **Packing** (`packCrate`):
+  juice bottles (as in `juice.png`) are clear glass, an opaque juice or plant milk by flavour (`JUICES`: 21 of
+  them, the mylks cream, cacao, matcha, the charcoal black), a tall ribbed polished-steel screw cap (`metal`),
+  and a big flat white sticker ±70° round the front (the chalk atlas's juice cells, drawn at the label's aspect,
+  `JUICE_LABEL_ASPECT`: the code big, GROSHER PRESS, the name in capitals, ingredients, two boxes); the juice bays
+  have a stainless back with rows of vent slots and stainless shelves; under them, on the chilled well, round
+  deli tubs (`deliTubParts`) of energy balls rolled in chopped nuts, two high, a paper label on each lid. **Packing** (`packCrate`):
   each crate's top layer on a jittered grid over its pile's surface, a third of each fruit settled into it,
   inside the crate's walls, never through another (circles for round ones, footprints for long ones lying),
   every instance its own colour; deterministic per crate.
@@ -835,8 +837,8 @@ freed, off the GPU the moment it is left.
 - **Textures** (`scripts/produce-textures.mjs`, run by `gen-hero-textures.mjs`; `ONLY=oak,chalk,… ` re-encodes
   just those): oak planks 1024² ETC1S (128 KB), brushed stainless 512² (13 KB), the kit's pine for the crates,
   `chalk` 2048 × 1280 (the 108 chalkboards in handwritten-style Outfit roughened like chalk, the 21 juice labels,
-  11 header boards), `packs` 2048 × 1280 (39 of 40 cells: cut fruit, cut veg, punnets, greens, the salad kit's bag,
-  energy bites, far rows), `mounds` 1024 × 512, `foliage` 1024² RGBA (leaves, fronds, a pineapple's crown, blooms). Chalk and
+  11 header boards), `packs` 2048 × 1280 (all 40 cells: cut fruit, cut veg, punnets, greens, the salad kit's bag,
+  energy balls and their lid label, far rows), `mounds` 1024 × 512, `foliage` 1024² RGBA (leaves, fronds, a pineapple's crown, blooms). Chalk and
   foliage are ETC1S at full quality (`etc1s-hq`): as UASTC the chalk was 1.8 MB, its slate's noise defeating
   compression. Hi 1.11 MB, lo 0.42 MB.
 - **Numbers** (close-up gate, SwiftShader, 390 × 844, 20 Oct 2026): arriving 51 calls / 163k triangles, an

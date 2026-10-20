@@ -86,8 +86,8 @@ export function gridPlane(w: number, h: number, step: number, tile: number): Buf
   return g;
 }
 
-export function cylinder(rTop: number, rBottom: number, h: number, seg = 12, open = false): BufferGeometry {
-  return clean(new CylinderGeometry(rTop, rBottom, h, seg, 1, open));
+export function cylinder(rTop: number, rBottom: number, h: number, seg = 12, open = false, thetaStart?: number, thetaLength?: number): BufferGeometry {
+  return clean(new CylinderGeometry(rTop, rBottom, h, seg, 1, open, thetaStart, thetaLength));
 }
 
 /** A lathe profile ([radius, height] pairs, bottom to top) around y. */

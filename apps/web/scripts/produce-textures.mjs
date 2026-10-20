@@ -235,31 +235,59 @@ export async function drawProduce(d) {
       chalkText(s.price, x + S.w / 2, y + S.h - 18, 23, "rgba(246,232,170,0.95)", S.w - 24);
       roughen(x, y, S.w, S.h);
     });
-    // the juice labels: white, the line's name small, the number big, the juice's name, the size
+    // the juice labels, as in design/refs/juice.png: a big white sticker; the code big at the top left, the
+    // line's name beside it, the product name in bold capitals, ingredient lines, two small boxes at the foot.
+    // Drawn at the label's own aspect (JUICE_LABEL_ASPECT) and squeezed into its 96 × 128 cell, so it reads
+    // true once it is on the bottle
     const J = d.JUICE_LABEL;
+    const LW = Math.round(J.h * d.JUICE_LABEL_ASPECT);
     d.JUICES.forEach((j) => {
       const x = (j.n - 1) * J.w;
       const y = J.y;
-      ctx.fillStyle = "#F7F5F0";
-      ctx.fillRect(x + 2, y + 2, J.w - 4, J.h - 4);
-      ctx.fillStyle = "#1E1D1C";
-      ctx.textAlign = "center";
-      ctx.font = "600 8px Outfit";
-      ctx.letterSpacing = "1px";
-      ctx.fillText("GROSHER PRESS", x + J.w / 2, y + 20);
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(x, y, J.w, J.h);
+      ctx.clip();
+      ctx.translate(x, y);
+      ctx.scale(J.w / LW, 1);
+      ctx.fillStyle = "#F6F4EE";
+      ctx.fillRect(0, 0, LW, J.h);
+      ctx.fillStyle = "#1C1B1A";
+      ctx.textAlign = "left";
+      ctx.font = "700 27px Outfit";
+      ctx.fillText(`J${String(j.n).padStart(2, "0")}`, 6, 30);
+      ctx.font = "600 7px Outfit";
+      ctx.letterSpacing = "1.5px";
+      ctx.fillText("GROSHER", 64, 16);
+      ctx.fillText("PRESS", 64, 25);
+      ctx.letterSpacing = "0.5px";
+      ctx.font = "500 5px Outfit";
+      ctx.fillText("COLD-PRESSED", 64, 32);
+      // the name, in capitals, as big as fits
+      const name = j.name.toUpperCase();
+      let size = 15;
       ctx.letterSpacing = "0px";
-      ctx.font = "700 40px Outfit";
-      ctx.fillText(`J${String(j.n).padStart(2, "0")}`, x + J.w / 2, y + 66);
-      let size = 11;
-      ctx.font = `500 ${size}px Outfit`;
-      while (ctx.measureText(j.name).width > J.w - 10 && size > 7) ctx.font = `500 ${--size}px Outfit`;
-      ctx.fillText(j.name, x + J.w / 2, y + 88);
-      ctx.fillStyle = j.color;
-      ctx.fillRect(x + 16, y + 98, J.w - 32, 4);
-      ctx.fillStyle = "#5A5854";
-      ctx.font = "500 7px Outfit";
-      ctx.fillText("COLD-PRESSED", x + J.w / 2, y + 113);
-      ctx.fillText("12 FL OZ", x + J.w / 2, y + 122);
+      ctx.font = `700 ${size}px Outfit`;
+      while (ctx.measureText(name).width > LW - 12 && size > 8) ctx.font = `700 ${--size}px Outfit`;
+      ctx.fillText(name, 6, 52);
+      // ingredients: small, grey, two lines
+      ctx.fillStyle = "#4A4846";
+      ctx.font = "500 6px Outfit";
+      ctx.fillText("INGREDIENTS / ZUTATEN", 6, 64);
+      const words = j.ingredients.toUpperCase().split(" · ");
+      ctx.fillText(words.slice(0, 2).join(" · "), 6, 72);
+      ctx.fillText(words.slice(2).join(" · ") || "COLD-PRESSED, UNPASTEURISED", 6, 80);
+      ctx.fillText("KEEP REFRIGERATED · 330 ML", 6, 90);
+      // the two boxes at the foot: pressed on, best before
+      ctx.strokeStyle = "#1C1B1A";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(6, 98, (LW - 18) / 2, 18);
+      ctx.strokeRect(12 + (LW - 18) / 2, 98, (LW - 18) / 2, 18);
+      ctx.fillStyle = "#1C1B1A";
+      ctx.font = "500 5px Outfit";
+      ctx.fillText("PRESSED", 9, 105);
+      ctx.fillText("BEST BEFORE", 15 + (LW - 18) / 2, 105);
+      ctx.restore();
     });
     // header boards: black, white uppercase, as the shelf kit's
     const HD = d.HEADER;
@@ -331,6 +359,44 @@ export async function drawProduce(d) {
       sh.addColorStop(0.5, "rgba(255,255,255,0)");
       ctx.fillStyle = sh;
       ctx.fillRect(x0, y0, C, C);
+    };
+    /** balls crusted in chopped nuts, close-packed (bitesX cells) */
+    const bites = (x0, y0, body, nuts) => {
+      ctx.fillStyle = css(rgb(body, 0.5));
+      ctx.fillRect(x0, y0, C, C);
+      for (let k = 0; k < 14; k++) {
+        const r = 30 + rand() * 8;
+        const cx = x0 + ((k % 4) + 0.5 + (Math.floor(k / 4) % 2) * 0.5) * (C / 4) + (rand() - 0.5) * 8;
+        const cy = y0 + (Math.floor(k / 4) + 0.5) * (C / 3.6) + (rand() - 0.5) * 8;
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(x0, y0, C, C);
+        ctx.clip();
+        const g = ctx.createRadialGradient(cx - r * 0.3, cy - r * 0.35, r * 0.1, cx, cy, r);
+        g.addColorStop(0, css(rgb(body, 1.25)));
+        g.addColorStop(1, css(rgb(body, 0.6)));
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fill();
+        // the crust: pale nut pieces, angular, more toward the lit side
+        for (let q = 0; q < 240; q++) {
+          const a = rand() * Math.PI * 2;
+          const d = Math.sqrt(rand()) * r * 0.95;
+          const px = cx + Math.cos(a) * d;
+          const py = cy + Math.sin(a) * d;
+          const lit = 0.75 + 0.35 * (1 - (py - cy + r) / (2 * r));
+          ctx.fillStyle = css(rgb(nuts[Math.floor(rand() * nuts.length)], lit * (0.85 + rand() * 0.3)));
+          ctx.beginPath();
+          const s1 = 1.2 + rand() * 2.4;
+          ctx.moveTo(px - s1, py - s1 * 0.4);
+          ctx.lineTo(px + s1 * 0.8, py - s1 * 0.7);
+          ctx.lineTo(px + s1 * 0.5, py + s1 * 0.8);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.restore();
+      }
     };
     const kiwi = (x0, y0, n = 26) => {
       for (let k = 0; k < n; k++) {
@@ -508,11 +574,33 @@ export async function drawProduce(d) {
           ctx.fillRect(bx + 14, y + 16, 20, 26);
         });
       },
-      // energy balls and bites: rolled balls, close-packed, dusted or coated, each a shade apart
-      bitesCocoa: (x, y) => chunks(x, y, ["#4A2E1E", "#5A3826", "#3E2618"], { n: 60, size: 46, round: true, base: "#2A1A10" }),
-      bitesCoconut: (x, y) => chunks(x, y, ["#EDE6D6", "#E2D8C4", "#F4EEE2"], { n: 60, size: 46, round: true, base: "#9A8E78" }),
-      bitesDate: (x, y) => chunks(x, y, ["#7A4A2A", "#8A5A32", "#6A3E22"], { n: 60, size: 46, round: true, base: "#3A2414" }),
-      bitesMatcha: (x, y) => chunks(x, y, ["#8AA04A", "#7A9440", "#9AAE5A"], { n: 60, size: 46, round: true, base: "#3E4A22" }),
+      // energy balls rolled in chopped nuts, as in the reference: round balls seen through the tub, each
+      // crusted with pale nut pieces over its dark or pale body
+      bitesCocoa: (x, y) => bites(x, y, "#3A2416", ["#C8A070", "#B88A58", "#D8B888"]),
+      bitesCoconut: (x, y) => bites(x, y, "#E8E0CC", ["#F4EEE0", "#D8CCB0", "#C8A878"]),
+      bitesDate: (x, y) => bites(x, y, "#6A3E22", ["#C89A62", "#B07E48", "#D4AE7A"]),
+      bitesMatcha: (x, y) => bites(x, y, "#6E8238", ["#C8B484", "#A8B868", "#D8C896"]),
+      // the tubs' paper lid label: white, the house name and the bites' name
+      bitesLabel: (x, y) => {
+        ctx.fillStyle = "#F4F2EC";
+        ctx.fillRect(x, y, C, C);
+        ctx.fillStyle = "#1C1B1A";
+        ctx.textAlign = "left";
+        ctx.font = "700 44px Outfit";
+        ctx.fillText("J22", x + 18, y + 64);
+        ctx.font = "600 16px Outfit";
+        ctx.fillText("GROSHER PRESS", x + 116, y + 44);
+        ctx.font = "700 34px Outfit";
+        ctx.fillText("POWER BALLS", x + 18, y + 118);
+        ctx.fillStyle = "#4A4846";
+        ctx.font = "500 15px Outfit";
+        ctx.fillText("DATE · CASHEW · CACAO", x + 18, y + 150);
+        ctx.fillText("ROLLED IN CHOPPED NUTS", x + 18, y + 172);
+        ctx.strokeStyle = "#1C1B1A";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x + 18, y + 192, 100, 40);
+        ctx.strokeRect(x + 136, y + 192, 100, 40);
+      },
       headsRow: (x, y) => {
         ctx.fillStyle = "#2E4A26";
         ctx.fillRect(x, y, C, C);

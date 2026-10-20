@@ -406,28 +406,68 @@ export function bottleParts(): { glass: BufferGeometry; body: BufferGeometry; ca
     12,
   );
   painted(liquid, () => [1, 1, 1]);
-  // the cap: a short ribbed steel cylinder, its top a shade brighter
-  const cap = cylinder(0.0165, 0.0165, 0.02, 16);
+  // the cap: a tall ribbed steel screw cap, as in the reference, its top a shade brighter
+  const cap = cylinder(0.0185, 0.0185, 0.026, 16);
   const cp = cap.getAttribute("position");
   for (let i = 0; i < cp.count; i++) {
     const a = Math.atan2(cp.getZ(i), cp.getX(i));
-    const k = Math.abs(cp.getY(i)) < 0.0099 ? 1 + 0.06 * Math.max(0, Math.cos(a * 8)) : 1;
+    const k = Math.abs(cp.getY(i)) < 0.0129 ? 1 + 0.05 * Math.max(0, Math.cos(a * 8)) : 1;
     cp.setXYZ(i, cp.getX(i) * k, cp.getY(i), cp.getZ(i) * k);
   }
   cap.computeVertexNormals();
-  place(cap, { pos: [0, 0.208, 0] });
+  place(cap, { pos: [0, 0.209, 0] });
   painted(cap, (_, n) => (n.y > 0.5 ? [0.86, 0.86, 0.84] : [0.74, 0.74, 0.72]));
   const body = normalizeAttrs(liquid);
-  // the label: a band round the front, white with its number
-  const label = cylinder(0.0335, 0.0335, 0.07, 14, true);
-  place(label, { pos: [0, 0.07, 0] });
+  // the label: a big flat sticker on the front, ±70° round the bottle and half its height (JUICE_LABEL_ASPECT)
+  const ARC = (70 * Math.PI) / 180;
+  const label = cylinder(0.0336, 0.0336, 0.088, 16, true, -ARC, 2 * ARC);
+  place(label, { pos: [0, 0.072, 0] });
   const p = label.getAttribute("position");
   const uv = label.getAttribute("uv");
   for (let i = 0; i < p.count; i++) {
     const a = Math.atan2(p.getX(i), p.getZ(i));
-    uv.setXY(i, Math.max(0, Math.min(1, 0.5 + a / Math.PI)), (p.getY(i) - 0.035) / 0.07);
+    uv.setXY(i, Math.max(0, Math.min(1, 0.5 + a / (2 * ARC))), (p.getY(i) - 0.028) / 0.088);
   }
   return { glass, body, cap: normalizeAttrs(cap), label };
+}
+
+/**
+ * A round deli tub of energy balls, as in the reference: clear, tapering to its foot, its lid; the balls inside
+ * (the packs cell round its side and on top); a white paper label on the lid. Real size: 12 cm across, 7.5 tall.
+ */
+export function deliTubParts(): { clear: BufferGeometry; content: BufferGeometry; label: BufferGeometry } {
+  const wall = lathe(
+    [
+      [0, 0],
+      [0.052, 0],
+      [0.06, 0.068],
+      [0.063, 0.071],
+      [0.063, 0.077],
+      [0, 0.078],
+    ],
+    20,
+  );
+  const content = lathe(
+    [
+      [0, 0.002],
+      [0.05, 0.002],
+      [0.057, 0.064],
+      [0, 0.066],
+    ],
+    16,
+  );
+  // the cell round the side (u round, v up) and across the top
+  const cp = content.getAttribute("position");
+  const cuv = content.getAttribute("uv");
+  for (let i = 0; i < cp.count; i++) {
+    const top = cp.getY(i) > 0.0655 || (cp.getY(i) > 0.063 && Math.hypot(cp.getX(i), cp.getZ(i)) < 0.001);
+    if (top) cuv.setXY(i, 0.5 + cp.getX(i) / 0.12, 0.5 + cp.getZ(i) / 0.12);
+    else cuv.setXY(i, 0.5 + Math.atan2(cp.getX(i), cp.getZ(i)) / (2 * Math.PI), cp.getY(i) / 0.066);
+  }
+  const label = clean(new PlaneGeometry(0.085, 0.062));
+  label.rotateX(-Math.PI / 2);
+  place(label, { pos: [0, 0.0785, 0], rot: [0, 0.08, 0] });
+  return { clear: wall, content, label };
 }
 
 /** position, normal, uv and colour on every part, so they merge */

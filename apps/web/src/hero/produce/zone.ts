@@ -19,7 +19,7 @@ import { grainMound, headerBoard, shelving, type Piece } from "../kit/pieces.ts"
 import { scaled, WARM_3000K, type LightRig, type ZoneLightDef } from "../kit/light.ts";
 import type { Decal } from "../kit/decals.ts";
 import type { ProduceMaterialKey } from "../kit/materials.ts";
-import { bag, bananaBunch, bottleParts, bunchLeaves, bunchStems, fruitMatrix, leafyHead, packCrate, packParts, roundGeometry, shapeOf, type Pile } from "./fruit.ts";
+import { bag, bananaBunch, bottleParts, deliTubParts, bunchLeaves, bunchStems, fruitMatrix, leafyHead, packCrate, packParts, roundGeometry, shapeOf, type Pile } from "./fruit.ts";
 import { BITES, CUT_FRUIT, DISPLAYS, foliageRect, HEADERS, headerRect, JUICES, juiceRect, KINDS, moundIndex, MOUNDS, packRect, signCells, signRect, WALL, type Kind, type KindId, type MoundId, type PackId } from "./recipe.ts";
 
 // ---------------------------------------------------------------- the plan (map metres; z is the map's y)
@@ -266,6 +266,10 @@ export function buildProduceZone(outline: [number, number][] | undefined): Produ
   spec("bottleBody", bt.body, "plain");
   spec("bottleCap", bt.cap, "metal");
   spec("bottleLabel", bt.label, "chalkCell", [{ name: "aCell", size: 4 }]);
+  const deli = deliTubParts();
+  spec("deliClear", deli.clear, "clear");
+  spec("deliContent", deli.content, "packs", [{ name: "aCell", size: 4 }]);
+  spec("deliLabel", deli.label, "packs", [{ name: "aCell", size: 4 }]);
   // a far deck: one box, its front a row of the stock (one cell, repeated)
   spec("row", place(clean(new BoxGeometry(1, 1, 1)), { pos: [0, 0.5, 0] }), "packsRow", [
     { name: "aCell", size: 4 },
@@ -592,6 +596,25 @@ function wetWall(add: (p: { key: ProduceMaterialKey; geo: BufferGeometry; tint?:
     const depth = end ? CASE.zFront - CASE.zBack : DECKS[1].depth + 0.04;
     st(place(tiledBox(end ? 0.05 : 0.02, CASE.top - (end ? 0 : 0.64), depth, 1), { pos: [x, end ? CASE.top / 2 : (CASE.top + 0.64) / 2, CASE.zBack + depth / 2] }), [0.92, 0.92, 0.92]);
   }
+  // the juice (the last three bays) as in its reference: a stainless back with rows of vent slots between the
+  // shelves, and stainless shelves, where the rest of the case is black inside
+  const jx0 = CASE.x0 + (CASE.bays - 3) * BAY;
+  const jw = CASE.x1 - jx0;
+  const jcx = jx0 + jw / 2;
+  st(place(tiledBox(jw - 0.06, CASE.top - 0.62, 0.012, 1.2), { pos: [jcx, (CASE.top + 0.62) / 2, CASE.zBack + 0.008] }), [0.9, 0.9, 0.9]);
+  for (let i = 1; i < DECKS.length; i++) {
+    const below = DECKS[i - 1].lip + DECKS[i - 1].rise;
+    for (const f of [0.38, 0.62]) {
+      const y = below + (DECKS[i].lip - below) * f;
+      for (let x = jx0 + 0.08; x < CASE.x1 - 0.08; x += 0.07) add([{ key: "steel", geo: place(tiledBox(0.036, 0.006, 0.004, 1), { pos: [x, y, CASE.zBack + 0.016] }), tint: hex("#1A1A19") }]);
+    }
+  }
+  DECKS.forEach((d, i) => {
+    const tilt = deckTilt(i);
+    const plate = tiledBox(jw - 0.06, 0.006, d.depth / Math.cos(tilt), 1.2);
+    place(plate, { pos: [jcx, d.lip + d.rise / 2 - 0.0, CASE.zBack + d.depth / 2], rot: [tilt, 0, 0] });
+    st(plate, [0.92, 0.92, 0.92]);
+  });
   // misting bars over the greens and herbs (bays 1–11): a thin tube under each deck's lip, nozzles on it
   const misting = CASE.x0 + 11 * BAY;
   for (let i = 1; i < DECKS.length; i++) {
@@ -621,17 +644,18 @@ function stockBay(b: (typeof WALL)[number]["bays"][number], bx0: number, cutFrui
     // the far row: which cell, how many across, how tall, stacked how many
     let far: { pack: PackId; w: number; h: number; stack: number; tint: V3 } = { pack: "spinach", w: 0.18, h: 0.16, stack: 1, tint: [1, 1, 1] };
     if (b.kind === "bottle" && di === 0) {
-      // the chilled well under the juice: energy balls and bites in round-shouldered tubs, two rows, mixed
-      const size: V3 = [0.12, 0.07, 0.12];
-      far = { pack: BITES[0], w: size[0] + 0.012, h: size[1] * 2, stack: 2, tint: [1, 1, 1] };
+      // the chilled well under the juice, as in the reference: energy balls in round deli tubs stacked two
+      // high, three rows deep, a paper label on each lid, mixed along the bay
+      far = { pack: BITES[0], w: 0.13, h: 0.155, stack: 2, tint: [1, 1, 1] };
       for (let r = 0; r < 3; r++) {
-        const z = front - 0.03 - size[2] / 2 - r * (size[2] + 0.01);
-        row(z, size[0] + 0.012, (x, k) => {
+        const z = front - 0.09 - r * 0.13;
+        row(z, 0.13, (x, k) => {
           const pack = BITES[(k + r * 3 + Math.floor(bx0)) % BITES.length];
           for (let h = 0; h < 2; h++) {
-            const m = onDeck(x, z).multiply(M([0, h * (size[1] + 0.003), 0], [0, (rand() - 0.5) * 0.06, 0], size));
-            put({ set: "packClear", m, color: [1, 1, 1], group: g.id });
-            put({ set: "packContent", m, color: [1, 1, 1], attrs: { aCell: cellOf(packRect(pack)) }, group: g.id });
+            const m = onDeck(x + (rand() - 0.5) * 0.008, z).multiply(M([0, h * 0.0785, 0], [0, rand() * Math.PI * 2, 0]));
+            put({ set: "deliClear", m, color: [1, 1, 1], group: g.id });
+            put({ set: "deliContent", m, color: [1, 1, 1], attrs: { aCell: cellOf(packRect(pack)) }, group: g.id });
+            if (h === 1) put({ set: "deliLabel", m, color: [1, 1, 1], attrs: { aCell: cellOf(packRect("bitesLabel")) }, group: g.id });
           }
         });
       }

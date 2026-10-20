@@ -218,25 +218,25 @@
       "h": 256
     },
     "chalk": {
-      "bytes": 303334,
+      "bytes": 305547,
       "kind": "etc1s-hq",
       "w": 2048,
       "h": 1280
     },
     "chalk.lo": {
-      "bytes": 125337,
+      "bytes": 125028,
       "kind": "etc1s-hq",
       "w": 1024,
       "h": 640
     },
     "packs": {
-      "bytes": 430022,
+      "bytes": 435862,
       "kind": "etc1s",
       "w": 2048,
       "h": 1280
     },
     "packs.lo": {
-      "bytes": 154036,
+      "bytes": 154377,
       "kind": "etc1s",
       "w": 1024,
       "h": 640
