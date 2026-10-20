@@ -14,8 +14,11 @@
 // fill rate on a CI runner does).
 
 import { chromium } from "playwright";
+import { writeFileSync } from "node:fs";
 
 const BASE = (process.argv[2] ?? "http://localhost:4173").replace(/\/$/, "");
+// --json <path>: the rows as data, for scripts/docs-numbers.mjs (the README and the project page cite them)
+const JSON_OUT = process.argv.includes("--json") ? process.argv[process.argv.indexOf("--json") + 1] : null;
 const MAX_CALLS = 70;
 const MAX_INSTANCES = 12_000;
 const LIST = "Basmati rice 10 lb, Spinach, Pasta, Chips, Milk, Greek yogurt, Bread, Ice cream";
@@ -89,6 +92,7 @@ for (const r of rows) {
   console.log(`${pad(r.framing, 30)} ${pad(r.calls, 7)} ${pad(r.instances, 10)} ${pad(r.productFixtures, 9)} ${pad(r.distance + " m", 9)} ${r.frameMs.toFixed(1)}${over ? "   OVER BUDGET" : ""}`);
 }
 console.log(`\nbudget: ≤ ${MAX_CALLS} draw calls, ≤ ${MAX_INSTANCES.toLocaleString("en-US")} instances`);
+if (JSON_OUT) writeFileSync(JSON_OUT, JSON.stringify({ gate: "perf", rows: rows.map((r) => ({ framing: r.framing, calls: r.calls, instances: r.instances })) }, null, 2) + "\n");
 if (errors.length) console.log(`page errors:\n  ${errors.slice(0, 5).join("\n  ")}`);
 if (failed || errors.length) {
   console.error("perf gate FAILED");

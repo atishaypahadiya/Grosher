@@ -1,7 +1,9 @@
 // Benchmark: Grosher route vs walking the list in the order it was typed.
 // Run: npm run bench                       (the demo Supercenter)
 //      npm run bench -- --store grosher    (Grosher: the same 30 hand-kept items, on Grosher's shelves)
+//      ... --json <path>                   (also writes the distances and savings, for apps/web/scripts/docs-numbers.mjs)
 
+import { writeFileSync } from "node:fs";
 import { Router, WalkGraph, type Stop } from "../src/index.ts";
 import { demoSupercenter, grosher } from "@grosher/stores";
 
@@ -34,6 +36,8 @@ const pct = (xs: number[], q: number) => {
 };
 const range = (saved: number[]) => `${(pct(saved, 0.1) * 100).toFixed(0)}–${(pct(saved, 0.9) * 100).toFixed(0)}%`;
 const r = rng(42);
+const json: { store: string; rows: { stops: number; solver: string; listOrderM: number; routeM: number; savedPct: number; p10: number; p90: number }[]; range14?: { mean: number; p10: number; p90: number } } = { store: DEMO_STORE.storeId, rows: [] };
+const pct0 = (x: number) => Number((x * 100).toFixed(0));
 for (const n of [5, 8, 10, 12, 13, 18, 25, 30]) {
   const trials = n <= 13 ? 30 : 10;
   let naive = 0;
@@ -52,6 +56,7 @@ for (const n of [5, 8, 10, 12, 13, 18, 25, 30]) {
     solver = route.solver;
   }
   times.sort((a, b) => a - b);
+  json.rows.push({ stops: n, solver, listOrderM: Number((naive / trials).toFixed(0)), routeM: Number((opt / trials).toFixed(0)), savedPct: pct0(1 - opt / naive), p10: pct0(pct(saved, 0.1)), p90: pct0(pct(saved, 0.9)) });
   rows.push([
     String(n),
     solver,
@@ -79,5 +84,9 @@ console.log(`\n${DEMO_STORE.name}, averages over random lists. Distances are wal
     saved.push(1 - router.solve({ stops }).distanceM / router.routeForOrder(stops).distanceM);
   }
   const mean = saved.reduce((a, b) => a + b, 0) / saved.length;
+  json.range14 = { mean: pct0(mean), p10: pct0(pct(saved, 0.1)), p90: pct0(pct(saved, 0.9)) };
   console.log(`14 stops, 30 random lists: saved mean ${(mean * 100).toFixed(0)}%, p10–p90 ${range(saved)}, min–max ${(pct(saved, 0) * 100).toFixed(0)}–${(pct(saved, 1) * 100).toFixed(0)}%`);
 }
+
+const jsonAt = process.argv.indexOf("--json");
+if (jsonAt > 0) writeFileSync(process.argv[jsonAt + 1], JSON.stringify(json, null, 2) + "\n");

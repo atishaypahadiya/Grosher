@@ -12,10 +12,11 @@
 //   npm run eval:everyday -w @grosher/stores -- --catalog a.json --catalog b.json      # several, merged in order (first wins a name)
 //   npm run eval:everyday -w @grosher/stores -- --offline                             # skip the model
 //   npm run eval:everyday -w @grosher/stores -- --store grosher                       # Grosher, plus the new-shelves set
+//   ... --json <path>   also writes the offline scores (apps/web/scripts/docs-numbers.mjs checks the docs against them)
 //
 // Env: OLLAMA_URL (default http://localhost:11434), OLLAMA_MODEL (default qwen3:8b).
 
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { llmMaxTokens, llmResultSchema, llmSystemPrompt, llmUserMessage, normalize, parseLlmResults, resolveList, type LlmGuess, type Stop } from "@grosher/core";
 import { demoSupercenter, departmentLocations, grosher, llmOptions } from "../src/index.ts";
@@ -68,7 +69,13 @@ const offlineResults = resolveList(
   cases.map((c) => c.q),
   ctx,
 );
-printEveryday(`everyday set on ${store.name}, no model · catalog ${catalog.length} items (${catalogPaths.length ? catalogPaths.join(" + ") : "its full catalog"}), ${categories.length} categories`, scoreEveryday(cases, offlineResults, aisleOf));
+const offlineReport = scoreEveryday(cases, offlineResults, aisleOf);
+printEveryday(`everyday set on ${store.name}, no model · catalog ${catalog.length} items (${catalogPaths.length ? catalogPaths.join(" + ") : "its full catalog"}), ${categories.length} categories`, offlineReport);
+const json: { store: string; everyday: { correct: number; total: number; byKind: Record<string, { total: number; correct: number }> }; newShelves: Record<string, number> } = {
+  store: store.storeId,
+  everyday: { correct: offlineReport.correct, total: offlineReport.total, byKind: offlineReport.byKind },
+  newShelves: {},
+};
 
 // things Walmart grocery had no shelf for, at category level, on this store and on the demo
 interface NewCase {
@@ -91,6 +98,7 @@ async function newShelves(b: typeof bundle, llm?: Map<string, LlmGuess | null>) 
     if (hit) ok++;
     return `  ${hit ? "ok  " : "miss"}  ${c.q.padEnd(18)} → ${(got ?? "Needs a place").padEnd(22)} via ${rs[i].source}${rs[i].canonicalName ? ` "${rs[i].canonicalName}"` : ""}`;
   });
+  if (!llm) json.newShelves[b.store.storeId] = ok;
   console.log(`\nnew shelves on ${b.store.name}${llm ? " (with the model)" : ", no model"}: ${ok} of ${newCases.length} where Grosher sells them`);
   console.log(rows.join("\n"));
   return rs;
@@ -99,6 +107,8 @@ if (bundle === grosher) {
   await newShelves(demoSupercenter);
   await newShelves(grosher);
 }
+const jsonAt = args.indexOf("--json");
+if (jsonAt >= 0) writeFileSync(args[jsonAt + 1], JSON.stringify(json, null, 2) + "\n");
 if (offline) process.exit(0);
 
 // the unknowns go to the model in batches, as the app would send them

@@ -182,6 +182,8 @@ test("hero lists: every item placed offline on its shelf, solved in time, routes
       lane: route.legs.find((l) => l.label === "Checkout")?.nodeId,
       routeM: Math.round(route.distanceM),
       listOrderM: Math.round(inOrder.distanceM),
+      // as printed above, from the unrounded metres: the docs cite it (apps/web/scripts/docs-numbers.mjs)
+      savedPct: Number((100 * (1 - route.distanceM / inOrder.distanceM)).toFixed(0)),
     };
   }
   const json = JSON.stringify(out, null, 2) + "\n";

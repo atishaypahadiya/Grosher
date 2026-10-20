@@ -18,3 +18,6 @@ design/refs/
 
 # local captures and comparison images (screenshots, perf runs): never committed
 .work/
+
+# the gates' --json measurements (apps/web/scripts/docs-numbers.mjs)
+apps/web/.numbers/

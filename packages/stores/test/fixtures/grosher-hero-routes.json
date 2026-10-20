@@ -26,7 +26,8 @@
     ],
     "lane": "SELF",
     "routeM": 315,
-    "listOrderM": 440
+    "listOrderM": 440,
+    "savedPct": 28
   },
   "weekly-staples": {
     "items": [
@@ -57,7 +58,8 @@
     ],
     "lane": "SELF",
     "routeM": 359,
-    "listOrderM": 513
+    "listOrderM": 513,
+    "savedPct": 30
   },
   "friday-night": {
     "items": [
@@ -84,7 +86,8 @@
     ],
     "lane": "SELF",
     "routeM": 289,
-    "listOrderM": 523
+    "listOrderM": 523,
+    "savedPct": 45
   },
   "pharmacy-run": {
     "items": [
@@ -103,6 +106,7 @@
     ],
     "lane": "SELF",
     "routeM": 256,
-    "listOrderM": 331
+    "listOrderM": 331,
+    "savedPct": 22
   }
 }

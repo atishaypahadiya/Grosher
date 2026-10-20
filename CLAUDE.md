@@ -58,6 +58,8 @@ npm run dev -w @grosher/resolver         # wrangler dev on :8787 (anthropic prov
 npm run chain:status -w @grosher/resolver   # the Mac → worker chain, one ✓ / ✗ line per link with the fix
 cd apps/web && node scripts/boot-resilience.mjs     # stale worker + old state + a deploy → the app renders (CI runs it)
 cd apps/web && node scripts/survey-flow.mjs http://localhost:4173 --shots /tmp/s   # survey mode end to end, mocked sensors (CI runs it)
+node apps/web/scripts/docs-numbers.mjs --run          # the README's and the project page's numbers against the gates (CI runs it last)
+gh run download <run> -n docs-numbers -D /tmp/dn && node apps/web/scripts/docs-numbers.mjs --dir /tmp/dn --ci --write   # take CI's numbers into the docs
 ```
 
 Web tests run in jsdom, where WebGL does not exist, so the trip screen under test always uses the flat
@@ -1028,8 +1030,17 @@ slice, meeting seamlessly (haze → lime-green → leaf → deep, then back up t
 two blooms kept inside it vertically (a bloom clipped while still tinted draws a seam). Ink follows the region:
 warm ink (`--ink-warm`) on haze and the mango hand-off, white on green; muted white only where the ground is #276E3E or darker or inside
 a card, full white on the leaf footer. Every figure carries an HTML comment with its source file or commit;
-update the page (and the README's Numbers, which carry the same figures) when the bench, the fixtures, the
-perf or close-up gate, or the index timings move.
+**The numbers are checked** (`scripts/docs-numbers.mjs`, CI's last step): every number in the README or on the
+page that a gate or a test measures carries a key, `<!--n:perf.calls-->48<!--/n-->` in the README (an HTML
+comment, invisible on GitHub) and `data-n="perf.calls"` on the page (a budget bar `data-bar="perf.calls/70"`, its
+width checked too). The values come from the gates' `--json` files (`apps/web/.numbers/`, git-ignored: the perf
+and close-up gates write them; `--run` runs the bench and the offline eval for theirs) and the hero-route
+snapshot (its `savedPct` is the test's own rounding). A key that reads anything else fails CI with the key, the
+two values and the fix; `--write` rewrites the docs from the measurements. The close-up gate's megabytes and
+download kilobytes are CI's own (larger on CI's renderer and build: `ci: true` in `KEYS`): off CI they are
+skipped, so take them from the run's `docs-numbers` artifact with `--ci`. Timings (solve, load, ready ms) vary
+run to run: they are not keyed and carry their date and machine. A new cited number gets a key in `KEYS`.
+Update the timings by hand when they move.
 
 Media: `node apps/web/scripts/capture-project.mjs http://localhost:4173` against `vite preview` of a fresh build.
 It types a 14-item list over 13 aisles in no store order, walks the trip, and writes the 2× WebP stills (list,
@@ -1046,7 +1057,8 @@ The close-up media: `node apps/web/scripts/capture-closeup.mjs http://localhost:
 Metal: SwiftShader draws a close-up at a few frames a second). "Bananas, Toor dal (bulk), Greek yogurt": the
 descent into Produce and the stroll to the bananas, a second at eye level, Got it, the way out and the descent
 into Bulk, cut from one recording into `closeup.{webm,mp4}` (the hero), `closeup-poster.webp` (a 2× still) and
-`closeup.gif` (the README's hero, 270 px at 10 fps, ~3.7 MB); the cuts are in `closeup.json`. Playwright
+`closeup.gif` (the README's hero: the first arrival only, the first rung of a fps / width / colours ladder
+that fits 1.5 MB; today 4.3 s at 10 fps, 250 px, 1.3 MB); the cuts and the rung are in `closeup.json`. Playwright
 records at CSS pixels (a 780 × 1688 video of a 2× page is the 390 × 844 picture padded), so it records at
 390 × 844.
 

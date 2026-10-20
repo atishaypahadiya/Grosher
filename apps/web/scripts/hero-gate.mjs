@@ -28,13 +28,15 @@
 
 import { chromium } from "playwright";
 import { gzipSync } from "node:zlib";
-import { mkdirSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { CLOSE_UP_BUDGET as B } from "../src/hero/budget.ts";
 
 const BASE = (process.argv[2] ?? "http://localhost:4173").replace(/\/$/, "");
 const shotsAt = process.argv.indexOf("--shots");
 const SHOTS = shotsAt > 0 ? process.argv[shotsAt + 1] : null;
+// --json <path>: what it measured as data, for scripts/docs-numbers.mjs (the README and the project page cite it)
+const JSON_OUT = process.argv.includes("--json") ? process.argv[process.argv.indexOf("--json") + 1] : null;
 if (SHOTS) mkdirSync(SHOTS, { recursive: true });
 const DIST = join(import.meta.dirname, "..", "dist");
 const GL = ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--enable-webgl"];
@@ -309,6 +311,22 @@ failed ||= !preload.prepared;
 console.log(`prepared on the list: ${preload.onList && preload.std && preload.produce ? "yes, before Route (Bulk, Produce, and the standard A4-R16)" : `NO: the first stop's close-up was not prepared on the list screen (Bulk ${preload.onList}, Produce ${preload.produce}, standard ${preload.std})`}`);
 failed ||= !preload.onList || !preload.std || !preload.produce;
 console.log(`tier: ${rows[0]?.hero.tier}`);
+if (JSON_OUT)
+  writeFileSync(
+    JSON_OUT,
+    JSON.stringify(
+      {
+        gate: "closeup",
+        tier: rows[0]?.hero.tier ?? null,
+        rows: rows.map((r) => ({ view: r.view, calls: r.calls, triangles: r.triangles, mb: Number(((r.hero.gpuBytes + (r.hero.envBytes ?? 0)) / 2 ** 20).toFixed(1)) })),
+        downloadKB: Object.fromEntries(Object.entries(downloads).map(([zone, d]) => [zone, Math.round(d.kb)])),
+        combined: { stops: combined.stops.map((r) => ({ zone: r.zone, mb: Number(r.mb.toFixed(1)) })), peakMB: Number(combined.peakMB.toFixed(1)) },
+        transitions: transitions.map((t) => ({ from: t.from, to: t.to, prepared: t.prepared, ms: t.ready?.ms ?? null, frames: t.ready?.frames ?? null })),
+      },
+      null,
+      2,
+    ) + "\n",
+  );
 console.log(`budget: ≤ ${B.drawCalls} draw calls, ≤ ${B.triangles.toLocaleString("en-US")} triangles, ≤ ${B.gpuTextureMB} MB GPU textures, ≤ ${B.downloadKB.toLocaleString("en-US")} KB download`);
 if (errors.length) console.log(`page errors:\n  ${errors.slice(0, 5).join("\n  ")}`);
 if (failed) {

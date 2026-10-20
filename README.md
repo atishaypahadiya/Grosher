@@ -8,9 +8,9 @@ A shopping list in, the shortest walk through the store out: every item placed o
 re-solved each time you check one off, and every stop opening at eye level when you get there.
 
 <p align="center">
-  <img src="apps/web/public/project/img/closeup.gif" width="270" alt="The 3D trip: the camera comes down through Produce's skylight to the bananas, the shopper taps Got it, the camera rises over the map and comes down again into Bulk, to the toor dal bin" />
+  <img src="apps/web/public/project/img/closeup.gif" width="270" alt="The 3D trip: from the map the camera comes down through Produce's skylight and strolls to the bananas, their crate lit in lime, and stops at eye level" />
 </p>
-<p align="center"><sub>The app as built: Produce, Got it, then Bulk. Recorded from the production build by <code>apps/web/scripts/capture-closeup.mjs</code>.</sub></p>
+<p align="center"><sub>The app as built: the first stop, in Produce. Recorded from the production build by <code>apps/web/scripts/capture-closeup.mjs</code>; the <a href="https://grosher.pages.dev/project/">project page</a> has the full clip, on to Bulk.</sub></p>
 
 <p>
   <img src="apps/web/public/project/img/list.webp" width="30%" alt="The list screen with 14 items, each placed on a shelf, and the lime Route button" />
@@ -24,7 +24,10 @@ re-solved each time you check one off, and every stop opening at eye level when 
 ### The list and the resolver
 
 - **Type, paste or hold to speak.** Voice uses the Web Speech API: release to stop, and each pause becomes an
-  item. Lists save, the usual trip for today's weekday is offered when the list is empty, and every trip goes
+  item. In the app installed on an iPhone's home screen the mic is hidden, because WebKit's recogniser has been
+  reported not to start there (not yet checked on a device). The list says "Voice works in Safari, or use the
+  keyboard mic." and offers **Try it here**, which shows the mic on that phone from then on; the keyboard's own
+  dictation works everywhere. Lists save, the usual trip for today's weekday is offered when the list is empty, and every trip goes
   into a history.
 - **Every line is placed on a shelf, in seven layers.** In order: an exact catalog name or brand, your own
   memory of where you found it, a shelf category that names it ("atta", "tp"), a fuzzy match for typos
@@ -117,58 +120,62 @@ page.
 
 ## Numbers
 
-All measured on 20 Oct 2026 on this repo unless a CI run is named. Each one says how it was measured.
+Every number below that a gate or a test measures is checked against it on every push
+(`apps/web/scripts/docs-numbers.mjs`, after the gates in CI): if the code moves a number and this page does
+not, CI fails. Timings vary run to run, so they are not checked; they carry their date and machine instead.
 
 **Route vs walking the list as written**, Grosher's four hero lists (`packages/stores/test/grosher.test.ts`
-against its snapshot `test/fixtures/grosher-hero-routes.json`; walking distance only, every item placed
-offline, exact by Held–Karp):
+and its snapshot `test/fixtures/grosher-hero-routes.json`; walking distance only, every item placed offline,
+exact by Held–Karp):
 
 | list | items | in order | Grosher | saved |
 | --- | ---: | ---: | ---: | ---: |
-| Weeknight dal-chawal | 10 | 440 m | 315 m | 28% |
-| Weekly staples | 11 | 513 m | 359 m | 30% |
-| Friday night in | 9 | 523 m | 289 m | 45% |
-| Pharmacy run | 5 | 331 m | 256 m | 22% |
+| Weeknight dal-chawal | 10 | <!--n:routes.dal-chawal.listOrderM-->440<!--/n--> m | <!--n:routes.dal-chawal.routeM-->315<!--/n--> m | <!--n:routes.dal-chawal.savedPct-->28<!--/n-->% |
+| Weekly staples | 11 | <!--n:routes.weekly-staples.listOrderM-->513<!--/n--> m | <!--n:routes.weekly-staples.routeM-->359<!--/n--> m | <!--n:routes.weekly-staples.savedPct-->30<!--/n-->% |
+| Friday night in | 9 | <!--n:routes.friday-night.listOrderM-->523<!--/n--> m | <!--n:routes.friday-night.routeM-->289<!--/n--> m | <!--n:routes.friday-night.savedPct-->45<!--/n-->% |
+| Pharmacy run | 5 | <!--n:routes.pharmacy-run.listOrderM-->331<!--/n--> m | <!--n:routes.pharmacy-run.routeM-->256<!--/n--> m | <!--n:routes.pharmacy-run.savedPct-->22<!--/n-->% |
 
 **Random lists** (`npm run bench -- --store grosher`: 30 random lists per size from 30 everyday items,
-walking distance only, solve times on an M4 Pro):
+walking distance only; solve times measured 20 Oct 2026 on an M4 Pro, not checked):
 
 | stops | solver | list order | Grosher | saved | saved p10–p90 | solve p50 | solve max |
 | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| 5 | Held–Karp | 339 m | 252 m | 25% | 9–40% | 0.0 ms | 0.2 ms |
-| 8 | Held–Karp | 472 m | 305 m | 35% | 24–42% | 0.1 ms | 0.1 ms |
-| 10 | Held–Karp | 577 m | 343 m | 41% | 28–49% | 0.4 ms | 1.2 ms |
-| 13 | Held–Karp | 704 m | 391 m | 44% | 36–51% | 4.5 ms | 4.9 ms |
-| 18 | heuristic | 977 m | 511 m | 48% | 44–54% | 4.1 ms | 9.1 ms |
-| 25 | heuristic | 1,270 m | 614 m | 52% | 50–55% | 8.5 ms | 9.5 ms |
-| 30 | heuristic | 1,532 m | 665 m | 57% | 53–59% | 18.1 ms | 19.8 ms |
+| 5 | Held–Karp | <!--n:bench.5.listOrderM-->339<!--/n--> m | <!--n:bench.5.routeM-->252<!--/n--> m | <!--n:bench.5.savedPct-->25<!--/n-->% | <!--n:bench.5.p10-->9<!--/n-->–<!--n:bench.5.p90-->40<!--/n-->% | 0.0 ms | 0.2 ms |
+| 8 | Held–Karp | <!--n:bench.8.listOrderM-->472<!--/n--> m | <!--n:bench.8.routeM-->305<!--/n--> m | <!--n:bench.8.savedPct-->35<!--/n-->% | <!--n:bench.8.p10-->24<!--/n-->–<!--n:bench.8.p90-->42<!--/n-->% | 0.1 ms | 0.1 ms |
+| 10 | Held–Karp | <!--n:bench.10.listOrderM-->577<!--/n--> m | <!--n:bench.10.routeM-->343<!--/n--> m | <!--n:bench.10.savedPct-->41<!--/n-->% | <!--n:bench.10.p10-->28<!--/n-->–<!--n:bench.10.p90-->49<!--/n-->% | 0.4 ms | 1.2 ms |
+| 13 | Held–Karp | <!--n:bench.13.listOrderM-->704<!--/n--> m | <!--n:bench.13.routeM-->391<!--/n--> m | <!--n:bench.13.savedPct-->44<!--/n-->% | <!--n:bench.13.p10-->36<!--/n-->–<!--n:bench.13.p90-->51<!--/n-->% | 4.5 ms | 4.9 ms |
+| 18 | heuristic | <!--n:bench.18.listOrderM-->977<!--/n--> m | <!--n:bench.18.routeM-->511<!--/n--> m | <!--n:bench.18.savedPct-->48<!--/n-->% | <!--n:bench.18.p10-->44<!--/n-->–<!--n:bench.18.p90-->54<!--/n-->% | 4.1 ms | 9.1 ms |
+| 25 | heuristic | <!--n:bench.25.listOrderM-->1,270<!--/n--> m | <!--n:bench.25.routeM-->614<!--/n--> m | <!--n:bench.25.savedPct-->52<!--/n-->% | <!--n:bench.25.p10-->50<!--/n-->–<!--n:bench.25.p90-->55<!--/n-->% | 8.5 ms | 9.5 ms |
+| 30 | heuristic | <!--n:bench.30.listOrderM-->1,532<!--/n--> m | <!--n:bench.30.routeM-->665<!--/n--> m | <!--n:bench.30.savedPct-->57<!--/n-->% | <!--n:bench.30.p10-->53<!--/n-->–<!--n:bench.30.p90-->59<!--/n-->% | 18.1 ms | 19.8 ms |
 
-**Item resolution** (`npm run eval:everyday -w @grosher/stores -- --store grosher`, scored at aisle level):
+**Item resolution** (`npm run eval:everyday -w @grosher/stores -- --store grosher`, scored at aisle level; the
+model's column was measured 20 Oct 2026 with qwen3:8b on the Mac, which CI does not have):
 
 | set | without the model | with qwen3:8b |
 | --- | ---: | ---: |
-| 150 everyday items, written blind (food, brands, household, pharmacy, Indian staples, misspellings) | 149 / 150 (99%) | 149 / 150 |
-| the same set on the demo Supercenter | 147 / 150 (98%) | – |
-| 33 things Walmart grocery had no shelf for (beer and wine, bulk, cookware, flowers, the food hall; not blind) | 29 / 33 | 32 / 33 |
+| 150 everyday items, written blind (food, brands, household, pharmacy, Indian staples, misspellings) | <!--n:eval.grosher.correct-->149<!--/n--> / <!--n:eval.grosher.total-->150<!--/n--> (<!--n:eval.grosher.pct-->99<!--/n-->%) | 149 / 150 |
+| the same set on the demo Supercenter | <!--n:eval.demo.correct-->147<!--/n--> / 150 (<!--n:eval.demo.pct-->98<!--/n-->%) | – |
+| 33 things Walmart grocery had no shelf for (beer and wine, bulk, cookware, flowers, the food hall; not blind) | <!--n:eval.newShelves.grosher-->29<!--/n--> / 33 | 32 / 33 |
 
 The one miss on Grosher is "salmon fillet", which lands on frozen fillets rather than the seafood counter.
 The two tuned regression fixtures (`packages/core/test/fixtures`, 60 and 30 items) are 100%.
 
-**The 3D view**, against the budgets in DESIGN.md §3 (headless Chromium, SwiftShader, 390 × 844):
+**The 3D view**, against the budgets in DESIGN.md §3, as CI measures it (headless Chromium, SwiftShader,
+390 × 844):
 
 | check | measured | budget |
 | --- | --- | --- |
-| overview, worst of three framings (`scripts/perf-gate.mjs`) | 48 draw calls, 7,924 product instances | ≤ 70 calls, ≤ 12,000 instances |
-| close-ups, worst arrival frame (`scripts/hero-gate.mjs`, CI run 39471815998) | Bulk 61 calls / 205k triangles; Produce 51 / 168k; standard A4-R16 46 / 179k | ≤ 70 calls, ≤ 250k triangles |
-| close-up GPU textures, peak across four in a row (same run) | 13.7 MB | ≤ 16 MB |
-| close-up download (same run) | Bulk 2,306 KB · standard 1,527 KB · Produce 1,476 KB | ≤ 2,500 KB |
-| next close-up, asked for → ready (same run) | 3–5 ms | – |
+| overview, worst of three framings (`scripts/perf-gate.mjs`) | <!--n:perf.calls-->48<!--/n--> draw calls, <!--n:perf.instances-->7,924<!--/n--> product instances | ≤ 70 calls, ≤ 12,000 instances |
+| close-ups, worst arrival frame (`scripts/hero-gate.mjs`) | Bulk <!--n:closeup.bulk.calls-->61<!--/n--> calls / <!--n:closeup.bulk.triangles-->205k<!--/n--> triangles; Produce <!--n:closeup.produce.calls-->51<!--/n--> / <!--n:closeup.produce.triangles-->168k<!--/n-->; standard A4-R16 <!--n:closeup.standard.calls-->46<!--/n--> / <!--n:closeup.standard.triangles-->179k<!--/n--> | ≤ 70 calls, ≤ 250k triangles |
+| close-up GPU textures, peak across four close-ups in a row | <!--n:closeup.peakMB-->13.7<!--/n--> MB | ≤ 16 MB |
+| close-up download | Bulk <!--n:closeup.download.bulk-->2,306<!--/n--> KB · standard <!--n:closeup.download.standard-->1,527<!--/n--> KB · Produce <!--n:closeup.download.produce-->1,476<!--/n--> KB | ≤ 2,500 KB |
+| next close-up, prepared during the stop before: asked for → ready | within the limit at every hand-over | ≤ 2 frames or 400 ms |
 
 Frame times under SwiftShader are software rendering, so no frame rate is claimed for a phone.
 
-**Loading** (production build, headless Chromium at 390 × 844, median of 3): the list is interactive at
-80 ms cold and 76 ms warm. The 145,964-form catalog index is ready at 1,104 ms cold (built in the worker) and
-147 ms warm (from IndexedDB).
+**Loading** (production build, headless Chromium at 390 × 844, median of 3, 20 Oct 2026, not checked): the list
+is interactive at 80 ms cold and 76 ms warm. The 145,964-form catalog index is ready at 1,104 ms cold (built in
+the worker) and 147 ms warm (from IndexedDB).
 
 ## Quality gates
 
@@ -177,7 +184,7 @@ Every push to `main` runs `.github/workflows/ci.yml`:
 | gate | what fails it |
 | --- | --- |
 | typecheck | `tsc --noEmit` in every workspace |
-| tests | core (33), stores (23), resolver (6), web (171), counted as each runner reports them |
+| tests | the engine, store data, worker and web app suites (`npm test`) |
 | no key in the bundle | `apps/web/test/bundle.test.ts` builds the app and searches it for an Anthropic key prefix |
 | perf gate | the overview over 70 draw calls or 12,000 instances in any of three framings |
 | close-up gate | any close-up over its call, triangle, GPU-texture or download budget; a close-up fetched when it should not be; a next stop not prepared ahead |
@@ -185,6 +192,7 @@ Every push to `main` runs `.github/workflows/ci.yml`:
 | survey flow | survey mode end to end with mocked sensors: calibrate, three aisles, offline sign photos, build, export, import |
 | guard demo | the off-list guard firing anywhere but the demo's one detour, or speaking during a counter wait |
 | boot resilience | a stale service worker, old saved state, missing chunks or a render error leaving a blank screen |
+| docs numbers | a number in this README or on the project page that the gates above did not measure |
 
 ## Run it
 
@@ -200,9 +208,39 @@ npm run bench -- --store grosher     # the random-list table above
 For the model layer, install [Ollama](https://ollama.com) and run `ollama pull qwen3:8b`. On the Mac, the dev
 server talks to it at `http://localhost:11434`. Ollama listens on loopback only, so a phone goes through the
 Cloudflare Worker in `apps/resolver`, which reaches the same model through Tailscale Funnel and a token gate.
-Setup and the LaunchAgents that keep it up across reboots are in `CLAUDE.md`, "Worker deploy"; check it with
-`npm run chain:status -w @grosher/resolver`. Without any of it the app still works: items the catalog and your
-memory cannot place ask for one tap.
+Without any of it the app still works: items the catalog and your memory cannot place ask for one tap.
+
+## Operations
+
+The model layer runs on one Mac. The chain is: the installed app → the Cloudflare Worker → a Tailscale Funnel
+address (a fixed public HTTPS name on the tailnet) → a small token gate on `127.0.0.1:11435` → Ollama on
+`127.0.0.1:11434`.
+
+- **One command checks it:** `npm run chain:status -w @grosher/resolver` prints one ✓ or ✗ line per link, with
+  the fix for each ✗, and exits 1 on any failure. The links are Ollama, the model loaded, the gate, the Funnel
+  (a public request without the token must get 401) and the Worker's `/health`.
+- **It comes back after a reboot by itself.** Two LaunchAgents start at login:
+  - `dev.grosher.ollama` sets Ollama's environment and opens the app, then warms `qwen3:8b` with a one-token
+    request.
+  - `dev.grosher.gate` keeps the gate running, restarting it within a second if it dies.
+
+  The Funnel is stored in Tailscale's own config, so it returns with the Tailscale app.
+  `npm run chain:install -w @grosher/resolver` installs both agents; `--uninstall` removes them.
+- **Ollama listens on loopback only** (`OLLAMA_HOST=127.0.0.1`). It has no authentication, so nothing on the
+  LAN or the tailnet can reach it: the gate is its one client, and only the gate is on the Funnel. The gate
+  passes two routes, and only with the exact bearer token. The Ollama app's "Expose Ollama to the network"
+  setting must stay off, because it overrides that; `chain:status` fails if anything listens beyond loopback.
+- **Two models can stay resident** (`OLLAMA_MAX_LOADED_MODELS=2`, `OLLAMA_KEEP_ALIVE=24h`): `qwen3:8b` for the
+  list (6.1 GB loaded) and `qwen2.5vl:7b` for survey mode's sign photos (8.0 GB). The vision model loads on the
+  first sign read, and from then on both fit together (14.1 GB within the 24 GB Mac's 17.8 GiB GPU budget), so a sign
+  read never evicts the list's model. A third model loaded by anything else would evict one of them.
+- **When the Mac sleeps**, the Worker answers every item as unknown with `degraded: true`. The app shows
+  "Resolver offline · unknown items need a tap", and everything the catalog and memory can place still works.
+- **Secrets stay in the Worker.** The Funnel address and the token are Worker secrets, and the token file on the
+  Mac is readable by its owner only. Nothing secret ships in the app (the bundle test checks).
+
+The one-time setup (the token, Funnel, the agents, `wrangler secret put`, deploy) is in `CLAUDE.md`, under
+"Worker deploy".
 
 ## Layout
 

@@ -6,8 +6,9 @@
 //   npm run build -w @grosher/web && (cd apps/web && npx vite preview --port 4173 &)
 //   node apps/web/scripts/capture-closeup.mjs http://localhost:4173
 //
-// Writes public/project/img/closeup.{webm,mp4} with closeup-poster.webp and closeup.gif (for the README):
-// the first arrival, a second at eye level, Got it, the way out and the second arrival. Needs a GPU: a software renderer draws the
+// Writes public/project/img/closeup.{webm,mp4} with closeup-poster.webp (the project page's hero): the first
+// arrival, a second at eye level, Got it, the way out and the second arrival; and closeup.gif (the README's
+// hero): the first arrival only, ≤ 1.5 MB. Needs a GPU: a software renderer draws the
 // close-ups at a few frames a second, so this one launches Chromium on the Mac's GPU (ANGLE on Metal).
 // Needs ffmpeg and cwebp.
 
@@ -87,8 +88,21 @@ const trims = cuts.map(([a, b], i) => `[0:v]trim=${a.toFixed(2)}:${b.toFixed(2)}
 ff(["-i", join(TMP, "raw.webm"), "-an", "-filter_complex", `${trims};[cut]scale=390:-2[v]`, "-map", "[v]", "-c:v", "libvpx-vp9", "-b:v", "0", "-crf", "40", "-row-mt", "1", "-deadline", "good", "-cpu-used", "2", join(IMG, "closeup.webm")]);
 ff(["-i", join(TMP, "raw.webm"), "-an", "-filter_complex", `${trims};[cut]scale=390:-2[v]`, "-map", "[v]", "-c:v", "libx264", "-preset", "slow", "-crf", "31", "-pix_fmt", "yuv420p", "-movflags", "+faststart", join(IMG, "closeup.mp4")]);
 execFileSync("cwebp", ["-quiet", "-q", "78", join(TMP, "poster.png"), "-o", join(IMG, "closeup-poster.webp")]);
-// the README's GIF: the same cuts at 10 fps, 270 px, one palette
-ff(["-i", join(TMP, "raw.webm"), "-filter_complex", `${trims};[cut]fps=10,scale=270:-2:flags=lanczos,split[a][b];[a]palettegen=max_colors=112:stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=3:diff_mode=rectangle[v]`, "-map", "[v]", "-loop", "0", join(IMG, "closeup.gif")]);
+// the README's GIF: the first arrival only (the descent into Produce, the stroll, a second at eye level), one
+// palette, at most GIF_MAX_KB: the first rung of the ladder that fits
+const GIF_MAX_KB = 1500;
+const [g0, g1] = cuts[0];
+let gif = null;
+for (const [fps, width, colors] of [[10, 270, 112], [10, 250, 96], [9, 240, 88], [8, 230, 80], [8, 220, 64]]) {
+  ff(["-ss", g0.toFixed(2), "-t", (g1 - g0).toFixed(2), "-i", join(TMP, "raw.webm"), "-vf", `fps=${fps},scale=${width}:-2:flags=lanczos,split[a][b];[a]palettegen=max_colors=${colors}:stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=3:diff_mode=rectangle`, "-loop", "0", join(IMG, "closeup.gif")]);
+  const kb = statSync(join(IMG, "closeup.gif")).size / 1024;
+  if (kb <= GIF_MAX_KB) {
+    gif = { fps, width, colors, kb: Math.round(kb), seconds: Number((g1 - g0).toFixed(1)) };
+    break;
+  }
+}
+if (!gif) throw new Error(`closeup.gif: no rung of the ladder fits in ${GIF_MAX_KB} KB`);
+console.log(`closeup.gif: ${gif.seconds} s at ${gif.fps} fps, ${gif.width} px, ${gif.colors} colours`);
 rmSync(TMP, { recursive: true, force: true });
 for (const f of ["closeup.webm", "closeup.mp4", "closeup-poster.webp", "closeup.gif"]) console.log(`${f} ${Math.round(statSync(join(IMG, f)).size / 1024)} KB`);
-writeFileSync(join(IMG, "..", "closeup.json"), JSON.stringify({ _note: "Written by apps/web/scripts/capture-closeup.mjs (production build, 390×844, GPU). Seconds from the video's start.", capturedAt: new Date().toISOString().slice(0, 10), list: LIST.split(", "), marks, cuts }, null, 2) + "\n");
+writeFileSync(join(IMG, "..", "closeup.json"), JSON.stringify({ _note: "Written by apps/web/scripts/capture-closeup.mjs (production build, 390×844, GPU). Seconds from the video's start.", capturedAt: new Date().toISOString().slice(0, 10), list: LIST.split(", "), marks, cuts, gif }, null, 2) + "\n");

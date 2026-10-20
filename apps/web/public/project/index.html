@@ -604,9 +604,9 @@ td .num { font-size: 17px; }
         </dl>
         <div class="result">
           <span class="eyebrow">Result</span>
-          <!-- source: apps/web/scripts/hero-gate.mjs "prepared ahead" in CI run 39471815998 (std:FLORAL-1 → produce 5 ms, produce → bulk 3 ms, bulk → std:DAIRY-1 3 ms); GPU peak 13.7 MB in the same run -->
-          <span class="num">3–5<span class="unit">ms</span></span>
-          <p>From asking for the next close-up to it being ready, in CI's software renderer; the GPU peaks at 13.7 MB across four in a row.</p>
+          <!-- source: apps/web/scripts/hero-gate.mjs "prepared ahead": CI fails a hand-over that takes more than two frames or 400 ms from asking for the next close-up to it being ready; the peak is checked by scripts/docs-numbers.mjs -->
+          <span class="num">≤ 2</span>
+          <p>Frames from asking for the next close-up to it being ready, at every hand-over, or CI fails; the GPU peaks at <span data-n="closeup.peakMB">13.7</span> MB across four in a row.</p>
         </div>
       </li>
     </ul>
@@ -739,14 +739,14 @@ td .num { font-size: 17px; }
           <caption class="sr-only">Walking distance of each hero list in written order and of the Grosher route, in metres</caption>
           <thead><tr><th scope="col">List</th><th scope="col">In order, m</th><th scope="col">Grosher, m</th><th scope="col">Saved</th></tr></thead>
           <tbody>
-            <tr><td>Dal-chawal · <span class="num">10</span></td><td><span class="num">440</span></td><td><span class="num">315</span></td><td><span class="num now">28%</span></td></tr>
-            <tr><td>Weekly staples · <span class="num">11</span></td><td><span class="num">513</span></td><td><span class="num">359</span></td><td><span class="num now">30%</span></td></tr>
-            <tr><td>Friday night in · <span class="num">9</span></td><td><span class="num">523</span></td><td><span class="num">289</span></td><td><span class="num now">45%</span></td></tr>
-            <tr><td>Pharmacy run · <span class="num">5</span></td><td><span class="num">331</span></td><td><span class="num">256</span></td><td><span class="num now">22%</span></td></tr>
+            <tr><td>Dal-chawal · <span class="num">10</span></td><td><span class="num" data-n="routes.dal-chawal.listOrderM">440</span></td><td><span class="num" data-n="routes.dal-chawal.routeM">315</span></td><td><span class="num now"><span data-n="routes.dal-chawal.savedPct">28</span>%</span></td></tr>
+            <tr><td>Weekly staples · <span class="num">11</span></td><td><span class="num" data-n="routes.weekly-staples.listOrderM">513</span></td><td><span class="num" data-n="routes.weekly-staples.routeM">359</span></td><td><span class="num now"><span data-n="routes.weekly-staples.savedPct">30</span>%</span></td></tr>
+            <tr><td>Friday night in · <span class="num">9</span></td><td><span class="num" data-n="routes.friday-night.listOrderM">523</span></td><td><span class="num" data-n="routes.friday-night.routeM">289</span></td><td><span class="num now"><span data-n="routes.friday-night.savedPct">45</span>%</span></td></tr>
+            <tr><td>Pharmacy run · <span class="num">5</span></td><td><span class="num" data-n="routes.pharmacy-run.listOrderM">331</span></td><td><span class="num" data-n="routes.pharmacy-run.routeM">256</span></td><td><span class="num now"><span data-n="routes.pharmacy-run.savedPct">22</span>%</span></td></tr>
           </tbody>
         </table>
         <!-- 14-stop range: `npm run bench -- --store grosher` (packages/core/bench/bench.ts, rng 1414, 30 lists of 14 of the 30 hand-kept items): mean 46%, p10–p90 37–56%; the trip's 45%: public/project/capture.json -->
-        <p class="note">Each list (items after the name) is written the way a person jots it and never reordered; every item is placed offline. Walking distance only, penalties excluded; exact by Held–Karp in 0.0 to 2.0 ms. The dal-chawal route still leaves produce for the rice, atta and ghee, because heavy goes in the cart first. Random 14-item lists save 37–56% (10th to 90th percentile of 30); the trip on this page saved 45%.</p>
+        <p class="note">Each list (items after the name) is written the way a person jots it and never reordered; every item is placed offline. Walking distance only, penalties excluded; exact by Held–Karp in 0.0 to 2.0 ms. The dal-chawal route still leaves produce for the rice, atta and ghee, because heavy goes in the cart first. Random 14-item lists save <span data-n="bench.range14.p10">37</span>–<span data-n="bench.range14.p90">56</span>% (10th to 90th percentile of 30); the trip on this page saved 45%.</p>
       </article>
 
       <article class="card r-solver">
@@ -772,22 +772,22 @@ td .num { font-size: 17px; }
         <h3>Item resolution at aisle level</h3>
         <!-- source: packages/core/test/fixtures/resolution-everyday.json, scored by `npm run eval:everyday -w @grosher/stores -- --store grosher` (each expected demo aisle translated to the Grosher aisles holding its categories), re-run 20 Oct 2026: 149 of 150, no model; the demo store 147 of 150. New shelves: packages/stores/test/fixtures/grosher-new-shelves.json, 33 items, not blind -->
         <div class="res-cols"><div class="res-a">
-        <div class="big"><span class="num">99<span class="unit">%</span></span><p>149 of 150 everyday items written blind, no model involved (147 on the Walmart-style demo store).</p></div>
+        <div class="big"><span class="num"><span data-n="eval.grosher.pct">99</span><span class="unit">%</span></span><p><span data-n="eval.grosher.correct">149</span> of <span data-n="eval.grosher.total">150</span> everyday items written blind, no model involved (<span data-n="eval.demo.correct">147</span> on the Walmart-style demo store).</p></div>
         <ul class="misses" aria-label="The one miss">
           <li>"salmon fillet" lands on frozen fillets, not the seafood counter</li>
         </ul>
-        <p class="note">Things Walmart grocery had no shelf for (beer and wine, bulk dal, cookware, flowers, the food hall): 29 of 33 placed without the model, 32 with it, against 1 on the old store. That set was written after Grosher's signs, so it is not blind.</p>
+        <p class="note">Things Walmart grocery had no shelf for (beer and wine, bulk dal, cookware, flowers, the food hall): <span data-n="eval.newShelves.grosher">29</span> of 33 placed without the model, 32 with it (measured 20 Oct 2026 with qwen3:8b), against <span data-n="eval.newShelves.demo">1</span> on the old store. That set was written after Grosher's signs, so it is not blind.</p>
         </div><div class="res-b">
         <table>
           <caption class="sr-only">Aisle-level accuracy by kind of item on Grosher</caption>
           <thead><tr><th scope="col">Kind</th><th scope="col">Items</th><th scope="col">Right aisle</th></tr></thead>
           <tbody>
-            <tr><td>Food</td><td><span class="num">60</span></td><td><span class="num">59</span></td></tr>
-            <tr><td>Brands</td><td><span class="num">24</span></td><td><span class="num">24</span></td></tr>
-            <tr><td>Pharmacy</td><td><span class="num">19</span></td><td><span class="num">19</span></td></tr>
-            <tr><td>Indian staples</td><td><span class="num">18</span></td><td><span class="num">18</span></td></tr>
-            <tr><td>Household</td><td><span class="num">17</span></td><td><span class="num">17</span></td></tr>
-            <tr><td>Misspellings</td><td><span class="num">12</span></td><td><span class="num">12</span></td></tr>
+            <tr><td>Food</td><td><span class="num" data-n="eval.kind.food.total">60</span></td><td><span class="num" data-n="eval.kind.food.correct">59</span></td></tr>
+            <tr><td>Brands</td><td><span class="num" data-n="eval.kind.brand.total">24</span></td><td><span class="num" data-n="eval.kind.brand.correct">24</span></td></tr>
+            <tr><td>Pharmacy</td><td><span class="num" data-n="eval.kind.pharmacy.total">19</span></td><td><span class="num" data-n="eval.kind.pharmacy.correct">19</span></td></tr>
+            <tr><td>Indian staples</td><td><span class="num" data-n="eval.kind.indian.total">18</span></td><td><span class="num" data-n="eval.kind.indian.correct">18</span></td></tr>
+            <tr><td>Household</td><td><span class="num" data-n="eval.kind.household.total">17</span></td><td><span class="num" data-n="eval.kind.household.correct">17</span></td></tr>
+            <tr><td>Misspellings</td><td><span class="num" data-n="eval.kind.typo.total">12</span></td><td><span class="num" data-n="eval.kind.typo.correct">12</span></td></tr>
           </tbody>
         </table>
         <!-- source: packages/core/test/fixtures/resolution.json (60) and resolution-heldout.json (30), resolution-fixture.test.ts -->
@@ -799,27 +799,27 @@ td .num { font-size: 17px; }
         <span class="eyebrow">Measured · production build, headless Chromium</span>
         <h3>Performance against the budget</h3>
         <div class="perf-cols">
-          <!-- draw calls and instances: apps/web/scripts/perf-gate.mjs on Grosher (local, 20 Oct 2026: 46 / 48 / 46 calls, 1,199 / 7,924 / 7,924 instances); close-ups: apps/web/scripts/hero-gate.mjs, CI run 39471815998 (worst arrival frame: Bulk 61 calls / 204,979 triangles, Produce 51 / 168,085, standard A4-R16 46 / 179,107; GPU textures peak 13.7 MB across four close-ups in a row; download Bulk 2,306 KB); budgets: DESIGN.md §3, apps/web/src/hero/budget.ts -->
+          <!-- draw calls and instances: apps/web/scripts/perf-gate.mjs (the worst of three framings); close-ups: apps/web/scripts/hero-gate.mjs (the worst frame of any arrival or view; the peak across four close-ups in a row); every data-n value checked against CI's gates by scripts/docs-numbers.mjs; budgets: DESIGN.md §3, apps/web/src/hero/budget.ts -->
           <div class="budget">
             <div class="row">
-              <div class="row-head"><span>Draw calls, worst framing</span><span><span class="num">48</span> of <span class="num">70</span></span></div>
-              <div class="bar" role="img" aria-label="48 of a 70 draw-call budget"><i style="width:68.6%"></i></div>
+              <div class="row-head"><span>Draw calls, worst framing</span><span><span class="num" data-n="perf.calls">48</span> of <span class="num">70</span></span></div>
+              <div class="bar" aria-hidden="true"><i data-bar="perf.calls/70" style="width:68.6%"></i></div>
             </div>
             <div class="row">
-              <div class="row-head"><span>Product instances, worst framing</span><span><span class="num">7,924</span> of <span class="num">12,000</span></span></div>
-              <div class="bar" role="img" aria-label="7,924 of a 12,000 instance budget"><i style="width:66%"></i></div>
+              <div class="row-head"><span>Product instances, worst framing</span><span><span class="num" data-n="perf.instances">7,924</span> of <span class="num">12,000</span></span></div>
+              <div class="bar" aria-hidden="true"><i data-bar="perf.instances/12000" style="width:66%"></i></div>
             </div>
             <div class="row">
-              <div class="row-head"><span>Close-up draw calls, worst arrival</span><span><span class="num">61</span> of <span class="num">70</span></span></div>
-              <div class="bar" role="img" aria-label="61 of a 70 draw-call budget, Bulk arriving"><i style="width:87.1%"></i></div>
+              <div class="row-head"><span>Close-up draw calls, worst arrival</span><span><span class="num" data-n="closeup.calls">61</span> of <span class="num">70</span></span></div>
+              <div class="bar" aria-hidden="true"><i data-bar="closeup.calls/70" style="width:87.1%"></i></div>
             </div>
             <div class="row">
-              <div class="row-head"><span>Close-up triangles, worst arrival</span><span><span class="num">205k</span> of <span class="num">250k</span></span></div>
-              <div class="bar" role="img" aria-label="205 thousand of a 250 thousand triangle budget, Bulk arriving"><i style="width:82%"></i></div>
+              <div class="row-head"><span>Close-up triangles, worst arrival</span><span><span class="num" data-n="closeup.triangles">205k</span> of <span class="num">250k</span></span></div>
+              <div class="bar" aria-hidden="true"><i data-bar="closeup.triangles/250000" style="width:82%"></i></div>
             </div>
             <div class="row">
-              <div class="row-head"><span>Close-up GPU textures, peak</span><span><span class="num">13.7</span> of <span class="num">16</span> MB</span></div>
-              <div class="bar" role="img" aria-label="13.7 of a 16 megabyte texture budget"><i style="width:85.6%"></i></div>
+              <div class="row-head"><span>Close-up GPU textures, peak</span><span><span class="num" data-n="closeup.peakMB">13.7</span> of <span class="num">16</span> MB</span></div>
+              <div class="bar" aria-hidden="true"><i data-bar="closeup.peakMB/16" style="width:85.6%"></i></div>
             </div>
           </div>
           <!-- list interactive (80 / 76 ms) and index ready (1,104 / 147 ms): production build, headless Chromium at 390×844, median of 3, 20 Oct 2026 (time from navigation to the add-items field, and to window.__grosherIndex); CLAUDE.md "Item resolution" -->
