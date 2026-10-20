@@ -1,30 +1,31 @@
 // The Bulk & pulses zone at full detail (its own lazy chunk): the shelf kit's meshes for zone.ts, the hero
 // textures, the shadow decals, the stop's bin lifted a little and lit lime with its real grains, and the
 // zone's one realtime light (a hemisphere: every spot and downlight is per pixel in the materials, light.ts).
-// Mounted by the 3D map only while a close-up is open in this zone.
+// Mounted by the 3D map while a close-up is open in this zone or being prepared; on the GPU only once it may
+// be (`upload`, kit/warm.ts), and off it, textures and geometry, as soon as it unmounts.
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Line } from "@react-three/drei";
 import { BoxGeometry, Color, EdgesGeometry, Group, InstancedBufferAttribute, InstancedMesh, Matrix4, Mesh, MeshStandardMaterial, type Texture } from "three";
-import { warmUp } from "../kit/warm.ts";
+import { compileZone, unloadZone, uploadZone } from "../kit/warm.ts";
 import type { StoreGraph } from "@grosher/core";
 import { bulkRig, bulkZoneFor, dropBuiltZones, grainSurface, pickTarget, shapeOf, type Target } from "./zone.ts";
 import { decalMesh } from "../kit/decals.ts";
-import { bakeEnv } from "../kit/env.ts";
+import { acquireEnv } from "../kit/env.ts";
 import { grainLayer } from "../kit/grains.ts";
 import { hex } from "../kit/bake.ts";
 import { GRAINS } from "./recipe.ts";
 import { dropPreparedTextures, kitMaterials, loadHeroTextures, pickTier, pinnedTier, prepareHeroTextures, TIER_KEY, type KitMaterials, type TextureName, type Tier } from "../kit/materials.ts";
 import { save } from "../../lib/storage.ts";
 import type { HeroZoneComponentProps } from "../index.ts";
-import { heroStats } from "../stats.ts";
+import { heroStats, zoneState } from "../stats.ts";
 
 const LIME = new Color("#D4FF4A");
 const LIFT = 0.03;
 const PULL = 0.06;
 
-export default function HeroZone({ store, category, itemName, active = true, onTarget, onLit, onError }: HeroZoneComponentProps) {
+export default function HeroZone({ store, zone: entry, category, itemName, active = true, upload = active, onTarget, onLit, onError }: HeroZoneComponentProps) {
   const gl = useThree((s) => s.gl);
   const camera = useThree((s) => s.camera);
   const scene = useThree((s) => s.scene);
@@ -33,11 +34,7 @@ export default function HeroZone({ store, category, itemName, active = true, onT
   // never stalls on a shader
   const [compiled, setCompiled] = useState<KitMaterials | null>(null);
   const invalidate = useThree((s) => s.invalidate);
-  const zone = useMemo(() => {
-    const z = bulkZoneFor(store);
-    heroStats.triangles = z.triangles;
-    return z;
-  }, [store]);
+  const zone = useMemo(() => bulkZoneFor(store), [store]);
   const [tier, setTier] = useState<Tier>(() => pickTier());
   // the dolly in is the first stretch of continuous frames: if hi runs under ~30 fps (median over 34 ms), drop
   // to lo now and on this phone from now on
@@ -60,14 +57,14 @@ export default function HeroZone({ store, category, itemName, active = true, onT
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gl, tier]);
   const rig = useMemo(() => bulkRig(), []);
-  // the gloss's environment, baked once per zone (env.ts)
-  const env = useMemo(() => {
-    const e = bakeEnv(gl);
-    heroStats.envBytes = e.bytes;
-    return e;
+  // the gloss's environment, shared with the other zone mounted (env.ts)
+  const [env, setEnv] = useState<Texture | null>(null);
+  useEffect(() => {
+    const e = acquireEnv(gl);
+    setEnv(e.texture);
+    return e.release;
   }, [gl]);
-  useEffect(() => () => env.dispose(), [env]);
-  const mats = useMemo<KitMaterials | null>(() => (textures ? kitMaterials(textures, rig, env.texture) : null), [textures, rig, env]);
+  const mats = useMemo<KitMaterials | null>(() => (textures && env ? kitMaterials(textures, rig, env) : null), [textures, rig, env]);
   const decals = useMemo(() => decalMesh(zone.decals), [zone]);
   useFrame(() => {
     const f = frames.current;
@@ -156,16 +153,45 @@ export default function HeroZone({ store, category, itemName, active = true, onT
     invalidate();
   }, [target, instanced, invalidate]);
   // the camera starts down only once there is something to see: the textures are in, the programs compiled
+  // (while prepared), every texture and buffer uploaded (once the zone may be resident)
   useEffect(() => {
     if (!mats || !group.current || compiled === mats || !target) return;
-    return warmUp(gl, scene, camera, group.current, { from: target.door, at: target.center }, textures ? Object.values(textures) : [], () => setCompiled(mats));
+    let live = true;
+    void compileZone(gl, scene, camera, group.current).then(() => {
+      if (!live) return;
+      setCompiled(mats);
+      if (!heroStats.zones[entry.id]) zoneState(entry.id, "prepared");
+    });
+    return () => {
+      live = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mats, gl, camera, scene, compiled, instanced]);
+  const [uploaded, setUploaded] = useState<KitMaterials | null>(null);
   useEffect(() => {
-    // prepared in the background, it waits; made active (its stop is next), it hands over at once
-    if (active && target && mats && compiled === mats) onTarget({ center: target.center, facing: target.facing, name: target.name, height: target.size[1], bounds: target.bounds, door: target.door, via: target.via, stand: target.stand });
+    if (!upload || !mats || compiled !== mats || !group.current || !target) return;
+    const g = group.current;
+    const list = textures ? Object.values(textures) : [];
+    uploadZone(gl, scene, g, { from: target.door, at: target.center }, list);
+    setUploaded(mats);
+    zoneState(entry.id, "uploaded");
+    invalidate();
+    // no longer allowed on the GPU (or unmounted): off it at once
+    return () => {
+      setUploaded(null);
+      zoneState(entry.id, "prepared");
+      unloadZone(g, list);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [target, zone, mats, compiled, active]);
+  }, [upload, mats, compiled]);
+  useEffect(() => {
+    if (active) heroStats.triangles = zone.triangles;
+    // prepared in the background, it waits; made active (its stop is next), it hands over at once
+    if (active && target && mats && uploaded === mats) onTarget({ center: target.center, facing: target.facing, name: target.name, height: target.size[1], bounds: target.bounds, door: target.door, via: target.via, stand: target.stand });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [target, zone, mats, uploaded, active]);
+  // after the upload's cleanup (effects are torn down in order): unmounted, the zone is gone
+  useEffect(() => () => zoneState(entry.id, null), [entry.id]);
 
   const lit = useMemo(() => {
     if (!target) return null;
@@ -184,6 +210,13 @@ export default function HeroZone({ store, category, itemName, active = true, onT
     onLit?.(lit?.mesh ?? null);
     return () => onLit?.(null);
   }, [lit, onLit]);
+  useEffect(
+    () => () => {
+      lit?.mesh.geometry.dispose();
+      (lit?.mesh.material as MeshStandardMaterial | undefined)?.dispose();
+    },
+    [lit],
+  );
 
   // the target's own grains, real and in 3D, on its visible surface; lifted with it
   const grains = useMemo(() => {

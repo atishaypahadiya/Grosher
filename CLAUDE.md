@@ -627,8 +627,18 @@ renderer); the scene's one hemisphere blends from the overview's haze to the zon
 - *the next stop* (TripMap3D `prepared` → Scene, each zone mounted once by id with `active={false}`): the
   stop after the current one, 1.2 s after the current stop starts (its close-up is usually open by then),
   then the next idle period; and the current stop's own zone while it waits out the hold, so the one that
-  opens next is always mounted. A route change cancels it; `?preload=0` turns it off. Its fixtures' other
-  merge is made in idle time too (`prepareHide`). The fixtures' merged variants are kept to the whole store
+  opens next is always mounted. A route change cancels it; `?preload=0` turns it off. **Prepared is off the
+  GPU**: geometry built, textures transcoded, programs compiled (`compileZone` in `kit/warm.ts`; compiling
+  uploads nothing). A zone goes on the GPU (`uploadZone`: its textures, then the 1 × 1 draw) only when it is
+  open, or, between two close-ups, when it opens next (`staged`: TripMap3D → Scene → the zone's `upload`) and
+  the one before has unmounted; leaving a zone frees its textures, geometry and materials at once, and a zone
+  that loses `upload` while still mounted takes itself back off (`unloadZone`). So one zone's textures are
+  resident at a time: Bulk with the next standard zone prepared had reached 17.1 MB (two sets and two
+  environment maps); now 9.1 MB. The environment map is one bake shared by the zones mounted (`acquireEnv`).
+  The cost moved into the hold: on the M4 Pro (Metal, 390 × 844 × 3) one ~60 ms task as the hold starts (none
+  before), the hold still 1.1 s, asked for → ready 1–2 ms (was 4); on SwiftShader the upload is seconds and
+  stretches the hold. Two standard stops in a row upload the shared textures once (76 uploads, none again). Its
+  fixtures' other merge is made in idle time too (`prepareHide`). The fixtures' merged variants are kept to the whole store
   and the last four hide sets (`Fixtures.tsx` `noteVariant`; older ones are disposed).
 - The overview hides the zone's fixtures only once the close-up shows (they used to vanish while it loaded);
   the variant without them waits, merged and in meshes, in a hidden `fixtures-warm` group that the zone's
@@ -726,8 +736,15 @@ ready (the camera starts) 19–29 ms for every stop after the first, 300 ms for 
   the most triangles of all 319: `test/standard-zone.test.ts` pins which one it is). The gate reads the worst
   frame of each arrival (the page's clock slowed 40×), eye level, along the aisle, and Bulk's scoop bins facing
   out over the store; checks nothing of a close-up is fetched by an empty list or a `?closeup=0` trip; sizes
-  each close-up's download from the requests it made beyond that overview trip's; and checks the first stop
-  is prepared on the list and the next one during the stop before (asked for → ready). Measured 19 Oct 2026
+  each close-up's download from the requests it made beyond that overview trip's; checks the first stop
+  is prepared on the list and the next one during the stop before (at Got it the next zone is `prepared` in
+  `heroStats.zones`: built, transcoded, compiled, off the GPU; then asked for → ready within 400 ms or two
+  frames, the log stamping `__grosherPerf.rendered`. Timing alone cannot tell: on SwiftShader the hold's
+  upload takes seconds and stretches the hold, and with `?preload=0` the zone still reads ready in 1 ms); and walks standard →
+  Bulk → standard with the next zone prepared at each stop, holding what is resident at each (`heroStats`'s
+  ledger: a texture counts from its upload to its dispose, plus the environment map) and the page's peak to
+  the same 16 MB (20 Oct 2026: 8.0 · 9.1 · 8.0 MB, peak 9.1; 17.1 before). Every row's MB is the ledger's,
+  so it is everything resident then, not one zone's set. Measured 19 Oct 2026
   (SwiftShader, 390 × 844): Bulk arriving 61 calls / 205k triangles, eye level 47 / 190k (with the target's
   real grains), along the aisle 49 / 160k, scoop bins 56 / 164k, 9.1 MB textures with the gloss's environment,
   2,301 KB download; standard A4-R16 arriving 46 / 179k, eye level 40 / 179k, along the aisle 35 / 178k, 8.0 MB,
@@ -770,8 +787,11 @@ Any stop outside a hero zone, generated from the store data with the shelf kit; 
 - **Light**: the kit's per-pixel light with exactly `STD_LIGHTS` (10) lights and `STD_SLABS` (12) slabs in
   every standard zone (padded), so their programs are one set, compiled at the first and reused by every
   later one; the fill is `STANDARD_AMBIENT` (2.3). **Textures** (`STANDARD_TEXTURES`: pine, plaster, concrete,
-  grains + normals, `catlabels` 2048 × 2688 ETC1S, `signs` 1024 × 1280 UASTC; ~1.2 MB hi) are fetched once per
-  tier and kept for the trip (`standardTextures`); a zone disposes only its own geometry and materials.
+  grains + normals, `catlabels` 2048 × 2688 ETC1S, `signs` 1024 × 1280 UASTC; ~1.2 MB hi) are fetched and
+  transcoded once per tier and kept for the trip (`standardTextures`); their GPU copies only while a standard
+  zone is uploaded (`holdStandardGpu`, taken in the layout phase so the next standard zone holds them before
+  the one it replaces lets go: no re-upload between two standard stops), freed when the trip leaves the last
+  one for Bulk or the map. A zone disposes its own geometry and materials.
   Builds are cached (the last four), ~40 ms each on an M4.
 - **Budget**: every one of the 319 builds is under 180k triangles (the test leaves the overview 70k); the
   heaviest, A4-R16 (jars and bottles on both faces of a 35 m aisle, 145k), is the one the close-up gate opens.

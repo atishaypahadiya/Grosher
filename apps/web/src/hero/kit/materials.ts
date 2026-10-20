@@ -10,7 +10,7 @@
 
 import { Color, DoubleSide, MeshBasicMaterial, MeshStandardMaterial, type Material, RepeatWrapping, SRGBColorSpace, type CompressedTexture, type Texture, type WebGLRenderer } from "three";
 import { KTX2Loader } from "three/examples/jsm/loaders/KTX2Loader.js";
-import { heroStats } from "../stats.ts";
+import { heroStats, trackTexture } from "../stats.ts";
 import { load } from "../../lib/storage.ts";
 import { GRAIN_COLS, GRAIN_ROWS } from "../bulk/recipe.ts";
 import { rigUniforms, withPatches, zoneLightPatch, type LightRig, type Patch } from "./light.ts";
@@ -89,6 +89,7 @@ async function fetchTextures(l: KTX2Loader, tier: Tier, set: TextureSet = "bulk"
       if (!name.endsWith("_n")) t.colorSpace = SRGBColorSpace;
       t.anisotropy = 4;
       t.needsUpdate = true;
+      trackTexture(t, gpuBytes(t));
       return [name, t] as const;
     }),
   );
@@ -110,10 +111,26 @@ export function prepareHeroTextures(tier: Tier): Promise<Record<TextureName, Tex
 }
 
 /**
- * The standard close-ups' textures: fetched once per tier and kept for the trip (a trip opens a dozen standard
- * close-ups; they all share these, as they share their shader programs). ~1.2 MB on the wire on hi.
+ * The standard close-ups' textures: fetched and transcoded once per tier and kept for the trip (a trip opens a
+ * dozen standard close-ups; they all share these, as they share their shader programs). ~1.2 MB on the wire on
+ * hi. Their GPU copies are held only while a standard zone is uploaded (`holdStandardGpu`): leaving the last
+ * one frees them, and the next standard zone uploads them again from the transcoded data, in its warm-up.
  */
 const standardSet = new Map<Tier, Promise<Record<StandardTextureName, Texture>>>();
+const standardLoaded = new Set<Record<StandardTextureName, Texture>>();
+let standardOnGpu = 0;
+/** A standard zone is on the GPU: its shared textures stay there until every holder has let go. */
+export function holdStandardGpu(): () => void {
+  standardOnGpu++;
+  let held = true;
+  return () => {
+    if (!held) return;
+    held = false;
+    if (--standardOnGpu > 0) return;
+    // the GPU copies only: three uploads a disposed texture again on its next use
+    for (const set of standardLoaded) for (const t of Object.values(set)) t.dispose();
+  };
+}
 export function standardTextures(tier: Tier, gl?: WebGLRenderer): Promise<Record<StandardTextureName, Texture>> {
   let p = standardSet.get(tier);
   if (!p) {
@@ -122,6 +139,7 @@ export function standardTextures(tier: Tier, gl?: WebGLRenderer): Promise<Record
     const t0 = performance.now();
     p = (fetchTextures(l, tier, "standard") as unknown as Promise<Record<StandardTextureName, Texture>>).then((t) => {
       heroStats.loadMs = Math.round(performance.now() - t0);
+      standardLoaded.add(t);
       return t;
     });
     p.catch(() => standardSet.delete(tier));
@@ -129,8 +147,6 @@ export function standardTextures(tier: Tier, gl?: WebGLRenderer): Promise<Record
   }
   return p.then((t) => {
     heroStats.tier = tier;
-    heroStats.textures = STANDARD_TEXTURES.length;
-    heroStats.gpuBytes = Object.values(t).reduce((s, x) => s + gpuBytes(x), 0);
     return t;
   });
 }
@@ -148,8 +164,6 @@ export async function loadHeroTextures(gl: WebGLRenderer, tier: Tier): Promise<R
   prepared.delete(tier);
   const t = (ahead && (await ahead)) || (await fetchTextures(ktx2(gl)!, tier));
   heroStats.tier = tier;
-  heroStats.textures = TEXTURES.length;
-  heroStats.gpuBytes = Object.values(t).reduce((s, x) => s + gpuBytes(x), 0);
   heroStats.loadMs = Math.round(performance.now() - t0);
   return t;
 }

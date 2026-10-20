@@ -269,6 +269,9 @@ export interface SceneProps {
   /** zones prepared in the background (hidden, no camera): the current stop's while its close-up waits to
    * open, the next stop's during this one */
   prepared?: ZoneProps[];
+  /** with no close-up up, the prepared zone that opens next: it alone may go on the GPU (the one before it has
+   * been freed); every other prepared zone stays off it (geometry, transcoded textures, programs) */
+  staged?: string | null;
   /** the overview fixtures the next close-up to open will hide: merged ahead */
   prepareHide?: string[];
   closeUpRef?: RefObject<CloseUpCameraHandle | null>;
@@ -277,7 +280,7 @@ export interface SceneProps {
   onCloseUpExited?: () => void;
 }
 
-export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, footprint, litSlot, legFixtureIds, ribbon, overlay, focus, safe, flat, reducedMotion, cameraRef, onOverZoomOut, perf, closeUp, prepared = [], prepareHide, closeUpRef, onHeroTarget, onHeroError, onCloseUpExited }: SceneProps) {
+export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, footprint, litSlot, legFixtureIds, ribbon, overlay, focus, safe, flat, reducedMotion, cameraRef, onOverZoomOut, perf, closeUp, prepared = [], staged, prepareHide, closeUpRef, onHeroTarget, onHeroError, onCloseUpExited }: SceneProps) {
   const [litMesh, setLitMesh] = useState<Mesh | null>(null);
   const [heroLit, setHeroLit] = useState<Mesh | null>(null);
   // the zone loads (and picks its bin) while the overview stays as it is; the scene turns to the close-up, and
@@ -367,6 +370,7 @@ export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, fo
                   category={open ? closeUp!.category : z.category}
                   itemName={open ? closeUp!.itemName : z.itemName}
                   active={open}
+                  upload={open || (!closeUp && z.zone.id === staged)}
                   onTarget={(t) => open && onHeroTarget?.(t)}
                   onLit={open ? setHeroLit : undefined}
                   onError={(e) => onHeroError?.(e, z.zone.id)}

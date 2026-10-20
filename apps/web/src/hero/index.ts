@@ -41,6 +41,10 @@ export interface HeroZoneComponentProps {
   itemName: string;
   /** false while it is only being prepared in the background (the next stop's zone): no camera hand-off yet */
   active?: boolean;
+  /** true once the zone may go on the GPU (textures, buffers): it is open, or it opens next and the zone before
+   * it has been freed. Until then it is only prepared: geometry built, textures transcoded, programs compiled.
+   * Default: `active`. */
+  upload?: boolean;
   onTarget: (t: HeroTargetInfo) => void;
   onLit?: (m: Mesh | null) => void;
   onError: (e: Error) => void;

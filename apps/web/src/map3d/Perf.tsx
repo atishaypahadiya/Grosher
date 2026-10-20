@@ -15,6 +15,8 @@ declare global {
       triangles: number;
       frameMs: number;
       frames: number;
+      /** every frame rendered since the trip's map mounted (the close-up log stamps it: frames between events) */
+      rendered: number;
       programs: number;
       instances: number;
       productFixtures: number;
@@ -35,6 +37,7 @@ export function Perf() {
   const gl = useThree((s) => s.gl);
   const last = useRef(performance.now());
   const samples = useRef<number[]>([]);
+  const rendered = useRef(0);
   useEffect(() => {
     gl.info.autoReset = false; // count every pass of the frame, not just the last one
     return () => {
@@ -55,6 +58,7 @@ export function Perf() {
       programs: gl.info.programs?.length ?? 0,
       frameMs,
       frames: samples.current.length,
+      rendered: ++rendered.current,
       instances: productStats.instances,
       productFixtures: productStats.fixtures,
       distance: Math.round(cameraStats.distance * 10) / 10,

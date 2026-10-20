@@ -10,11 +10,16 @@
 //   draw calls  per frame, every pass: the worst frame of the arrival (high up, the overview still drawn under
 //               the zone), at eye level, looking along the aisle; Bulk's scoop bins out over the store
 //   triangles   the same
-//   GPU MB      the close-up's textures as transcoded on this device, every mip level (hi tier)
+//   GPU MB      the close-up textures resident on the GPU, as transcoded on this device, every mip level (hi
+//               tier): the open zone's and any other zone's still or already uploaded (src/hero/stats.ts)
+//   combined    a walk standard → Bulk → standard, the next zone prepared during each stop: at most one zone on
+//               the GPU at a time (the one before is freed when it is left, the next uploads only after), and
+//               the page's peak over the whole walk within the same budget
 //   download    what a close-up fetches that the overview did not: its chunks (gzip), its hi-tier KTX2 files and
 //               the transcoder (gzip), by the requests the page made, sized from dist/
-//   prepared    the next stop's zone ready when its close-up is asked for (prepared during the stop before), and
-//               the first stop's on the list screen
+//   prepared    the next stop's zone prepared during the stop before (at Got it: built, transcoded, compiled,
+//               still off the GPU), then ready within 400 ms or two rendered frames of being asked for (it
+//               uploads in the hold); and the first stop's on the list screen
 //
 // Frame times are headless software rendering (SwiftShader): printed, never judged. Check a phone with
 // ?debug=perf.
@@ -81,15 +86,23 @@ const steady = async (n) => {
 
 const rows = [];
 let lazy;
-const preload = { prepared: false, readyMs: 0, onList: false, std: false, stdReadyMs: 0 };
+const preload = { prepared: false, ready: null, onList: false, std: false, stdReady: null };
+/** the walk's residency at each stop (with the next stop's zone prepared) and its peak */
+const combined = { stops: [], peakMB: 0 };
+/** the next zone's state as Got it is tapped on the stop before */
+const ahead = [];
+const residentMB = () => page.evaluate(() => {
+  const h = window.__grosherPerf.hero;
+  return { mb: (h.gpuBytes + h.envBytes) / 2 ** 20, peakMB: h.peakBytes / 2 ** 20, textures: h.textures, zone: window.__grosherCloseUp?.zone ?? null };
+});
 const downloads = {};
-/** request → ready of a stop's close-up, from the map's log */
-const readyMs = (zone) =>
+/** request → ready of a stop's close-up, from the map's log: milliseconds, and frames rendered in between */
+const readyIn = (zone) =>
   page.evaluate((z) => {
     const log = (window.__grosherCloseUpLog ?? []).filter((e) => e.zone === z);
     const req = log.find((e) => e.event === "request" || e.event === "request+ready");
     const ready = log.find((e) => e.event === "ready" || e.event === "request+ready");
-    return req && ready ? Math.round(ready.t - req.t) : null;
+    return req && ready ? { ms: Math.round(ready.t - req.t), frames: ready.frame != null && req.frame != null ? ready.frame - req.frame : null } : null;
   }, zone);
 let baseline;
 try {
@@ -199,17 +212,31 @@ try {
   await page.getByTestId("map3d").waitFor({ timeout: 60_000 });
   for (const zone of ["bulk", null]) {
     await page.waitForFunction(() => window.__grosherCloseUp?.state === "open", null, { timeout: 90_000 });
-    await page.waitForTimeout(6000); // the arrival, then the next zone's compile and upload in the background
+    await page.waitForTimeout(6000); // the arrival, then the next zone's preparation in the background
+    combined.stops.push(await residentMB());
+    // tapping Got it: the next stop's zone already prepared during this one (built, transcoded, compiled) and
+    // still off the GPU (it uploads in the hold, once this one is freed)
+    ahead.push(await page.evaluate((z) => {
+      const zones = window.__grosherPerf.hero.zones ?? {};
+      const next = z ?? Object.keys(zones).find((id) => id.startsWith("std:") && id !== window.__grosherCloseUp.zone);
+      return { zone: next ?? null, state: (next && zones[next]) ?? "absent" };
+    }, zone));
     await page.getByRole("button", { name: /got it/i }).click();
     await page.waitForFunction((z) => (z ? window.__grosherCloseUp?.zone === z : window.__grosherCloseUp?.quality === "standard" && window.__grosherCloseUp?.item !== "Bouquet") && window.__grosherCloseUp?.state === "open", zone, { timeout: 90_000 });
     const z = await page.evaluate(() => window.__grosherCloseUp.zone);
-    const ms = await readyMs(z);
-    if (zone) preload.readyMs = ms;
-    else preload.stdReadyMs = ms;
+    const r = await readyIn(z);
+    if (zone) preload.ready = r;
+    else preload.stdReady = r;
   }
-  // ready within a frame or two of being asked for: it was prepared (unprepared, the zone loads, builds and
-  // compiles first: seconds on a software renderer)
-  preload.prepared = preload.readyMs !== null && preload.readyMs < 400 && preload.stdReadyMs !== null && preload.stdReadyMs < 400;
+  await page.waitForTimeout(6000);
+  combined.stops.push(await residentMB());
+  combined.peakMB = combined.stops.at(-1).peakMB;
+  // prepared: when Got it is tapped the next zone is built, transcoded and compiled, and off the GPU; then ready
+  // within a frame or two of being asked for. (On a software renderer the upload in the hold takes seconds and
+  // stretches the hold, which hides an unprepared zone's load too: hence the state check. And an overdue frame
+  // of the overview, 100–350 ms there, can land between the request and its commit: hence frames as well as ms.)
+  const quick = (r) => r !== null && (r.ms < 400 || (r.frames !== null && r.frames <= 2));
+  preload.prepared = quick(preload.ready) && quick(preload.stdReady) && ahead.length === 2 && ahead.every((a) => a.state === "prepared");
 } finally {
   await browser.close();
 }
@@ -230,8 +257,13 @@ for (const [zone, d] of Object.entries(downloads)) {
   failed ||= dlOver;
   console.log(`download, ${zone}: ${d.kb.toFixed(0)} KB (chunks ${(d.chunks / 1024).toFixed(0)} KB gzip, textures ${(d.textures / 1024).toFixed(0)} KB, transcoder ${(d.transcoder / 1024).toFixed(0)} KB gzip)${dlOver ? "   OVER BUDGET" : ""}`);
 }
+const combinedOver = combined.peakMB > B.gpuTextureMB || combined.stops.some((r) => r.mb > B.gpuTextureMB);
+failed ||= combinedOver || combined.stops.length < 3;
+console.log(`combined, standard → Bulk → standard: ${combined.stops.map((r) => `${r.zone} ${r.mb.toFixed(1)} MB (${r.textures} textures)`).join(" · ")}; peak ${combined.peakMB.toFixed(1)} MB${combinedOver ? "   OVER BUDGET" : ""}`);
 console.log(`lazy: ${lazy ? "nothing of a close-up fetched by an empty list or a trip without close-ups" : "FETCHED WITHOUT A CLOSE-UP"}`);
-console.log(`prepared ahead: ${preload.prepared ? `yes, during the stop before; asked for → ready ${preload.readyMs} ms (Bulk), ${preload.stdReadyMs} ms (standard)` : `NO: the next stop's zone was not ready when asked for (${preload.readyMs} ms Bulk, ${preload.stdReadyMs} ms standard)`}`);
+const fmt = (r) => (r ? `${r.ms} ms, ${r.frames ?? "?"} frames` : "never");
+const states = ahead.map((a) => `${a.zone} ${a.state}`).join(", ");
+console.log(`prepared ahead: ${preload.prepared ? `yes, during the stop before (at Got it: ${states}); asked for → ready ${fmt(preload.ready)} (Bulk), ${fmt(preload.stdReady)} (standard)` : `NO: the next stop's zone was not ready (at Got it: ${states}; asked for → ready ${fmt(preload.ready)} Bulk, ${fmt(preload.stdReady)} standard)`}`);
 failed ||= !preload.prepared;
 console.log(`prepared on the list: ${preload.onList && preload.std ? "yes, before Route (Bulk, and the standard A4-R16)" : `NO: the first stop's close-up was not prepared on the list screen (Bulk ${preload.onList}, standard ${preload.std})`}`);
 failed ||= !preload.onList || !preload.std;

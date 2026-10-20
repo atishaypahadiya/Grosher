@@ -1,9 +1,11 @@
 // A cheap gloss for the zone's polished concrete, glass and acrylic: an environment map baked once from a
 // sketch of the room (warm clay walls and ceiling, the rows of track spots and downlights, the lit shelf faces)
 // through three's PMREM, at 64 px: blurred reflections, no planar reflection, no extra pass per frame.
-// ~0.7 MB on the GPU (counted in heroStats), nothing to download.
+// ~0.7 MB on the GPU (counted in heroStats), nothing to download. The sketch is the same for every zone, so one
+// bake is shared by every zone mounted (the open one and the next one prepared) and freed with the last.
 
 import { BackSide, BoxGeometry, Color, Mesh, MeshBasicMaterial, PMREMGenerator, Scene, Vector3, type Texture, type WebGLRenderer, type WebGLRenderTarget } from "three";
+import { envResident } from "../stats.ts";
 
 export const ENV_SIZE = 64;
 
@@ -45,5 +47,38 @@ export function bakeEnv(gl: WebGLRenderer): Env {
   });
   // the cube-UV texture: RGBA half floats
   const bytes = rt.width * rt.height * 8;
-  return { texture: rt.texture, bytes, dispose: () => rt.dispose() };
+  envResident(bytes);
+  let live = true;
+  return {
+    texture: rt.texture,
+    bytes,
+    dispose: () => {
+      if (!live) return;
+      live = false;
+      envResident(-bytes);
+      rt.dispose();
+    },
+  };
+}
+
+let shared: { gl: WebGLRenderer; env: Env; users: number } | null = null;
+/** The shared environment map for a zone: baked by the first zone that asks, freed when the last lets go. */
+export function acquireEnv(gl: WebGLRenderer): { texture: Texture; release: () => void } {
+  if (!shared || shared.gl !== gl) {
+    shared?.env.dispose();
+    shared = { gl, env: bakeEnv(gl), users: 0 };
+  }
+  const s = shared;
+  s.users++;
+  let held = true;
+  return {
+    texture: s.env.texture,
+    release: () => {
+      if (!held) return;
+      held = false;
+      if (--s.users > 0) return;
+      s.env.dispose();
+      if (shared === s) shared = null;
+    },
+  };
 }

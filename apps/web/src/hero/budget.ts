@@ -15,6 +15,9 @@
 // at eye level (the target's real grains included), 9.1 MB of textures on a desktop GPU (BC; an iPhone
 // transcodes to ASTC 4×4, up to twice that) and a 2.3 MB download: each budget leaves the next zone room
 // without letting it double; the download has the least (200 KB), and the labels atlas is its biggest file.
+//
+// The texture budget is for everything resident at once, not one zone alone: a prepared zone stays off the GPU
+// until the one before it has been freed (kit/warm.ts), and the gate's combined walk holds the page's peak to it.
 
 export const CLOSE_UP_BUDGET = {
   drawCalls: 70,

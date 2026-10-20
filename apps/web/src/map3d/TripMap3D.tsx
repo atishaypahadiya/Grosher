@@ -177,6 +177,9 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
     if (preload) out.push(preload);
     return out;
   }, [nextStop, preload]);
+  // on the GPU: the open close-up's zone alone; between two (the hold), the next stop's, once the one before it
+  // has been freed. The stop after it is prepared off the GPU. So one zone's textures at a time (budget.ts).
+  const staged = !closeUp && nextStop && prepared.includes(nextStop) ? nextStop.zone.id : null;
   // the overview fixtures the next close-up to open will hide, merged ahead (map3d/Fixtures.tsx)
   const prepareHide = (closeUp && !closeUp.exiting && closeUp.target ? preload?.zone : closeUp && !closeUp.target ? closeUp.zone : nextStop?.zone ?? preload?.zone)?.hideFixtures;
   const nextNode = current ? nodes.get(current.nodeId) : undefined;
@@ -372,14 +375,14 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
   const logged = useRef<{ stopId: string | null; state: string }>({ stopId: null, state: "none" });
   useEffect(() => {
     if (!perf && !debugPerf) return;
-    const w = window as Window & { __grosherCloseUp?: unknown; __grosherCloseUpLog?: { stop: string | null; zone: string | null; quality: string | null; event: string; t: number }[] };
+    const w = window as Window & { __grosherCloseUp?: unknown; __grosherCloseUpLog?: { stop: string | null; zone: string | null; quality: string | null; event: string; t: number; frame: number | null }[]; __grosherPerf?: { rendered?: number } };
     const state = closeUp ? (closeUp.exiting ? "leaving" : closeUp.target ? "open" : "loading") : "none";
     w.__grosherCloseUp = closeUp ? { zone: closeUp.zone.id, quality: closeUp.zone.quality, category: closeUp.category, item: closeUp.itemName, bin: closeUp.target?.name ?? null, state } : null;
     const was = logged.current;
     const stopId = closeUp?.stopId ?? null;
     if (state !== was.state || stopId !== was.stopId) {
       const event = state === "loading" ? "request" : state === "open" ? (was.state === "loading" && was.stopId === stopId ? "ready" : "request+ready") : state === "leaving" ? "leaving" : "closed";
-      (w.__grosherCloseUpLog ??= []).push({ stop: stopId ?? was.stopId, zone: closeUp?.zone.id ?? null, quality: closeUp?.zone.quality ?? null, event, t: performance.now() });
+      (w.__grosherCloseUpLog ??= []).push({ stop: stopId ?? was.stopId, zone: closeUp?.zone.id ?? null, quality: closeUp?.zone.quality ?? null, event, t: performance.now(), frame: w.__grosherPerf?.rendered ?? null });
       logged.current = { stopId, state };
     }
   }, [closeUp, perf, debugPerf]);
@@ -422,6 +425,7 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
           perf={perf || debugPerf}
           closeUp={closeUp}
           prepared={prepared}
+          staged={staged}
           prepareHide={prepareHide}
           closeUpRef={closeUpRef}
           onHeroTarget={(t: HeroTargetInfo) => setCloseUp((c) => (c && !c.exiting ? { ...c, target: t } : c))}
