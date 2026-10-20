@@ -10,7 +10,10 @@
 //   bench.json     packages/core bench --store grosher --json
 //   eval-grosher.json / eval-demo.json   packages/stores eval:everyday --offline [--store grosher] --json
 // plus the hero-route snapshot packages/stores/test/fixtures/grosher-hero-routes.json (the stores test keeps it
-// current). Timings (solve ms, load ms) vary run to run and are cited with their date instead, unkeyed.
+// current), and capture.json (the trip the share card shows, apps/web/scripts/capture-project.mjs). Timings vary
+// run to run and from machine to machine: most are cited with their date, unkeyed; the one keyed (the solver's
+// 30-stop median, `timing` below) is checked within ±35% on the machine the docs name (an Apple-silicon Mac) and
+// skipped on CI's, whose processors are slower.
 //
 // Some numbers are CI's own: the close-up gate's texture megabytes and download kilobytes come out larger on
 // CI's renderer and build than on a Mac (`ci: true` below). Off CI they are skipped, unless the directory came
@@ -47,7 +50,9 @@ const src = {
   grosher: read("eval-grosher.json"),
   demo: read("eval-demo.json"),
   routes: JSON.parse(readFileSync(join(ROOT, "packages", "stores", "test", "fixtures", "grosher-hero-routes.json"), "utf8")),
+  capture: JSON.parse(readFileSync(join(ROOT, "apps", "web", "public", "project", "capture.json"), "utf8")),
 };
+const REFERENCE_MACHINE = process.platform === "darwin" && process.arch === "arm64";
 
 const int = (v) => v.toLocaleString("en-US");
 const k = (v) => `${Math.round(v / 1000)}k`;
@@ -63,7 +68,7 @@ const benchRow = (n) => {
   return r;
 };
 
-/** key → [source, value(), format, ci-only?] */
+/** key → [source, value(), format, ci-only? | "timing"] */
 const KEYS = {
   "perf.calls": ["perf", () => Math.max(...src.perf.rows.map((r) => r.calls)), int],
   "perf.instances": ["perf", () => Math.max(...src.perf.rows.map((r) => r.instances)), int],
@@ -75,6 +80,10 @@ const KEYS = {
   "closeup.produce.triangles": ["closeup", () => row("Produce island: arriving (worst frame)").triangles, k],
   "closeup.standard.calls": ["closeup", () => row("standard A4-R16: arriving (worst frame)").calls, int],
   "closeup.standard.triangles": ["closeup", () => row("standard A4-R16: arriving (worst frame)").triangles, k],
+  "closeup.bulkEye.calls": ["closeup", () => row("Bulk: eye level").calls, int],
+  "closeup.bulkEye.triangles": ["closeup", () => row("Bulk: eye level").triangles, k],
+  "closeup.wetWall.calls": ["closeup", () => row("Produce: the wet wall").calls, int],
+  "closeup.wetWall.triangles": ["closeup", () => row("Produce: the wet wall").triangles, k],
   "closeup.peakMB": ["closeup", () => src.closeup.combined.peakMB, mb, true],
   "closeup.download.bulk": ["closeup", () => src.closeup.downloadKB.Bulk, int, true],
   "closeup.download.standard": ["closeup", () => src.closeup.downloadKB.standard, int, true],
@@ -86,6 +95,14 @@ const KEYS = {
   "eval.demo.pct": ["demo", () => Math.round((100 * src.demo.everyday.correct) / src.demo.everyday.total), int],
   "eval.newShelves.grosher": ["grosher", () => src.grosher.newShelves.grosher, int],
   "eval.newShelves.demo": ["grosher", () => src.grosher.newShelves["demo-supercenter"], int],
+  "bench.30.p50ms": ["bench", () => benchRow(30).p50ms, (v) => String(Math.round(v)), "timing"],
+  "card.day": ["capture", () => src.capture.card.eyebrows[1], (v) => v],
+  "card.clock": ["capture", () => src.capture.card.clock, (v) => v],
+  "card.sub": ["capture", () => src.capture.card.sub, (v) => v],
+  "card.walked": ["capture", () => src.capture.card.tiles[0].value, (v) => v],
+  "card.walkedCaption": ["capture", () => src.capture.card.tiles[0].caption, (v) => v],
+  "card.saved": ["capture", () => src.capture.card.tiles[1].value, (v) => v],
+  "card.savedCaption": ["capture", () => src.capture.card.tiles[1].caption, (v) => v],
   "bench.range14.p10": ["bench", () => src.bench.range14.p10, int],
   "bench.range14.p90": ["bench", () => src.bench.range14.p90, int],
 };
@@ -102,12 +119,13 @@ for (const id of Object.keys(src.routes))
 function expected(key) {
   const def = KEYS[key];
   if (!def) return { error: `unknown key` };
-  const [from, value, format, ciOnly] = def;
+  const [from, value, format, kind] = def;
   if (!src[from]) return { skip: `no ${from} measurement in ${DIR}` };
-  if (ciOnly && !ON_CI) return { skip: "CI's own number (pass --ci with a CI run's files)" };
+  if (kind === true && !ON_CI) return { skip: "CI's own number (pass --ci with a CI run's files)" };
+  if (kind === "timing" && (process.env.CI || !REFERENCE_MACHINE)) return { skip: "a timing, checked on the machine the docs name (an Apple-silicon Mac)", timing: true };
   try {
     const v = value();
-    return { text: format(v), value: v };
+    return { text: format(v), value: v, timing: kind === "timing" };
   } catch (e) {
     return { error: e.message };
   }
@@ -116,12 +134,16 @@ function expected(key) {
 const problems = [];
 const skipped = new Set();
 let checked = 0;
+const timingsSkipped = new Set();
 const look = (doc, key, got, fix) => {
   const e = expected(key);
+  if (e.skip && e.timing) return timingsSkipped.add(`${key}: ${e.skip}`), got;
   if (e.skip) return skipped.add(`${key}: ${e.skip}`), got;
   if (e.error) return problems.push(`${doc}: ${key}: ${e.error}`), got;
   checked++;
   if (got === e.text) return got;
+  // a timing passes within ±35% of this run's measurement
+  if (e.timing && Math.abs(Number(got) - e.value) <= 0.35 * e.value) return got;
   if (!WRITE) problems.push(`${doc}: ${key} reads ${got}, the gate measured ${e.text}`);
   return fix(e);
 };
@@ -147,6 +169,7 @@ if (WRITE) {
 const keyed = (readme.match(/<!--n:/g) ?? []).length + (page.match(/data-(n|bar)="/g) ?? []).length;
 console.log(`docs numbers: ${checked} checked of ${keyed} keyed${skipped.size ? `, ${skipped.size} skipped` : ""}${WRITE ? " (written)" : ""}`);
 for (const s of skipped) console.log(`  skipped ${s}`);
+for (const s of timingsSkipped) console.log(`  not checked here: ${s}`);
 if (problems.length) {
   console.error(`docs numbers FAILED: the docs cite what the gates did not measure\n  ${problems.join("\n  ")}`);
   console.error("Fix: node apps/web/scripts/docs-numbers.mjs --write (with --dir from `gh run download <run> -n docs-numbers` and --ci for CI's own numbers)");

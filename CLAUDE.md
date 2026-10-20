@@ -1017,8 +1017,8 @@ one animation (a lime token round the reroute loop in the pipeline diagram, visi
 inside a box it hides and that box's border turns lime) and play-while-visible for every `video[data-autoplay]`,
 `img/` for the media, `capture.json` for the share card's numbers. Linked from the README's top and the list
 screen's footer ("About"). Sections: hero (two columns from 1100 px: text, and the close-up arrival video in a
-large phone above the fold), the app (three phones: the list, the reroute loop, the checkout), why (with the
-pull quote), how it works (steps, pipeline diagram, two rules), decisions (six Problem / Choice / Result cards,
+large phone above the fold), who it's for, the app (three phones: the list, the reroute loop, the checkout),
+close-ups, why (with the pull quote), how it works (five steps, pipeline diagram, two rules), decisions (six Problem / Choice / Result cards,
 each with one number, three over three), architecture (an inline SVG,
 a wide variant from 1000 px and a tall one below), results (a bento: bench beside solver over not-measured;
 resolution beside performance), interface (the share card live, equal height with the map legend), limits,
@@ -1042,25 +1042,41 @@ skipped, so take them from the run's `docs-numbers` artifact with `--ci`. Timing
 run to run: they are not keyed and carry their date and machine. A new cited number gets a key in `KEYS`.
 Update the timings by hand when they move.
 
-Media: `node apps/web/scripts/capture-project.mjs http://localhost:4173` against `vite preview` of a fresh build.
-It types a 14-item list over 13 aisles in no store order, walks the trip, and writes the 2× WebP stills (list,
-3D trip, checkout), the 6-second WebM + MP4 loop with its WebP poster, and `capture.json`. The trip clock is
-simulated: the page's `Date.now` is frozen and advanced by each leg at `WALK_MPS` (1 m/s), so the card reads
-walking time only. The 3D frame is the mid-trip step (30–70%) nearest 6 of 14 with the next stop's marker in
-the map area, the camera within 40 m, and its cards inside the map area and clear of each other; today that
-is step 6 at the default framing: Dal in A4 in lime, with Chips in a card beside it (chips count as cards).
-`capture.json` records the step and the cards counted at each step evaluated. The loop's one reroute arrives at
-that step. The trip's "vs list in order" (45%) sits inside the bench's 14-stop range on Grosher (37–56%,
-`npm run bench -- --store grosher`'s last line). The close-ups run with `?closeup=0` here.
+**Media** (`capture-kit.mjs`, shared by the two scripts): captured on this Mac's GPU (ANGLE on Metal; elsewhere it
+warns and falls back to SwiftShader, soft and slow), against `vite preview` of a fresh build, with the app's capture
+parameters `?dpr=3&msaa=4&tier=hi` (`src/map3d/renderQuality.ts`: the canvas at the page's full pixel ratio, the app
+caps it at 2; the composer's target multisampled, the app draws it without, so the context's own antialias never
+reached the scene). Stills are 3× screenshots (1170 × 2532) exported as AVIF, WebP and PNG (pngquant) at 1× (342 px,
+the widest phone box on the page), 2× and 3×, used in `<picture>` with x-descriptors, lazy below the fold. Video is
+drawn frame by frame: the page clock is installed and paused (Playwright's clock fakes Date, performance.now, timers
+and requestAnimationFrame) and stepped 1/60 s at a time with a screenshot after each, so every frame is the app's
+own at exactly 60 fps whatever it costs to render; 2× (780 × 1688), AV1 (SVT-AV1, CRF 34) and H.264 (CRF 18) MP4s.
+Each video has a small poster (the hero's 400 px, ~27 KB, preloaded; the loop's none until load) that carries the first paint and a 2× one `project.js` swaps in
+after load; the videos fetch nothing before the page has loaded and gone idle. Lighthouse 100 in all four on mobile
+and desktop depends on it: the hero poster at 780 px (106 KB) read mobile performance 98–99.
 
-The close-up media: `node apps/web/scripts/capture-closeup.mjs http://localhost:4173`, on the Mac's GPU (ANGLE on
-Metal: SwiftShader draws a close-up at a few frames a second). "Bananas, Toor dal (bulk), Greek yogurt": the
-descent into Produce and the stroll to the bananas, a second at eye level, Got it, the way out and the descent
-into Bulk, cut from one recording into `closeup.{webm,mp4}` (the hero), `closeup-poster.webp` (a 2× still) and
-`closeup.gif` (the README's hero: the first arrival only, the first rung of a fps / width / colours ladder
-that fits 1.5 MB; today 4.3 s at 10 fps, 250 px, 1.3 MB); the cuts and the rung are in `closeup.json`. Playwright
-records at CSS pixels (a 780 × 1688 video of a 2× page is the 390 × 844 picture padded), so it records at
-390 × 844.
+- `node apps/web/scripts/capture-project.mjs http://localhost:4173`: a 14-item list over 13 aisles in no store
+  order, walked; the list, trip and checkout stills, the guard card (from `?demo=walk`), survey mode walking an
+  aisle (sensors mocked by `survey-driver.mjs`), the 6-second reroute loop (`trip.*`, close-ups off) and
+  `capture.json`. The trip clock is simulated: `Date.now` is frozen after load and advanced by each leg at
+  `WALK_MPS` (1 m/s), so the card reads walking time only. The 3D frame is the mid-trip step (30–70%) nearest 6 of
+  14 with the next stop's marker in the map area, the camera within 40 m, and its cards inside the map area and
+  clear of each other: step 6, Dal in A4 in lime with Chips beside it. The page's share card is keyed to
+  `capture.json` (`card.*` in docs-numbers), so it cannot drift from the checkout still again (it read "Sun" while
+  the still read "Tue").
+- `node apps/web/scripts/capture-closeup.mjs http://localhost:4173`: checks the texture tier in `?debug=perf`'s
+  readout ("hero hi" or it stops); the hero video ("Bananas, Toor dal (bulk), Greek yogurt": the descent into
+  Produce, a second at eye level, Got it, the way out, the descent into Bulk to the toor dal bin); the stills
+  `closeup-bulk` (eye level at the lit bin, also the video's poster), `closeup-produce` (the landing under the
+  skylight, frame 68 of the arrival on the stepped clock) and `closeup-juice`; `closeup.json` with the frame marks.
+- The README cannot play a video from the repo (GitHub keeps `<video>` only for its own uploads, a
+  `user-attachments` URL from the web editor): its hero is the 2× Bulk still linking to `closeup.mp4`, and the
+  inline video goes in once uploaded.
+
+The page's sections, in order: hero, who it's for (three audiences: "Today" only what the build does, "Next"
+labelled not built), the app, close-ups (three stills, each with how it is built and its keyed budget), why, how it
+works (five steps; the guard's still in step 03, survey mode's in step 05), decisions, architecture, results,
+interface, limits, footer.
 
 The service worker never answers `/project/` with the app shell (`navigateFallbackDenylist`) and does not
 precache it (`globIgnores`). `prefers-reduced-motion` keeps the video paused with controls, the token at rest

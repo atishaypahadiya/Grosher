@@ -72,6 +72,9 @@ for (const video of document.querySelectorAll("video[data-autoplay]")) {
   let ready = false;
   settled.then(() => {
     ready = true;
+    // the small poster carried the first paint; the 2× one is for whoever never plays the video (a video below
+    // the fold has no poster until now: it would have been fetched with the first paint's resources)
+    if (video.dataset.posterHi) video.poster = video.dataset.posterHi;
     sync();
   });
   const sync = () => {

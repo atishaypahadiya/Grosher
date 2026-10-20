@@ -1,35 +1,113 @@
 {
-  "_note": "Written by apps/web/scripts/capture-closeup.mjs (production build, 390×844, GPU). Seconds from the video's start.",
+  "_note": "Written by apps/web/scripts/capture-closeup.mjs (production build, this Mac's GPU, 390×844: video 2× at 60 fps on a stepped page clock, stills 3×). Marks and cuts are frame numbers.",
   "capturedAt": "2026-10-20",
   "list": [
     "Bananas",
     "Toor dal (bulk)",
     "Greek yogurt"
   ],
+  "stills": {
+    "closeup-bulk": {
+      "zone": "bulk",
+      "item": "Bulk toor dal",
+      "files": {
+        "1x": {
+          "avif": 28,
+          "webp": 35,
+          "png": 90
+        },
+        "2x": {
+          "avif": 74,
+          "webp": 102,
+          "png": 297
+        },
+        "3x": {
+          "avif": 127,
+          "webp": 186,
+          "png": 601
+        }
+      }
+    },
+    "closeup-produce": {
+      "zone": "produce",
+      "item": "Bananas",
+      "files": {
+        "1x": {
+          "avif": 33,
+          "webp": 39,
+          "png": 80
+        },
+        "2x": {
+          "avif": 84,
+          "webp": 106,
+          "png": 254
+        },
+        "3x": {
+          "avif": 144,
+          "webp": 187,
+          "png": 504
+        }
+      }
+    },
+    "closeup-juice": {
+      "zone": "produce",
+      "item": "Juice",
+      "files": {
+        "1x": {
+          "avif": 38,
+          "webp": 41,
+          "png": 86
+        },
+        "2x": {
+          "avif": 96,
+          "webp": 109,
+          "png": 277
+        },
+        "3x": {
+          "avif": 160,
+          "webp": 190,
+          "png": 547
+        }
+      }
+    }
+  },
   "marks": {
-    "route": 5.674,
-    "map": 6.03,
-    "open1": 6.32,
-    "hold1": 13.004,
-    "gotit": 13.045,
-    "open2": 14.988,
-    "end": 19.994
+    "open1": 40,
+    "gotit": 260,
+    "open2": 374,
+    "end": 624
+  },
+  "debugPerf": "hero hi · 9.1 MB tex · 137k tris · 39 ms load",
+  "first": {
+    "zone": "produce",
+    "quality": "hero",
+    "category": "bananas",
+    "item": "Bananas",
+    "bin": "Bananas",
+    "state": "open"
+  },
+  "second": {
+    "zone": "bulk",
+    "quality": "hero",
+    "category": "bulk-pulses",
+    "item": "Bulk toor dal",
+    "bin": "Toor Dal",
+    "state": "open"
   },
   "cuts": [
     [
-      6.42,
-      10.72
+      40,
+      260
     ],
     [
-      12.845,
-      18.494
+      260,
+      624
     ]
   ],
-  "gif": {
-    "fps": 10,
-    "width": 250,
-    "colors": 96,
-    "kb": 1316,
-    "seconds": 4.3
-  }
+  "video": {
+    "av1KB": 5361,
+    "h264KB": 7658,
+    "seconds": 9.73
+  },
+  "posterKB": 27
 }

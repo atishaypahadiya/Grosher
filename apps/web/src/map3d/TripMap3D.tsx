@@ -17,6 +17,7 @@ import { slotFor } from "@grosher/stores";
 import type { Focus, SafeArea } from "./CameraRig.tsx";
 import { OverlayDom, useOverlayItems, type NextLabel, type OverlayRegistry, type StopCard } from "./Overlay.tsx";
 import { locationDepartment } from "../lib/chips.ts";
+import { canvasDpr } from "./renderQuality.ts";
 
 export interface TripMap3DProps {
   bundle: StoreBundle;
@@ -417,7 +418,7 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
     >
       <Canvas
         frameloop={perf || debugPerf ? "always" : "demand"}
-        dpr={[1, 2]}
+        dpr={canvasDpr()}
         gl={{ antialias: true, alpha: false, powerPreference: "high-performance", stencil: false }}
         camera={{ fov: 60, near: 0.5, far: 400, position: [0, 40, 60] }}
         style={{ width: "100%", height: "100%" }}

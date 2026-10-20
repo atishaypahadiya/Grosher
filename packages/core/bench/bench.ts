@@ -36,7 +36,7 @@ const pct = (xs: number[], q: number) => {
 };
 const range = (saved: number[]) => `${(pct(saved, 0.1) * 100).toFixed(0)}–${(pct(saved, 0.9) * 100).toFixed(0)}%`;
 const r = rng(42);
-const json: { store: string; rows: { stops: number; solver: string; listOrderM: number; routeM: number; savedPct: number; p10: number; p90: number }[]; range14?: { mean: number; p10: number; p90: number } } = { store: DEMO_STORE.storeId, rows: [] };
+const json: { store: string; rows: { stops: number; solver: string; listOrderM: number; routeM: number; savedPct: number; p10: number; p90: number; p50ms: number }[]; range14?: { mean: number; p10: number; p90: number } } = { store: DEMO_STORE.storeId, rows: [] };
 const pct0 = (x: number) => Number((x * 100).toFixed(0));
 for (const n of [5, 8, 10, 12, 13, 18, 25, 30]) {
   const trials = n <= 13 ? 30 : 10;
@@ -56,7 +56,7 @@ for (const n of [5, 8, 10, 12, 13, 18, 25, 30]) {
     solver = route.solver;
   }
   times.sort((a, b) => a - b);
-  json.rows.push({ stops: n, solver, listOrderM: Number((naive / trials).toFixed(0)), routeM: Number((opt / trials).toFixed(0)), savedPct: pct0(1 - opt / naive), p10: pct0(pct(saved, 0.1)), p90: pct0(pct(saved, 0.9)) });
+  json.rows.push({ stops: n, solver, listOrderM: Number((naive / trials).toFixed(0)), routeM: Number((opt / trials).toFixed(0)), savedPct: pct0(1 - opt / naive), p10: pct0(pct(saved, 0.1)), p90: pct0(pct(saved, 0.9)), p50ms: Number(times[Math.floor(times.length / 2)].toFixed(1)) });
   rows.push([
     String(n),
     solver,

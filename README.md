@@ -7,19 +7,48 @@
 A shopping list in, the shortest walk through the store out: every item placed on its shelf, the route
 re-solved each time you check one off, and every stop opening at eye level when you get there.
 
+<!-- the hero: an inline MP4 once uploaded through GitHub (a user-attachments URL), with this 2× still as the fallback -->
 <p align="center">
-  <img src="apps/web/public/project/img/closeup.gif" width="270" alt="The 3D trip: from the map the camera comes down through Produce's skylight and strolls to the bananas, their crate lit in lime, and stops at eye level" />
+  <a href="apps/web/public/project/img/closeup.mp4"><img src="apps/web/public/project/img/closeup-bulk-2x.png" width="300" alt="Eye level in Bulk: the toor dal gravity bin lit in lime on square-steel shelving, packs of dal below; the bottom card reads Bulk toor dal, 55 metres" /></a>
 </p>
-<p align="center"><sub>The app as built: the first stop, in Produce. Recorded from the production build by <code>apps/web/scripts/capture-closeup.mjs</code>; the <a href="https://grosher.pages.dev/project/">project page</a> has the full clip, on to Bulk.</sub></p>
+<p align="center"><sub>The app as built, at a stop in Bulk: tap it for the video (60 fps, from Produce's skylight to this bin). Captured on the GPU from the production build by <code>apps/web/scripts/capture-closeup.mjs</code>.</sub></p>
 
 <p>
-  <img src="apps/web/public/project/img/list.webp" width="30%" alt="The list screen with 14 items, each placed on a shelf, and the lime Route button" />
-  <img src="apps/web/public/project/img/trip.webp" width="30%" alt="The 3D trip mid-route: the next stop, Dal in aisle A4, in a lime card with its shelf lit; Chips, the stop after it, in a card beside it" />
-  <img src="apps/web/public/project/img/checkout.webp" width="30%" alt="Checkout: 6:35, 438 metres walked, 45% shorter than walking the list in order" />
+  <img src="apps/web/public/project/img/list-2x.png" width="30%" alt="The list screen with 14 items, each placed on a shelf, and the lime Route button" />
+  <img src="apps/web/public/project/img/trip-2x.png" width="30%" alt="The 3D trip mid-route: the next stop, Dal in aisle A4, in a lime card with its shelf lit; Chips, the stop after it, in a card beside it" />
+  <img src="apps/web/public/project/img/checkout-2x.png" width="30%" alt="Checkout: 6:35, 438 metres walked, 45% shorter than walking the list in order" />
 </p>
 <p><sub>List, trip and checkout for one 14-item list (<code>apps/web/scripts/capture-project.mjs</code>, 20 Oct 2026). The design boards these started from are in <a href="design/boards/">design/boards/</a>; <a href="DESIGN.md">DESIGN.md</a> is the visual contract.</sub></p>
 
+## Who it's for
+
+Only what the app does today is listed under "Today"; "Next" is not built yet.
+
+- **Delivery shoppers.** Someone else's list in a store they may not know. *Today:* the whole list as one
+  route, re-solved after every Got it, cold and hot items last, Not here to move on. *Next:* a shopper mode
+  (several orders in one walk, items tagged per order, bag sorting, substitutions).
+- **Blind and low-vision shoppers.** Signs and shelf tags they cannot read. *Today:* the list by voice in Safari,
+  and every screen contrast-checked on every change. *Next:* an accessibility mode (spoken turn-by-turn
+  directions, full VoiceOver support, a large-type view, audio arrival cues), designed and tested with blind users.
+- **Huge stores.** Thirty items picked in written order is a long walk. *Today:* a 30-stop list solved in
+  ~<!--n:bench.30.p50ms-->18<!--/n--> ms (the median on an M4 Pro), <!--n:bench.30.savedPct-->57<!--/n-->% less walking than the list's order. *Next:* stores on several floors and
+  warehouse-style layouts.
+
 ## What it does
+
+```mermaid
+flowchart LR
+  subgraph PWA["The PWA, on the phone"]
+    L["List"] --> X["Catalog index<br/>(Web Worker)"]
+    X --> S["Solver"]
+    S --> M["3D overview<br/>+ close-ups"]
+  end
+  L -. "offline: the catalog and<br/>your memory only" .-> S
+  L -- "items they cannot place,<br/>aisle-sign photos" --> W["Cloudflare Worker"]
+  W --> F["Tailscale Funnel"]
+  F --> G["Token gate"]
+  G --> O["Ollama<br/>qwen3:8b · qwen2.5vl:7b"]
+```
 
 ### The list and the resolver
 
@@ -95,6 +124,8 @@ is kept for the tests and as the reference taxonomy that survey mode matches Wal
   - Off · Gentle · Strict are in Settings. Motion data stays on the phone and only this trip's counts are
     kept.
   - `?demo=walk` plays it on a desk.
+
+  <img src="apps/web/public/project/img/guard-2x.png" width="240" alt="The off-list guard's card over the 3D map: Nothing on your list here. Chips is 18 metres ahead. Back on route, I'm grabbing something" />
 - **Checkout.** A share card shows the time, the metres walked and the saving against walking the list in
   order, plus "1 detour · off-route 1 min" when the guard spoke. A "Make the map better" list asks about
   what was skipped or never placed.
@@ -106,6 +137,8 @@ is kept for the tests and as the reference taxonomy that survey mode matches Wal
   held-out synthetic walks, the step detector counts 156 of 160 steps. The aisle signs are read in the
   background by a vision model (`qwen2.5vl:7b`) and matched to shelf categories. "Build draft map" gives aisles
   at their lengths and spacing, with the signs' categories on them.
+
+  <img src="apps/web/public/project/img/survey-2x.png" width="240" alt="Survey mode walking aisle 1: 27 steps, heading 30 degrees, quick tags, a sign photo waiting for a connection, and Sign photo, Pin and End aisle buttons" />
 - **The editor** (`#/edit`, desktop) fixes the draft. It has a floor-plan underlay, corridors, doors, shelf
   blocks, locations, categories, textures, a confidence view, and Validate. "Write to package" writes it into
   `packages/stores/<storeId>`. The step-by-step guide is in `CLAUDE.md`, "How to map a new store".
@@ -245,10 +278,14 @@ The one-time setup (the token, Funnel, the agents, `wrangler secret put`, deploy
 ## Layout
 
 ```
-packages/core      routing engine + item resolution (no dependencies; Node runs the TypeScript)
-packages/stores    store data: Grosher (the default), the synthetic Supercenter (tests, Walmart reference), generators
-apps/web           Vite + React 19 PWA: list, 3D trip with close-ups, checkout, editor, survey mode
-apps/resolver      Cloudflare Worker (Hono): the model layer and the sign reader over HTTPS
+packages/core     routing engine + item resolution
+                  (no dependencies; Node runs the TypeScript)
+packages/stores   store data: Grosher (the default), the synthetic
+                  Supercenter (tests, Walmart reference), generators
+apps/web          Vite + React 19 PWA: list, 3D trip with close-ups,
+                  checkout, editor, survey mode
+apps/resolver     Cloudflare Worker (Hono): the model layer and
+                  the sign reader over HTTPS
 ```
 
 `CLAUDE.md` is the full project guide. `DESIGN.md` holds the design rules and tokens.

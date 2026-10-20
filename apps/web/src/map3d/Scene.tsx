@@ -19,6 +19,7 @@ import { Perf } from "./Perf.tsx";
 import type { Focus, SafeArea } from "./CameraRig.tsx";
 import { loadedZones, type HeroTargetInfo, type HeroZoneComponentProps, type HeroZoneEntry } from "../hero/index.ts";
 import { CloseUpCamera, type CloseUpCameraHandle } from "../hero/CloseUpCamera.tsx";
+import { composerSamples } from "./renderQuality.ts";
 
 /** A hero close-up as the 3D map asks for it. */
 export interface CloseUpState {
@@ -406,7 +407,7 @@ export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, fo
 
       {/* One bloom pass, selective: the lit fixture and the current leg's wide ribbon copy. The rest of the
           frame never blooms, so the haze stays clean and the pass stays within the draw-call budget. */}
-      <EffectComposer multisampling={0}>
+      <EffectComposer multisampling={composerSamples()}>
         {selection.length ? <SelectiveBloom ref={bloomRef} selection={selection} lights={near ? [] : [hemi, sun]} luminanceThreshold={0.15} intensity={0.7} radius={0.42} mipmapBlur ignoreBackground /> : <></>}
       </EffectComposer>
       {perf && <Perf />}

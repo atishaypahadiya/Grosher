@@ -1,110 +1,132 @@
-// Captures the close-up arrival for the README and the project page: a short list whose first stop is in
-// Produce (a hero zone), routed; the map appears, the camera comes down through the skylight to eye level
-// and strolls to the bananas; a hold; Got it; the way out to the map and down again to the next stop, toor
-// dal in Bulk. From a running production build at 390×844 (the poster 2×):
+// Captures the close-up media for the project page and the README from a running production build, on this
+// Mac's GPU at full quality (capture-kit.mjs):
 //
 //   npm run build -w @grosher/web && (cd apps/web && npx vite preview --port 4173 &)
 //   node apps/web/scripts/capture-closeup.mjs http://localhost:4173
 //
-// Writes public/project/img/closeup.{webm,mp4} with closeup-poster.webp (the project page's hero): the first
-// arrival, a second at eye level, Got it, the way out and the second arrival; and closeup.gif (the README's
-// hero): the first arrival only, ≤ 1.5 MB. Needs a GPU: a software renderer draws the
-// close-ups at a few frames a second, so this one launches Chromium on the Mac's GPU (ANGLE on Metal).
-// Needs ffmpeg and cwebp.
+// First it checks the texture tier in ?debug=perf's readout: "hero hi" or it stops. Then:
+// - closeup.av1.mp4 + closeup.mp4: the project page's hero and the README's video. "Bananas, Toor dal (bulk),
+//   Greek yogurt": the descent into Produce and the stroll to the bananas, a second at eye level; Got it, the
+//   way out and the descent into Bulk to the toor dal bin, a moment there. 60 fps at 2× (780 × 1688), every
+//   frame drawn on a paused, stepped page clock, so the motion is exactly the app's.
+// - stills at 3× as AVIF / WebP / PNG at 1× / 2× / 3×: closeup-bulk (eye level at the lit toor dal bin),
+//   closeup-produce (the landing under the skylight, the island's lit crate ahead: frame PRODUCE_F of the
+//   arrival, on the stepped clock), closeup-juice (the Grosher Press juice wall).
+// - closeup-poster.webp: the Bulk still at 400 px (~27 KB), the video's poster, preloaded for the page's first
+//   paint; the page swaps in the 2× still after load for viewers who never play the video.
+// - closeup.json: the frame marks, the cuts, the sizes.
 
-import { chromium } from "playwright";
-import { execFileSync } from "node:child_process";
-import { mkdirSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { clean, encode, frames, launch, phone, poster, QUALITY, still, until } from "./capture-kit.mjs";
 
 const BASE = (process.argv[2] ?? "http://localhost:4173").replace(/\/$/, "");
 const IMG = join(import.meta.dirname, "..", "public", "project", "img");
 const TMP = join(import.meta.dirname, "..", "public", "project", ".closeup-tmp");
 const LIST = "Bananas, Toor dal (bulk), Greek yogurt";
-const GL = process.platform === "darwin" ? ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-webgl"] : ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--enable-webgl"];
+const ARRIVAL_F = 160; // the descent and the stroll into Produce, in frames (measured: 152 at 60 fps)
+const PRODUCE_F = 68; // the landing: the skylight overhead, the produce wall, the bananas' island ahead
 
-mkdirSync(IMG, { recursive: true });
-rmSync(TMP, { recursive: true, force: true });
-mkdirSync(TMP, { recursive: true });
+clean(TMP);
+const browser = await launch();
+const out = { capturedAt: new Date().toISOString().slice(0, 10), list: LIST.split(", "), stills: {}, marks: {} };
 
-const browser = await chromium.launch({ args: GL });
-const marks = {};
-try {
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, serviceWorkers: "block", recordVideo: { dir: TMP, size: { width: 390, height: 844 } } });
-  const t0 = Date.now();
-  const mark = (k) => (marks[k] = (Date.now() - t0) / 1000);
-  const page = await ctx.newPage();
-  page.setDefaultTimeout(120_000);
-  // no resolver here: every item on this list is in the catalog
-  await page.route(/11434|workers\.dev|\/api\//, (r) => r.abort());
-  // ?perf=1 publishes the close-up state (window.__grosherCloseUp); it draws no readout
-  await page.goto(`${BASE}/?tier=hi&perf=1`, { waitUntil: "load" });
-  await page.waitForFunction(() => !!window.__grosherIndex);
+/** type a list, wait for every row placed, tap Route */
+async function route(page, list, { paused = false } = {}) {
+  await until(page, () => !!window.__grosherIndex, { paused });
   await page.evaluate(() => document.fonts.ready);
   const input = page.getByLabel(/add items/i);
-  await input.fill(LIST);
+  await input.fill(list);
   await input.press("Enter");
-  await page.getByText(/3 items · 3 placed/i).waitFor();
+  const n = list.split(", ").length;
+  await until(page, (n) => new RegExp(`${n} items? · ${n} placed`, "i").test(document.body.innerText), { arg: n, paused });
   // the first stop's close-up is prepared on the list (hero/usePrepareFirst.ts): give it its idle time
-  await page.waitForTimeout(4000);
-  mark("route");
-  await page.getByRole("button", { name: /route 3 items/i }).click();
-  await page.getByTestId("map3d").waitFor();
-  mark("map");
-  await page.waitForFunction(() => window.__grosherCloseUp?.state === "open");
-  mark("open1");
-  const first = await page.evaluate(() => window.__grosherCloseUp);
-  // the arrival (descent + stroll) and a hold at eye level
-  await page.waitForTimeout(6500);
-  // the poster: eye level in Produce, a 2× still (the video is recorded at 390 × 844 CSS pixels)
-  await page.screenshot({ path: join(TMP, "poster.png") });
-  mark("hold1");
-  await page.getByRole("button", { name: /got it/i }).click();
-  mark("gotit");
-  await page.waitForFunction((z) => window.__grosherCloseUp?.state === "open" && window.__grosherCloseUp.zone !== z, first.zone);
-  mark("open2");
-  const second = await page.evaluate(() => window.__grosherCloseUp);
-  await page.waitForTimeout(5000);
-  mark("end");
-  await page.close();
-  await ctx.close();
-  console.log(`first: ${first.zone} · ${first.item}; second: ${second.zone} · ${second.item}`);
-  console.log(JSON.stringify(marks));
+  if (paused) await page.clock.runFor(4000);
+  else await page.waitForTimeout(4000);
+  await page.getByRole("button", { name: new RegExp(`route ${n} items?`, "i") }).click();
+}
+const closeUp = () => window.__grosherCloseUp;
+
+try {
+  // ---------------------------------------------------------------- the tier, read off ?debug=perf
+  {
+    const { ctx, page } = await phone(browser, { dsf: 1 });
+    await page.goto(`${BASE}/?${QUALITY}&debug=perf`, { waitUntil: "load" });
+    await route(page, "Toor dal (bulk)");
+    await until(page, () => /hero (hi|lo) ·/.test(document.querySelector("[data-testid=debug-perf]")?.textContent ?? ""));
+    const line = (await page.getByTestId("debug-perf").textContent()).split("\n").find((l) => l.startsWith("hero")) ?? "";
+    console.log(`?debug=perf: ${line}`);
+    if (!line.startsWith("hero hi")) throw new Error(`the close-up's texture tier is not hi: "${line}"`);
+    out.debugPerf = line;
+    await ctx.close();
+  }
+
+  // ---------------------------------------------------------------- the video, frame by frame at 60 fps
+  {
+    const { ctx, page } = await phone(browser, { dsf: 2, paused: true });
+    // ?perf=1 publishes the close-up's state (window.__grosherCloseUp); it draws no readout
+    await page.goto(`${BASE}/?${QUALITY}&perf=1`, { waitUntil: "load" });
+    await route(page, LIST, { paused: true });
+    const dir = join(TMP, "frames");
+    let f = 0;
+    // from Route until the close-up opens (the map appearing), one frame at a time
+    while (!(await page.evaluate(() => window.__grosherCloseUp?.state === "open"))) f = await frames(page, dir, 1, f);
+    out.marks.open1 = f;
+    out.first = await page.evaluate(closeUp);
+    f = await frames(page, dir, ARRIVAL_F + 60, f); // the arrival and a second at eye level
+    out.marks.gotit = f;
+    await page.getByRole("button", { name: /got it/i }).click();
+    while (!(await page.evaluate((z) => window.__grosherCloseUp?.state === "open" && window.__grosherCloseUp.zone !== z, out.first.zone))) f = await frames(page, dir, 1, f);
+    out.marks.open2 = f;
+    out.second = await page.evaluate(closeUp);
+    f = await frames(page, dir, ARRIVAL_F + 90, f); // into Bulk, and a moment at the bin
+    out.marks.end = f;
+    await ctx.close();
+    // the clip: from the first close-up's first frame through a second at eye level; Got it to the end
+    out.cuts = [
+      [out.marks.open1, out.marks.open1 + ARRIVAL_F + 60],
+      [out.marks.gotit, out.marks.end],
+    ];
+    out.video = encode(dir, join(IMG, "closeup"), out.cuts);
+    console.log(`first: ${out.first.zone} · ${out.first.item}; second: ${out.second.zone} · ${out.second.item}`);
+    console.log(`closeup video: ${out.video.seconds} s at 60 fps, AV1 ${out.video.av1KB} KB, H.264 ${out.video.h264KB} KB`);
+  }
+
+  // ---------------------------------------------------------------- the stills, 3×, each its own trip
+  for (const [name, list, atFrame] of [
+    ["closeup-bulk", "Toor dal (bulk)", null],
+    ["closeup-produce", "Bananas", PRODUCE_F],
+    ["closeup-juice", "Cold pressed juice", null],
+  ]) {
+    const paused = atFrame !== null;
+    const { ctx, page } = await phone(browser, { dsf: 3, paused });
+    await page.goto(`${BASE}/?${QUALITY}&perf=1`, { waitUntil: "load" });
+    await route(page, list, { paused });
+    await until(page, () => window.__grosherCloseUp?.state === "open" && window.__grosherPerf?.hero?.tier === "hi", { paused, step: 1000 / 60 });
+    if (paused) {
+      // a moment of the arrival: step to it frame by frame, every frame drawn
+      for (let i = 0; i < atFrame; i++) await page.clock.runFor(1000 / 60);
+    } else {
+      // the arrival over (a 1 s descent, a walk under 5 s), then frames flowing with everything uploaded
+      await page.waitForTimeout(6000);
+      await page.evaluate(() => (window.__grosherPerf.frames = 0));
+      await until(page, () => (window.__grosherPerf?.frames ?? 0) >= 30);
+    }
+    const png = join(TMP, `${name}.png`);
+    await page.screenshot({ path: png });
+    const cu = await page.evaluate(closeUp);
+    out.stills[name] = { zone: cu.zone, item: cu.item, files: still(png, join(IMG, name)) };
+    // 400 px at q60 (~27 KB): on a phone the poster sits below the lede, the first paint, and competes with the
+    // fonts for the link; at 480 px / 40 KB Lighthouse's mobile performance read 99 by run (the page swaps in the
+    // 2× still after load)
+    if (name === "closeup-bulk") out.posterKB = poster(png, join(IMG, "closeup-poster.webp"), 400, 60);
+    console.log(`${name}: ${cu.zone} · ${cu.item}`);
+    await ctx.close();
+  }
 } finally {
   await browser.close();
 }
 
-const raw = readdirSync(TMP).find((f) => f.endsWith(".webm"));
-renameSync(join(TMP, raw), join(TMP, "raw.webm"));
-const ff = (args) => execFileSync("ffmpeg", ["-y", "-loglevel", "error", ...args]);
-// two cuts: from the first 3D frame (the close-up opens with it; before it the flat map shows while the
-// 3D chunk loads) through the arrival and a second at eye level; then Got it to the second arrival's end
-const ARRIVAL_S = 3.4; // the descent and the stroll, measured from these captures
-const cuts = [
-  [marks.open1 + 0.1, marks.open1 + ARRIVAL_S + 1.0],
-  [marks.gotit - 0.2, marks.end - 1.5],
-];
-const trims = cuts.map(([a, b], i) => `[0:v]trim=${a.toFixed(2)}:${b.toFixed(2)},setpts=PTS-STARTPTS[c${i}]`).join(";") + `;[c0][c1]concat=n=2:v=1[cut]`;
-ff(["-i", join(TMP, "raw.webm"), "-an", "-filter_complex", `${trims};[cut]scale=390:-2[v]`, "-map", "[v]", "-c:v", "libvpx-vp9", "-b:v", "0", "-crf", "40", "-row-mt", "1", "-deadline", "good", "-cpu-used", "2", join(IMG, "closeup.webm")]);
-ff(["-i", join(TMP, "raw.webm"), "-an", "-filter_complex", `${trims};[cut]scale=390:-2[v]`, "-map", "[v]", "-c:v", "libx264", "-preset", "slow", "-crf", "31", "-pix_fmt", "yuv420p", "-movflags", "+faststart", join(IMG, "closeup.mp4")]);
-// 480 px, q70 (~40 KB): the poster is the project page's largest paint on a phone, and preloaded at this size
-// it keeps Lighthouse's mobile performance at 100 (780 px at q78, 106 KB, read 98–99)
-execFileSync("cwebp", ["-quiet", "-resize", "480", "0", "-q", "70", join(TMP, "poster.png"), "-o", join(IMG, "closeup-poster.webp")]);
-// the README's GIF: the first arrival only (the descent into Produce, the stroll, a second at eye level), one
-// palette, at most GIF_MAX_KB: the first rung of the ladder that fits
-const GIF_MAX_KB = 1500;
-const [g0, g1] = cuts[0];
-let gif = null;
-for (const [fps, width, colors] of [[10, 270, 112], [10, 250, 96], [9, 240, 88], [8, 230, 80], [8, 220, 64]]) {
-  ff(["-ss", g0.toFixed(2), "-t", (g1 - g0).toFixed(2), "-i", join(TMP, "raw.webm"), "-vf", `fps=${fps},scale=${width}:-2:flags=lanczos,split[a][b];[a]palettegen=max_colors=${colors}:stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=3:diff_mode=rectangle`, "-loop", "0", join(IMG, "closeup.gif")]);
-  const kb = statSync(join(IMG, "closeup.gif")).size / 1024;
-  if (kb <= GIF_MAX_KB) {
-    gif = { fps, width, colors, kb: Math.round(kb), seconds: Number((g1 - g0).toFixed(1)) };
-    break;
-  }
-}
-if (!gif) throw new Error(`closeup.gif: no rung of the ladder fits in ${GIF_MAX_KB} KB`);
-console.log(`closeup.gif: ${gif.seconds} s at ${gif.fps} fps, ${gif.width} px, ${gif.colors} colours`);
-rmSync(TMP, { recursive: true, force: true });
-for (const f of ["closeup.webm", "closeup.mp4", "closeup-poster.webp", "closeup.gif"]) console.log(`${f} ${Math.round(statSync(join(IMG, f)).size / 1024)} KB`);
-writeFileSync(join(IMG, "..", "closeup.json"), JSON.stringify({ _note: "Written by apps/web/scripts/capture-closeup.mjs (production build, 390×844, GPU). Seconds from the video's start.", capturedAt: new Date().toISOString().slice(0, 10), list: LIST.split(", "), marks, cuts, gif }, null, 2) + "\n");
+clean(TMP);
+writeFileSync(join(IMG, "..", "closeup.json"), JSON.stringify({ _note: "Written by apps/web/scripts/capture-closeup.mjs (production build, this Mac's GPU, 390×844: video 2× at 60 fps on a stepped page clock, stills 3×). Marks and cuts are frame numbers.", ...out }, null, 2) + "\n");
+console.log(`poster ${out.posterKB} KB; stills: ${Object.entries(out.stills).map(([k, v]) => `${k} ${v.files["2x"].avif} KB avif 2×`).join(", ")}`);

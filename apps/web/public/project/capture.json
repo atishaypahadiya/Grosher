@@ -1,5 +1,5 @@
 {
-  "_note": "Written by apps/web/scripts/capture-project.mjs from the production build on the demo store. Simulated trip: the clock is the legs to the stops (legsToStopsM) at the app's walking pace (WALK_MPS = 1.0 m/s, src/lib/format.ts), no time at the shelf. 'Walked' also counts the legs to the lane and the exit. The 3D still and the end of the video are trip step `tripFrame.step`, zoomed in by `tripFrame.zoomSteps` wheel notches (the app's own zoom). The project page's share card shows these numbers.",
+  "_note": "Written by apps/web/scripts/capture-project.mjs from the production build on Grosher, on this Mac's GPU. Simulated trip: the clock is the legs to the stops (legsToStopsM) at the app's walking pace (WALK_MPS = 1.0 m/s, src/lib/format.ts), no time at the shelf. 'Walked' also counts the legs to the lane and the exit. The 3D still and the end of the video are trip step `tripFrame.step`, zoomed in by `tripFrame.zoomSteps` wheel notches (the app's own zoom). The project page's share card shows these numbers (scripts/docs-numbers.mjs checks it).",
   "capturedAt": "2026-10-20",
   "list": [
     "Greek yogurt",
