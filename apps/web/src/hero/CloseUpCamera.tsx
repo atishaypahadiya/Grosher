@@ -1,11 +1,13 @@
-// The eye-level camera of a hero close-up. The way in has two moves: it descends from the overview over the
-// walkway outside the zone (a curve that stays out over the store, never above the zone's ceiling) to eye
-// level at the aisle's open end, then walks in under the ceiling's edge, down the aisle's walking line and
-// across to stand a couple of metres from the stop's bin, turning to face it, with a slight head bob (480 ms
-// down, then a walk of 360–760 ms by its length: at most 1.24 s, DESIGN.md §7's one exception, a scene
-// transition; a tap skips to the end; a cut under reduced motion). At eye level it allows a limited look
-// around (±57° yaw, ±17° pitch), a pan along the aisle and a dolly down to arm's length. No free flight. On
-// exit it walks back out and rises to the overview camera's pose, and hands over.
+// The eye-level camera of a close-up (hero or standard). The way in has two moves: it descends from the
+// overview over the walkway outside the zone (a curve that stays out over the store, never above a hero
+// zone's ceiling) to eye level at the aisle's open end, then walks in down the aisle's walking line and across
+// to stand a couple of metres from the stop's slot, turning to face it, with a slight head bob (1.0 s down,
+// then a walk of 1.2–1.5 s by its length, each eased in and out: DESIGN.md §7's one exception, a scene
+// transition; a tap skips to the end; a cut under reduced motion). The slot is framed in the clear band
+// between the progress strip and the bottom card; for a low shelf the shopper crouches (the eye comes down to
+// 1.05 m) and looks down, so the card never hides it. At eye level it allows a limited look around (±57° yaw,
+// ±17° pitch), a pan along the shelf and a dolly down to arm's length. No free flight. On exit it walks back
+// out and rises to the overview camera's pose in 0.8 s, and hands over.
 //
 // `envRef` carries how far the scene is into the close-up (0 overview … 1 eye level), from the camera's
 // height: the fog, the background, the overview's lights and fixtures blend on it (Scene.tsx).
@@ -17,14 +19,23 @@ import type { HeroTargetInfo } from "./index.ts";
 import type { SafeArea } from "../map3d/CameraRig.tsx";
 
 export const EYE_HEIGHT = 1.6;
-const DESCENT_MS = 480;
+/** the lowest the eye comes for a bottom shelf: a crouch */
+export const CROUCH_HEIGHT = 1.05;
+export const DESCENT_MS = 1000;
+/** the way back out: the walk back to the door, then the rise to the map */
+export const EXIT_WALK_MS = 300;
+export const EXIT_RISE_MS = 500;
+/** the bottom card covers about this much of the screen in a close-up: the slot stays above it */
+export const CARD_MIN = 0.4;
 const ARM = 0.7; // the closest the dolly comes: arm's length from the bin's centre
 const YAW = 1.0; // ±57°: enough to look down the aisle, never behind
 const PITCH = 0.3;
 const BOB = 0.012; // metres, a step's rise and fall
 
-/** the walk's duration for its length: a stroll, never a dash, never past 760 ms */
-export const walkMs = (metres: number) => Math.round(Math.min(760, Math.max(360, 300 + metres * 40)));
+/** the walk's duration for its length: a stroll, 1.2–1.5 s */
+export const walkMs = (metres: number) => Math.round(Math.min(1500, Math.max(1200, 1050 + metres * 90)));
+/** the eye's height for a slot centred at y: standing, or crouched for the low shelves */
+export const eyeHeightFor = (y: number) => Math.min(EYE_HEIGHT, Math.max(CROUCH_HEIGHT, y + 0.75));
 
 export interface CloseUpCameraHandle {
   look: (dxPx: number, dyPx: number) => void;
@@ -59,6 +70,21 @@ export const closeUpFov = (aspect: number) => Math.min(75, Math.max(50, (2 * Mat
 
 const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
+/** the arrival's two moves: soft at both ends, never a lurch */
+const easeSine = (t: number) => 0.5 - 0.5 * Math.cos(Math.PI * t);
+
+/**
+ * Two moves as one motion: a single ease in and out over both, each move taking its share of the way by its
+ * own duration, so the camera never stops at the door between them (it slows only at the two ends).
+ */
+const chain = (a: Segment, b: Segment): Segment => {
+  const f = a.ms / (a.ms + b.ms);
+  return {
+    ms: a.ms + b.ms,
+    ease: easeSine,
+    at: (g, t) => (g < f ? a.at(g / f, t) : b.at((g - f) / (1 - f), t)),
+  };
+};
 
 /** the environment blend for a camera height: overview above 9 m, the close-up at 2.2 m and below */
 export const envAt = (y: number) => {
@@ -87,6 +113,33 @@ interface Segment {
   ease: (t: number) => number;
 }
 
+/**
+ * Where the eye is and where it looks, for a target, the shopper's look / pan / dolly and the screen: standing
+ * (crouched for a low slot) `stand` metres out from it (a step to the side when the target says), turned to it,
+ * pitched so the slot sits in the middle of the band the progress strip and the bottom card leave clear.
+ */
+export function eyePose(target: HeroTargetInfo, u: { yaw: number; pitch: number; pan: number; dolly: number }, safe: SafeArea, aspect: number): CameraView {
+  const out = target.out ?? [0, target.facing];
+  const axis = target.axis ?? [1, 0];
+  const fov = closeUpFov(aspect);
+  const back = target.stand - u.dolly;
+  const c = target.center;
+  const along0 = c[0] * axis[0] + c[2] * axis[1];
+  const along = Math.min(target.bounds.x1, Math.max(target.bounds.x0, along0 + u.pan)) - along0;
+  const y = eyeHeightFor(c[1]);
+  const side = target.side ?? 0;
+  const position = new Vector3(c[0] + out[0] * back + axis[0] * (along + side), y, c[2] + out[1] * back + axis[1] * (along + side));
+  const bottom = Math.max(safe.bottom, CARD_MIN);
+  const bandMid = 1 - 2 * (safe.top + (1 - safe.top - bottom) / 2); // ndc y
+  const toBin = Math.atan2(c[1] - y, Math.hypot(back, side));
+  const lift = Math.atan(bandMid * Math.tan((fov * Math.PI) / 360));
+  const pitch = Math.max(-0.85, Math.min(0.4, toBin - lift + u.pitch));
+  // facing the shelf; from one side, turned back toward the target
+  const yaw = Math.atan2(out[0] * back + axis[0] * side, out[1] * back + axis[1] * side) + u.yaw;
+  const quaternion = new Quaternion().setFromEuler(new Euler(pitch, yaw, 0, "YXZ"));
+  return { position, quaternion, fov };
+}
+
 export const CloseUpCamera = forwardRef<CloseUpCameraHandle, CloseUpCameraProps>(function CloseUpCamera({ target, safe, reducedMotion, exiting, returnView, onExited, distanceRef, envRef }, ref) {
   const { camera, invalidate, size } = useThree();
   const cam = camera as PerspectiveCamera;
@@ -94,23 +147,10 @@ export const CloseUpCamera = forwardRef<CloseUpCameraHandle, CloseUpCameraProps>
   const anim = useRef<{ t0: number; segs: Segment[]; i: number; done?: () => void } | null>(null);
   const settled = useRef(false);
 
+  const out = target.out ?? [0, target.facing];
+  const axis = target.axis ?? [1, 0];
   /** the eye pose for the current target and the shopper's look / pan / dolly */
-  const eye = (): CameraView => {
-    const aspect = size.width / size.height;
-    const fov = closeUpFov(aspect);
-    const u = user.current;
-    const back = target.stand - u.dolly;
-    const x = Math.min(target.bounds.x1, Math.max(target.bounds.x0, target.center[0] + u.pan));
-    const position = new Vector3(x, EYE_HEIGHT, target.center[2] + target.facing * back);
-    // aim so the bin sits in the middle of the band the strip and the sheet leave clear
-    const bandMid = 1 - 2 * (safe.top + (1 - safe.top - safe.bottom) / 2); // ndc y
-    const toBin = Math.atan2(target.center[1] - EYE_HEIGHT, back);
-    const lift = Math.atan(bandMid * Math.tan((fov * Math.PI) / 360));
-    const pitch = Math.max(-0.6, Math.min(0.4, toBin - lift + u.pitch));
-    const yaw = (target.facing === 1 ? 0 : Math.PI) + u.yaw;
-    const quaternion = new Quaternion().setFromEuler(new Euler(pitch, yaw, 0, "YXZ"));
-    return { position, quaternion, fov };
-  };
+  const eye = (): CameraView => eyePose(target, user.current, safe, size.width / size.height);
 
   const apply = (v: CameraView) => {
     cam.position.copy(v.position);
@@ -158,10 +198,10 @@ export const CloseUpCamera = forwardRef<CloseUpCameraHandle, CloseUpCameraProps>
     // was looking to the zone's open side ahead of the door, so the camera never turns to the sky
     const from = groundOf(high);
     const ahead = door.clone().add(new Vector3(0, 0, -1).applyQuaternion(doorPose.quaternion).multiplyScalar(3));
-    // ease-out, as every camera move (DESIGN.md §3): it leaves the map at once, settles into the walk
+    // eased in and out (DESIGN.md §7's exception): it lifts off the map gently and settles at the door
     const descent: Segment = {
       ms: DESCENT_MS,
-      ease: easeOut,
+      ease: easeSine,
       at: (e) => {
         const a = high.position.clone().multiplyScalar((1 - e) * (1 - e));
         const b = ctrl.clone().multiplyScalar(2 * e * (1 - e));
@@ -175,7 +215,7 @@ export const CloseUpCamera = forwardRef<CloseUpCameraHandle, CloseUpCameraProps>
     };
     const walk: Segment = {
       ms: walkMs(metres),
-      ease: easeInOut,
+      ease: easeSine,
       at: (e) => {
         const p = along(e * metres);
         // a step every ~0.7 m: the head rises and falls, fading in and out with the walk
@@ -199,11 +239,11 @@ export const CloseUpCamera = forwardRef<CloseUpCameraHandle, CloseUpCameraProps>
     if (cam.position.y < 3) {
       const from = high;
       const to = eye();
-      run([{ ms: walkMs(from.position.distanceTo(to.position)), ease: easeInOut, at: (e) => ({ position: from.position.clone().lerp(to.position, e), quaternion: from.quaternion.clone().slerp(to.quaternion, e), fov: to.fov }) }], () => (settled.current = true));
+      run([{ ms: walkMs(from.position.distanceTo(to.position)), ease: easeSine, at: (e) => ({ position: from.position.clone().lerp(to.position, e), quaternion: from.quaternion.clone().slerp(to.quaternion, e), fov: to.fov }) }], () => (settled.current = true));
       return;
     }
     const { descent, walk } = moves(high);
-    run([descent, walk], () => (settled.current = true));
+    run([chain(descent, walk)], () => (settled.current = true));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [target.center[0], target.center[1], target.center[2], target.facing]);
 
@@ -213,9 +253,11 @@ export const CloseUpCamera = forwardRef<CloseUpCameraHandle, CloseUpCameraProps>
     const back = returnView();
     const here = { position: cam.position.clone(), quaternion: cam.quaternion.clone(), fov: cam.fov };
     const { descent, walk } = moves(back);
-    const out: Segment[] = [
+    // 0.8 s in all, one motion: the walk back gathers speed, the rise carries it on and settles on the map
+    const outward = chain(
       {
         ...walk,
+        ms: EXIT_WALK_MS,
         // the walk back starts from wherever the shopper looked (panned, turned, dollied): blend that in
         at: (e, t) => {
           const p = walk.at(1 - e, 1 - t);
@@ -223,9 +265,9 @@ export const CloseUpCamera = forwardRef<CloseUpCameraHandle, CloseUpCameraProps>
           return { position: here.position.clone().lerp(p.position, k), quaternion: here.quaternion.clone().slerp(p.quaternion, k), fov: p.fov };
         },
       },
-      { ...descent, at: (e, t) => descent.at(1 - e, 1 - t) },
-    ];
-    run(out, () => {
+      { ...descent, ms: EXIT_RISE_MS, at: (e, t) => descent.at(1 - e, 1 - t) },
+    );
+    run([outward], () => {
       cam.near = 0.5;
       cam.updateProjectionMatrix();
       if (envRef) envRef.current = 0;
@@ -274,8 +316,10 @@ export const CloseUpCamera = forwardRef<CloseUpCameraHandle, CloseUpCameraProps>
     pan: (dx) => {
       if (anim.current) return;
       const u = user.current;
-      const along = target.facing === 1 ? -1 : 1; // screen right is +x facing the wall, −x facing the island
-      u.pan = Math.max(target.bounds.x0 - target.center[0], Math.min(target.bounds.x1 - target.center[0], u.pan + along * dx * 0.006));
+      // dragging right moves the view left along the shelf: screen right, looking into the shelf, is (out.z, −out.x)
+      const along = -(out[1] * axis[0] - out[0] * axis[1]);
+      const along0 = target.center[0] * axis[0] + target.center[2] * axis[1];
+      u.pan = Math.max(target.bounds.x0 - along0, Math.min(target.bounds.x1 - along0, u.pan + along * dx * 0.006));
       apply(eye());
       invalidate();
     },

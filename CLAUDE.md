@@ -592,11 +592,18 @@ and is not a device number; measure that on a phone.
 The Playwright scripts that drove these checks live outside the repo; the pattern is: `vite dev`, fill the
 list, Route, `waitForFunction(() => window.__grosherPerf.frames > 100)`, read the object, screenshot.
 
-### Hero close-ups (`apps/web/src/hero`): full-detail aisles
+### Close-ups (`apps/web/src/hero`): every stop at eye level
 
-Two zoom levels. The overview stays as above; a zone that has a **hero close-up** (`HERO_ZONES` in
-`src/hero/index.ts`: today Grosher's Bulk & pulses, `aisle: "BULK"`) opens at eye level when the next stop is
-in it (or a stop in it is tapped: `stopUnder` hit-tests the overlay's `data-key` items). The scene keeps the
+Two zoom levels. The overview stays as above; **every stop opens a close-up** at eye level when it becomes
+next (or is tapped: `stopUnder` hit-tests the overlay's `data-key` items). `closeUpAt(store, categories,
+locationId)` in `src/hero/index.ts` gives its zone: a **hero** zone when the location is in one (`HERO_ZONES`:
+today Grosher's Bulk & pulses, `aisle: "BULK"`, drawn from a recipe), else a **standard** close-up generated
+from the store data (`std:<locationId>`, see "Standard close-ups" below). Between stops (TripMap3D): Got it or
+Skip → the camera goes back out to the map (0.8 s, the overview's cards and labels stay off until it is
+there), the next leg shows for `HOLD_MS` (1.1 s), then the next stop's close-up opens; two bins in the same
+hero zone are a walk over at eye level instead. "Back to the map" is remembered for that stop. `?closeup=0`
+opens none on its own (a tap still does): the overview gates (perf, contrast's trip shots, the project
+capture) use it. The scene keeps the
 overview until the zone's chunk and textures are in, its programs compiled (`compileAsync`) and every buffer
 uploaded (textures, then one draw into a 1 × 1 target from the door), so no frame of the arrival stalls. The
 programs are compiled with a render target bound: the scene is drawn into the post-processing composer's
@@ -617,26 +624,34 @@ renderer); the scene's one hemisphere blends from the overview's haze to the zon
   probe on the same GPU). A different first stop drops it; starting the trip keeps it; `?prepare=0` turns it
   off. The zone then mounts with the map (its close-up state is set in the first render, the loaded module
   used directly, no Suspense pass) and only compiles and uploads. One long task on the list (~90 ms on an M4).
-- *the next stop* (TripMap3D `preload` → Scene, `active={false}` on the zone): during the current leg, 1.2 s
-  after it starts, then the next idle period; a route change cancels it, another item in the same zone only
-  retargets; `?preload=0` turns it off. Its fixtures' other merge is made in idle time too (`prepareHide`).
+- *the next stop* (TripMap3D `prepared` → Scene, each zone mounted once by id with `active={false}`): the
+  stop after the current one, 1.2 s after the current stop starts (its close-up is usually open by then),
+  then the next idle period; and the current stop's own zone while it waits out the hold, so the one that
+  opens next is always mounted. A route change cancels it; `?preload=0` turns it off. Its fixtures' other
+  merge is made in idle time too (`prepareHide`). The fixtures' merged variants are kept to the whole store
+  and the last four hide sets (`Fixtures.tsx` `noteVariant`; older ones are disposed).
 - The overview hides the zone's fixtures only once the close-up shows (they used to vanish while it loaded);
   the variant without them waits, merged and in meshes, in a hidden `fixtures-warm` group that the zone's
   warm-up draw shows for its one 1 × 1 frame, so its buffers are on the GPU before the switch.
-Measured on an M4 Pro (Metal) at 390 × 844 × 3, the camera's first visible movement after the map appears:
-first stop prepared 133–250 ms (`?prepare=0`: 600–650); "Got it" → open for the next stop 53–67 ms, worst
-frame 17 ms (`?preload=0`: 620–780 ms, a 150–180 ms frame). Once the camera moves no frame is over 17 ms; the
-one frame that switches the scene to the close-up (before the camera moves) takes 33–50 ms. The descent eases
-out (DESIGN.md §3), so it moves at once.
-- **The arrival** (`CloseUpCamera`, two moves, each eased on its own; DESIGN.md §7's one exception, at most
-  1.24 s, a tap anywhere skips to the end, reduced motion cuts): a descent of 480 ms on a curve that stays out
-  over the walkway, never above the zone, its view on a point gliding from where the overview looked to the
-  aisle mouth (never the sky), to the **door** (`Target.door`: eye level, outside the zone's ceiling, on the
-  aisle's walking line at its nearer end); then a walk in (360–760 ms by its length, a 1.2 cm head bob) along
-  that line, turning off it (`Target.via`) to stand `Target.stand` from the bin (2.0 m; 1.55 m beside the
-  centerpiece, on its north side), turned to face it, the bin in the middle of the band between the strip and
-  the sheet. No walk or pan goes through the centerpiece (tested). The way out walks back to the door and
-  rises to the overview's pose. `envRef` (0 overview … 1 eye level, from
+Measured on an M4 Pro (Metal) at 390 × 844 × 3, the camera's first visible movement after the map appears
+(Bulk, before standard close-ups): first stop prepared 133–250 ms (`?prepare=0`: 600–650); "Got it" → open for
+the next stop 53–67 ms, worst frame 17 ms (`?preload=0`: 620–780 ms, a 150–180 ms frame). With every stop a
+close-up (19 Oct 2026, Weekly staples, 11 standard close-ups in a row, `__grosherCloseUpLog`): asked for →
+ready (the camera starts) 19–29 ms for every stop after the first, 300 ms for the first; the way out 819–837 ms.
+- **The arrival** (`CloseUpCamera`; DESIGN.md §7's one exception, a tap anywhere skips to the end, reduced
+  motion cuts): two moves chained into **one motion with one sine ease in and out** (`chain`: it never stops
+  at the door), each taking its share by its own duration: a descent of `DESCENT_MS` (1.0 s) on a curve that
+  stays out over the walkway, never above a hero zone's ceiling, its view on a point gliding from where the
+  overview looked to the aisle mouth (never the sky), to the **door** (`Target.door`: eye level, on the
+  aisle's walking line); then a walk in (`walkMs`, 1.2–1.5 s by its length, a 1.2 cm head bob) along that line,
+  turning off it (`Target.via`) to stand `Target.stand` from the target, turned to face it. **Framing**
+  (`eyePose`, pure, tested on every slot): the slot in the middle of the band between the progress strip and
+  the bottom card (taken as at least `CARD_MIN` = 40% of the screen); the eye at 1.6 m, down to 1.05 m for a
+  low slot (`eyeHeightFor`: a crouch), pitched down to it; a standard target stands a step to one side
+  (`side`, ≤ 0.9 m, toward the way in) and turns back to it, so the aisle recedes beside the slot. Shelves face
+  any of the four directions (`out`, `axis` on the target; Bulk's default to ±z and x). No walk or pan goes
+  through Bulk's centerpiece (tested). The way out (0.8 s: `EXIT_WALK_MS` 300 back to the door, `EXIT_RISE_MS`
+  500 up to the overview's pose, one eased motion). `envRef` (0 overview … 1 eye level, from
   the camera's height between 9 m and 2.2 m) blends the scene: the fog and background to a warm dark
   (`#2A1F17`, .03), the overview's lights and skylight spots down (lights fade, never leave the scene: that
   recompiles every program), the overview's fixtures to 40% (`Fixtures dimRef`). Look ±57° yaw / ±17° pitch,
@@ -707,19 +722,58 @@ out (DESIGN.md §3), so it moves at once.
 - **Fallback**: no WebGL, or a zone that fails to load, shows the flat shelf image
   (`public/hero/bulk/<category>.webp`, `scripts/capture-hero-flat.mjs`, rendered from the close-up itself).
 - **Close-up budget** (`src/hero/budget.ts`, `scripts/hero-gate.mjs` in CI): ≤ 70 draw calls, ≤ 250,000
-  triangles, ≤ 16 MB GPU textures, ≤ 2,500 KB download, nothing fetched before a close-up opens. The gate reads
-  the worst frame of the arrival (the page's clock slowed 40×), eye level, down the aisle, and a scoop bin
-  facing out over the store, and checks the next stop's zone is prepared during the leg before it. Measured
-  19 Oct 2026 (the aisle, store v3): arriving 61 calls / 205k triangles, eye level 47 / 190k (with the target's
-  real grains), down the aisle 49 / 160k, scoop bins 55 / 160k; 9.1 MB textures with the gloss's environment
-  (BC on a desktop; ASTC on an iPhone can be up to twice); 2,298 KB download. On the M4 Pro's GPU (Metal) at 390 × 844
-  × 3, uncapped: 2.5 ms a frame median, 3.8 ms p95 (an iPhone's GPU is several times slower: check it there
-  with `?debug=perf`). SwiftShader frame times (CI) are software rendering, not a device number.
+  triangles, ≤ 16 MB GPU textures, ≤ 2,500 KB download, for Bulk and for the worst standard close-up (A4-R16,
+  the most triangles of all 319: `test/standard-zone.test.ts` pins which one it is). The gate reads the worst
+  frame of each arrival (the page's clock slowed 40×), eye level, along the aisle, and Bulk's scoop bins facing
+  out over the store; checks nothing of a close-up is fetched by an empty list or a `?closeup=0` trip; sizes
+  each close-up's download from the requests it made beyond that overview trip's; and checks the first stop
+  is prepared on the list and the next one during the stop before (asked for → ready). Measured 19 Oct 2026
+  (SwiftShader, 390 × 844): Bulk arriving 61 calls / 205k triangles, eye level 47 / 190k (with the target's
+  real grains), along the aisle 49 / 160k, scoop bins 56 / 164k, 9.1 MB textures with the gloss's environment,
+  2,301 KB download; standard A4-R16 arriving 46 / 179k, eye level 40 / 179k, along the aisle 35 / 178k, 8.0 MB,
+  1,521 KB; prepared zones ready 1 ms after they are asked for. (BC textures on a desktop; ASTC on an iPhone can
+  be up to twice.) On the M4 Pro's GPU (Metal) at 390 × 844 × 3, uncapped, Bulk: 2.5 ms a frame median, 3.8 ms
+  p95 (an iPhone's GPU is several times slower: check it there with `?debug=perf`). SwiftShader frame times
+  (CI) are software rendering, not a device number.
 - **References** for the look are kept in `design/refs/` (git-ignored: third-party photos, not ours to
   publish); `.work/` is the ignored place for local captures and comparison images.
 - **The next aisle**: a recipe beside `bulk/` (sections, tiers, labels), its lights and slabs, an entry in
   `HERO_ZONES` (its aisle, the overview fixtures it and its backdrop replace), its labels in the generator,
-  its flat images. The kit, the light, the camera and the gate carry over.
+  its flat images. The kit, the light, the camera and the gate carry over. Produce is next; its locations then
+  stop being standard close-ups (`closeUpAt` checks `HERO_ZONES` first).
+
+#### Standard close-ups (`src/hero/standard`)
+
+Any stop outside a hero zone, generated from the store data with the shelf kit; one chunk
+(`StandardZone.tsx`, 11 KB gzip) for all of them.
+- **The plan** (`plan.ts`, pure, no three.js, in the main bundle): `slotFor` gives the fixture and face; the
+  face's frame (centre, along, out, length, depth, bay 1's end); the face across the corridor (marching out
+  from the slot to the next parallel fixture, ≤ 5 m); the overview fixtures to hide (those two); the slot.
+- **The build** (`zone.ts`): each face built in its own frame (face on z = 0 looking +z) and moved into the
+  store, so the four directions come out the same. One build per fixture type (`buildKind`): `gondola`
+  (black steel shelving and pine planks at the store's shelf heights, a pine back, a header board per sign
+  every 7.2 m with the aisle number: "AISLE 4 · WORLD FOODS · INDIAN"), `chiller` (dark interior, stainless
+  shelves with price rails, a lit canopy: dairy, the meat and cheese cases), `doors` (the same behind
+  reach-in glass doors with lit mullions: frozen, cold beer), `coffin`, `service` (a base, a lit deck of trays
+  of loose food behind curved glass, the staff side and a back wall with the counter's sign), `bar` (the food
+  hall's wells under a sneeze guard), `produce` (crates on black stands, both sides), `producewall` (a
+  stepped rack), `counter` (pine counter, a stocked back wall). Stock: each face's categories as runs along
+  it (`faceCategories`, from their bays, shifted onto their own slot's bay; the stop's own category always
+  fills its slot); a pack shape per category (`styles.ts` `styleOf`: 23 shapes in `STANDARD_TEMPLATES`,
+  coarser glass than Bulk's) with its Grosher house label (the **categories atlas**, one 128 px cell per
+  category at its pack's aspect, band colour by department, no blue), in blocks of 2–5 facings told apart by
+  tint and size (`VARIANTS`); loose goods (produce, counter trays) as grain mounds at fruit size (`LOOSE`).
+  Modelled packs only near the slot (`detailOf`: 4.5 m either side, less for heavy kinds, 4,000 triangles a
+  shelf-metre over both faces), printed boxes beyond; full shelving within 6 m, plain planks beyond. The whole
+  store's floor in polished concrete; tracks of spots overhead; everything else the overview's, dimmed.
+- **Light**: the kit's per-pixel light with exactly `STD_LIGHTS` (10) lights and `STD_SLABS` (12) slabs in
+  every standard zone (padded), so their programs are one set, compiled at the first and reused by every
+  later one; the fill is `STANDARD_AMBIENT` (2.3). **Textures** (`STANDARD_TEXTURES`: pine, plaster, concrete,
+  grains + normals, `catlabels` 2048 × 2688 ETC1S, `signs` 1024 × 1280 UASTC; ~1.2 MB hi) are fetched once per
+  tier and kept for the trip (`standardTextures`); a zone disposes only its own geometry and materials.
+  Builds are cached (the last four), ~40 ms each on an M4.
+- **Budget**: every one of the 319 builds is under 180k triangles (the test leaves the overview 70k); the
+  heaviest, A4-R16 (jars and bottles on both faces of a 35 m aisle, 145k), is the one the close-up gate opens.
 
 ### Texture pipeline
 
@@ -964,7 +1018,8 @@ the precache filled, manifest with name / icons 192 + 512 + maskable / `standalo
   and blur only).
 - Only two labels on the map: the next stop and the checkout callout. Markers and labels never scale with zoom.
 - No animation longer than 480 ms; everything respects `prefers-reduced-motion`. One exception (DESIGN.md §7):
-  a hero close-up's arrival and way out, at most 1.24 s, a tap skips it, reduced motion cuts.
+  a close-up's arrival (a ~1.0 s descent and a 1.2–1.5 s walk in, one eased motion) and its way out (0.8 s);
+  a tap skips either, reduced motion cuts.
 - No "amazing / smart / optimized" copy. Numbers say it.
 - Phone screens are a centred column, max 430px; verify at 390×844 and 1440×900.
 - Keep the solver's penalties position-and-mask only (exactness), keep Fixture/Department optional (the

@@ -6,7 +6,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Line } from "@react-three/drei";
-import { BoxGeometry, Color, EdgesGeometry, Group, InstancedBufferAttribute, InstancedMesh, Matrix4, Mesh, MeshStandardMaterial, PerspectiveCamera, WebGLRenderTarget, type Texture } from "three";
+import { BoxGeometry, Color, EdgesGeometry, Group, InstancedBufferAttribute, InstancedMesh, Matrix4, Mesh, MeshStandardMaterial, type Texture } from "three";
+import { warmUp } from "../kit/warm.ts";
 import type { StoreGraph } from "@grosher/core";
 import { bulkRig, bulkZoneFor, dropBuiltZones, grainSurface, pickTarget, shapeOf, type Target } from "./zone.ts";
 import { decalMesh } from "../kit/decals.ts";
@@ -16,26 +17,14 @@ import { hex } from "../kit/bake.ts";
 import { GRAINS } from "./recipe.ts";
 import { dropPreparedTextures, kitMaterials, loadHeroTextures, pickTier, pinnedTier, prepareHeroTextures, TIER_KEY, type KitMaterials, type TextureName, type Tier } from "../kit/materials.ts";
 import { save } from "../../lib/storage.ts";
-import type { HeroTargetInfo } from "../index.ts";
+import type { HeroZoneComponentProps } from "../index.ts";
 import { heroStats } from "../stats.ts";
 
 const LIME = new Color("#D4FF4A");
 const LIFT = 0.03;
 const PULL = 0.06;
 
-export interface HeroZoneProps {
-  store: StoreGraph;
-  category: string;
-  itemName: string;
-  /** false while it is only being prepared in the background */
-  active?: boolean;
-  /** where the camera should stand: the target bin and the pan bounds */
-  onTarget: (t: HeroTargetInfo) => void;
-  onLit?: (m: Mesh | null) => void;
-  onError: (e: Error) => void;
-}
-
-export default function HeroZone({ store, category, itemName, active = true, onTarget, onLit, onError }: HeroZoneProps) {
+export default function HeroZone({ store, category, itemName, active = true, onTarget, onLit, onError }: HeroZoneComponentProps) {
   const gl = useThree((s) => s.gl);
   const camera = useThree((s) => s.camera);
   const scene = useThree((s) => s.scene);
@@ -168,65 +157,13 @@ export default function HeroZone({ store, category, itemName, active = true, onT
   }, [target, instanced, invalidate]);
   // the camera starts down only once there is something to see: the textures are in, the programs compiled
   useEffect(() => {
-    if (!mats || !group.current || compiled === mats) return;
-    let live = true;
-    const done = () => {
-      if (!live) return;
-      // one draw into a 1 × 1 target, from the door, with the real scene's lights: every buffer and texture
-      // goes up to the GPU now, not in the first frame of the descent (that frame took 150 ms on an M4)
-      const g = group.current;
-      const wrapper = g?.parent;
-      if (g && wrapper && target) {
-        // the textures first (compressed: a few ms), then the buffers with the draw
-        if (textures) for (const t of Object.values(textures)) gl.initTexture(t);
-        const was = wrapper.visible;
-        wrapper.visible = true;
-        // the overview's fixtures as they will be once the close-up shows (Fixtures keeps them hidden till then)
-        const warmFixtures = scene.getObjectByName("fixtures-warm");
-        if (warmFixtures) warmFixtures.visible = true;
-        const eye = new PerspectiveCamera(80, 1, 0.05, 120);
-        eye.position.set(...target.door);
-        eye.lookAt(...target.center);
-        // every object drawn once, in view of the door or not: on a GPU without parallel shader compiling
-        // (software rendering, some phones) a program finishes compiling on its first use, and that use
-        // must be here, not the frame the descending camera first sees the object
-        const culled: { frustumCulled: boolean }[] = [];
-        for (const root of [g, warmFixtures])
-          root?.traverse((o) => {
-            if (o.frustumCulled) {
-              o.frustumCulled = false;
-              culled.push(o);
-            }
-          });
-        const rt = new WebGLRenderTarget(1, 1);
-        const prev = gl.getRenderTarget();
-        gl.setRenderTarget(rt);
-        gl.render(scene, eye);
-        gl.setRenderTarget(prev);
-        rt.dispose();
-        for (const o of culled) o.frustumCulled = true;
-        if (warmFixtures) warmFixtures.visible = false;
-        wrapper.visible = was;
-      }
-      setCompiled(mats);
-    };
-    // compiled for a render target, as the scene is drawn (into the post-processing composer's target: no
-    // tone mapping, linear output in the program), or the first real frame compiles them again, synchronously
-    const compileTarget = new WebGLRenderTarget(1, 1);
-    const before = gl.getRenderTarget();
-    gl.setRenderTarget(compileTarget);
-    const compiling = gl.compileAsync(group.current, camera, scene);
-    gl.setRenderTarget(before);
-    compileTarget.dispose();
-    compiling.then(done, done);
-    return () => {
-      live = false;
-    };
+    if (!mats || !group.current || compiled === mats || !target) return;
+    return warmUp(gl, scene, camera, group.current, { from: target.door, at: target.center }, textures ? Object.values(textures) : [], () => setCompiled(mats));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mats, gl, camera, scene, compiled, instanced]);
   useEffect(() => {
     // prepared in the background, it waits; made active (its stop is next), it hands over at once
-    if (active && target && mats && compiled === mats) onTarget({ center: target.center, facing: target.facing, name: target.name, bounds: target.bounds, door: target.door, via: target.via, stand: target.stand });
+    if (active && target && mats && compiled === mats) onTarget({ center: target.center, facing: target.facing, name: target.name, height: target.size[1], bounds: target.bounds, door: target.door, via: target.via, stand: target.stand });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [target, zone, mats, compiled, active]);
 

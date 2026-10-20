@@ -168,6 +168,30 @@
       "kind": "uastc",
       "w": 512,
       "h": 256
+    },
+    "catlabels": {
+      "bytes": 307490,
+      "kind": "etc1s",
+      "w": 2048,
+      "h": 2688
+    },
+    "catlabels.lo": {
+      "bytes": 129773,
+      "kind": "etc1s",
+      "w": 1024,
+      "h": 1344
+    },
+    "signs": {
+      "bytes": 216114,
+      "kind": "uastc",
+      "w": 1024,
+      "h": 1280
+    },
+    "signs.lo": {
+      "bytes": 106697,
+      "kind": "uastc",
+      "w": 512,
+      "h": 640
     }
   }
 }

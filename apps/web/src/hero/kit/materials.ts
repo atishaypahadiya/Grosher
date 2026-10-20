@@ -18,7 +18,14 @@ import { rigUniforms, withPatches, zoneLightPatch, type LightRig, type Patch } f
 export type Tier = "hi" | "lo";
 export const TEXTURES = ["pine", "plaster", "plaster_n", "concrete", "burlap", "burlap_n", "terracotta", "stone", "stone_n", "grains", "grains_n", "labels", "headers", "cutouts"] as const;
 export type TextureName = (typeof TEXTURES)[number];
-const ATLASES: TextureName[] = ["grains", "grains_n", "labels", "headers", "cutouts"];
+/** what a standard close-up uses (src/hero/standard): the kit's wood, plaster and floor, the grains for loose
+ * goods, every category's house label and the aisle signs */
+export const STANDARD_TEXTURES = ["pine", "plaster", "concrete", "grains", "grains_n", "catlabels", "signs"] as const;
+export type StandardTextureName = (typeof STANDARD_TEXTURES)[number];
+type AnyTexture = TextureName | StandardTextureName;
+const ATLASES: AnyTexture[] = ["grains", "grains_n", "labels", "headers", "cutouts", "catlabels", "signs"];
+export type TextureSet = "bulk" | "standard";
+const SET_NAMES: Record<TextureSet, readonly AnyTexture[]> = { bulk: TEXTURES, standard: STANDARD_TEXTURES };
 
 // every file, by name, as a hashed asset URL (Vite globs the folder; the service worker precaches them)
 const FILES = import.meta.glob("../assets/*.ktx2", { query: "?url", import: "default", eager: true }) as Record<string, string>;
@@ -74,9 +81,9 @@ export function pickTier(): Tier {
   return "hi";
 }
 
-async function fetchTextures(l: KTX2Loader, tier: Tier): Promise<Record<TextureName, Texture>> {
+async function fetchTextures(l: KTX2Loader, tier: Tier, set: TextureSet = "bulk"): Promise<Record<TextureName, Texture>> {
   const entries = await Promise.all(
-    TEXTURES.map(async (name) => {
+    SET_NAMES[set].map(async (name) => {
       const t = await l.loadAsync(urlOf(name, tier));
       if (!ATLASES.includes(name)) t.wrapS = t.wrapT = RepeatWrapping;
       if (!name.endsWith("_n")) t.colorSpace = SRGBColorSpace;
@@ -100,6 +107,32 @@ export function prepareHeroTextures(tier: Tier): Promise<Record<TextureName, Tex
     prepared.set(tier, p);
   }
   return p;
+}
+
+/**
+ * The standard close-ups' textures: fetched once per tier and kept for the trip (a trip opens a dozen standard
+ * close-ups; they all share these, as they share their shader programs). ~1.2 MB on the wire on hi.
+ */
+const standardSet = new Map<Tier, Promise<Record<StandardTextureName, Texture>>>();
+export function standardTextures(tier: Tier, gl?: WebGLRenderer): Promise<Record<StandardTextureName, Texture>> {
+  let p = standardSet.get(tier);
+  if (!p) {
+    const l = ktx2(gl);
+    if (!l) return Promise.reject(new Error("no compressed texture support"));
+    const t0 = performance.now();
+    p = (fetchTextures(l, tier, "standard") as unknown as Promise<Record<StandardTextureName, Texture>>).then((t) => {
+      heroStats.loadMs = Math.round(performance.now() - t0);
+      return t;
+    });
+    p.catch(() => standardSet.delete(tier));
+    standardSet.set(tier, p);
+  }
+  return p.then((t) => {
+    heroStats.tier = tier;
+    heroStats.textures = STANDARD_TEXTURES.length;
+    heroStats.gpuBytes = Object.values(t).reduce((s, x) => s + gpuBytes(x), 0);
+    return t;
+  });
 }
 
 /** Drop what was prepared and not taken (the route changed): the transcoded data goes with it. */
@@ -189,6 +222,32 @@ function tiles(map: Texture, normalMap: Texture): Patch {
         }
         `,
       );
+  };
+}
+
+/**
+ * A standard close-up's materials: the kit's, on the standard textures (the category labels for packs, the
+ * aisle signs on the header boards). Every standard zone has the same number of lights and slabs, so these
+ * programs compile once a trip.
+ */
+export function standardMaterials(t: Record<StandardTextureName, Texture>, rig: LightRig, env?: Texture): Partial<KitMaterials> {
+  const uniforms = rigUniforms(rig);
+  const zone = zoneLightPatch(rig, uniforms);
+  const key = `zone${rig.lights.length}-${rig.slabs.length}`;
+  const std = (o: ConstructorParameters<typeof MeshStandardMaterial>[0], tag = "std", ...extra: Patch[]) => withPatches(new MeshStandardMaterial({ vertexColors: true, metalness: 0, ...o }), `${key}-${tag}`, zone, ...extra);
+  return {
+    plaster: std({ map: t.plaster, roughness: 0.95 }),
+    concrete: std({ map: t.concrete, roughness: 0.32, envMap: env, envMapIntensity: 0.55 }),
+    pine: std({ map: t.pine, roughness: 0.66 }),
+    steel: std({ color: new Color("#FFFFFF"), roughness: 0.42 }),
+    paint: std({ color: new Color("#FFFFFF"), roughness: 0.55 }),
+    header: std({ map: t.signs, emissiveMap: t.signs, emissive: new Color("#FFF4E6"), emissiveIntensity: 0.45, roughness: 0.8 }),
+    label: std({ map: t.catlabels, roughness: 0.5 }, "cells", cells),
+    glass: std({ color: new Color("#F6F6F2"), transparent: true, opacity: 0.16, roughness: 0.04, depthWrite: false, envMap: env, envMapIntensity: 0.6 }),
+    grain: std({ roughness: 0.75 }, "tiles", tiles(t.grains, t.grains_n)),
+    lid: std({ color: new Color("#FFFFFF"), roughness: 0.45 }),
+    metal: std({ color: new Color("#FFFFFF"), roughness: 0.28, metalness: 0.45, envMap: env, envMapIntensity: 0.5 }),
+    glow: new MeshBasicMaterial({ vertexColors: true, toneMapped: false }),
   };
 }
 

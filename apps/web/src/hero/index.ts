@@ -1,17 +1,28 @@
-// Hero zones: the aisles that have a full-detail close-up. The 3D map opens one when the next stop is in it
-// (or the shopper taps such a stop), lazily loading the zone's chunk and textures. Every other aisle stays
-// at overview detail. The next aisle is another entry here plus its recipe (src/hero/<zone>/).
+// Close-ups: every stop opens one at eye level when it is next (or the shopper taps it), lazily loading the
+// zone's chunk and textures. Two qualities: a HERO zone is drawn by hand from a recipe at full detail (today
+// Bulk & pulses, src/hero/bulk); every other stop gets a STANDARD zone, generated from the store data with the
+// same shelf kit (src/hero/standard: its fixture face and the one across, the stop's slot lit lime). A zone
+// is upgraded to hero quality by another entry in HERO_ZONES plus its recipe (src/hero/<zone>/).
 
-import type { StoreGraph } from "@grosher/core";
+import type { Category, StoreGraph } from "@grosher/core";
 import type { ComponentType } from "react";
 import type { Mesh } from "three";
+import { standardPlan, type StandardPlan } from "./standard/plan.ts";
 
 export interface HeroTargetInfo {
   /** the target bin's centre (world metres) and which way it faces (z) */
   center: [number, number, number];
   facing: 1 | -1;
   name: string;
-  /** how far an eye-level camera may pan along x */
+  /** out of the shelf toward the shopper, world (x, z); default (0, facing) */
+  out?: [number, number];
+  /** along the shelf, world (x, z): the eye-level pan's direction; default (1, 0) */
+  axis?: [number, number];
+  /** the lit target's height: the close-up frames all of it above the bottom card */
+  height?: number;
+  /** metres along `axis` the shopper stands to one side of the target, looking back at it (the aisle shows) */
+  side?: number;
+  /** how far an eye-level camera may pan, as positions along `axis` */
   bounds: { x0: number; x1: number };
   /** where the walk in starts: eye level, outside the zone's ceiling (the descent ends there) */
   door: [number, number, number];
@@ -23,6 +34,9 @@ export interface HeroTargetInfo {
 
 export interface HeroZoneComponentProps {
   store: StoreGraph;
+  /** the zone being drawn (a standard zone's entry carries its plan) */
+  zone: HeroZoneEntry;
+  locationId: string;
   category: string;
   itemName: string;
   /** false while it is only being prepared in the background (the next stop's zone): no camera hand-off yet */
@@ -33,25 +47,37 @@ export interface HeroZoneComponentProps {
 }
 
 export interface HeroZoneEntry {
+  /** unique per zone: "bulk", or "std:<location>" for a standard close-up */
   id: string;
+  quality: "hero" | "standard";
+  /** the module that draws it: one per hero zone, one for every standard zone */
+  chunk: string;
   storeId: string;
-  /** the locations' aisle code */
-  aisle: string;
+  /** the locations' aisle code (hero zones) */
+  aisle?: string;
+  /** a standard zone's plan (the faces it redraws, the slot) and the store's categories (what it stocks) */
+  plan?: StandardPlan;
+  categories?: CategoryRow[];
   /** overview fixtures the close-up replaces (they would show through it) */
   hideFixtures: string[];
   load: () => Promise<{ default: ComponentType<HeroZoneComponentProps> }>;
   /** the same chunk's preparation: geometry and textures ahead of the trip's canvas, and its undo */
-  prepare: () => Promise<{ default: ComponentType<HeroZoneComponentProps>; prepare: (store: StoreGraph) => Promise<void>; unprepare: () => void }>;
+  prepare: () => Promise<{ default: ComponentType<HeroZoneComponentProps>; prepare: (store: StoreGraph, zone: HeroZoneEntry) => Promise<void>; unprepare: () => void }>;
   /** the zone's ambient fill: the scene's one hemisphere light blends to it as the camera comes down (the
    * zone brings no light of its own: a light joining the scene would recompile every material in it) */
   ambient: { sky: string; ground: string; intensity: number };
-  /** the flat shelf images for devices without the 3D close-up, by category (public/hero/<id>/<category>.webp) */
-  flatImage: (category: string) => string;
+  /** the flat shelf images for devices without the 3D close-up, by category (public/hero/<id>/<category>.webp);
+   * a standard zone has none (without WebGL the trip's flat map already shows the slot) */
+  flatImage: (category: string) => string | null;
 }
+
+export type CategoryRow = Pick<Category, "id" | "name" | "group" | "aisle" | "department" | "locationId"> & { bays?: [number, number] };
 
 export const HERO_ZONES: HeroZoneEntry[] = [
   {
     id: "bulk",
+    quality: "hero",
+    chunk: "bulk",
     storeId: "grosher",
     aisle: "BULK",
     // its own three fixtures, and the ones it redraws as the backdrop seen from inside it
@@ -64,20 +90,56 @@ export const HERO_ZONES: HeroZoneEntry[] = [
   },
 ];
 
-/** zones whose module is already loaded (prepared ahead): the 3D map uses them directly, with no Suspense pass */
+/** the warm, even fill of a standard close-up: the store's own light at eye level */
+export const STANDARD_AMBIENT = { sky: "#FFEBD6", ground: "#B49A80", intensity: 2.3 };
+
+/** chunks whose module is already loaded (prepared ahead): the 3D map uses them directly, with no Suspense pass */
 export const loadedZones = new Map<string, ComponentType<HeroZoneComponentProps>>();
 
 export interface HeroStop {
   zone: HeroZoneEntry;
   category: string;
+  locationId: string;
 }
 
-/** The hero zone a location is in, and its category (what the camera aims at), or null. */
-export function heroStopAt(store: StoreGraph, categories: { id: string; locationId: string }[], locationId: string | undefined): HeroStop | null {
+const STANDARD = new WeakMap<StoreGraph, Map<string, HeroZoneEntry | null>>();
+/** A location's standard close-up, made once per store map. */
+function standardEntry(store: StoreGraph, categories: CategoryRow[], locationId: string): HeroZoneEntry | null {
+  let byLoc = STANDARD.get(store);
+  if (!byLoc) STANDARD.set(store, (byLoc = new Map()));
+  if (byLoc.has(locationId)) return byLoc.get(locationId)!;
+  const loc = store.locations.find((l) => l.id === locationId);
+  const plan = loc ? standardPlan(store, loc) : null;
+  const entry: HeroZoneEntry | null = plan
+    ? {
+        id: `std:${locationId}`,
+        quality: "standard",
+        chunk: "standard",
+        storeId: store.storeId,
+        plan,
+        categories,
+        hideFixtures: plan.hide,
+        load: () => import("./standard/StandardZone.tsx"),
+        prepare: () => import("./standard/StandardZone.tsx"),
+        ambient: STANDARD_AMBIENT,
+        flatImage: () => null,
+      }
+    : null;
+  byLoc.set(locationId, entry);
+  return entry;
+}
+
+/**
+ * The close-up a location opens, and its category (what the camera aims at): the hero zone it is in, else its
+ * standard close-up; null only for a location the map cannot place on a fixture.
+ */
+export function closeUpAt(store: StoreGraph, categories: CategoryRow[], locationId: string | undefined): HeroStop | null {
   if (!locationId) return null;
   const loc = store.locations.find((l) => l.id === locationId);
   if (!loc) return null;
-  const zone = HERO_ZONES.find((z) => z.storeId === store.storeId && z.aisle === loc.aisle);
-  const category = categories.find((c) => c.locationId === locationId)?.id;
-  return zone && category ? { zone, category } : null;
+  const category = categories.find((c) => c.locationId === locationId)?.id ?? "";
+  const hero = HERO_ZONES.find((z) => z.storeId === store.storeId && z.aisle === loc.aisle);
+  if (hero) return category ? { zone: hero, category, locationId } : null;
+  const std = standardEntry(store, categories, locationId);
+  return std ? { zone: std, category, locationId } : null;
 }

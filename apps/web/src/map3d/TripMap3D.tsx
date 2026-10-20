@@ -7,7 +7,7 @@ import { WalkGraph, type RouteLeg, type StoreGraph } from "@grosher/core";
 import type { StoreBundle } from "@grosher/stores";
 import type { TripState } from "../lib/trip.ts";
 import { Scene, type CloseUpState } from "./Scene.tsx";
-import { heroStopAt, type HeroTargetInfo } from "../hero/index.ts";
+import { closeUpAt, type HeroTargetInfo } from "../hero/index.ts";
 import type { CloseUpCameraHandle } from "../hero/CloseUpCamera.tsx";
 import { DebugPerf, debugPerfOn } from "./DebugPerf.tsx";
 import { IconArrowLeft } from "../components/Icons.tsx";
@@ -68,6 +68,10 @@ export function footprintOf(store: StoreGraph) {
   return { x: (x0 + x1) / 2, z: (y0 + y1) / 2, w: x1 - x0 + 2 * pad, d: y1 - y0 + 2 * pad };
 }
 
+/** on the map between two close-ups: how long the next leg shows before the camera goes down again */
+export const HOLD_MS = 1100;
+const PRELOAD_DELAY_MS = 1200;
+
 export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel, checkoutLabel, perf = false, className, safe = { top: 0.16, bottom: 0.36 }, onCloseUpChange }: TripMap3DProps) {
   const { store } = bundle;
   const graph = useMemo(() => new WalkGraph(store), [store]);
@@ -81,23 +85,30 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
   const current = legs[0];
   const nextIsStop = !!current?.stopId;
 
-  // ---- hero close-ups: eye level in a zone that has one (src/hero), when the next stop is in it or a stop
-  // in it is tapped; back (the pill, a swipe down) returns to the overview and is remembered for that stop
-  // a trip that starts in a hero zone opens its close-up in the first render, not an effect after it: the zone
-  // (prepared on the list screen) mounts with the map and compiles while the map draws its first frames
+  // ---- close-ups: every stop opens one at eye level when it is next (its hero zone, or a standard close-up,
+  // src/hero), or when it is tapped; back (the pill, a swipe down) returns to the overview and is remembered for
+  // that stop. Between two stops the camera comes back out to the map, holds the next leg for a moment, and
+  // goes down again (two stops in one hero zone: it walks over at eye level instead).
+  // A trip's first close-up opens in the first render, not an effect after it: the zone (prepared on the list
+  // screen) mounts with the map and compiles while the map draws its first frames.
+  // ?closeup=0: none opens on its own (a tap still opens one): the overview gates measure the map itself
+  const autoOpen = useMemo(() => typeof location === "undefined" || new URLSearchParams(location.search).get("closeup") !== "0", []);
   const [closeUp, setCloseUp] = useState<(CloseUpState & { stopId: string }) | null>(() => {
+    if (!autoOpen) return null;
     const first = trip.route.legs[0];
-    const h = first?.stopId ? heroStopAt(store, bundle.categories, first.locationId) : null;
-    return h && first?.stopId ? { zone: h.zone, category: h.category, itemName: first.label, target: null, exiting: false, stopId: first.stopId } : null;
+    const h = first?.stopId ? closeUpAt(store, bundle.categories, first.locationId) : null;
+    return h && first?.stopId ? { zone: h.zone, locationId: h.locationId, category: h.category, itemName: first.label, target: null, exiting: false, stopId: first.stopId } : null;
   });
   const [flatShelf, setFlatShelf] = useState<{ image: string; name: string } | null>(null);
   const dismissed = useRef(new Set<string>());
+  // zones that failed on this device: their stops stay on the overview
+  const failed = useRef(new Set<string>());
   const closeUpRef = useRef<CloseUpCameraHandle | null>(null);
   const openCloseUp = (stopId: string, locationId: string | undefined, itemName: string) => {
-    const h = heroStopAt(store, bundle.categories, locationId);
-    if (!h) return false;
+    const h = closeUpAt(store, bundle.categories, locationId);
+    if (!h || failed.current.has(h.zone.id)) return false;
     setFlatShelf(null);
-    setCloseUp((c) => (c && c.stopId === stopId && !c.exiting ? c : { zone: h.zone, category: h.category, itemName, target: null, exiting: false, stopId }));
+    setCloseUp((c) => (c && c.stopId === stopId && !c.exiting ? c : { zone: h.zone, locationId: h.locationId, category: h.category, itemName, target: null, exiting: false, stopId }));
     return true;
   };
   const leaveCloseUp = (remember: boolean) =>
@@ -107,26 +118,38 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
       // the zone never loaded (no target yet): nothing to animate back from
       return c.target ? { ...c, exiting: true } : null;
     });
+  // the stop that is next, and its close-up
+  const nextStop = useMemo(() => {
+    if (!nextIsStop || !current?.stopId) return null;
+    const h = closeUpAt(store, bundle.categories, current.locationId);
+    return h ? { ...h, stopId: current.stopId, itemName: current.label } : null;
+  }, [nextIsStop, current?.stopId, current?.locationId, current?.label, store, bundle.categories]);
   useEffect(() => {
-    const stopId = nextIsStop ? current!.stopId! : null;
-    const hero = stopId ? heroStopAt(store, bundle.categories, current!.locationId) : null;
-    if (stopId && hero && !dismissed.current.has(stopId)) openCloseUp(stopId, current!.locationId, current!.label);
-    else if (closeUp && !closeUp.exiting && closeUp.stopId !== stopId) leaveCloseUp(false);
+    if (closeUp && !closeUp.exiting && closeUp.stopId !== nextStop?.stopId) {
+      // a Got it or a Skip: another bin in the same hero zone is a walk over at eye level; anywhere else the
+      // camera goes back out to the map first
+      if (nextStop && nextStop.zone.id === closeUp.zone.id && nextStop.zone.quality === "hero" && !dismissed.current.has(nextStop.stopId)) openCloseUp(nextStop.stopId, nextStop.locationId, nextStop.itemName);
+      else leaveCloseUp(false);
+      return;
+    }
+    if (closeUp || !nextStop || !autoOpen || dismissed.current.has(nextStop.stopId)) return;
+    // on the map: show the next leg for a moment, then go down
+    const t = window.setTimeout(() => openCloseUp(nextStop.stopId, nextStop.locationId, nextStop.itemName), HOLD_MS);
+    return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current?.stopId, current?.locationId]);
-  // the stop after this one, when it is in a hero zone: its close-up is prepared in the background during this
-  // leg (in idle time, after the map has settled), so it opens with no pause; a route change cancels it, the
-  // same zone with another item only retargets
+  }, [nextStop?.stopId, closeUp === null, closeUp?.exiting]);
+  // the stop after this one: its close-up is prepared in the background during this one (in idle time, after
+  // the map has settled), so it opens with no pause; a route change cancels it
   const upcoming = useMemo(() => {
     const leg = legs.slice(1).find((l) => l.stopId);
-    const h = leg ? heroStopAt(store, bundle.categories, leg.locationId) : null;
-    return h && leg ? { zone: h.zone, category: h.category, itemName: leg.label } : null;
+    const h = leg ? closeUpAt(store, bundle.categories, leg.locationId) : null;
+    return h && leg ? { zone: h.zone, locationId: h.locationId, category: h.category, itemName: leg.label } : null;
   }, [legs, store, bundle.categories]);
   const [preload, setPreload] = useState<typeof upcoming>(null);
   // ?preload=0 turns it off: the measurement's baseline
   const preloading = useMemo(() => typeof location === "undefined" || new URLSearchParams(location.search).get("preload") !== "0", []);
   useEffect(() => {
-    if (!upcoming || !preloading) {
+    if (!upcoming || !preloading || !autoOpen || failed.current.has(upcoming.zone.id)) {
       setPreload(null);
       return;
     }
@@ -137,16 +160,25 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
     const w = window as Window & { requestIdleCallback?: (f: () => void, o?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
     let id = 0;
     const start = () => setPreload(upcoming);
-    // a moment for the leg's framing to settle, then the browser's next idle period (Safari: a timer)
+    // a moment for the leg's framing (or the arrival) to settle, then the browser's next idle period (Safari: a timer)
     const t = window.setTimeout(() => {
       id = w.requestIdleCallback ? w.requestIdleCallback(start, { timeout: 3000 }) : window.setTimeout(start, 200);
-    }, 1200);
+    }, PRELOAD_DELAY_MS);
     return () => {
       clearTimeout(t);
       if (id) (w.cancelIdleCallback ?? clearTimeout)(id);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [upcoming?.zone.id, upcoming?.category, upcoming?.itemName]);
+  // mounted ahead of time, hidden: the next stop's zone while it waits to open, and the one after it
+  const prepared = useMemo(() => {
+    const out = [];
+    if (nextStop && autoOpen && !failed.current.has(nextStop.zone.id) && !dismissed.current.has(nextStop.stopId)) out.push(nextStop);
+    if (preload) out.push(preload);
+    return out;
+  }, [nextStop, preload]);
+  // the overview fixtures the next close-up to open will hide, merged ahead (map3d/Fixtures.tsx)
+  const prepareHide = (closeUp && !closeUp.exiting && closeUp.target ? preload?.zone : closeUp && !closeUp.target ? closeUp.zone : nextStop?.zone ?? preload?.zone)?.hideFixtures;
   const nextNode = current ? nodes.get(current.nodeId) : undefined;
   const litFixtureId = useMemo(() => (nextIsStop ? fixtureForLocation(store, current?.locationId, nextNode)?.id ?? null : null), [store, current, nextNode, nextIsStop]);
   const litSlot = useMemo(() => {
@@ -236,6 +268,9 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
   const prev = useRef<{ a: Pt; b?: Pt } | null>(null);
   const press = useRef<{ x: number; y: number; t: number; multi: boolean } | null>(null);
   const near = !!closeUp?.target && !closeUp.exiting;
+  // inside a close-up until the camera is back on the map (the way out included): the overview's cards and
+  // labels stay off until then
+  const inside = !!closeUp?.target;
   const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     e.currentTarget.setPointerCapture(e.pointerId);
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -315,7 +350,7 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
       leaveCloseUp(true);
       return;
     }
-    // a tap on a stop in a hero zone opens its close-up
+    // a tap on a stop opens its close-up
     if (!near && Math.hypot(dx, dy) < 8 && dt < 350) {
       const stopId = stopUnder(e.clientX, e.clientY);
       const leg = stopId ? legs.find((l) => l.stopId === stopId) : undefined;
@@ -331,12 +366,22 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
     else cameraRef.current?.zoom(f);
   };
   const debugPerf = useMemo(() => debugPerfOn(), []);
-  useEffect(() => onCloseUpChange?.(near), [near, onCloseUpChange]);
+  useEffect(() => onCloseUpChange?.(inside), [inside, onCloseUpChange]);
   // the close-up's state for the gates and ?debug=perf: none, loading (zone not ready), open, leaving
+  // and its log (request → ready → leaving → closed, performance.now()), for the gates' timings
+  const logged = useRef<{ stopId: string | null; state: string }>({ stopId: null, state: "none" });
   useEffect(() => {
     if (!perf && !debugPerf) return;
-    const w = window as Window & { __grosherCloseUp?: unknown };
-    w.__grosherCloseUp = closeUp ? { zone: closeUp.zone.id, category: closeUp.category, item: closeUp.itemName, bin: closeUp.target?.name ?? null, state: closeUp.exiting ? "leaving" : closeUp.target ? "open" : "loading" } : null;
+    const w = window as Window & { __grosherCloseUp?: unknown; __grosherCloseUpLog?: { stop: string | null; zone: string | null; quality: string | null; event: string; t: number }[] };
+    const state = closeUp ? (closeUp.exiting ? "leaving" : closeUp.target ? "open" : "loading") : "none";
+    w.__grosherCloseUp = closeUp ? { zone: closeUp.zone.id, quality: closeUp.zone.quality, category: closeUp.category, item: closeUp.itemName, bin: closeUp.target?.name ?? null, state } : null;
+    const was = logged.current;
+    const stopId = closeUp?.stopId ?? null;
+    if (state !== was.state || stopId !== was.stopId) {
+      const event = state === "loading" ? "request" : state === "open" ? (was.state === "loading" && was.stopId === stopId ? "ready" : "request+ready") : state === "leaving" ? "leaving" : "closed";
+      (w.__grosherCloseUpLog ??= []).push({ stop: stopId ?? was.stopId, zone: closeUp?.zone.id ?? null, quality: closeUp?.zone.quality ?? null, event, t: performance.now() });
+      logged.current = { stopId, state };
+    }
   }, [closeUp, perf, debugPerf]);
 
   return (
@@ -376,14 +421,19 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
           onOverZoomOut={() => onFlatChange(true)}
           perf={perf || debugPerf}
           closeUp={closeUp}
-          preload={closeUp ? null : preload}
+          prepared={prepared}
+          prepareHide={prepareHide}
           closeUpRef={closeUpRef}
           onHeroTarget={(t: HeroTargetInfo) => setCloseUp((c) => (c && !c.exiting ? { ...c, target: t } : c))}
-          onHeroError={() => {
-            setPreload(null);
-            // no close-up on this device (no compressed textures, the chunk failed): the flat shelf image instead
+          onHeroError={(_e, zoneId) => {
+            failed.current.add(zoneId);
+            setPreload((p) => (p?.zone.id === zoneId ? null : p));
+            // no close-up on this device (no compressed textures, the chunk failed): the flat shelf image instead,
+            // where the zone has one
             setCloseUp((c) => {
-              if (c) setFlatShelf({ image: c.zone.flatImage(c.category), name: c.itemName });
+              if (!c || c.zone.id !== zoneId) return c;
+              const image = c.zone.flatImage(c.category);
+              if (image) setFlatShelf({ image, name: c.itemName });
               return null;
             });
           }}
@@ -391,7 +441,7 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
         />
       </Canvas>
       <div className="trip-vignette" aria-hidden />
-      <div className={near ? "m-overlay-hidden" : undefined}>
+      <div className={inside ? "m-overlay-hidden" : undefined}>
         <OverlayDom items={items} registry={registry} />
       </div>
       {closeUp && !closeUp.exiting && (

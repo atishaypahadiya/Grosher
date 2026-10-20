@@ -281,7 +281,8 @@ try {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
   const page = await ctx.newPage();
   page.on("pageerror", (e) => errors.push(e.message));
-  await page.goto(`${BASE}/?perf=1`, { waitUntil: "load" });
+  // the overview (no close-up opens on its own: those are measured below)
+  await page.goto(`${BASE}/?perf=1&closeup=0`, { waitUntil: "load" });
   await page.waitForFunction(() => !!window.__grosherIndex, null, { timeout: 120_000 });
   await page.evaluate(() => document.fonts.ready);
   const input = page.getByLabel(/add items/i);
@@ -323,8 +324,12 @@ try {
   all.push(...(await measure(page, "checkout")));
   await ctx.close();
 
-  // ---- a hero close-up (src/hero): the header, the back pill and the sheet over the zone's dark interior
-  {
+  // ---- close-ups (src/hero): the header, the back pill and the sheet over a zone's interior: the hero zone,
+  // and a standard one (the dairy wall)
+  for (const [item, label] of [
+    ["toor dal (bulk)", "trip close-up"],
+    ["milk", "trip close-up (standard)"],
+  ]) {
     const cctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
     const cp = await cctx.newPage();
     // a software renderer (CI) compiles the zone's lighting shaders slowly: allow it, the gate measures contrast
@@ -333,15 +338,15 @@ try {
     await cp.goto(`${BASE}/?perf=1&tier=hi`, { waitUntil: "load" });
     await cp.evaluate(() => document.fonts.ready);
     const ci = cp.getByLabel(/add items/i);
-    await ci.fill("toor dal (bulk)");
+    await ci.fill(item);
     await ci.press("Enter");
     await cp.getByRole("button", { name: /route 1 item/i }).click({ timeout: 60_000 });
     await cp.waitForFunction(() => window.__grosherCloseUp?.state === "open" && window.__grosherPerf?.hero?.tier, null, { timeout: 180_000 });
     // the arrival over and frames flowing again (the page draws continuously with ?perf=1) before the shot
-    await cp.waitForTimeout(1500);
+    await cp.waitForTimeout(2800);
     await cp.evaluate(() => (window.__grosherPerf.frames = 0));
     await cp.waitForFunction(() => (window.__grosherPerf?.frames ?? 0) >= 8, null, { timeout: 180_000 });
-    all.push(...(await measure(cp, "trip close-up")));
+    all.push(...(await measure(cp, label)));
     await cctx.close();
   }
 

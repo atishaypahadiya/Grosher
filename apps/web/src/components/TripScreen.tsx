@@ -16,7 +16,7 @@ import { Num } from "./Num.tsx";
 import { IconArrowLeft, IconCheck, IconLayers, IconPlus } from "./Icons.tsx";
 
 import { FallbackBoundary } from "./ErrorBoundary.tsx";
-import { heroStopAt } from "../hero/index.ts";
+import { closeUpAt } from "../hero/index.ts";
 
 const TripMap3D = lazy(() => import("../map3d/TripMap3D.tsx"));
 
@@ -77,7 +77,7 @@ export function TripScreen({ bundle, router, trip, flat, onFlatChange, onGotIt, 
   const doneCount = trip.got.length + trip.skipped.length;
 
   const loc = leg ? store.locations.find((l) => l.id === leg.locationId) : undefined;
-  const hero = !webgl && leg ? heroStopAt(store, bundle.categories, leg.locationId) : null;
+  const hero = !webgl && leg ? closeUpAt(store, bundle.categories, leg.locationId) : null;
   const shelfImage = hero ? hero.zone.flatImage(hero.category) : null;
   const dept = locationDepartment(store, loc);
   const tags = stop?.tags ?? [];

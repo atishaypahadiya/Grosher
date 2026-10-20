@@ -57,7 +57,7 @@ const clockShim = () => {
 };
 
 async function openTrip(page) {
-  await page.goto(`${BASE}/?perf=1`, { waitUntil: "load" });
+  await page.goto(`${BASE}/?perf=1&closeup=0`, { waitUntil: "load" });
   await page.waitForFunction(() => !!window.__grosherIndex, null, { timeout: 60_000 }); // the full catalog's index
   const input = page.getByLabel(/add items/i);
   await input.fill(LIST);

@@ -228,3 +228,175 @@ export function matka(r: number, h: number, withLid: boolean, seg = 12): BufferG
   );
   return mergeGeometries([body, lid])!;
 }
+
+// ---------------------------------------------------------------- the standard close-ups' packs
+// More shapes for every other shelf in the store (src/hero/standard): what a category's goods come in.
+// Every one carries its category's house label (the categories atlas) on the front.
+
+/** A plain printed box (cereal, crackers, pharmacy, frozen meals, a drinks case, a multipack). */
+export function packBox(w: number, h: number, d: number): Template {
+  const g = clean(new BoxGeometry(w, h, d));
+  place(g, { pos: [0, h / 2, 0] });
+  return { label: labelUVs(g), size: [w, h, d], front: [w, h] };
+}
+
+/** A puffy bag of chips: a pouch blown out at the middle, crimped flat at top and bottom. */
+function chipBag(w = 0.22, h = 0.3, d = 0.07): Template {
+  const g = clean(new BoxGeometry(w, h, d, 1, 6, 1));
+  const pos = g.getAttribute("position");
+  for (let i = 0; i < pos.count; i++) {
+    const t = (pos.getY(i) + h / 2) / h;
+    pos.setZ(i, pos.getZ(i) * Math.sin(Math.PI * Math.min(1, Math.max(0, t * 1.04 - 0.02))) * 1.1);
+    pos.setY(i, pos.getY(i) + h / 2);
+  }
+  g.computeVertexNormals();
+  return { label: labelUVs(g), size: [w, h, d], front: [w, h] };
+}
+
+/** A plastic bottle with a wide shoulder (detergent, shampoo, dish soap): opaque, the label on its front. */
+function plasticBottle(r = 0.045, h = 0.24): Template {
+  const body = lathe(
+    [
+      [0, 0],
+      [r * 0.95, 0],
+      [r, 0.01],
+      [r, h * 0.72],
+      [r * 0.7, h * 0.85],
+      [r * 0.32, h * 0.9],
+      [r * 0.32, h],
+      [0, h],
+    ],
+    8,
+  );
+  // the body takes the label's side strip colour; the band on its front is the label
+  const uv = body.getAttribute("uv");
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, STRIP_U[0] + 0.5 * (STRIP_U[1] - STRIP_U[0]), 0.5);
+  const cap = cylinder(r * 0.36, r * 0.36, 0.03, 8);
+  place(cap, { pos: [0, h + 0.015, 0] });
+  return { label: mergeGeometries([body, labelBand(r * 1.012, h * 0.5, h * 0.38, 8)])!, lid: cap, size: [r * 2, h + 0.03, r * 2], front: [Math.PI * r, h * 0.5] };
+}
+
+/** A wine or spirits bottle: dark glass, a long neck, a paper label, a capsule. */
+function wineBottle(r = 0.038, h = 0.3): Template {
+  const glass = lathe(
+    [
+      [0, 0],
+      [r * 0.95, 0],
+      [r, 0.01],
+      [r, h * 0.62],
+      [r * 0.55, h * 0.74],
+      [r * 0.3, h * 0.8],
+      [r * 0.3, h],
+      [0, h],
+    ],
+    6,
+  );
+  const capsule = cylinder(r * 0.33, r * 0.33, h * 0.12, 6);
+  place(capsule, { pos: [0, h * 0.94, 0] });
+  const lh = h * 0.28;
+  return { metal: glass, lid: capsule, label: labelBand(r * 1.012, lh, h * 0.3, 8), size: [r * 2, h, r * 2], front: [Math.PI * r, lh] };
+}
+
+/** A gallon jug: a squared body, a neck and cap, a handle bulge; the label on its front. */
+function jug(w = 0.15, h = 0.26, d = 0.15): Template {
+  const body = clean(new BoxGeometry(w, h * 0.82, d, 1, 2, 1));
+  place(body, { pos: [0, (h * 0.82) / 2, 0] });
+  labelUVs(body);
+  const shoulder = clean(new BoxGeometry(w * 0.6, h * 0.1, d * 0.6));
+  place(shoulder, { pos: [-w * 0.15, h * 0.87, 0] });
+  labelUVs(shoulder, () => false);
+  const cap = cylinder(0.022, 0.022, 0.03, 8);
+  place(cap, { pos: [-w * 0.15, h * 0.95, 0] });
+  return { label: mergeGeometries([body, shoulder])!, lid: cap, size: [w, h, d], front: [w, h * 0.82] };
+}
+
+/** A tub (yogurt cup, ice cream pint, butter, dip): a tapered cylinder with a lid; the label round its front. */
+function tub(r: number, h: number): Template {
+  const body = labelBand(r, h, h / 2, 12);
+  const lid = cylinder(r * 1.04, r * 1.04, 0.01, 12);
+  place(lid, { pos: [0, h + 0.005, 0] });
+  return { label: body, lid, size: [r * 2, h + 0.01, r * 2], front: [Math.PI * r, h] };
+}
+
+/** A meat or fish tray: a shallow tray under clear film, the label on the film. */
+function tray(w = 0.24, h = 0.05, d = 0.17): Template {
+  const g = clean(new BoxGeometry(w, h, d));
+  place(g, { pos: [0, h / 2, 0] });
+  // the label is on top, facing up and toward the shopper: the top takes the front region
+  return { label: labelUVs(g, (nz) => nz > 0.7), size: [w, h, d], front: [w, h] };
+}
+
+/** A cheese wedge: a triangular prism lying on its side, the rind label on its long face. */
+function wedge(w = 0.13, h = 0.06, d = 0.1): Template {
+  const shape = clean(new BoxGeometry(w, h, d));
+  const pos = shape.getAttribute("position");
+  for (let i = 0; i < pos.count; i++) if (pos.getZ(i) < 0) pos.setX(i, pos.getX(i) * 0.15);
+  shape.computeVertexNormals();
+  place(shape, { pos: [0, h / 2, 0] });
+  return { label: labelUVs(shape), size: [w, h, d], front: [w, h] };
+}
+
+/** A loaf in its bag: a rounded box, the bag's label on its front. */
+function loaf(w = 0.12, h = 0.12, d = 0.26): Template {
+  const g = clean(new BoxGeometry(w, h, d, 1, 3, 1));
+  const pos = g.getAttribute("position");
+  for (let i = 0; i < pos.count; i++) {
+    const y = pos.getY(i) / (h / 2);
+    if (y > 0) pos.setX(i, pos.getX(i) * (1 - 0.25 * y * y));
+  }
+  g.computeVertexNormals();
+  place(g, { pos: [0, h / 2, 0] });
+  return { label: labelUVs(g), size: [w, h, d], front: [w, h] };
+}
+
+export type StandardStyle =
+  | "carton"
+  | "cereal"
+  | "smallbox"
+  | "pouch"
+  | "bag"
+  | "tin"
+  | "jar"
+  | "spice"
+  | "bottle"
+  | "plastic"
+  | "wine"
+  | "jug"
+  | "cup"
+  | "pint"
+  | "tray"
+  | "wedge"
+  | "loaf"
+  | "eggs"
+  | "bigpack"
+  | "case"
+  | "sack"
+  | "kraft"
+  | "frozen";
+
+export const STANDARD_TEMPLATES: Record<StandardStyle, () => Template> = {
+  carton: () => packBox(0.09, 0.22, 0.06),
+  cereal: () => packBox(0.2, 0.29, 0.07),
+  smallbox: () => packBox(0.08, 0.11, 0.04),
+  pouch: () => pouch(0.13, 0.21, 0.065),
+  bag: () => chipBag(),
+  tin: () => tin(0.042, 0.11),
+  // the standard close-ups' glass is a little coarser than Bulk's (6 sides): a shelf holds hundreds
+  jar: () => jar(0.042, 0.12, 6),
+  spice: () => jar(0.026, 0.085, 6),
+  bottle: () => oilBottle(0.032, 0.22, 6),
+  plastic: () => plasticBottle(),
+  wine: () => wineBottle(),
+  jug: () => jug(),
+  cup: () => tub(0.042, 0.065),
+  pint: () => tub(0.05, 0.11),
+  tray: () => tray(),
+  wedge: () => wedge(),
+  loaf: () => loaf(),
+  eggs: () => packBox(0.3, 0.07, 0.11),
+  bigpack: () => packBox(0.3, 0.3, 0.24),
+  case: () => packBox(0.28, 0.2, 0.36),
+  sack: () => wovenSack(0.3, 0.44, 0.1),
+  kraft: () => kraftBag(),
+  frozen: () => packBox(0.2, 0.26, 0.05),
+};

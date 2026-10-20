@@ -110,6 +110,36 @@ interface Merged {
   glow: BufferGeometry | null;
 }
 const MERGED = new WeakMap<StoreGraph, Map<string, Merged>>();
+/** each variant's merges, most recently used last: a trip's close-ups each hide their own fixtures, so the
+ * variants are kept to the whole store and the last few (a phone would otherwise hold a copy of the wood
+ * departments per stop) */
+const VARIANTS = new WeakMap<StoreGraph, Map<string, string[]>>();
+const KEEP_VARIANTS = 4;
+function noteVariant(store: StoreGraph, cache: Map<string, Merged>, variant: string, ids: string[]) {
+  let v = VARIANTS.get(store);
+  if (!v) VARIANTS.set(store, (v = new Map()));
+  v.delete(variant);
+  v.set(variant, ids);
+  const hiding = [...v.keys()].filter((k) => !k.endsWith(":"));
+  if (hiding.length <= KEEP_VARIANTS) return;
+  const old = hiding[0];
+  v.delete(old);
+  const kept = new Set([...v.values()].flat());
+  const dropped = (cache: Map<string, Merged>) => {
+    for (const [id, m] of cache) {
+      if (kept.has(id)) continue;
+      cache.delete(id);
+      for (const g of [m.opaque, m.trim, m.glass, m.frame, m.glow]) g?.dispose();
+    }
+  };
+  dropped(cache);
+  const edges = EDGES.get(store);
+  const e = edges?.get(old);
+  if (e) {
+    e.dispose();
+    edges!.delete(old);
+  }
+}
 /** The store's merged departments with the fixtures in `hideKey` ("a|b|c") left out. */
 function mergedFor(store: StoreGraph, repeatMeters: number, hideKey: string): Merged[] {
   let cache = MERGED.get(store);
@@ -143,6 +173,7 @@ function mergedFor(store: StoreGraph, repeatMeters: number, hideKey: string): Me
     }
     out.push(m);
   }
+  noteVariant(store, cache, `${repeatMeters}:${hideKey}`, out.map((m) => m.id));
   return out;
 }
 

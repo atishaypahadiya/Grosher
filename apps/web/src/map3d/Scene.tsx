@@ -23,6 +23,7 @@ import { CloseUpCamera, type CloseUpCameraHandle } from "../hero/CloseUpCamera.t
 /** A hero close-up as the 3D map asks for it. */
 export interface CloseUpState {
   zone: HeroZoneEntry;
+  locationId: string;
   category: string;
   itemName: string;
   /** set once the zone has picked its bin */
@@ -30,12 +31,16 @@ export interface CloseUpState {
   exiting: boolean;
 }
 
-// one component per zone, fixed the first time it is asked for (so it never remounts): the module itself when
-// it was prepared ahead and is loaded (no Suspense pass before it mounts), else a lazy one
+/** a zone to mount: open, about to open, or prepared for the stop after */
+export type ZoneProps = Pick<CloseUpState, "zone" | "locationId" | "category" | "itemName">;
+
+// one component per chunk (every standard zone shares one), fixed the first time it is asked for (so it never
+// remounts): the module itself when it was prepared ahead and is loaded (no Suspense pass before it mounts),
+// else a lazy one
 const ZONE_COMPONENTS = new Map<string, LazyExoticComponent<ComponentType<HeroZoneComponentProps>> | ComponentType<HeroZoneComponentProps>>();
 const zoneComponent = (z: HeroZoneEntry) => {
-  let c = ZONE_COMPONENTS.get(z.id);
-  if (!c) ZONE_COMPONENTS.set(z.id, (c = loadedZones.get(z.id) ?? lazy(z.load)));
+  let c = ZONE_COMPONENTS.get(z.chunk);
+  if (!c) ZONE_COMPONENTS.set(z.chunk, (c = loadedZones.get(z.chunk) ?? lazy(z.load)));
   return c;
 };
 
@@ -261,15 +266,18 @@ export interface SceneProps {
   perf: boolean;
   /** an open hero close-up: its zone at full detail, the eye-level camera, its own light */
   closeUp?: CloseUpState | null;
-  /** the next stop's zone, prepared in the background during the current leg (hidden, no camera) */
-  preload?: { zone: HeroZoneEntry; category: string; itemName: string } | null;
+  /** zones prepared in the background (hidden, no camera): the current stop's while its close-up waits to
+   * open, the next stop's during this one */
+  prepared?: ZoneProps[];
+  /** the overview fixtures the next close-up to open will hide: merged ahead */
+  prepareHide?: string[];
   closeUpRef?: RefObject<CloseUpCameraHandle | null>;
   onHeroTarget?: (t: HeroTargetInfo) => void;
-  onHeroError?: (e: Error) => void;
+  onHeroError?: (e: Error, zoneId: string) => void;
   onCloseUpExited?: () => void;
 }
 
-export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, footprint, litSlot, legFixtureIds, ribbon, overlay, focus, safe, flat, reducedMotion, cameraRef, onOverZoomOut, perf, closeUp, preload, closeUpRef, onHeroTarget, onHeroError, onCloseUpExited }: SceneProps) {
+export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, footprint, litSlot, legFixtureIds, ribbon, overlay, focus, safe, flat, reducedMotion, cameraRef, onOverZoomOut, perf, closeUp, prepared = [], prepareHide, closeUpRef, onHeroTarget, onHeroError, onCloseUpExited }: SceneProps) {
   const [litMesh, setLitMesh] = useState<Mesh | null>(null);
   const [heroLit, setHeroLit] = useState<Mesh | null>(null);
   // the zone loads (and picks its bin) while the overview stays as it is; the scene turns to the close-up, and
@@ -280,9 +288,12 @@ export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, fo
   if (!closeUp) envRef.current = 0;
   const fogRef = useRef<FogExp2>(null);
   const skyRef = useRef<Group>(null);
-  // the open close-up's zone, or the next stop's being prepared: one mounted zone, handed over when it opens
-  const zoneProps = closeUp ?? preload ?? null;
-  const Zone = zoneProps ? zoneComponent(zoneProps.zone) : null;
+  // the open close-up's zone and the ones being prepared, each mounted once (by id), handed over when it opens
+  const zones = useMemo(() => {
+    const out: ZoneProps[] = [];
+    for (const z of [closeUp, ...prepared]) if (z && !out.some((o) => o.zone.id === z.zone.id)) out.push(z);
+    return out;
+  }, [closeUp, prepared]);
   const [glowLine, setGlowLine] = useState<Object3D | null>(null);
   const bloomRef = useRef<SelectiveBloomEffect | null>(null);
   const distanceRef = useRef(36);
@@ -338,19 +349,33 @@ export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, fo
       {!near && <Line points={edge} color="#FFFFFF" transparent opacity={0.3} lineWidth={1} />}
 
       <Suspense fallback={null}>
-        <Fixtures store={store} textureUrl={textureUrl} repeatMeters={repeatMeters} nodes={nodes} fromEntrance={fromEntrance} hide={near ? closeUp?.zone.hideFixtures : undefined} prepareHide={zoneProps?.zone.hideFixtures} prepareNow={!!closeUp} dimRef={closeUp ? envRef : undefined} />
+        <Fixtures store={store} textureUrl={textureUrl} repeatMeters={repeatMeters} nodes={nodes} fromEntrance={fromEntrance} hide={near ? closeUp?.zone.hideFixtures : undefined} prepareHide={prepareHide} prepareNow={!!closeUp && !near} dimRef={closeUp ? envRef : undefined} />
         {!near && <Products store={store} textureUrl={textureUrl} settled={settled} priority={legFixtureIds} you={{ x: focus.you.x, z: focus.you.y }} />}
       </Suspense>
-      {Zone && zoneProps && (
-        <ZoneBoundary key={zoneProps.zone.id} onError={(e) => onHeroError?.(e)}>
-          {/* hidden until the scene turns to the close-up: never drawn over the overview's products and ribbon */}
-          <group visible={near}>
-            <Suspense fallback={null}>
-              <Zone store={store} category={zoneProps.category} itemName={zoneProps.itemName} active={!!closeUp} onTarget={(t) => onHeroTarget?.(t)} onLit={setHeroLit} onError={(e) => onHeroError?.(e)} />
-            </Suspense>
-          </group>
-        </ZoneBoundary>
-      )}
+      {zones.map((z) => {
+        const Zone = zoneComponent(z.zone);
+        const open = closeUp?.zone.id === z.zone.id;
+        return (
+          <ZoneBoundary key={z.zone.id} onError={(e) => onHeroError?.(e, z.zone.id)}>
+            {/* hidden until the scene turns to its close-up: never drawn over the overview's products and ribbon */}
+            <group visible={near && open}>
+              <Suspense fallback={null}>
+                <Zone
+                  store={store}
+                  zone={z.zone}
+                  locationId={open ? closeUp!.locationId : z.locationId}
+                  category={open ? closeUp!.category : z.category}
+                  itemName={open ? closeUp!.itemName : z.itemName}
+                  active={open}
+                  onTarget={(t) => open && onHeroTarget?.(t)}
+                  onLit={open ? setHeroLit : undefined}
+                  onError={(e) => onHeroError?.(e, z.zone.id)}
+                />
+              </Suspense>
+            </group>
+          </ZoneBoundary>
+        );
+      })}
       {!near && <Ribbon nodes={nodes} walked={ribbon.walked} current={ribbon.current} ahead={ribbon.ahead} onGlowLine={setGlowLine} />}
       {!near && litSlot && <LitSlot slot={litSlot} onMesh={setLitMesh} />}
       {!near && <OverlayProjector items={overlay.items} registry={overlay.registry} safe={safe} />}

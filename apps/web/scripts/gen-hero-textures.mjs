@@ -23,7 +23,9 @@ import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { GRAIN_SHAPES, HEADERS, LABEL_ATLAS, LABEL_ROWS, LABEL_STYLE, SACK_STENCILS, labelCells } from "../src/hero/bulk/recipe.ts";
-import { TEMPLATES } from "../src/hero/kit/products.ts";
+import { STANDARD_TEMPLATES, TEMPLATES } from "../src/hero/kit/products.ts";
+import { BAND, signKeys, signLabel, styleOf, CAT_COLS, CAT_CELL } from "../src/hero/standard/styles.ts";
+import CATEGORIES from "../../../packages/stores/grosher/categories.json" with { type: "json" };
 
 const ROOT = join(import.meta.dirname, "..");
 const OUT = join(ROOT, "src", "hero", "assets");
@@ -36,12 +38,19 @@ const font = readFileSync(join(ROOT, "public", "fonts", "outfit-latin.woff2")).t
 const { labels, tags } = labelCells();
 // each pack's label front, width over height: the generator draws the lettering at that aspect
 const ASPECT = Object.fromEntries(Object.entries(TEMPLATES).map(([k, t]) => { const f = t().front; return [k, f[0] / f[1]]; }));
+// the standard close-ups: every category's house label, at its pack's aspect, and the aisle signs
+const CATS = CATEGORIES.map((c) => {
+  const style = styleOf(c.id, c.department);
+  const f = STANDARD_TEMPLATES[style]().front;
+  return { id: c.id, name: c.name, band: BAND[c.department] ?? "#6A5A4A", style, aspect: f[0] / f[1] };
+});
+const SIGNS = signKeys(CATEGORIES).map((k) => signLabel(...k.split("|")));
 
 const browser = await chromium.launch();
 const page = await browser.newPage();
 await page.setContent("<!doctype html><html><body></body></html>");
 const images = await page.evaluate(
-  async ({ font, labels, tags, headers, GRAIN, STYLE, ASPECT, LABEL_ATLAS, LABEL_ROWS, stencils }) => {
+  async ({ font, labels, tags, headers, GRAIN, STYLE, ASPECT, LABEL_ATLAS, LABEL_ROWS, stencils, CATS, SIGNS, CAT_COLS, CAT_CELL }) => {
     const face = new FontFace("Outfit", `url(data:font/woff2;base64,${font})`, { weight: "100 900" });
     await face.load();
     document.fonts.add(face);
@@ -834,16 +843,97 @@ const images = await page.evaluate(
       out.cutouts = c.toDataURL("image/png");
       out["cutouts.lo"] = half(c).toDataURL("image/png");
     }
+    // ---------------------------------------------------------------- the standard close-ups: category labels
+    {
+      const W = CAT_COLS * CAT_CELL;
+      const H = Math.ceil(CATS.length / CAT_COLS) * CAT_CELL;
+      const c = canvas(W, H);
+      const ctx = c.getContext("2d");
+      ctx.fillStyle = "#EFE8DA";
+      ctx.fillRect(0, 0, W, H);
+      const wrapC = (text, max, size, weight = 700) => {
+        ctx.font = `${weight} ${size}px Outfit`;
+        const out = [];
+        let line = "";
+        for (const w of text.split(" ")) {
+          const t = line ? `${line} ${w}` : w;
+          if (ctx.measureText(t).width > max && line) {
+            out.push(line);
+            line = w;
+          } else line = t;
+        }
+        out.push(line);
+        return out;
+      };
+      CATS.forEach((cat, i) => {
+        const x = (i % CAT_COLS) * CAT_CELL;
+        const y = Math.floor(i / CAT_COLS) * CAT_CELL;
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(x, y, CAT_CELL, CAT_CELL);
+        ctx.clip();
+        // the side strip (x 0–12): the pack's plain colour, its band
+        ctx.fillStyle = cat.band;
+        ctx.fillRect(x, y, CAT_CELL, CAT_CELL);
+        const VH = 160;
+        const VW = VH * cat.aspect;
+        ctx.translate(x + 12, y);
+        ctx.scale(116 / VW, 128 / VH);
+        const cx = VW / 2;
+        ctx.textAlign = "center";
+        // a cream face with the band across the top, the wordmark, the category's name; a few styles differ
+        const dark = cat.style === "wine" || cat.style === "frozen";
+        ctx.fillStyle = dark ? "#1E2A3A" : "#F7F2E8";
+        if (cat.style === "wine") ctx.fillStyle = "#F4ECDD";
+        ctx.fillRect(0, 0, VW, VH);
+        ctx.fillStyle = cat.band;
+        ctx.fillRect(0, 0, VW, Math.max(18, VH * 0.2));
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "700 11px Outfit";
+        ctx.fillText("G R O S H E R", cx, Math.max(13, VH * 0.13));
+        ctx.fillStyle = cat.style === "frozen" ? "#FFFFFF" : "#2A1A10";
+        const size = Math.max(11, Math.min(22, VW / 6));
+        const lines = wrapC(cat.name, VW * 0.84, size);
+        lines.slice(0, 3).forEach((t, k) => ctx.fillText(t, cx, VH * 0.52 + k * (size + 2) - ((Math.min(3, lines.length) - 1) * (size + 2)) / 2));
+        ctx.fillStyle = cat.band;
+        ctx.fillRect(VW * 0.2, VH * 0.84, VW * 0.6, 4);
+        ctx.restore();
+      });
+      out.catlabels = c.toDataURL("image/png");
+      out["catlabels.lo"] = half(c).toDataURL("image/png");
+    }
+    // ---------------------------------------------------------------- the standard close-ups: signs
+    {
+      const c = canvas(1024, 1280);
+      const ctx = c.getContext("2d");
+      ctx.fillStyle = "#1C1A18";
+      ctx.fillRect(0, 0, 1024, 1280);
+      SIGNS.forEach((t, i) => {
+        const x = (i % 2) * 512;
+        const y = Math.floor(i / 2) * 64;
+        ctx.strokeStyle = "rgba(255,255,255,0.18)";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x + 6, y + 6, 500, 52);
+        ctx.fillStyle = "#F4F1EA";
+        ctx.textAlign = "center";
+        let size = 30;
+        ctx.font = `600 ${size}px Outfit`;
+        ctx.letterSpacing = "3px";
+        while (ctx.measureText(t).width > 470 && size > 14) ctx.font = `600 ${--size}px Outfit`;
+        ctx.fillText(t, x + 256, y + 32 + size * 0.36);
+      });
+      put("signs", c);
+    }
     return out;
   },
-  { font, labels, tags, headers: HEADERS, GRAIN: GRAIN_SHAPES, STYLE: LABEL_STYLE, ASPECT, LABEL_ATLAS, LABEL_ROWS, stencils: SACK_STENCILS },
+  { font, labels, tags, headers: HEADERS, GRAIN: GRAIN_SHAPES, STYLE: LABEL_STYLE, ASPECT, LABEL_ATLAS, LABEL_ROWS, stencils: SACK_STENCILS, CATS, SIGNS, CAT_COLS, CAT_CELL },
 );
 await browser.close();
 
 // ---------------------------------------------------------------- encode
 const KIND = {
   pine: "etc1s", plaster: "etc1s", plaster_n: "normal-etc1s", concrete: "etc1s", burlap: "etc1s", burlap_n: "normal-etc1s",
-  terracotta: "etc1s", stone: "etc1s", stone_n: "normal-etc1s", grains: "etc1s", grains_n: "normal-etc1s", labels: "uastc", headers: "uastc", cutouts: "uastc",
+  terracotta: "etc1s", stone: "etc1s", stone_n: "normal-etc1s", grains: "etc1s", grains_n: "normal-etc1s", labels: "uastc", headers: "uastc", cutouts: "uastc", catlabels: "etc1s", signs: "uastc",
 };
 const manifest = {};
 for (const [name, url] of Object.entries(images)) {

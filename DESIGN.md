@@ -165,11 +165,20 @@ Phone screens render in a centred column, max-width 430px, full viewport height;
 
 **Error plate** (index.html's boot guard): over the ground gradient, a `--plate` soil card (radius 24, white hairline): "Something went wrong" Outfit 500 22, a muted line, the error in a dark inset code block, **Reload** (lime, soil text) and **Reset local data** (outline white), the build id. In the contrast gate (lowest text 9.38:1).
 
-## 5b. Hero close-ups (eye level)
+## 5b. Close-ups (eye level)
 
-A zone with a close-up (today Grosher's Bulk & pulses) is drawn at full detail at eye level; everything else
-stays at overview detail and, from inside the zone, reads as a backdrop of recognisable fixtures fading into a
-warm dark. The look follows an earthy Indian pulses store (the reference photos are kept locally in
+Every stop opens a close-up at eye level when it is next: the camera comes down to the stop's shelf, and after
+Got it it goes back out to the map, shows the next leg for a moment (1.1 s), and goes down again. Two
+qualities. A **hero** zone (today Grosher's Bulk & pulses) is drawn by hand from a recipe at full detail; a
+**standard** close-up, everywhere else, is generated from the store data with the same shelf kit, lighting and
+materials, simpler: the stop's fixture face and the one across the corridor (black steel shelving with pine
+planks and a header board with the aisle's name and sign; an open chiller with a lit canopy; reach-in freezer
+doors; a chest freezer; a service counter behind curved glass with its staff side and sign; the food hall's
+wells under a sneeze guard; produce crates on black stands or a stepped rack; a pine counter with a stocked
+back wall), stocked by the categories on that shelf in Grosher house labels (a pack shape per category,
+products told apart by tint and size), the stop's slot lit lime. Standard zones are upgraded to hero quality
+one at a time (produce next). Everything outside a close-up stays at overview detail and, from inside it,
+reads as a backdrop of recognisable fixtures fading into a warm dark. The hero look: The look follows an earthy Indian pulses store (the reference photos are kept locally in
 `design/refs/`): an **aisle with shelving both sides**, the centerpiece in its mouth; warm tan clay-plaster
 walls and ceiling, khaki polished concrete with a soft gloss, exposed copper conduit; an **even, warm, bright
 fill** like the reference's, with black tracks of spots (~3000 K) as accents: crisp pools on the shelf faces
@@ -182,11 +191,15 @@ pale-jute sacks with rolled, frayed rims and a mill's stencil, a grey stone chak
 grey-brown clay pot of dried wheat. Light is per pixel with analytic plank shadows and contact decals, never
 baked blobs. The stop's bin is lit lime by its rim (a faint fill, so the grain keeps its colour) and lifted a
 little: lime still means now. Over the zone every control is on the soil plate with white text, and the
-sheet takes the warm deep glass. The arrival is §7's one exception: a 480 ms descent outside the zone and a
-walk in down the aisle (360–760 ms), at most 1.24 s, a tap skips it, reduced motion cuts. When a stop is in a
-close-up's zone, its close-up is prepared ahead (on the list screen for the first stop, during the leg before
-it for the others), so the descent starts as the map appears or as Got it is tapped, without a pause. Budget:
-≤ 70 draw calls, ≤ 250k triangles, ≤ 16 MB textures, ≤ 2.5 MB download, in every frame of the arrival too.
+sheet takes the warm deep glass. **Framing:** the bottom card covers about the lower 40% of the screen; the
+slot is framed in the clear band between the progress strip and the card, the shopper standing a step to one
+side so the aisle recedes beside it; for a low shelf the eye comes down (to 1.05 m at the lowest, a crouch)
+and tilts down rather than letting the card hide the target. The arrival is §7's one exception: a descent of
+~1.0 s outside the zone and a walk in down the aisle of 1.2–1.5 s, one motion eased in and out (it never
+stops at the aisle's mouth), a tap skips it, reduced motion cuts; the way back out to the map is 0.8 s. Every
+close-up is prepared ahead (on the list screen for the first stop, during the stop before it for the others),
+so the descent starts without a pause. Budget: ≤ 70 draw calls, ≤ 250k triangles, ≤ 16 MB textures, ≤ 2.5 MB
+download, in every frame of the arrival too, for the hero zone and the worst standard one.
 
 ## 6. Data additions
 
@@ -216,8 +229,8 @@ departments?: Department[];
 - No status color on the map; the map only knows white, lime, and the photos.
 - No map label other than the next stop and the checkout callout.
 - Don't scale markers or labels with zoom. Don't animate longer than 480ms; the user is walking.
-  **One exception, a scene transition:** a hero close-up's arrival (§5b), from the map down to eye level and
-  in, and its way back out, may take up to **1.24 s** (a 480 ms descent, then a walk of 360–760 ms by its
-  length). A tap anywhere skips it to the end; under `prefers-reduced-motion` it is an instant cut. Nothing
-  else may borrow this.
+  **One exception, a scene transition:** a close-up's arrival (§5b), from the map down to eye level and in,
+  may take up to **2.5 s**: a descent of **~1.0 s**, then a walk in of **1.2–1.5 s** by its length, as one
+  motion with a smooth ease in and out. Its way back out to the map takes **0.8 s**. A tap anywhere skips
+  either to its end; under `prefers-reduced-motion` both are an instant cut. Nothing else may borrow this.
 - No "amazing / smart / optimized". The numbers say it.
