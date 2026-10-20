@@ -389,8 +389,8 @@ export function bag(): BufferGeometry {
   return g;
 }
 
-/** A juice bottle, 0.3 L: the glass, the juice and its cap (vertex colour: the cap stays dark), the label band. */
-export function bottleParts(): { glass: BufferGeometry; body: BufferGeometry; label: BufferGeometry } {
+/** A juice bottle, 0.3 L: the glass, the juice, a ribbed metal cap, the label band (white, its code and name). */
+export function bottleParts(): { glass: BufferGeometry; body: BufferGeometry; cap: BufferGeometry; label: BufferGeometry } {
   const profile: [number, number][] = [
     [0, 0],
     [0.031, 0],
@@ -406,8 +406,18 @@ export function bottleParts(): { glass: BufferGeometry; body: BufferGeometry; la
     12,
   );
   painted(liquid, () => [1, 1, 1]);
-  const cap = painted(place(cylinder(0.016, 0.016, 0.022, 10), { pos: [0, 0.208, 0] }), () => [0.08, 0.08, 0.08]);
-  const body = mergeGeometries([normalizeAttrs(liquid), normalizeAttrs(cap)])!;
+  // the cap: a short ribbed steel cylinder, its top a shade brighter
+  const cap = cylinder(0.0165, 0.0165, 0.02, 16);
+  const cp = cap.getAttribute("position");
+  for (let i = 0; i < cp.count; i++) {
+    const a = Math.atan2(cp.getZ(i), cp.getX(i));
+    const k = Math.abs(cp.getY(i)) < 0.0099 ? 1 + 0.06 * Math.max(0, Math.cos(a * 8)) : 1;
+    cp.setXYZ(i, cp.getX(i) * k, cp.getY(i), cp.getZ(i) * k);
+  }
+  cap.computeVertexNormals();
+  place(cap, { pos: [0, 0.208, 0] });
+  painted(cap, (_, n) => (n.y > 0.5 ? [0.86, 0.86, 0.84] : [0.74, 0.74, 0.72]));
+  const body = normalizeAttrs(liquid);
   // the label: a band round the front, white with its number
   const label = cylinder(0.0335, 0.0335, 0.07, 14, true);
   place(label, { pos: [0, 0.07, 0] });
@@ -417,7 +427,7 @@ export function bottleParts(): { glass: BufferGeometry; body: BufferGeometry; la
     const a = Math.atan2(p.getX(i), p.getZ(i));
     uv.setXY(i, Math.max(0, Math.min(1, 0.5 + a / Math.PI)), (p.getY(i) - 0.035) / 0.07);
   }
-  return { glass, body, label };
+  return { glass, body, cap: normalizeAttrs(cap), label };
 }
 
 /** position, normal, uv and colour on every part, so they merge */

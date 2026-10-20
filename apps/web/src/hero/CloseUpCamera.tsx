@@ -14,7 +14,7 @@
 
 import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { Euler, Matrix4, PerspectiveCamera, Quaternion, Vector3 } from "three";
+import { CatmullRomCurve3, Euler, Matrix4, PerspectiveCamera, Quaternion, Vector3 } from "three";
 import type { HeroTargetInfo } from "./index.ts";
 import type { SafeArea } from "../map3d/CameraRig.tsx";
 
@@ -34,6 +34,24 @@ const BOB = 0.012; // metres, a step's rise and fall
 
 /** the walk's duration for its length: a stroll, 1.2–1.5 s */
 export const walkMs = (metres: number) => Math.round(Math.min(1500, Math.max(1200, 1050 + metres * 90)));
+/** a walk at a pace (m/s): a walk in at least 0.8 s; a walk between stops at most 5 s (beyond, it hurries) */
+export const paceMs = (metres: number, speed: number, cap = Infinity) => Math.round(Math.min(cap, Math.max(800, (metres / speed) * 1000)));
+/** the longest walk between two stops in a zone, whatever the pace */
+export const WALK_OVER_MAX_MS = 5000;
+
+/**
+ * The descent's path: from the overview's pose to the door, through the zone's own waypoints when it has
+ * them (a smooth curve through each), else a curve that comes down over the walkway outside the zone (its
+ * control point above the door at the overview's height). `at(e)` for e 0…1, by length.
+ */
+export function descentPath(high: Vector3, door: Vector3, via?: [number, number, number][]): (e: number) => Vector3 {
+  if (via?.length) {
+    const curve = new CatmullRomCurve3([high.clone(), ...via.map((p) => new Vector3(...p)), door.clone()], false, "centripetal");
+    return (e) => curve.getPointAt(Math.min(1, Math.max(0, e)));
+  }
+  const ctrl = new Vector3(door.x, high.y, door.z).lerp(high, 0.25);
+  return (e) => high.clone().multiplyScalar((1 - e) * (1 - e)).add(ctrl.clone().multiplyScalar(2 * e * (1 - e))).add(door.clone().multiplyScalar(e * e));
+}
 /** the eye's height for a slot centred at y: standing, or crouched for the low shelves */
 export const eyeHeightFor = (y: number) => Math.min(EYE_HEIGHT, Math.max(CROUCH_HEIGHT, y + 0.75));
 
@@ -191,9 +209,11 @@ export const CloseUpCamera = forwardRef<CloseUpCameraHandle, CloseUpCameraProps>
       return stand.clone();
     };
     // at the door the shopper looks down the aisle toward the first turn (or the bin, when there is none)
-    const doorPose = lookPose(door, target.via.length ? path[1].clone().lerp(path[2], 0.5) : stand.clone().lerp(new Vector3(...target.center), 0.25), end.fov);
-    // the curve's control point: above the door at the overview's height, so the path comes down outside
-    const ctrl = new Vector3(door.x, high.position.y, door.z).lerp(high.position, 0.25);
+    // (landing through a skylight, a couple of metres from the stop: it lands already looking at the display)
+    const doorPose = lookPose(door, target.descent ? new Vector3(...target.center) : target.via.length ? path[1].clone().lerp(path[2], 0.5) : stand.clone().lerp(new Vector3(...target.center), 0.25), end.fov);
+    // the way down: outside the zone over the walkway (a curve whose control point is above the door at the
+    // overview's height), or the zone's own (Produce: through a skylight pane)
+    const down = descentPath(high.position, door, target.descent);
     // the view stays on the store all the way down: it looks at a point that glides from where the overview
     // was looking to the zone's open side ahead of the door, so the camera never turns to the sky
     const from = groundOf(high);
@@ -203,10 +223,7 @@ export const CloseUpCamera = forwardRef<CloseUpCameraHandle, CloseUpCameraProps>
       ms: DESCENT_MS,
       ease: easeSine,
       at: (e) => {
-        const a = high.position.clone().multiplyScalar((1 - e) * (1 - e));
-        const b = ctrl.clone().multiplyScalar(2 * e * (1 - e));
-        const c = door.clone().multiplyScalar(e * e);
-        const position = a.add(b).add(c);
+        const position = down(e);
         const q = aim(position, from.clone().lerp(ahead, easeOut(e)));
         // the first and last moments hand over exactly from the overview's pose and to the door's
         const quaternion = high.quaternion.clone().slerp(q, Math.min(1, e * 6)).slerp(doorPose.quaternion, Math.max(0, (e - 0.85) / 0.15));
@@ -214,7 +231,7 @@ export const CloseUpCamera = forwardRef<CloseUpCameraHandle, CloseUpCameraProps>
       },
     };
     const walk: Segment = {
-      ms: walkMs(metres),
+      ms: target.walkSpeed ? paceMs(metres, target.walkSpeed) : walkMs(metres),
       ease: easeSine,
       at: (e) => {
         const p = along(e * metres);
@@ -253,7 +270,7 @@ export const CloseUpCamera = forwardRef<CloseUpCameraHandle, CloseUpCameraProps>
       run(
         [
           {
-            ms: walkMs(metres),
+            ms: target.walkSpeed ? paceMs(metres, target.walkSpeed, WALK_OVER_MAX_MS) : walkMs(metres),
             ease: easeSine,
             at: (e) => {
               const p = along(e * metres);
@@ -270,7 +287,9 @@ export const CloseUpCamera = forwardRef<CloseUpCameraHandle, CloseUpCameraProps>
       return;
     }
     const { descent, walk } = moves(high);
-    run([chain(descent, walk)], () => (settled.current = true));
+    // a zone with its own way down lands, then walks at its pace (two moves, each eased: a landing, then a
+    // stroll); otherwise one motion that never stops at the door
+    run(target.descent ? [descent, walk] : [chain(descent, walk)], () => (settled.current = true));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [target.center[0], target.center[1], target.center[2], target.facing]);
 

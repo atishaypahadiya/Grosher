@@ -17,7 +17,7 @@ import { save } from "../../lib/storage.ts";
 import type { HeroZoneComponentProps } from "../index.ts";
 import { heroStats, zoneState } from "../stats.ts";
 import { fruitShape } from "./fruit.ts";
-import { dropProduceZone, pickProduceTarget, produceRig, produceZoneFor, selectDetail, walkOver, type ProduceTarget } from "./zone.ts";
+import { dropProduceZone, pickProduceTarget, produceRig, produceZoneFor, selectDetail, walkOver, WALK_SPEED, type ProduceTarget } from "./zone.ts";
 
 const LIME = new Color("#D4FF4A");
 const LIFT = 0.03;
@@ -310,6 +310,8 @@ export default function ProduceZone({ store, zone: entry, category, itemName, ac
         door: target.door,
         via: target.via,
         stand: target.stand,
+        descent: target.descent,
+        walkSpeed: WALK_SPEED,
         over: (from) => walkOver(from, { x: target.center[0] + target.side, walkZ: target.walkZ }),
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps

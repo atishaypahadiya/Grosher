@@ -20,7 +20,7 @@ import { scaled, WARM_3000K, type LightRig, type ZoneLightDef } from "../kit/lig
 import type { Decal } from "../kit/decals.ts";
 import type { ProduceMaterialKey } from "../kit/materials.ts";
 import { bag, bananaBunch, bottleParts, bunchLeaves, bunchStems, fruitMatrix, leafyHead, packCrate, packParts, roundGeometry, shapeOf, type Pile } from "./fruit.ts";
-import { CUT_FRUIT, DISPLAYS, foliageRect, HEADERS, headerRect, JUICES, juiceRect, KINDS, moundIndex, MOUNDS, packRect, signCells, signRect, WALL, type Kind, type KindId, type MoundId, type PackId } from "./recipe.ts";
+import { BITES, CUT_FRUIT, DISPLAYS, foliageRect, HEADERS, headerRect, JUICES, juiceRect, KINDS, moundIndex, MOUNDS, packRect, signCells, signRect, WALL, type Kind, type KindId, type MoundId, type PackId } from "./recipe.ts";
 
 // ---------------------------------------------------------------- the plan (map metres; z is the map's y)
 export const ZONE = { x0: 12, x1: 48, z0: 1.0, z1: 14.4 };
@@ -184,6 +184,8 @@ export interface ProduceTarget {
   walkZ: number;
   door: V3;
   via: V3[];
+  /** the way down through the skylight (approach) */
+  descent: V3[];
   stand: number;
   side: number;
   bounds: { x0: number; x1: number };
@@ -262,6 +264,7 @@ export function buildProduceZone(outline: [number, number][] | undefined): Produ
   const bt = bottleParts();
   spec("bottleGlass", bt.glass, "clear");
   spec("bottleBody", bt.body, "plain");
+  spec("bottleCap", bt.cap, "metal");
   spec("bottleLabel", bt.label, "chalkCell", [{ name: "aCell", size: 4 }]);
   // a far deck: one box, its front a row of the stock (one cell, repeated)
   spec("row", place(clean(new BoxGeometry(1, 1, 1)), { pos: [0, 0.5, 0] }), "packsRow", [
@@ -496,19 +499,42 @@ export function buildProduceZone(outline: [number, number][] | undefined): Produ
   return { statics, specs, items, groups, decals, targets, shafts, mist, triangles: Math.round(triangles), signs };
 }
 
+/** the skylight's panes: their centres (between the mullions every 4 m and the cross bar at z 8) */
+export const PANE_X = [16, 20, 24, 28, 32, 36, 40, 44];
+export const PANE_Z = [5.5, 10.5];
+/** a stroll: the walk in and between stops, metres a second */
+export const WALK_SPEED = 1.4;
+/** the walk in, at most; and how far from the stop the camera lands, along its walking line */
+export const WALK_IN_MAX = 4;
+export const LANDING_M = 2.2;
+
 /**
- * How the shopper reaches a display: the descent ends outside the zone, at eye level, at the end of a walking
- * line (west or east) or on the south walkway at the foot of a cross aisle between the islands; the walk goes
- * along the line, or up the cross aisle and along, to stand in front of it. The shortest of these.
+ * How the shopper reaches a display: the camera comes down over the roof to the pane above its landing,
+ * through the middle of its glass (never near a mullion), over the islands, and lands at eye level on the
+ * stop's walking line 2.2 m from where the shopper will stand; then a short walk along the line, at a
+ * stroll (1.6 s), turning to face it. (The descent's curve is CloseUpCamera's `descentPath` through these
+ * waypoints.)
  */
-export function approach(x: number, walkZ: number): { door: V3; via: V3[]; bounds: { x0: number; x1: number } } {
-  const options: { door: V3; via: V3[]; len: number }[] = [
-    { door: [ZONE.x0 - 0.8, EYE, walkZ], via: [], len: x - (ZONE.x0 - 0.8) },
-    { door: [ZONE.x1 + 0.8, EYE, walkZ], via: [], len: ZONE.x1 + 0.8 - x },
-    ...CROSS.slice(1, -1).map((xc) => ({ door: [xc, EYE, ZONE.z1 + 0.2] as V3, via: [[xc, EYE, walkZ]] as V3[], len: ZONE.z1 + 0.2 - walkZ + Math.abs(x - xc) })),
-  ];
-  const best = options.reduce((a, b) => (b.len < a.len - 0.01 ? b : a));
-  return { door: best.door, via: best.via, bounds: { x0: ZONE.x0 + 0.6, x1: ZONE.x1 - 0.6 } };
+export function approach(standX: number, walkZ: number): { door: V3; via: V3[]; descent: V3[]; bounds: { x0: number; x1: number } } {
+  // the landing: a couple of metres from the stop along its line, toward the zone's middle (so it is under the
+  // skylight, whose ends are 2 m in from the zone's)
+  const toward = standX < (SKY.x0 + SKY.x1) / 2 ? 1 : -1;
+  const xd = standX + toward * LANDING_M;
+  // through the glass at the middle of the pane over the landing, never near a mullion
+  const xp = PANE_X.reduce((a, b) => (Math.abs(b - xd) < Math.abs(a - xd) ? b : a));
+  // the pane row on the walkway's side: the wall's walkway under the north row, the rows' walkway under the south
+  const zp = walkZ < 6 ? PANE_Z[0] : PANE_Z[1];
+  return {
+    door: [xd, EYE, walkZ],
+    via: [],
+    // well over the roof above the pane, then through its glass, then down over the islands to the walkway
+    descent: [
+      [xp, SKY.y + 3.5, zp],
+      [xp, SKY.y - 0.9, zp],
+      [xd, EYE + 1.6, walkZ + (zp - walkZ) * 0.25],
+    ],
+    bounds: { x0: ZONE.x0 + 0.6, x1: ZONE.x1 - 0.6 },
+  };
 }
 
 /**
@@ -594,7 +620,22 @@ function stockBay(b: (typeof WALL)[number]["bays"][number], bx0: number, cutFrui
     };
     // the far row: which cell, how many across, how tall, stacked how many
     let far: { pack: PackId; w: number; h: number; stack: number; tint: V3 } = { pack: "spinach", w: 0.18, h: 0.16, stack: 1, tint: [1, 1, 1] };
-    if (b.kind === "bottle") {
+    if (b.kind === "bottle" && di === 0) {
+      // the chilled well under the juice: energy balls and bites in round-shouldered tubs, two rows, mixed
+      const size: V3 = [0.12, 0.07, 0.12];
+      far = { pack: BITES[0], w: size[0] + 0.012, h: size[1] * 2, stack: 2, tint: [1, 1, 1] };
+      for (let r = 0; r < 3; r++) {
+        const z = front - 0.03 - size[2] / 2 - r * (size[2] + 0.01);
+        row(z, size[0] + 0.012, (x, k) => {
+          const pack = BITES[(k + r * 3 + Math.floor(bx0)) % BITES.length];
+          for (let h = 0; h < 2; h++) {
+            const m = onDeck(x, z).multiply(M([0, h * (size[1] + 0.003), 0], [0, (rand() - 0.5) * 0.06, 0], size));
+            put({ set: "packClear", m, color: [1, 1, 1], group: g.id });
+            put({ set: "packContent", m, color: [1, 1, 1], attrs: { aCell: cellOf(packRect(pack)) }, group: g.id });
+          }
+        });
+      }
+    } else if (b.kind === "bottle") {
       far = { pack: "bottlesRow", w: 0.296, h: 0.21, stack: 1, tint: [1, 1, 1] };
       const juices = b.juice!;
       // two rows deep, each juice two bottles wide; the top deck a single row
@@ -605,6 +646,7 @@ function stockBay(b: (typeof WALL)[number]["bays"][number], bx0: number, cutFrui
           const m = onDeck(x + (rand() - 0.5) * 0.004, z).multiply(M([0, 0, 0], [0, (rand() - 0.5) * 0.4, 0]));
           put({ set: "bottleGlass", m, color: [1, 1, 1], group: g.id });
           put({ set: "bottleBody", m, color: hex(j.color), group: g.id });
+          put({ set: "bottleCap", m, color: [1, 1, 1], group: g.id });
           put({ set: "bottleLabel", m, color: [1, 1, 1], attrs: { aCell: cellOf(juiceRect(j.n)) }, group: g.id });
         });
       }

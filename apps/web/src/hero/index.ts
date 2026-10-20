@@ -31,6 +31,12 @@ export interface HeroTargetInfo {
   door: [number, number, number];
   /** the walk's turns on the way from the door to where the shopper stands */
   via: [number, number, number][];
+  /** the descent's own way down, between the overview and the door (Produce: over the roof to a pane, through
+   * its glass, down over the islands to the walkway); without it the descent comes down outside the zone */
+  descent?: [number, number, number][];
+  /** metres a second for the walk in and between stops (Produce: a stroll, 1.4); without it the walk takes
+   * 1.2–1.5 s whatever its length (walkMs) */
+  walkSpeed?: number;
   /** metres from the bin's centre to the shopper */
   stand: number;
 }

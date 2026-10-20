@@ -508,6 +508,11 @@ export async function drawProduce(d) {
           ctx.fillRect(bx + 14, y + 16, 20, 26);
         });
       },
+      // energy balls and bites: rolled balls, close-packed, dusted or coated, each a shade apart
+      bitesCocoa: (x, y) => chunks(x, y, ["#4A2E1E", "#5A3826", "#3E2618"], { n: 60, size: 46, round: true, base: "#2A1A10" }),
+      bitesCoconut: (x, y) => chunks(x, y, ["#EDE6D6", "#E2D8C4", "#F4EEE2"], { n: 60, size: 46, round: true, base: "#9A8E78" }),
+      bitesDate: (x, y) => chunks(x, y, ["#7A4A2A", "#8A5A32", "#6A3E22"], { n: 60, size: 46, round: true, base: "#3A2414" }),
+      bitesMatcha: (x, y) => chunks(x, y, ["#8AA04A", "#7A9440", "#9AAE5A"], { n: 60, size: 46, round: true, base: "#3E4A22" }),
       headsRow: (x, y) => {
         ctx.fillStyle = "#2E4A26";
         ctx.fillRect(x, y, C, C);

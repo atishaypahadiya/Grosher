@@ -213,7 +213,10 @@ in clear bottles with white numbered labels (J01–J21). Eight black-steel islan
 wooden crates each side, heaped with fruit modelled one by one (no two apples the same colour), under small
 black chalkboards in handwritten white chalk with the price beneath; two tall potted plants. The stop's crates
 (or the wall's deck) carry the lime outline and lift a little. Beyond: floral by the entrance, Bulk's warm-lit
-header boards to the east; the store fades to a pale stone, not the lamplit aisles' dark.
+header boards to the east; the store fades to a pale stone, not the lamplit aisles' dark. Its arrival is its own: the camera
+comes down over the roof, through the middle of the skylight pane above the stop, over the islands, and lands at
+eye level on the walkway 2.2 m from the display, already looking at it; then a stroll at 1.4 m/s (about 1.6 s)
+to face it. Between two produce stops the walk is the same pace, along the walkways, at most 5 s.
 
 ## 6. Data additions
 
@@ -245,6 +248,8 @@ departments?: Department[];
 - Don't scale markers or labels with zoom. Don't animate longer than 480ms; the user is walking.
   **One exception, a scene transition:** a close-up's arrival (§5b), from the map down to eye level and in,
   may take up to **2.5 s**: a descent of **~1.0 s**, then a walk in of **1.2–1.5 s** by its length, as one
-  motion with a smooth ease in and out. Its way back out to the map takes **0.8 s**. A tap anywhere skips
+  motion with a smooth ease in and out (Produce's, **~2.6 s**: a descent through the skylight, then a stroll of
+  2.2 m at **1.4 m/s**, two eased moves). Its way back out to the map takes **0.8 s**. Inside a hero zone, a
+  walk from one stop to the next may go at walking pace, at most **5 s**. A tap anywhere skips
   either to its end; under `prefers-reduced-motion` both are an instant cut. Nothing else may borrow this.
 - No "amazing / smart / optimized". The numbers say it.

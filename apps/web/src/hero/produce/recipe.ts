@@ -96,6 +96,8 @@ export const PACKS = [
   "spinach", "springMix", "saladKit", "grapes",
   // a far deck's row
   "bottlesRow", "headsRow", "herbsRow",
+  // the chilled shelf under the juice: energy balls and bites in tubs
+  "bitesCocoa", "bitesCoconut", "bitesDate", "bitesMatcha",
 ] as const;
 export type PackId = (typeof PACKS)[number];
 export const PACK_COLS = 8;
@@ -289,6 +291,9 @@ export const WALL: WallSection[] = [
 
 /** the cut fruit's tubs, mixed as in the reference: each cut fruit bay shows these, in its own order */
 export const CUT_FRUIT: PackId[] = ["fruitMedley", "watermelonCubes", "pineappleChunks", "mangoChunks", "cantaloupeCubes", "honeydewCubes", "kiwiSlices", "grapesMix", "berryCups", "papayaCubes", "citrusSegments", "dragonfruit"];
+
+/** under the juice, on the chilled well: energy balls and bites in tubs, mixed along each bay */
+export const BITES: PackId[] = ["bitesCocoa", "bitesCoconut", "bitesDate", "bitesMatcha"];
 
 /** The Grosher Press line: 21 cold-pressed juices, each its colour and what the label's second line says. */
 export const JUICES: { n: number; name: string; color: string }[] = [

@@ -1,5 +1,6 @@
 // The Produce hero zone builds from the shelf kit: every display variety and every wall bay is a target and
-// an item finds its own; every walk in starts at eye level outside the zone and never goes through an island,
+// an item finds its own; every way in comes down through a skylight pane (clear of the mullions, over the
+// islands) and lands on the walkway for a short stroll, never through an island,
 // and neither does a walk from one stop to the next; fruit are packed into their crates without touching;
 // what is drawn one by one around any stop fits the close-up budget; the room is lit by daylight (a pool under
 // the skylight, the mullions' shadows, never blue) and the wet wall by its lip lights; every display carries a
@@ -7,7 +8,9 @@
 
 import { expect, test } from "vitest";
 import { grosher } from "@grosher/stores";
-import { approach, buildProduceZone, CASE, CRATE, DECKS, DETAIL_TRIANGLES, EYE, HIDE_FIXTURES, ISLANDS, pickProduceTarget, produceRig, selectDetail, SKY, walkOver, ZONE } from "../src/hero/produce/zone.ts";
+import { Vector3 } from "three";
+import { buildProduceZone, CASE, CEILING, CRATE, DECKS, DETAIL_TRIANGLES, EYE, HIDE_FIXTURES, ISLANDS, pickProduceTarget, produceRig, selectDetail, SKY, walkOver, WALK_IN_MAX, WALK_SPEED } from "../src/hero/produce/zone.ts";
+import { descentPath, paceMs } from "../src/hero/CloseUpCamera.tsx";
 import { DISPLAYS, KINDS, signCells, WALL, type KindId } from "../src/hero/produce/recipe.ts";
 import { deform, packCrate, shapeOf, type Pile } from "../src/hero/produce/fruit.ts";
 import { HERO_ZONES, closeUpAt } from "../src/hero/index.ts";
@@ -63,26 +66,46 @@ const sampled = (pts: [number, number][], f: (x: number, z: number) => void) => 
 };
 const standOf = (t: (typeof zone.targets)[number]): [number, number] => [t.center[0] + t.side, t.center[2] + t.facing * t.stand];
 
-test("every walk in starts at eye level outside the zone and goes between the islands, never through one", () => {
+test("every way in comes down through a skylight pane, clear of the mullions and over the islands, and lands for a short stroll", () => {
+  // the overview's camera is wherever the shopper left it: from the south (the usual framing), the west, the east
+  const highs = [new Vector3(30, 34, 52), new Vector3(-12, 28, 12), new Vector3(78, 30, 24)];
+  const mullionsX = [SKY.x0, 18, 22, 26, 30, 34, 38, 42, SKY.x1];
+  const mullionsZ = [SKY.z0, 8, SKY.z1];
   for (const t of zone.targets) {
+    // it lands at eye level on the stop's own walking line, under the skylight
     expect(t.door[1]).toBe(EYE);
-    const outside = t.door[0] < ZONE.x0 || t.door[0] > ZONE.x1 || t.door[2] > ZONE.z1;
-    expect(outside, `${t.name}: door ${t.door}`).toBe(true);
-    const pts: [number, number][] = [[t.door[0], t.door[2]], ...t.via.map((v) => [v[0], v[2]] as [number, number]), standOf(t)];
-    sampled(pts, (x, z) => expect(inIsland(x, z), `${t.name} walks through an island at ${x.toFixed(2)}, ${z.toFixed(2)}`).toBe(false));
-    // and stays within the walk's 1.2–1.5 s: the middle of the wall's walkway is 11 m and more from every edge
-    // of the zone, so its stops (berries, grapes and melons, mid-wall bays) walk 14–15 m, briskly
-    let len = 0;
-    for (let i = 0; i + 1 < pts.length; i++) len += Math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]);
-    expect(len, t.name).toBeLessThan(16);
-    // the shopper stands on a walking line, clear of the displays
-    expect(inIsland(...standOf(t)), t.name).toBe(false);
-    expect(standOf(t)[1]).toBeGreaterThan(CASE.zFront + 0.6);
+    expect(t.door[2], t.name).toBe(t.walkZ);
+    expect(t.door[0] > SKY.x0 && t.door[0] < SKY.x1, t.name).toBe(true);
+    expect(inIsland(t.door[0], t.door[2]), t.name).toBe(false);
+    // the walk: along the line to where the shopper stands, 1.2–4 m, at a stroll
+    const stand = standOf(t);
+    const walk = Math.hypot(stand[0] - t.door[0], stand[1] - t.door[2]);
+    expect(walk, t.name).toBeGreaterThanOrEqual(1.1);
+    expect(walk, t.name).toBeLessThanOrEqual(WALK_IN_MAX);
+    expect(paceMs(walk, WALK_SPEED), t.name).toBeLessThanOrEqual(3000);
+    expect(inIsland(...stand), t.name).toBe(false);
+    for (const high of highs) {
+      const at = descentPath(high, new Vector3(...t.door), t.descent);
+      let crossed = 0;
+      let prev = at(0);
+      for (let k = 1; k <= 2000; k++) {
+        const p = at(k / 2000);
+        // through the glass: inside the opening, half a metre and more from every mullion and the rim
+        if ((prev.y - SKY.y) * (p.y - SKY.y) <= 0) {
+          crossed++;
+          expect(p.x > SKY.x0 && p.x < SKY.x1 && p.z > SKY.z0 && p.z < SKY.z1, `${t.name}: through the roof at ${p.x.toFixed(2)}, ${p.z.toFixed(2)}`).toBe(true);
+          for (const x of mullionsX) expect(Math.abs(p.x - x), `${t.name}: near the mullion at x ${x}`).toBeGreaterThan(0.5);
+          for (const z of mullionsZ) expect(Math.abs(p.z - z), `${t.name}: near the mullion at z ${z}`).toBeGreaterThan(0.5);
+        }
+        // under the ceiling's margins it never goes (the roof is solid there)
+        if (p.y < CEILING && p.y > EYE + 0.1) expect(p.x > SKY.x0 - 0.2 && p.x < SKY.x1 + 0.2 && p.z > SKY.z0 - 0.6 && p.z < SKY.z1 + 0.2, `${t.name}: under the ceiling at ${p.x.toFixed(2)}, ${p.y.toFixed(2)}, ${p.z.toFixed(2)}`).toBe(true);
+        // and never through an island: over one it stays well above the crates
+        if (inIsland(p.x, p.z)) expect(p.y, `${t.name}: over an island at ${p.x.toFixed(2)}, ${p.z.toFixed(2)}`).toBeGreaterThan(1.6);
+        prev = p;
+      }
+      expect(crossed, t.name).toBe(1);
+    }
   }
-  // the door is the nearest way in
-  expect(approach(13.5, 3.5).door[0]).toBeLessThan(ZONE.x0);
-  expect(approach(46, 3.5).door[0]).toBeGreaterThan(ZONE.x1);
-  expect(approach(30, 8.3).door[2]).toBeGreaterThan(ZONE.z1);
 });
 
 test("from one stop to the next in the zone the walk keeps to the walking lines and the cross aisles", () => {

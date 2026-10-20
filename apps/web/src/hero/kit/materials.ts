@@ -380,6 +380,7 @@ export type ProduceMaterialKey =
   | "foliageCell"
   | "packs"
   | "packsRow"
+  | "metal"
   | "clear";
 export type ProduceMaterials = Record<ProduceMaterialKey, Material>;
 
@@ -408,6 +409,8 @@ export function produceMaterials(t: Record<ProduceTextureName, Texture>, rig: Li
     foliageCell: std({ map: t.foliage, alphaTest: 0.5, side: DoubleSide, roughness: 0.6 }, "cells", cells),
     packs: std({ map: t.packs, roughness: 0.5 }, "cells", cells),
     packsRow: std({ map: t.packs, roughness: 0.55 }, "rows", rowCells),
+    // the juice bottles' caps: polished steel
+    metal: std({ color: new Color("#FFFFFF"), roughness: 0.26, metalness: 0.85, envMap: env, envMapIntensity: 1 }),
     clear: std({ color: new Color("#F6F8F4"), transparent: true, opacity: 0.05, roughness: 0.06, depthWrite: false, envMap: env, envMapIntensity: 0.12 }),
   };
 }

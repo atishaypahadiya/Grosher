@@ -786,7 +786,9 @@ freed, off the GPU the moment it is left.
   where it would alias, and a roughness per instance (`deform` is the same maths in TypeScript, tested).
   Bananas, leafy heads and tied herb bunches (stems and twine, leaf cards from the foliage atlas) have templates
   of their own; punnets, tubs, clamshells and bags are unit boxes with their contents from the packs atlas;
-  juice bottles are glass, juice and cap, and a label (the chalk atlas's juice cells). **Packing** (`packCrate`):
+  juice bottles are glass, juice, a ribbed polished-steel cap (the `metal` material) and a label (the chalk
+  atlas's juice cells: white, the code big, the name); under the juice, on the chilled well, tubs of energy balls
+  and bites (`BITES`, four flavours, mixed). **Packing** (`packCrate`):
   each crate's top layer on a jittered grid over its pile's surface, a third of each fruit settled into it,
   inside the crate's walls, never through another (circles for round ones, footprints for long ones lying),
   every instance its own colour; deterministic per crate.
@@ -815,22 +817,26 @@ freed, off the GPU the moment it is left.
 - **Overhead, facing down only** (as Bulk's ceiling): the ceiling round the opening, the skylight's black
   mullions as downward strips, glowing glass, the well's walls facing in, a fascia facing in, two linear LED
   fittings; from the camera on its way down the room is open.
-- **The way in** (`approach`): the descent ends outside the zone at eye level, at the west or east end of the
-  shopper's walking line (y 3.5 along the wall, 8.3 between the rows) or on the south walkway at the foot of a
-  cross aisle (x 21.3, 29.7, 38.1); the walk goes along the line or up the cross aisle and along, to stand on the
-  line facing the display (island stops about 1.8 m from the crates' middle, wall stops 1.9 m, framed as every
-  close-up). Walks are 1.4–15 m, median 8: the middle of the wall's walkway is 11 m and more from every edge,
-  so 19 of 78 stops walk more than 12 m inside the 1.5 s cap, briskly. From one produce stop to the next the
-  camera walks over at eye level by `HeroTargetInfo.over` (`walkOver`: along the line, up the nearest cross
-  aisle, along: never through an island; `CloseUpCamera` follows it).
+- **The way in** (`approach`, 21 Oct 2026; it used to end outside the zone, and the middle stops walked 12–15 m
+  in 1.5 s, a run): the descent comes down over the roof to the pane above the landing, through the middle of
+  its glass, over the islands, and lands at eye level on the stop's walking line 2.2 m from where the shopper
+  will stand, toward the zone's middle, already looking at the display (`HeroTargetInfo.descent`: waypoints
+  CloseUpCamera's `descentPath` threads with a centripetal Catmull-Rom; the test samples it from three overview
+  poses: it crosses the glass once, inside the opening, 0.5 m and more from every mullion, never under the
+  ceiling's margins, and over an island never below 1.6 m). Then the walk, at a stroll (`walkSpeed` 1.4 m/s,
+  `paceMs`): about 1.6 s. Landing and walk are two eased moves (a landing, then a stroll), not Bulk's one
+  chained motion. From one produce stop to the next the camera walks over at eye level by
+  `HeroTargetInfo.over` (`walkOver`: along the line, up the nearest cross aisle, along: never through an
+  island) at the same pace, at most `WALK_OVER_MAX_MS` (5 s; a longer walk hurries). The way out is the
+  same path back up through the pane, 0.8 s. Bulk keeps its walk in.
 - **The backdrop**: floral by the entrance (buckets of blooms from the foliage atlas on a wooden table under
   its header), Bulk's wall shelving and its five header boards and the scoop-bin run to the east under warm
   spots; the overview's other fixtures, dimmed.
 - **Textures** (`scripts/produce-textures.mjs`, run by `gen-hero-textures.mjs`; `ONLY=oak,chalk,… ` re-encodes
   just those): oak planks 1024² ETC1S (128 KB), brushed stainless 512² (13 KB), the kit's pine for the crates,
   `chalk` 2048 × 1280 (the 108 chalkboards in handwritten-style Outfit roughened like chalk, the 21 juice labels,
-  11 header boards), `packs` 2048 × 1280 (40 cells: cut fruit, cut veg, punnets, greens, the salad kit's bag, far
-  rows), `mounds` 1024 × 512, `foliage` 1024² RGBA (leaves, fronds, a pineapple's crown, blooms). Chalk and
+  11 header boards), `packs` 2048 × 1280 (39 of 40 cells: cut fruit, cut veg, punnets, greens, the salad kit's bag,
+  energy bites, far rows), `mounds` 1024 × 512, `foliage` 1024² RGBA (leaves, fronds, a pineapple's crown, blooms). Chalk and
   foliage are ETC1S at full quality (`etc1s-hq`): as UASTC the chalk was 1.8 MB, its slate's noise defeating
   compression. Hi 1.11 MB, lo 0.42 MB.
 - **Numbers** (close-up gate, SwiftShader, 390 × 844, 20 Oct 2026): arriving 51 calls / 163k triangles, an
