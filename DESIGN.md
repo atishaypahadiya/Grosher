@@ -183,8 +183,9 @@ grey-brown clay pot of dried wheat. Light is per pixel with analytic plank shado
 baked blobs. The stop's bin is lit lime by its rim (a faint fill, so the grain keeps its colour) and lifted a
 little: lime still means now. Over the zone every control is on the soil plate with white text, and the
 sheet takes the warm deep glass. The arrival is §7's one exception: a 480 ms descent outside the zone and a
-walk in down the aisle (360–760 ms), at most 1.24 s, a tap skips it, reduced motion cuts. When the next stop
-is in a close-up's zone, the close-up is prepared during the leg before it, so it opens with no pause. Budget:
+walk in down the aisle (360–760 ms), at most 1.24 s, a tap skips it, reduced motion cuts. When a stop is in a
+close-up's zone, its close-up is prepared ahead (on the list screen for the first stop, during the leg before
+it for the others), so the descent starts as the map appears or as Got it is tapped, without a pause. Budget:
 ≤ 70 draw calls, ≤ 250k triangles, ≤ 16 MB textures, ≤ 2.5 MB download, in every frame of the arrival too.
 
 ## 6. Data additions

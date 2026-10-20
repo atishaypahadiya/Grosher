@@ -8,13 +8,13 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { Line } from "@react-three/drei";
 import { BoxGeometry, Color, EdgesGeometry, Group, InstancedBufferAttribute, InstancedMesh, Matrix4, Mesh, MeshStandardMaterial, PerspectiveCamera, WebGLRenderTarget, type Texture } from "three";
 import type { StoreGraph } from "@grosher/core";
-import { buildBulkZone, bulkRig, grainSurface, pickTarget, shapeOf, type Target } from "./zone.ts";
+import { bulkRig, bulkZoneFor, dropBuiltZones, grainSurface, pickTarget, shapeOf, type Target } from "./zone.ts";
 import { decalMesh } from "../kit/decals.ts";
 import { bakeEnv } from "../kit/env.ts";
 import { grainLayer } from "../kit/grains.ts";
 import { hex } from "../kit/bake.ts";
 import { GRAINS } from "./recipe.ts";
-import { kitMaterials, loadHeroTextures, pickTier, pinnedTier, TIER_KEY, type KitMaterials, type TextureName, type Tier } from "../kit/materials.ts";
+import { dropPreparedTextures, kitMaterials, loadHeroTextures, pickTier, pinnedTier, prepareHeroTextures, TIER_KEY, type KitMaterials, type TextureName, type Tier } from "../kit/materials.ts";
 import { save } from "../../lib/storage.ts";
 import type { HeroTargetInfo } from "../index.ts";
 import { heroStats } from "../stats.ts";
@@ -45,7 +45,7 @@ export default function HeroZone({ store, category, itemName, active = true, onT
   const [compiled, setCompiled] = useState<KitMaterials | null>(null);
   const invalidate = useThree((s) => s.invalidate);
   const zone = useMemo(() => {
-    const z = buildBulkZone(store.outline);
+    const z = bulkZoneFor(store);
     heroStats.triangles = z.triangles;
     return z;
   }, [store]);
@@ -177,6 +177,8 @@ export default function HeroZone({ store, category, itemName, active = true, onT
       const g = group.current;
       const wrapper = g?.parent;
       if (g && wrapper && target) {
+        // the textures first (compressed: a few ms), then the buffers with the draw
+        if (textures) for (const t of Object.values(textures)) gl.initTexture(t);
         const was = wrapper.visible;
         wrapper.visible = true;
         const eye = new PerspectiveCamera(80, 1, 0.05, 120);
@@ -192,7 +194,15 @@ export default function HeroZone({ store, category, itemName, active = true, onT
       }
       setCompiled(mats);
     };
-    gl.compileAsync(group.current, camera, scene).then(done, done);
+    // compiled for a render target, as the scene is drawn (into the post-processing composer's target: no
+    // tone mapping, linear output in the program), or the first real frame compiles them again, synchronously
+    const compileTarget = new WebGLRenderTarget(1, 1);
+    const before = gl.getRenderTarget();
+    gl.setRenderTarget(compileTarget);
+    const compiling = gl.compileAsync(group.current, camera, scene);
+    gl.setRenderTarget(before);
+    compileTarget.dispose();
+    compiling.then(done, done);
     return () => {
       live = false;
     };
@@ -265,4 +275,19 @@ export default function HeroZone({ store, category, itemName, active = true, onT
       )}
     </group>
   );
+}
+
+/**
+ * Prepared ahead, before the trip's 3D canvas exists (the list screen, when the route's first stop is in this
+ * zone): the zone's geometry built and kept, its textures fetched and transcoded for this device. Only the
+ * shader compile and the GPU upload are left for the trip, and those run before the camera moves.
+ */
+export async function prepare(store: StoreGraph): Promise<void> {
+  bulkZoneFor(store);
+  await prepareHeroTextures(pickTier());
+}
+/** The route changed: drop what was prepared and not taken. */
+export function unprepare() {
+  dropPreparedTextures();
+  dropBuiltZones();
 }

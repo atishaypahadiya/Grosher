@@ -10,7 +10,7 @@
 // `envRef` carries how far the scene is into the close-up (0 overview … 1 eye level), from the camera's
 // height: the fog, the background, the overview's lights and fixtures blend on it (Scene.tsx).
 
-import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Euler, Matrix4, PerspectiveCamera, Quaternion, Vector3 } from "three";
 import type { HeroTargetInfo } from "./index.ts";
@@ -158,9 +158,10 @@ export const CloseUpCamera = forwardRef<CloseUpCameraHandle, CloseUpCameraProps>
     // was looking to the zone's open side ahead of the door, so the camera never turns to the sky
     const from = groundOf(high);
     const ahead = door.clone().add(new Vector3(0, 0, -1).applyQuaternion(doorPose.quaternion).multiplyScalar(3));
+    // ease-out, as every camera move (DESIGN.md §3): it leaves the map at once, settles into the walk
     const descent: Segment = {
       ms: DESCENT_MS,
-      ease: easeInOut,
+      ease: easeOut,
       at: (e) => {
         const a = high.position.clone().multiplyScalar((1 - e) * (1 - e));
         const b = ctrl.clone().multiplyScalar(2 * e * (1 - e));
@@ -186,8 +187,9 @@ export const CloseUpCamera = forwardRef<CloseUpCameraHandle, CloseUpCameraProps>
     return { descent, walk };
   };
 
-  // in: from wherever the overview left the camera, down outside the zone, then the walk in
-  useEffect(() => {
+  // in: from wherever the overview left the camera, down outside the zone, then the walk in (started in the
+  // commit itself, not after paint: the descent's first frame is the next one)
+  useLayoutEffect(() => {
     cam.near = 0.05;
     cam.updateProjectionMatrix();
     settled.current = false;

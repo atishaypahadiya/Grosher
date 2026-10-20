@@ -68,6 +68,110 @@ function tint(hex: string) {
 
 const merge = (gs: BufferGeometry[]) => (gs.length ? mergeGeometries(gs, false) : null);
 
+// ---------------------------------------------------------------- geometry, cached per store (module scope)
+
+/** Every fixture's detailed parts, once per store map. */
+const BUILT = new WeakMap<StoreGraph, Map<number, Built[]>>();
+function builtFor(store: StoreGraph, repeatMeters: number): Built[] {
+  let byRepeat = BUILT.get(store);
+  if (!byRepeat) BUILT.set(store, (byRepeat = new Map()));
+  let built = byRepeat.get(repeatMeters);
+  if (built) return built;
+  const departments = store.departments ?? [];
+  const all = store.fixtures ?? [];
+  const centre = { x: 0, y: 0 };
+  if (all.length) {
+    centre.x = all.reduce((s, f) => s + fixtureBox(f).cx, 0) / all.length;
+    centre.y = all.reduce((s, f) => s + fixtureBox(f).cz, 0) / all.length;
+  }
+  built = all.map((f) => {
+    const p = fixtureParams(f, departments);
+    const hull = fixtureBox(f);
+    // a wall run opens toward the store centre: local +z is map +z for horizontal runs, map −x for vertical (rotateY(−π/2) maps local z → map −x)
+    const towardCentre: 1 | -1 = p.vertical ? (centre.x < p.cx ? 1 : -1) : centre.y > p.cz ? 1 : -1;
+    const parts = generate(p, repeatMeters, { wall: f.kind === "wall", towardCentre, frontSign: frontSignOf(p, store) });
+    return { f, p, hull, parts };
+  });
+  byRepeat.set(repeatMeters, built);
+  return built;
+}
+
+/** One department's (or one finish's) merged geometry, for a given set of its fixtures. */
+interface Merged {
+  /** the department id, or `finish:<name>` */
+  key: string;
+  /** the department key and the fixtures merged: the cache's key */
+  id: string;
+  finish: Finish | null;
+  opaque: BufferGeometry | null;
+  trim: BufferGeometry | null;
+  glass: BufferGeometry | null;
+  frame: BufferGeometry | null;
+  glow: BufferGeometry | null;
+}
+const MERGED = new WeakMap<StoreGraph, Map<string, Merged>>();
+/** The store's merged departments with the fixtures in `hideKey` ("a|b|c") left out. */
+function mergedFor(store: StoreGraph, repeatMeters: number, hideKey: string): Merged[] {
+  let cache = MERGED.get(store);
+  if (!cache) MERGED.set(store, (cache = new Map()));
+  const departments = store.departments ?? [];
+  const hidden = new Set(hideKey ? hideKey.split("|") : []);
+  const byKey = new Map<string, Built[]>();
+  for (const b of builtFor(store, repeatMeters)) {
+    if (hidden.has(b.f.id)) continue;
+    const finish = departments.find((d) => d.id === b.f.department)?.finish;
+    const k = finish ? `finish:${finish}` : b.f.department ?? "_none";
+    byKey.set(k, [...(byKey.get(k) ?? []), b]);
+  }
+  const out: Merged[] = [];
+  for (const [k, list] of byKey) {
+    const id = `${repeatMeters}:${k}#${list.map((b) => b.f.id).join(",")}`;
+    let m = cache.get(id);
+    if (!m) {
+      const finish = k.startsWith("finish:") ? (k.slice(7) as Finish) : null;
+      const parts = emptyParts();
+      for (const b of list) {
+        parts.opaque.push(...b.parts.opaque);
+        // steel trim is its own mesh only under wood; everywhere else it is part of the body
+        (finish === "wood" ? parts.trim : parts.opaque).push(...b.parts.trim);
+        parts.glass.push(...b.parts.glass);
+        parts.frame.push(...b.parts.frame);
+        parts.glow.push(...b.parts.glow);
+      }
+      m = { key: k, id, finish, opaque: merge(parts.opaque), trim: merge(parts.trim), glass: merge(parts.glass), frame: merge(parts.frame), glow: merge(parts.glow) };
+      cache.set(id, m);
+    }
+    out.push(m);
+  }
+  return out;
+}
+
+const EDGES = new WeakMap<StoreGraph, Map<string, BufferGeometry | null>>();
+function edgesGeometryFor(store: StoreGraph, repeatMeters: number, hideKey: string): BufferGeometry | null {
+  let cache = EDGES.get(store);
+  if (!cache) EDGES.set(store, (cache = new Map()));
+  const key = `${repeatMeters}:${hideKey}`;
+  if (cache.has(key)) return cache.get(key)!;
+  const hidden = new Set(hideKey ? hideKey.split("|") : []);
+  const hulls = merge(builtFor(store, repeatMeters).filter((b) => !hidden.has(b.f.id)).map((b) => hullGeometry(b.hull)));
+  const geo = hulls ? new EdgesGeometry(hulls) : null;
+  cache.set(key, geo);
+  return geo;
+}
+
+/**
+ * The 3D map's fixture geometry, prepared before the map exists (the list screen, idle time, when the route
+ * starts in a hero zone): the whole store merged, and merged again without `hide` (the close-up's own and its
+ * backdrop's fixtures), so the trip's first frame and the switch into the close-up only wrap cached geometry.
+ */
+export function prepareFixtures(store: StoreGraph, repeatMeters: number, hide: string[]) {
+  mergedFor(store, repeatMeters, "");
+  edgesGeometryFor(store, repeatMeters, "");
+  const key = hide.join("|");
+  mergedFor(store, repeatMeters, key);
+  edgesGeometryFor(store, repeatMeters, key);
+}
+
 export interface FixturesProps {
   store: StoreGraph;
   textureUrl: (file: string) => string;
@@ -76,6 +180,9 @@ export interface FixturesProps {
   fromEntrance: Map<string, number>;
   /** fixtures to leave out (a hero close-up draws its own in their place) */
   hide?: string[];
+  /** fixtures that will be left out soon (a close-up being prepared): their departments are re-merged
+   * without them in idle time, so the switch costs nothing when it comes */
+  prepareHide?: string[];
   /** a close-up's blend (0 … 1): the rest of the store dims into a backdrop (darker, no glow, no outlines) */
   dimRef?: { current: number };
 }
@@ -87,8 +194,9 @@ interface Built {
   parts: Parts;
 }
 
-export function Fixtures({ store, textureUrl, repeatMeters = 2, nodes, fromEntrance, hide, dimRef }: FixturesProps) {
+export function Fixtures({ store, textureUrl, repeatMeters = 2, nodes, fromEntrance, hide, prepareHide, dimRef }: FixturesProps) {
   const hideKey = (hide ?? []).join("|");
+  const prepareKey = (prepareHide ?? []).join("|");
   const departments = useMemo(() => store.departments ?? [], [store]);
   const withTexture = useMemo(() => departments.filter((d) => d.texture && !d.finish), [departments]);
   const finishes = useMemo(() => [...new Set(departments.flatMap((d) => (d.finish ? [d.finish] : [])))], [departments]);
@@ -106,24 +214,7 @@ export function Fixtures({ store, textureUrl, repeatMeters = 2, nodes, fromEntra
     return m;
   }, [withTexture, finishes, textures]);
 
-  // Every fixture's detailed parts, once per store.
-  const built = useMemo<Built[]>(() => {
-    const centre = { x: 0, y: 0 };
-    const hidden = new Set(hideKey ? hideKey.split("|") : []);
-    const all = (store.fixtures ?? []).filter((f) => !hidden.has(f.id));
-    if (all.length) {
-      centre.x = all.reduce((s, f) => s + fixtureBox(f).cx, 0) / all.length;
-      centre.y = all.reduce((s, f) => s + fixtureBox(f).cz, 0) / all.length;
-    }
-    return all.map((f) => {
-      const p = fixtureParams(f, departments);
-      const hull = fixtureBox(f);
-      // a wall run opens toward the store centre: local +z is map +z for horizontal runs, map −x for vertical (rotateY(−π/2) maps local z → map −x)
-      const towardCentre: 1 | -1 = p.vertical ? (centre.x < p.cx ? 1 : -1) : centre.y > p.cz ? 1 : -1;
-      const parts = generate(p, repeatMeters, { wall: f.kind === "wall", towardCentre, frontSign: frontSignOf(p, store) });
-      return { f, p, hull, parts };
-    });
-  }, [store, departments, repeatMeters, hideKey]);
+  const built = useMemo(() => builtFor(store, repeatMeters), [store, repeatMeters]);
 
   const materialFor = (dept: Department | undefined) => {
     const map = dept ? textureFor.get(dept.id) ?? null : null;
@@ -136,54 +227,61 @@ export function Fixtures({ store, textureUrl, repeatMeters = 2, nodes, fromEntra
         // brushed texture, a low roughness, neutral light and a little grey of its own so the shaded sides stay steel
         neutralLight(new MeshStandardMaterial({ map: textureFor.get("finish:stainless") ?? null, color: "#F4F5F3", emissive: new Color("#6B6E6C"), emissiveIntensity: 1, roughness: 0.3, metalness: 0 }));
 
-  // Merged per department, or per finish for departments that have one.
-  const groups = useMemo(() => {
-    const byKey = new Map<string, Built[]>();
-    for (const b of built) {
-      const finish = departments.find((d) => d.id === b.f.department)?.finish;
-      const key = finish ? `finish:${finish}` : b.f.department ?? "_none";
-      byKey.set(key, [...(byKey.get(key) ?? []), b]);
-    }
-    const out: { key: string; opaque: Mesh | null; trim: Mesh | null; glass: Mesh | null; frame: Mesh | null; glow: Mesh | null }[] = [];
-    for (const [key, list] of byKey) {
-      const finish = key.startsWith("finish:") ? (key.slice(7) as Finish) : null;
-      const dept = finish ? undefined : departments.find((d) => d.id === key);
-      const parts = emptyParts();
-      for (const b of list) {
-        parts.opaque.push(...b.parts.opaque);
-        // steel trim is its own mesh only under wood; everywhere else it is part of the body
-        (finish === "wood" ? parts.trim : parts.opaque).push(...b.parts.trim);
-        parts.glass.push(...b.parts.glass);
-        parts.frame.push(...b.parts.frame);
-        parts.glow.push(...b.parts.glow);
+  // Each department's merged geometry is cached by the store (module scope: prepared ahead on the list screen,
+  // prepareFixtures); here it only gets its meshes and materials. Hiding a close-up's fixtures swaps in their
+  // departments' other merge; every other department keeps its meshes.
+  type Group = { key: string; opaque: Mesh | null; trim: Mesh | null; glass: Mesh | null; frame: Mesh | null; glow: Mesh | null };
+  const cache = useRef(new Map<string, Group>());
+  useEffect(() => () => cache.current.clear(), [built, departments, textureFor]);
+  const groupsFor = (key: string) =>
+    mergedFor(store, repeatMeters, key).map((m) => {
+      let g = cache.current.get(m.id);
+      if (!g) {
+        const dept = m.finish ? undefined : departments.find((d) => d.id === m.key);
+        g = {
+          key: m.key,
+          opaque: m.opaque ? new Mesh(m.opaque, m.finish ? finishMaterial(m.finish) : materialFor(dept)) : null,
+          trim: m.trim ? new Mesh(m.trim, STEEL) : null,
+          glass: m.glass ? new Mesh(m.glass, GLASS) : null,
+          frame: m.frame ? new Mesh(m.frame, m.finish === "stainless" ? FRAME_STEEL : FRAME) : null,
+          glow: m.glow ? new Mesh(m.glow, m.finish === "stainless" ? GLOW_STEEL : GLOW) : null,
+        };
+        cache.current.set(m.id, g);
       }
-      const opaque = merge(parts.opaque);
-      const trim = merge(parts.trim);
-      const glass = merge(parts.glass);
-      const frame = merge(parts.frame);
-      const glow = merge(parts.glow);
-      out.push({
-        key,
-        opaque: opaque ? new Mesh(opaque, finish ? finishMaterial(finish) : materialFor(dept)) : null,
-        trim: trim ? new Mesh(trim, STEEL) : null,
-        glass: glass ? new Mesh(glass, GLASS) : null,
-        frame: frame ? new Mesh(frame, finish === "stainless" ? FRAME_STEEL : FRAME) : null,
-        glow: glow ? new Mesh(glow, finish === "stainless" ? GLOW_STEEL : GLOW) : null,
-      });
-    }
-    return out;
+      return g;
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const groups = useMemo(() => groupsFor(hideKey), [built, departments, textureFor, hideKey]);
+  // prepared ahead in the trip (the next stop's close-up): the variant without the soon-hidden fixtures, in idle time
+  useEffect(() => {
+    if (!prepareKey || prepareKey === hideKey) return;
+    const w = window as Window & { requestIdleCallback?: (f: () => void, o?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
+    const run = () => {
+      groupsFor(prepareKey);
+      edgesFor(prepareKey);
+    };
+    const id = w.requestIdleCallback ? w.requestIdleCallback(run, { timeout: 2000 }) : window.setTimeout(run, 100);
+    return () => (w.cancelIdleCallback ?? clearTimeout)(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [built, departments, textureFor]);
+  }, [prepareKey, hideKey, built]);
 
   // Every hull outline in one line batch: one draw call for the whole store instead of one per department
   // (thirteen departments would otherwise spend thirteen of the seventy-call budget on outlines).
-  const edges = useMemo(() => {
-    const hulls = merge(built.map((b) => hullGeometry(b.hull)));
-    return hulls ? new LineSegments(new EdgesGeometry(hulls), EDGE_WHITE) : null;
-  }, [built]);
+  const edgeCache = useRef(new Map<string, LineSegments | null>());
+  const edgesFor = (key: string) => {
+    if (edgeCache.current.has(key)) return edgeCache.current.get(key)!;
+    const geo = edgesGeometryFor(store, repeatMeters, key);
+    const e = geo ? new LineSegments(geo, EDGE_WHITE) : null;
+    edgeCache.current.set(key, e);
+    return e;
+  };
+  useEffect(() => () => edgeCache.current.clear(), [built]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const edges = useMemo(() => edgesFor(hideKey), [built, hideKey]);
 
   // Aisle signs: one plane per labelled fixture on its entrance-facing end, one atlas texture.
   const signs = useMemo(() => {
+    // (the signs are never hidden: a close-up hides them with the outlines as it dims the store)
     const labelled = built.filter((b) => b.f.aisle);
     if (!labelled.length) return null;
     const labels = [...new Set(labelled.map((b) => b.f.aisle!))];
@@ -227,7 +325,11 @@ export function Fixtures({ store, textureUrl, repeatMeters = 2, nodes, fromEntra
     lastDim.current = k;
     applyDim(k);
   });
-  useEffect(() => () => applyDim(0), [groups]);
+  useEffect(() => {
+    lastDim.current = -1; // a new variant's meshes take the current dim on the next frame
+    return () => applyDim(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groups]);
 
   return (
     <group name="fixtures">

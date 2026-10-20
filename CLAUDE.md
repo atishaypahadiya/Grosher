@@ -598,14 +598,26 @@ Two zoom levels. The overview stays as above; a zone that has a **hero close-up*
 `src/hero/index.ts`: today Grosher's Bulk & pulses, `aisle: "BULK"`) opens at eye level when the next stop is
 in it (or a stop in it is tapped: `stopUnder` hit-tests the overlay's `data-key` items). The scene keeps the
 overview until the zone's chunk and textures are in, its programs compiled (`compileAsync`) and every buffer
-uploaded (one draw into a 1 × 1 target from the door), so no frame of the arrival stalls. **Prepared ahead:**
-when the stop after the current one is in a hero zone, the 3D map mounts that zone hidden during the current
-leg (`preload` in TripMap3D → Scene, `active={false}` on the zone: 1.2 s after the leg starts, then the next
-idle period; a route change cancels it, another item in the same zone only retargets), so when its stop
-becomes next the close-up opens at once. Measured on an M4 Pro (Metal) at 390 × 844 × 3, a floral stop then
-toor dal: "Got it" → open 94 ms, worst frame 17 ms; with `?preload=0` (the baseline) 621–779 ms with a
-167–183 ms frame. The preparing costs three long frames (50–150 ms) during the previous leg, while the map is
-still. A first stop in a hero zone still pays the pause (~0.6–1.1 s on the M4).
+uploaded (textures, then one draw into a 1 × 1 target from the door), so no frame of the arrival stalls. The
+programs are compiled with a render target bound: the scene is drawn into the post-processing composer's
+target, so its programs have no tone mapping and linear output; compiled for the screen instead, the first
+real frame compiled them all again, synchronously (the 1 × 1 draw took 177 ms on an M4; now ~20).
+**Prepared ahead**, so no descent waits:
+- *the first stop* (`hero/usePrepareFirst.ts`, in App): while the list screen is open and the planned route
+  starts in a hero zone, after 0.8 s and one step per idle period: the 3D map's chunk and the zone's, the
+  map's fixtures merged with and without the zone's (`prepareFixtures`: the merges are cached per store at
+  module scope, so the trip's first frame wraps them too), the zone's geometry (`bulkZoneFor`, cached) and its
+  textures fetched and transcoded (`prepareHeroTextures`: the KTX2 loader configured from a throwaway WebGL2
+  probe on the same GPU). A different first stop drops it; starting the trip keeps it; `?prepare=0` turns it
+  off. The zone then mounts with the map (its close-up state is set in the first render, the loaded module
+  used directly, no Suspense pass) and only compiles and uploads. One long task on the list (~90 ms on an M4).
+- *the next stop* (TripMap3D `preload` → Scene, `active={false}` on the zone): during the current leg, 1.2 s
+  after it starts, then the next idle period; a route change cancels it, another item in the same zone only
+  retargets; `?preload=0` turns it off. Its fixtures' other merge is made in idle time too (`prepareHide`).
+- The overview hides the zone's fixtures only once the close-up shows (they used to vanish while it loaded).
+Measured on an M4 Pro (Metal) at 390 × 844 × 3, the camera's first visible movement after the map appears:
+first stop prepared 200–270 ms (`?prepare=0`: 550–650); "Got it" → open for the next stop 62 ms, worst frame
+17 ms (`?preload=0`: 620–780 ms, a 150–180 ms frame). The descent eases out (DESIGN.md §3), so it moves at once.
 - **The arrival** (`CloseUpCamera`, two moves, each eased on its own; DESIGN.md §7's one exception, at most
   1.24 s, a tap anywhere skips to the end, reduced motion cuts): a descent of 480 ms on a curve that stays out
   over the walkway, never above the zone, its view on a point gliding from where the overview looked to the

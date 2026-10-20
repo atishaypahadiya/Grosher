@@ -17,7 +17,7 @@ import { OverlayProjector, type OverlayItem, type OverlayRegistry } from "./Over
 import { CameraRig, MIN_DISTANCE_PINCH, type CameraRigHandle } from "./CameraRig.tsx";
 import { Perf } from "./Perf.tsx";
 import type { Focus, SafeArea } from "./CameraRig.tsx";
-import type { HeroTargetInfo, HeroZoneComponentProps, HeroZoneEntry } from "../hero/index.ts";
+import { loadedZones, type HeroTargetInfo, type HeroZoneComponentProps, type HeroZoneEntry } from "../hero/index.ts";
 import { CloseUpCamera, type CloseUpCameraHandle } from "../hero/CloseUpCamera.tsx";
 
 /** A hero close-up as the 3D map asks for it. */
@@ -30,11 +30,12 @@ export interface CloseUpState {
   exiting: boolean;
 }
 
-// one lazy component per zone, so re-renders never re-import it
-const ZONE_COMPONENTS = new Map<string, LazyExoticComponent<ComponentType<HeroZoneComponentProps>>>();
+// one component per zone, fixed the first time it is asked for (so it never remounts): the module itself when
+// it was prepared ahead and is loaded (no Suspense pass before it mounts), else a lazy one
+const ZONE_COMPONENTS = new Map<string, LazyExoticComponent<ComponentType<HeroZoneComponentProps>> | ComponentType<HeroZoneComponentProps>>();
 const zoneComponent = (z: HeroZoneEntry) => {
   let c = ZONE_COMPONENTS.get(z.id);
-  if (!c) ZONE_COMPONENTS.set(z.id, (c = lazy(z.load)));
+  if (!c) ZONE_COMPONENTS.set(z.id, (c = loadedZones.get(z.id) ?? lazy(z.load)));
   return c;
 };
 
@@ -330,7 +331,7 @@ export function Scene({ store, textureUrl, repeatMeters, nodes, fromEntrance, fo
       {!near && <Line points={edge} color="#FFFFFF" transparent opacity={0.3} lineWidth={1} />}
 
       <Suspense fallback={null}>
-        <Fixtures store={store} textureUrl={textureUrl} repeatMeters={repeatMeters} nodes={nodes} fromEntrance={fromEntrance} hide={closeUp?.zone.hideFixtures} dimRef={closeUp ? envRef : undefined} />
+        <Fixtures store={store} textureUrl={textureUrl} repeatMeters={repeatMeters} nodes={nodes} fromEntrance={fromEntrance} hide={near ? closeUp?.zone.hideFixtures : undefined} prepareHide={zoneProps?.zone.hideFixtures} dimRef={closeUp ? envRef : undefined} />
         {!near && <Products store={store} textureUrl={textureUrl} settled={settled} priority={legFixtureIds} you={{ x: focus.you.x, z: focus.you.y }} />}
       </Suspense>
       {Zone && zoneProps && (

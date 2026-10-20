@@ -40,6 +40,8 @@ export interface HeroZoneEntry {
   /** overview fixtures the close-up replaces (they would show through it) */
   hideFixtures: string[];
   load: () => Promise<{ default: ComponentType<HeroZoneComponentProps> }>;
+  /** the same chunk's preparation: geometry and textures ahead of the trip's canvas, and its undo */
+  prepare: () => Promise<{ default: ComponentType<HeroZoneComponentProps>; prepare: (store: StoreGraph) => Promise<void>; unprepare: () => void }>;
   /** the flat shelf images for devices without the 3D close-up, by category (public/hero/<id>/<category>.webp) */
   flatImage: (category: string) => string;
 }
@@ -52,9 +54,13 @@ export const HERO_ZONES: HeroZoneEntry[] = [
     // its own three fixtures, and the ones it redraws as the backdrop seen from inside it
     hideFixtures: ["f-bulk-wall", "f-bulk-run", "f-bulk-display", "f-island3", "f-island4", "f-island7", "f-island8", "f-produce-wall", "f-run0", "f-run0-capE", "f-bws0", "f-bws0-capW", "f-bws0-capE"],
     load: () => import("./bulk/HeroZone.tsx"),
+    prepare: () => import("./bulk/HeroZone.tsx"),
     flatImage: (category) => `${import.meta.env.BASE_URL}hero/bulk/${category}.webp`,
   },
 ];
+
+/** zones whose module is already loaded (prepared ahead): the 3D map uses them directly, with no Suspense pass */
+export const loadedZones = new Map<string, ComponentType<HeroZoneComponentProps>>();
 
 export interface HeroStop {
   zone: HeroZoneEntry;

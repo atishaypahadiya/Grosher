@@ -83,7 +83,13 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
 
   // ---- hero close-ups: eye level in a zone that has one (src/hero), when the next stop is in it or a stop
   // in it is tapped; back (the pill, a swipe down) returns to the overview and is remembered for that stop
-  const [closeUp, setCloseUp] = useState<(CloseUpState & { stopId: string }) | null>(null);
+  // a trip that starts in a hero zone opens its close-up in the first render, not an effect after it: the zone
+  // (prepared on the list screen) mounts with the map and compiles while the map draws its first frames
+  const [closeUp, setCloseUp] = useState<(CloseUpState & { stopId: string }) | null>(() => {
+    const first = trip.route.legs[0];
+    const h = first?.stopId ? heroStopAt(store, bundle.categories, first.locationId) : null;
+    return h && first?.stopId ? { zone: h.zone, category: h.category, itemName: first.label, target: null, exiting: false, stopId: first.stopId } : null;
+  });
   const [flatShelf, setFlatShelf] = useState<{ image: string; name: string } | null>(null);
   const dismissed = useRef(new Set<string>());
   const closeUpRef = useRef<CloseUpCameraHandle | null>(null);

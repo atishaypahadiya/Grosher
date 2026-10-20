@@ -588,6 +588,18 @@ function flipWinding(g: BufferGeometry) {
   }
 }
 
+/** Built once per store map and kept: prepared ahead on the list screen, reused by every close-up after. */
+const built = new Map<string, ZoneBuild>();
+export function bulkZoneFor(store: { storeId: string; version?: number; outline?: [number, number][] }): ZoneBuild {
+  const key = `${store.storeId}:${store.version ?? 0}`;
+  let z = built.get(key);
+  if (!z) built.set(key, (z = buildBulkZone(store.outline)));
+  return z;
+}
+export function dropBuiltZones() {
+  built.clear();
+}
+
 /** The bin a stop points the camera at: its category's bin whose name shares the most words with the item. */
 export function pickTarget(targets: Target[], category: string, itemName: string): Target | null {
   const words = (s: string) => s.toLowerCase().replace(/[^a-z ]/g, " ").split(/\s+/).filter((w) => w && w !== "bulk");

@@ -1,3 +1,4 @@
+import { usePrepareFirstStop } from "./hero/usePrepareFirst.ts";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Router, WalkGraph, type Stop } from "@grosher/core";
 import { DEFAULT_STORE, demoSupercenter, type StoreBundle } from "@grosher/stores";
@@ -99,6 +100,8 @@ export function App({ bundle = DEFAULT_STORE }: { bundle?: StoreBundle } = {}) {
   const notFound = useMemo(() => res.results.filter((r) => !r.locationIds.length).map((r) => r.query), [res.results]);
   const plan = useMemo(() => (stops.length ? router.solve({ stops }) : null), [stops, router]);
   const baselineM = useMemo(() => (stops.length ? router.routeForOrder(stops).distanceM : 0), [stops, router]);
+  // the route's first stop in a hero zone: its close-up is prepared while the list is open
+  usePrepareFirstStop(store, bundle.categories, plan?.legs.find((l) => l.stopId)?.locationId, !trip, Object.values(bundle.textures)[0]?.repeatMeters ?? 2);
   const [picking, setPicking] = useState<{ name: string; promote: boolean } | null>(null);
   const resultFor = (name: string) => res.results.find((r) => r.query === name);
   const picker = picking && (

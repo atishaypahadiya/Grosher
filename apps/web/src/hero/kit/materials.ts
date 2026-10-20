@@ -25,10 +25,24 @@ const FILES = import.meta.glob("../assets/*.ktx2", { query: "?url", import: "def
 const urlOf = (name: string, tier: Tier) => FILES[`../assets/${name}${tier === "lo" ? ".lo" : ""}.ktx2`];
 
 let loader: KTX2Loader | null = null;
-function ktx2(gl: WebGLRenderer): KTX2Loader {
-  if (!loader) {
-    loader = new KTX2Loader().setTranscoderPath(`${import.meta.env.BASE_URL}basis/`).detectSupport(gl);
+/**
+ * The loader, configured for this device's compressed formats: from the trip's renderer, or (prepared ahead,
+ * on the list screen, before any 3D canvas exists) from a throwaway WebGL2 probe on the same GPU.
+ */
+function ktx2(gl?: WebGLRenderer): KTX2Loader | null {
+  if (loader) return loader;
+  let renderer: WebGLRenderer | null = gl ?? null;
+  if (!renderer) {
+    const probe = typeof document !== "undefined" ? document.createElement("canvas").getContext("webgl2") : null;
+    if (!probe) return null;
+    const names = ["WEBGL_compressed_texture_astc", "WEBGL_compressed_texture_etc1", "WEBGL_compressed_texture_etc", "WEBGL_compressed_texture_s3tc", "EXT_texture_compression_bptc", "WEBGL_compressed_texture_pvrtc", "WEBKIT_WEBGL_compressed_texture_pvrtc"];
+    const has = new Set(names.filter((n) => !!probe.getExtension(n)));
+    const astc = probe.getExtension("WEBGL_compressed_texture_astc") as { getSupportedProfiles?: () => string[] } | null;
+    const profiles = astc?.getSupportedProfiles?.() ?? [];
+    (probe.getExtension("WEBGL_lose_context") as { loseContext?: () => void } | null)?.loseContext?.();
+    renderer = { extensions: { has: (n: string) => has.has(n), get: (n: string) => (n === "WEBGL_compressed_texture_astc" ? { getSupportedProfiles: () => profiles } : null) } } as unknown as WebGLRenderer;
   }
+  loader = new KTX2Loader().setTranscoderPath(`${import.meta.env.BASE_URL}basis/`).detectSupport(renderer);
   return loader;
 }
 
@@ -60,9 +74,7 @@ export function pickTier(): Tier {
   return "hi";
 }
 
-export async function loadHeroTextures(gl: WebGLRenderer, tier: Tier): Promise<Record<TextureName, Texture>> {
-  const t0 = performance.now();
-  const l = ktx2(gl);
+async function fetchTextures(l: KTX2Loader, tier: Tier): Promise<Record<TextureName, Texture>> {
   const entries = await Promise.all(
     TEXTURES.map(async (name) => {
       const t = await l.loadAsync(urlOf(name, tier));
@@ -73,11 +85,40 @@ export async function loadHeroTextures(gl: WebGLRenderer, tier: Tier): Promise<R
       return [name, t] as const;
     }),
   );
-  heroStats.tier = tier;
-  heroStats.textures = entries.length;
-  heroStats.gpuBytes = entries.reduce((s, [, t]) => s + gpuBytes(t), 0);
-  heroStats.loadMs = Math.round(performance.now() - t0);
   return Object.fromEntries(entries) as unknown as Record<TextureName, Texture>;
+}
+
+/** textures fetched and transcoded ahead (prepareHeroTextures), waiting for the zone to take them */
+const prepared = new Map<Tier, Promise<Record<TextureName, Texture> | null>>();
+
+/** Fetch and transcode a tier's textures now, before any 3D canvas exists (the list screen, idle time). */
+export function prepareHeroTextures(tier: Tier): Promise<Record<TextureName, Texture> | null> {
+  let p = prepared.get(tier);
+  if (!p) {
+    const l = ktx2();
+    p = l ? fetchTextures(l, tier).catch(() => null) : Promise.resolve(null);
+    prepared.set(tier, p);
+  }
+  return p;
+}
+
+/** Drop what was prepared and not taken (the route changed): the transcoded data goes with it. */
+export function dropPreparedTextures() {
+  for (const p of prepared.values()) p.then((t) => t && Object.values(t).forEach((x) => x.dispose()));
+  prepared.clear();
+}
+
+export async function loadHeroTextures(gl: WebGLRenderer, tier: Tier): Promise<Record<TextureName, Texture>> {
+  const t0 = performance.now();
+  // prepared ahead: take them (they are this zone's now; a later close-up loads its own)
+  const ahead = prepared.get(tier);
+  prepared.delete(tier);
+  const t = (ahead && (await ahead)) || (await fetchTextures(ktx2(gl)!, tier));
+  heroStats.tier = tier;
+  heroStats.textures = TEXTURES.length;
+  heroStats.gpuBytes = Object.values(t).reduce((s, x) => s + gpuBytes(x), 0);
+  heroStats.loadMs = Math.round(performance.now() - t0);
+  return t;
 }
 
 /** Labels: `aCell` (u0, v0, du, dv), per vertex or per instance, remaps a pack's 0–1 UVs into its atlas cell. */

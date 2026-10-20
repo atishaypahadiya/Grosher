@@ -65,7 +65,7 @@ const steady = async (n) => {
 
 const rows = [];
 let lazy;
-const preload = { prepared: false, openMs: 0 };
+const preload = { prepared: false, openMs: 0, onList: false };
 try {
   await fresh("?perf=1");
   const input = page.getByLabel(/add items/i);
@@ -82,6 +82,11 @@ try {
   const again = page.getByLabel(/add items/i);
   await again.fill("toor dal (bulk)");
   await again.press("Enter");
+  // the route starts in the zone: its close-up is prepared while the list is open (chunks, fixtures, the
+  // zone's geometry and textures), before Route is tapped
+  preload.onList = await page
+    .waitForFunction(() => window.__grosherPrepared === "grosher:bulk", null, { timeout: 60_000 })
+    .then(() => true, () => false);
   // the arrival in slow motion (the page's clock 40× slower): every frame's reading, the worst kept
   await page.evaluate(() => {
     const real = performance.now.bind(performance);
@@ -167,6 +172,8 @@ console.log(`lazy: ${lazy ? "nothing of the zone fetched before the close-up" : 
 // (SwiftShader: the opening time is software rendering's; on a GPU it is ~0.1 s, see CLAUDE.md)
 console.log(`prepared ahead: ${preload.prepared ? `yes, during the previous leg; "Got it" to open ${preload.openMs} ms` : "NO: the next stop's zone was not prepared during the leg before it"}`);
 failed ||= !preload.prepared;
+console.log(`prepared on the list: ${preload.onList ? "yes, before Route (the first stop is in the zone)" : "NO: the first stop's close-up was not prepared on the list screen"}`);
+failed ||= !preload.onList;
 console.log(`tier: ${rows[0]?.hero.tier}, zone ${rows[0]?.hero.triangles.toLocaleString("en-US")} triangles, textures in ${rows[0]?.hero.loadMs} ms`);
 console.log(`budget: ≤ ${B.drawCalls} draw calls, ≤ ${B.triangles.toLocaleString("en-US")} triangles, ≤ ${B.gpuTextureMB} MB GPU textures, ≤ ${B.downloadKB.toLocaleString("en-US")} KB download`);
 if (errors.length) console.log(`page errors:\n  ${errors.slice(0, 5).join("\n  ")}`);
