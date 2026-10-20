@@ -54,9 +54,14 @@ export function uploadZone(gl: WebGLRenderer, scene: Scene, group: Object3D, vie
     });
   const rt = new WebGLRenderTarget(1, 1);
   const prev = gl.getRenderTarget();
+  // a one-off upload, rasterised to one pixel: not part of any frame the shopper sees, so it stays out of the
+  // frame's counts (the perf readout and the close-up gate read gl.info across every pass of a frame; on a
+  // slow runner this draw landed in an arrival's first sample: 283k triangles, the zone twice over)
+  const counted = { calls: gl.info.render.calls, triangles: gl.info.render.triangles, points: gl.info.render.points, lines: gl.info.render.lines };
   gl.setRenderTarget(rt);
   gl.render(scene, eye);
   gl.setRenderTarget(prev);
+  if (!gl.info.autoReset) Object.assign(gl.info.render, counted);
   rt.dispose();
   for (const o of culled) o.frustumCulled = true;
   if (warmFixtures) warmFixtures.visible = false;
