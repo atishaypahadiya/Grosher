@@ -87,7 +87,9 @@ const cuts = [
 const trims = cuts.map(([a, b], i) => `[0:v]trim=${a.toFixed(2)}:${b.toFixed(2)},setpts=PTS-STARTPTS[c${i}]`).join(";") + `;[c0][c1]concat=n=2:v=1[cut]`;
 ff(["-i", join(TMP, "raw.webm"), "-an", "-filter_complex", `${trims};[cut]scale=390:-2[v]`, "-map", "[v]", "-c:v", "libvpx-vp9", "-b:v", "0", "-crf", "40", "-row-mt", "1", "-deadline", "good", "-cpu-used", "2", join(IMG, "closeup.webm")]);
 ff(["-i", join(TMP, "raw.webm"), "-an", "-filter_complex", `${trims};[cut]scale=390:-2[v]`, "-map", "[v]", "-c:v", "libx264", "-preset", "slow", "-crf", "31", "-pix_fmt", "yuv420p", "-movflags", "+faststart", join(IMG, "closeup.mp4")]);
-execFileSync("cwebp", ["-quiet", "-q", "78", join(TMP, "poster.png"), "-o", join(IMG, "closeup-poster.webp")]);
+// 480 px, q70 (~40 KB): the poster is the project page's largest paint on a phone, and preloaded at this size
+// it keeps Lighthouse's mobile performance at 100 (780 px at q78, 106 KB, read 98–99)
+execFileSync("cwebp", ["-quiet", "-resize", "480", "0", "-q", "70", join(TMP, "poster.png"), "-o", join(IMG, "closeup-poster.webp")]);
 // the README's GIF: the first arrival only (the descent into Produce, the stroll, a second at eye level), one
 // palette, at most GIF_MAX_KB: the first rung of the ladder that fits
 const GIF_MAX_KB = 1500;
