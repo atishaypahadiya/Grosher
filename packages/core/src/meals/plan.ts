@@ -91,8 +91,11 @@ export const BOUNDS: Record<MealCategory, Record<Base, number>> = {
 const ML: Partial<Record<RawUnit, number>> = { ml: 1, l: 1000, tsp: 5, tbsp: 15, cup: 240, pinch: 0.4 };
 const G: Partial<Record<RawUnit, number>> = { g: 1, kg: 1000 };
 /** grams per millilitre when an ingredient does not say (a spoon of spice is light, a cup of rice heavy) */
+/** words that make an unknown ingredient meat or fish */
+const MEAT = /\b(lamb|mutton|goat|beef|steak|pork|chicken|turkey|duck|veal|sausages?|bacon|ham|pancetta|guanciale|chorizo|andouille|prosciutto|salami|mince|fish|salmon|tuna|cod|haddock|tilapia|mackerel|sardines?|prawns?|shrimps?|crab|lobster|mussels?|clams?|squid|anchov(y|ies))\b/i;
+
 /** grams in "a piece" when an ingredient sold by weight does not say (a knob of ginger, a pod or a stick of spice) */
-const EACH: Partial<Record<MealCategory, number>> = { aromatics: 30, spices: 1, herbs: 10, produce: 150 };
+const EACH: Partial<Record<MealCategory, number>> = { aromatics: 30, spices: 1, herbs: 10, produce: 150, protein: 180 };
 const DENSITY: Partial<Record<MealCategory, number>> = { spices: 0.5, grains: 0.8, pulses: 0.85, sweet: 0.85, nuts: 0.6, dairy: 1.03, oils: 0.92, condiments: 1.1, canned: 1 };
 
 /** normalise a unit word ("Tbsp", "cloves", "grams", "pcs") to a RawUnit, or null */
@@ -236,6 +239,8 @@ export function adHocIngredient(name: string, unit: RawUnit): IngredientInfo {
   // measured by the spoon: a spice or a flavouring, bought as a small jar
   if (unit === "tsp" || unit === "tbsp" || unit === "pinch") return { key: k, name: display, category: "spices", base: "g", density: 0.6, buy: { kind: "pack", sizes: [50] } };
   if (unit === "bunch") return { key: k, name: display, category: "herbs", base: "count", bunchG: 50, buy: { kind: "count" } };
+  // meat and fish the table does not list (guanciale, andouille, mussels) take the meat bound, not "other"'s
+  if (MEAT.test(clean) && (G[unit] || unit === "piece")) return { key: k, name: display, category: "protein", base: "g", eachG: 180, buy: { kind: "loose", step: 100 } };
   const base: Base = G[unit] ? "g" : ML[unit] ? "ml" : "count";
   return { key: k, name: display, category: "other", base, buy: base === "count" ? { kind: "count" } : { kind: "loose", step: base === "g" ? 100 : 250 } };
 }

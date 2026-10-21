@@ -7,7 +7,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import type { IngredientInfo, PlannedDish, ShoppingLine } from "@grosher/core";
 import { INGREDIENT_BY_KEY } from "@grosher/stores/meals";
-import { dishAskerFor, parseDishes, planLines, resolveUnknown, tableFirst, type DishAsker, type DishState } from "../lib/meals.ts";
+import { dishAskerFor, forgetCached, parseDishes, planLines, resolveUnknown, tableFirst, type DishAsker, type DishState } from "../lib/meals.ts";
 import type { ResolverSettings } from "../lib/settings.ts";
 import { Num } from "./Num.tsx";
 import { IconClose } from "./Icons.tsx";
@@ -62,6 +62,7 @@ export function MealSheet({ settings, asker: given, onAdd, onClose }: MealSheetP
     setPlanned(t.planned);
     setAdHoc([]);
     setEdits({});
+    void forgetCached(t.states.filter((d) => d.status === "table").map((d) => d.query)).catch(() => {});
     if (t.unknown.length) ask(t.unknown);
   };
 

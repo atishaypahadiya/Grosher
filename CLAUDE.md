@@ -432,7 +432,10 @@ when the whole phrase is not a dish: "mac and cheese" stays one) and people (def
 list. **Local model only: never Claude or any cloud model** (the worker's `POST /dishes` answers every dish
 unanswered under the anthropic provider). Sources in order: (1) the dish table (`DISHES`, 110, 64 Indian, each per two
 servings with its `core` keys; `matchDish`: a name or alias exactly, else the resolver's `similarity` ≥ .8); (2) the
-cache (IndexedDB `dish:<normalised name>:2`, a `SCHEMAS` entry: the model's raw lines, validated again on every use);
+cache (IndexedDB `dish:<normalised name>:2`, a `SCHEMAS` entry: the model's raw lines, validated again on every use,
+stamped with `DISH_TABLE_HASH` (cyrb53 over the table and the ingredients): an answer from another table version, or
+from before the stamp, is deleted and the dish asked again; a dish the table knows never reads the cache, and its old
+answer is deleted when it is planned, so a phone that asked the model for rogan josh gets the table's next time);
 (3) the model, **one call a dish** (asked for several in one answer, qwen3:8b wrote the first and closed the JSON),
 sequentially (two at once took as long: Ollama runs one at a time), compact one-line JSON (indented was ~45 tokens an
 ingredient, one line ~26; the prompt's format example has no real ingredient names: with "basmati rice" in it, basmati
@@ -444,7 +447,9 @@ not reached are unanswered), the Mac unreachable → every dish unanswered at on
 (`checkModelIngredients`): no name, an unknown unit or no positive quantity → dropped; water and "garnish" skipped; a
 name matched to `INGREDIENTS` (aliases, then similarity ≥ .85) or made ad hoc (its own name; spoon-measured → a 50 g
 jar, by the bunch → a bunch, else loose or by the piece); the same ingredient twice adds up; past its category's
-`BOUNDS` for two servings → capped; pantry is the table's word for a known ingredient (the model called butter a
+`BOUNDS` for two servings → capped (meat and fish 900 g: a curry is 300–600 g, bone-in legs 750; an unknown cut
+named by `MEAT` takes it too, not "other"'s 1 kg, which is what capped a live "lamb shoulder" before lamb was an
+ingredient; a piece of meat is 180 g; on the 10-dish fixture no bound fires, the highest meat line 500 g); pantry is the table's word for a known ingredient (the model called butter a
 staple), the model's for an ad-hoc one. The sheet names what was dropped or capped. **Aggregation** (`aggregate`):
 scaled by people ÷ 2, converted to each ingredient's base (g, ml or pieces: `eachG`, `density`, `bunchG`,
 `partsPerUnit` for garlic cloves and bread slices), merged across dishes, then rounded up once (`purchase`: the

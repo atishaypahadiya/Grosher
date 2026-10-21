@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, test } from "vitest";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { dbClearMemoryFallback, dbGet } from "../src/lib/db.ts";
-import { cachedDish, dishAskerFor, dishKey, parseDishes, resolveUnknown, tableFirst, type DishAsker } from "../src/lib/meals.ts";
+import { cacheDish, cachedDish, dishAskerFor, dishKey, parseDishes, resolveUnknown, tableFirst, type DishAsker } from "../src/lib/meals.ts";
+import { dbSet } from "../src/lib/db.ts";
+import { DISH_TABLE_HASH } from "@grosher/stores/meals";
 import { mergeIntoList } from "../src/lib/mealsMerge.ts";
 import { DEFAULT_SETTINGS } from "../src/lib/settings.ts";
 import { MealSheet } from "../src/components/MealSheet.tsx";
@@ -38,6 +40,33 @@ describe("cook mode: the plan", () => {
     await resolveUnknown(["beef rendang"], empty, (_q, r) => out.push(r));
     expect(out).toEqual([null]);
     expect(await dbGet(dishKey("beef rendang"), "none")).toBe("none");
+  });
+
+  test("precedence: the table beats a cached model answer; an answer from another table version is dropped", async () => {
+    // a phone that asked the model for rogan josh before it was in the table
+    await cacheDish("rogan josh", CARBONARA, "an-older-table");
+    const asker = fakeAsker(() => CARBONARA);
+    render(<MealSheet settings={DEFAULT_SETTINGS} asker={asker} onAdd={() => {}} onClose={() => {}} />);
+    fireEvent.change(screen.getByLabelText("Dishes"), { target: { value: "rogan josh" } });
+    fireEvent.click(screen.getByRole("button", { name: "Make the list" }));
+    expect(screen.getByTestId("meal-dish").dataset.status).toBe("table");
+    expect((screen.getByLabelText("Edit Lamb") as HTMLInputElement).value).toBe("Lamb 1 kg");
+    expect(screen.queryByText("estimated")).toBeNull();
+    await waitFor(async () => expect(await dbGet(dishKey("rogan josh"), "gone")).toBe("gone"));
+    expect(asker.asked).toEqual([]);
+    // even under this table's hash, a table dish never reads the cache
+    await cacheDish("sarson ka saag", CARBONARA);
+    expect(tableFirst(["sarson ka saag"]).states[0].status).toBe("table");
+    // a dish the table does not know: a stale answer (another hash, or none from before the stamp) is asked again
+    await cacheDish("beef rendang", CARBONARA, "an-older-table");
+    await dbSet(dishKey("laksa"), { dish: "laksa", ingredients: CARBONARA, at: 1 });
+    expect(await cachedDish("beef rendang")).toBeNull();
+    expect(await cachedDish("laksa")).toBeNull();
+    expect(await dbGet(dishKey("beef rendang"), "gone")).toBe("gone");
+    const again = fakeAsker(() => CARBONARA);
+    await resolveUnknown(["beef rendang"], again, () => {});
+    expect(again.asked).toEqual([["beef rendang"]]);
+    expect((await cachedDish("beef rendang"))?.table).toBe(DISH_TABLE_HASH);
   });
 
   test("into the list: a plain item gives way to the line with its quantity; nothing twice", () => {

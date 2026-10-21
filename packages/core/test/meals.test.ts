@@ -192,3 +192,30 @@ test("a cut-off answer keeps the ingredients it finished", () => {
   assert.deepEqual(parseDishAnswer(parseDishJson(cut))?.map((i) => i.name), ["x"]);
   assert.equal(parseDishJson('{"ingred'), null);
 });
+
+test("the meat and fish bound: real recipes for two are never clamped, a cut for a crowd is", () => {
+  const meat: IngredientInfo[] = [
+    { key: "lamb", name: "Lamb", category: "protein", base: "g", buy: { kind: "pack", sizes: [500, 1000] }, aliases: ["lamb shoulder", "mutton"] },
+    { key: "chicken", name: "Chicken thighs", category: "protein", base: "g", buy: { kind: "pack", sizes: [500, 1000] }, aliases: ["chicken breast"] },
+    { key: "white-fish", name: "White fish", category: "protein", base: "g", buy: { kind: "pack", sizes: [400] } },
+  ];
+  // a curry's 300–600 g, bone-in chicken legs at 750 g, a fish curry's 500 g, two chicken breasts
+  const real = checkModelIngredients(
+    [
+      { name: "lamb shoulder", quantity: 600, unit: "g" },
+      { name: "chicken breast", quantity: 2, unit: "piece" },
+      { name: "white fish", quantity: 500, unit: "g" },
+      { name: "andouille sausage", quantity: 200, unit: "g" },
+    ],
+    meat,
+  );
+  assert.deepEqual(real.clamped, []);
+  assert.deepEqual(real.dropped, []);
+  assert.deepEqual(real.items.map((i) => [i.key, Math.round(i.qty)]), [["lamb", 600], ["chicken", 360], ["white-fish", 500], ["adhoc:andouille sausage", 200]]);
+  assert.equal(real.adHoc[0].category, "protein");
+  assert.deepEqual(checkModelIngredients([{ name: "chicken", quantity: 750, unit: "g" }], meat).clamped, []);
+  // what the deployed chain's rogan josh asked for (21 Oct 2026): 1.5 kg of lamb shoulder for two
+  assert.deepEqual(checkModelIngredients([{ name: "lamb shoulder", quantity: 1500, unit: "g" }], meat).clamped, [{ name: "Lamb", from: "1.5 kg", to: "900 g" }]);
+  // an unknown cut takes the same bound, not "other"'s kilogram
+  assert.deepEqual(checkModelIngredients([{ name: "guanciale", quantity: 1200, unit: "g" }], meat).clamped, [{ name: "Guanciale", from: "1.2 kg", to: "900 g" }]);
+});

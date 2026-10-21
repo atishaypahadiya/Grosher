@@ -86,7 +86,7 @@ export const SCHEMAS: Schema[] = [
   { match: (k) => k.startsWith("survey:"), version: 1, migrations: [(x) => x], valid: (x) => x === null || (isObj(x) && x.format === "grosher.survey") },
   { match: (k) => k.startsWith("survey-photo:"), version: 1, migrations: [(x) => x], valid: (x) => x === null || isObj(x) },
   // cook mode's model answers (lib/meals.ts): one dish's lines for two servings, as the model gave them
-  { match: (k) => k.startsWith("dish:"), version: 1, migrations: [(x) => x], valid: (x) => x === null || (isObj(x) && isStr(x.dish) && arrOf(x.ingredients, (i) => isObj(i) && isStr(i.name)) && isNum(x.at)) },
+  { match: (k) => k.startsWith("dish:"), version: 1, migrations: [(x) => x], valid: (x) => x === null || (isObj(x) && isStr(x.dish) && arrOf(x.ingredients, (i) => isObj(i) && isStr(i.name)) && isNum(x.at) && (x.table === undefined || isStr(x.table))) },
 ];
 
 /** anything not listed above: versioned all the same, any value but undefined passes */

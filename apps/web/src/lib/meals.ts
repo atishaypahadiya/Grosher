@@ -4,7 +4,9 @@
 // answer cache in IndexedDB, and the merge into the list.
 //
 // Sources, in order: the table (exact, then the resolver's similarity), the cache (`dish:<normalised name>:2`, the
-// model's lines for two servings as it gave them, validated again on every use), the model. A dish the model cannot
+// model's lines for two servings as it gave them, validated again on every use, and stamped with the dish table's
+// hash: an answer from another version of the table is dropped), the model. The table always wins: a dish it knows
+// never reads the cache, and its old cached answer is deleted. A dish the model cannot
 // answer (the Mac asleep, a timeout, nothing usable) is "unanswered": the sheet says so and the rest stand.
 
 import {
@@ -27,7 +29,7 @@ import {
   type PlannedDish,
   type ShoppingLine,
 } from "@grosher/core";
-import { DISHES, INGREDIENTS } from "@grosher/stores/meals";
+import { DISH_TABLE_HASH, DISHES, INGREDIENTS } from "@grosher/stores/meals";
 import { dbGet, dbSet } from "./db.ts";
 import type { ResolverSettings } from "./settings.ts";
 
@@ -119,10 +121,22 @@ export interface CachedDish {
   dish: string;
   ingredients: ModelIngredient[];
   at: number;
+  /** the dish table it was asked against (`DISH_TABLE_HASH`); missing on answers from before the stamp */
+  table?: string;
 }
 
-export const cachedDish = (dish: string) => dbGet<CachedDish | null>(dishKey(dish), null);
-export const cacheDish = (dish: string, ingredients: ModelIngredient[]) => dbSet(dishKey(dish), { dish, ingredients, at: Date.now() } satisfies CachedDish);
+/** a cached answer, if it was asked against this dish table; one from another table is deleted and not used */
+export async function cachedDish(dish: string, table = DISH_TABLE_HASH): Promise<CachedDish | null> {
+  const hit = await dbGet<CachedDish | null>(dishKey(dish), null);
+  if (hit && hit.table !== table) {
+    await dbSet(dishKey(dish), undefined);
+    return null;
+  }
+  return hit;
+}
+export const cacheDish = (dish: string, ingredients: ModelIngredient[], table = DISH_TABLE_HASH) => dbSet(dishKey(dish), { dish, ingredients, at: Date.now(), table } satisfies CachedDish);
+/** a dish the table answers needs no cached model answer: the table always wins, and the old answer goes */
+export const forgetCached = (dishes: string[]) => Promise.all(dishes.map((d) => dbSet(dishKey(d), undefined))).then(() => {});
 
 // ---------------------------------------------------------------- the plan
 
