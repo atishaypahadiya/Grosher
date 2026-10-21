@@ -332,8 +332,9 @@ qwen3:14b at 10 GB) would evict the least recently used one: keep the dev server
 (`TURNSTILE_SECRET` secret; the visitor's IP goes to that check only). It stores `{email (lower-cased), list
 (updates | pilot), created_at}` in D1 (`grosher-waitlist`, binding `WAITLIST`, `migrations/0001_waitlist.sql`, then
 `0002`: UNIQUE (email, list), so an address can be on both lists but never twice on one), inserting with ON CONFLICT
-DO NOTHING; a repeat answers `{ok: true, already: true}` and the form says "You're already on the list" (each try
-still needs a fresh Turnstile token, so the list cannot be checked in bulk). No IP, no user agent.
+DO NOTHING. A new sign-up and a repeat get the identical answer: 200 `{ok: true}`, the form's "You're on the list.
+Thanks!", and the same time (one query either way, and the answer waits out `MIN_ANSWER_MS`, 400 ms, from the
+insert's start), so the form cannot tell anyone who is on the list. No IP, no user agent.
 Remove an address on request: `npx wrangler d1 execute grosher-waitlist --remote --command "DELETE FROM waitlist WHERE
 email = '…'"`. A double opt-in email would need a sending provider and a domain of our own with SPF and DKIM (a
 pages.dev address cannot send); none is set up.

@@ -2,8 +2,9 @@
 //
 //   request   {email, token, list?: "updates" | "pilot"}   (token: the Turnstile widget's response)
 //   stored    waitlist(email, list, created_at), UNIQUE (email, list)   (no IP address, no user agent, nothing else)
-//   answers   200 {ok: true} for a new sign-up, 200 {ok: true, already: true} for an address already on that list
-//             (the form says so; each try still costs a fresh Turnstile token, so the list cannot be checked in bulk);
+//   answers   200 {ok: true} for a new sign-up and for an address already on that list alike: the same status, the
+//             same body and the same time (the insert is one query either way, and the answer waits out MIN_ANSWER_MS
+//             from its start), so the form cannot be used to learn who is on the list;
 //             400 a bad email or a missing token; 403 a foreign origin or a failed Turnstile check;
 //             429 over the per-IP limit (WAITLIST_LIMITER, 5 a minute); 503 not configured (no secret or no database)
 //
@@ -29,6 +30,9 @@ export interface WaitlistEnv {
 
 export const WAITLIST_LISTS = ["updates", "pilot"] as const;
 const DEFAULT_ORIGIN = "https://grosher.pages.dev";
+/** every accepted sign-up answers no sooner than this after its insert starts (a write and a skipped duplicate take
+ *  slightly different times; this hides the difference) */
+export const MIN_ANSWER_MS = 400;
 const SITEVERIFY = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 /** a plain address: something@something.tld, no spaces, at most 254 characters */
 const EMAIL = /^[^\s@]{1,64}@[^\s@]+\.[^\s@]{2,}$/;
@@ -41,7 +45,7 @@ export const normalEmail = (s: unknown): string | null => {
 
 const originOk = (origin: string | undefined, allowed: string) => origin === allowed || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin ?? "");
 
-export async function waitlist(c: Context<{ Bindings: WaitlistEnv }>, fetchImpl: typeof fetch): Promise<Response> {
+export async function waitlist(c: Context<{ Bindings: WaitlistEnv }>, fetchImpl: typeof fetch, minAnswerMs = MIN_ANSWER_MS): Promise<Response> {
   const env = c.env ?? {};
   if (!originOk(c.req.header("origin"), env.WAITLIST_ORIGIN ?? DEFAULT_ORIGIN)) return c.json({ error: "forbidden" }, 403);
   if (env.WAITLIST_LIMITER) {
@@ -74,7 +78,10 @@ export async function waitlist(c: Context<{ Bindings: WaitlistEnv }>, fetchImpl:
     return c.json({ error: "the check could not be verified; try again" }, 503);
   }
   if (!verified) return c.json({ error: "the check failed; try again" }, 403);
-  // UNIQUE (email, list): a repeat changes no row, and says so
-  const r = await env.WAITLIST.prepare("INSERT INTO waitlist (email, list, created_at) VALUES (?, ?, ?) ON CONFLICT (email, list) DO NOTHING").bind(email, list, new Date().toISOString()).run();
-  return c.json(r.meta?.changes === 0 ? { ok: true, already: true } : { ok: true });
+  // UNIQUE (email, list): a repeat changes no row; the answer does not say which happened, in what it says or when
+  const started = Date.now();
+  await env.WAITLIST.prepare("INSERT INTO waitlist (email, list, created_at) VALUES (?, ?, ?) ON CONFLICT (email, list) DO NOTHING").bind(email, list, new Date().toISOString()).run();
+  const wait = minAnswerMs - (Date.now() - started);
+  if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
+  return c.json({ ok: true });
 }

@@ -183,22 +183,31 @@ describe("POST /waitlist", () => {
     app.request("/waitlist", { method: "POST", body: JSON.stringify(body), headers: { "content-type": "application/json", origin } }, env);
   const env = { TURNSTILE_SECRET: "s", WAITLIST: db };
 
-  test("stores the address, lower-cased, once per list; a repeat is told it is already on the list", async () => {
-    const app = createApp(undefined, verify(true));
-    const r = await post(app, { email: "  Shopper@Example.com ", token: "t", list: "pilot" }, env);
-    expect(r.status).toBe(200);
-    expect(await r.json()).toEqual({ ok: true });
+  test("stores the address, lower-cased, once per list; a repeat gets the very same answer, status and time", async () => {
+    const app = createApp(undefined, verify(true), 120);
+    const timed = async (body: unknown) => {
+      const t0 = Date.now();
+      const r = await post(app, body, env);
+      return { status: r.status, text: await r.text(), ms: Date.now() - t0 };
+    };
+    const first = await timed({ email: "  Shopper@Example.com ", token: "t", list: "pilot" });
     expect(rows.at(-1)!.slice(0, 2)).toEqual(["shopper@example.com", "pilot"]);
-    const again = await post(app, { email: "SHOPPER@example.com", token: "t", list: "pilot" }, env);
-    expect(again.status).toBe(200);
-    expect(await again.json()).toEqual({ ok: true, already: true });
+    const repeat = await timed({ email: "SHOPPER@example.com", token: "t", list: "pilot" });
+    expect(rows.filter((r) => r[0] === "shopper@example.com" && r[1] === "pilot")).toHaveLength(1);
+    // identical: status and body byte for byte, and both held to the floor (no faster answer for a repeat)
+    expect(repeat.status).toBe(first.status);
+    expect(repeat.status).toBe(200);
+    expect(repeat.text).toBe(first.text);
+    expect(JSON.parse(first.text)).toEqual({ ok: true });
+    expect(first.ms).toBeGreaterThanOrEqual(115);
+    expect(repeat.ms).toBeGreaterThanOrEqual(115);
     // the other list is a separate sign-up
-    expect(await (await post(app, { email: "shopper@example.com", token: "t", list: "updates" }, env)).json()).toEqual({ ok: true });
+    await post(app, { email: "shopper@example.com", token: "t", list: "updates" }, env);
     expect(rows.filter((r) => r[0] === "shopper@example.com")).toHaveLength(2);
   });
 
   test("refuses a bad address, a missing or failed check, a foreign origin, too many tries, and runs only when configured", async () => {
-    const ok = createApp(undefined, verify(true));
+    const ok = createApp(undefined, verify(true), 0);
     expect((await post(ok, { email: "not an email", token: "t" }, env)).status).toBe(400);
     expect((await post(ok, { email: "a@b.co" }, env)).status).toBe(400);
     expect((await post(createApp(undefined, verify(false)), { email: "a@b.co", token: "t" }, env)).status).toBe(403);

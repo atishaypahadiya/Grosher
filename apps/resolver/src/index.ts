@@ -77,7 +77,7 @@ async function guard(c: Context<{ Bindings: Env }>): Promise<Response | null> {
 }
 
 /** The app, with the classifier and the health probe's fetch injectable for tests. */
-export function createApp(classifier?: Classifier, fetchImpl: typeof fetch = (...a) => fetch(...a)) {
+export function createApp(classifier?: Classifier, fetchImpl: typeof fetch = (...a) => fetch(...a), waitlistMinMs?: number) {
   const app = new Hono<{ Bindings: Env }>();
   app.use("*", async (c, next) => cors({ origin: c.env?.ALLOWED_ORIGIN ?? "*", allowMethods: ["GET", "POST", "OPTIONS"] })(c, next));
   app.get("/health", async (c) => {
@@ -121,7 +121,7 @@ export function createApp(classifier?: Classifier, fetchImpl: typeof fetch = (..
     }
   });
   // the project page's "Get notified" form (src/waitlist.ts): its own origin check and limit, not the resolver's
-  app.post("/waitlist", (c) => waitlist(c, fetchImpl));
+  app.post("/waitlist", (c) => waitlist(c, fetchImpl, waitlistMinMs));
 
   app.post("/resolve", async (c) => {
     const denied = await guard(c);
