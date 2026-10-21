@@ -1,5 +1,5 @@
-// Camera: perspective, tilt 58° from vertical, yaw −18°, framing the current
-// leg; eases 480 ms to every new framing; flattens to top-down on request.
+// Camera: perspective, tilt 58° from vertical, yaw −18°, framing the route
+// ahead (this leg and the next two); eases 480 ms to every new framing; flattens to top-down on request.
 // Gestures come from the container (see TripMap3D) through the ref API.
 
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
@@ -67,10 +67,9 @@ const boxOf = (qs: { x: number; y: number }[]): Box => ({
 
 /**
  * Solve the framing in screen space on a scratch camera.
- *  - fit: the leg's path plus the next stop, padded 15%, inside the map area
- *    between the header strip and the bottom sheet; next stop at that area's
- *    upper third, the distance grows until the you-dot reaches its lower third
- *    when the leg has the depth; never closer than a 30 m visible span.
+ *  - fit: the route ahead (this leg's path and the next two legs', the stops
+ *    that have cards), padded 15%, centred in the map area between the header
+ *    strip and the bottom sheet; never closer than a 30 m visible span.
  *  - slide: toward the store footprint within the slack the rule leaves, in
  *    both directions, so neither empty floor nor sky is kept for nothing.
  *  - hard constraints: both endpoints (you, next) end inside the padded area;
@@ -90,9 +89,6 @@ export function solveFraming(focus: Focus, flat: boolean, aspect: number, yawDeg
   const ndcTop = 1 - 2 * safe.top;
   const ndcBot = -1 + 2 * safe.bottom;
   const height = ndcTop - ndcBot;
-  const third = height / 3;
-  const yNext = ndcTop - third;
-  const yYou = ndcBot + third;
   const PAD = 0.15;
   const padY = (height * PAD) / 2;
   const availY = height - 2 * padY;
@@ -122,20 +118,14 @@ export function solveFraming(focus: Focus, flat: boolean, aspect: number, yawDeg
     for (let i = 0; i < 10; i++) {
       place();
       const box = boxOf(pts.map(ndc));
-      const you = ndc(focus.you);
-      const next = focus.next ? ndc(focus.next) : null;
-      let ratio = Math.max((box.maxX - box.minX) / availX, (box.maxY - box.minY) / availY);
-      if (next) ratio = Math.max(ratio, (next.y - you.y) / (yNext - yYou));
+      // the route ahead (this leg and the next two) fits the padded band between the top bar and the card
+      const ratio = Math.max((box.maxX - box.minX) / availX, (box.maxY - box.minY) / availY);
       if (ratio > 1.001) distance = Math.min(MAX_DISTANCE, distance * ratio);
       else if (ratio < 0.9 && distance > minD) distance = Math.max(minD, distance * Math.max(ratio, 0.6));
       place();
       const box2 = boxOf(pts.map(ndc));
-      const you2 = ndc(focus.you);
-      const next2 = focus.next ? ndc(focus.next) : null;
-      let errY = next2 ? next2.y - yNext : you2.y - (ndcTop + ndcBot) / 2;
-      if (box2.minY - errY < yLo) errY -= yLo - (box2.minY - errY);
-      if (box2.maxY - errY > yHi) errY += box2.maxY - errY - yHi;
-      shiftContent(-(box2.minX + box2.maxX) / 2, -errY);
+      // centred in the band, so the route is not parked in a corner over empty floor
+      shiftContent(-(box2.minX + box2.maxX) / 2, (ndcTop + ndcBot) / 2 - (box2.minY + box2.maxY) / 2);
     }
 
     // ---- slide toward the store footprint within the slack
@@ -151,7 +141,6 @@ export function solveFraming(focus: Focus, flat: boolean, aspect: number, yawDeg
         ].map(ndc),
       );
       const lb = boxOf(pts.map(ndc));
-      const nextY = focus.next ? ndc(focus.next).y : null;
       let sx = 0;
       if (fb.minX > -1) sx = -(fb.minX + 1);
       else if (fb.maxX < 1) sx = 1 - fb.maxX;
@@ -160,12 +149,8 @@ export function solveFraming(focus: Focus, flat: boolean, aspect: number, yawDeg
       if (fb.maxY < ndcTop) sy = ndcTop - fb.maxY;
       else if (fb.minY > ndcBot) sy = ndcBot - fb.minY;
       sx = Math.max(xLo - lb.minX, Math.min(xHi - lb.maxX, sx));
-      let syMin = yLo - lb.minY;
-      let syMax = yHi - lb.maxY;
-      if (nextY !== null) {
-        syMin = Math.max(syMin, yNext - third / 2 - nextY);
-        syMax = Math.min(syMax, yNext + third / 2 - nextY);
-      }
+      const syMin = yLo - lb.minY;
+      const syMax = yHi - lb.maxY;
       if (syMin <= syMax) sy = Math.max(syMin, Math.min(syMax, sy));
       else sy = 0;
       shiftContent(sx, sy);

@@ -9,6 +9,8 @@ import { IconArrowRight, IconChevronDown, IconClose, IconGear, IconMic, IconPlus
 
 export interface ListScreenProps {
   store: StoreGraph;
+  /** a hero list to offer when the list is empty ("Try a sample list") */
+  sample?: { name: string; items: string[] };
   items: string[];
   results: ResolveResult[];
   plan: Route | null;
@@ -42,7 +44,7 @@ export const splitItems = (text: string) =>
     .map((s) => s.trim())
     .filter(Boolean);
 
-export function ListScreen({ store, items, results, plan, baselineM, usual, asking, warming, offline, offlineNote, onAdd, onRemove, onReplace, memory, onLoadUsual, onOpenLists, onOpenSettings, reset, onTellWhere, onRoute, resume }: ListScreenProps) {
+export function ListScreen({ store, sample, items, results, plan, baselineM, usual, asking, warming, offline, offlineNote, onAdd, onRemove, onReplace, memory, onLoadUsual, onOpenLists, onOpenSettings, reset, onTellWhere, onRoute, resume }: ListScreenProps) {
   const [draft, setDraft] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
@@ -117,7 +119,7 @@ export function ListScreen({ store, items, results, plan, baselineM, usual, aski
             Lists
           </button>
           <button type="button" className="pill soil-ghost" onClick={() => setHint("One store so far: Grosher.")}>
-            Change
+            Store
           </button>
           {onOpenSettings && (
             <button type="button" className="pill soil-ghost circle" aria-label="Settings" onClick={onOpenSettings}>
@@ -133,7 +135,7 @@ export function ListScreen({ store, items, results, plan, baselineM, usual, aski
         not their layout.
       </h2>
 
-      <form className="add-pill glass" onSubmit={submit}>
+      <form className="add-pill glass" data-focus-host onSubmit={submit}>
         <IconPlus className="plus" />
         <input
           value={listening && interim ? interim : draft}
@@ -141,7 +143,7 @@ export function ListScreen({ store, items, results, plan, baselineM, usual, aski
           className={listening && interim ? "interim" : undefined}
           onChange={(e) => setDraft(e.target.value)}
           onPaste={onPaste}
-          placeholder={speechSupported() ? "Add items, paste a list, or hold to speak" : "Add items or paste a list"}
+          placeholder={speechSupported() ? "Add items or hold to speak" : "Add items or paste a list"}
           aria-label="Add items"
           autoCapitalize="none"
           autoCorrect="off"
@@ -222,7 +224,17 @@ export function ListScreen({ store, items, results, plan, baselineM, usual, aski
         )}
         {offline && !asking && <p className="offline-note">{offlineNote ?? "Resolver offline · unknown items need a tap"}</p>}
         {items.length === 0 ? (
-          <p className="row-item muted">Nothing yet. Add the first item above.</p>
+          <div className="row-item empty-row">
+            <p className="muted">Nothing yet. Add the first item above.</p>
+            {sample && (
+              <button type="button" className="pill white sample" onClick={() => onAdd(sample.items)}>
+                Try a sample list
+                <span className="muted">
+                  {sample.name} · {sample.items.length} items
+                </span>
+              </button>
+            )}
+          </div>
         ) : (
           <ul className="rows">
             {items.map((name) => {
@@ -237,7 +249,8 @@ export function ListScreen({ store, items, results, plan, baselineM, usual, aski
                   <button type="button" className="row-main" onClick={() => setSelected(isSel ? null : name)} aria-expanded={isSel}>
                     <span className="name">
                       {r && <SourceGlyph source={r.source} />}
-                      {r?.canonicalName ?? name}
+                      {/* what the shopper typed, never replaced: the shelf it resolved to is the chip's */}
+                      {name}
                     </span>
                     {r && unknown && <span className="sub">{r.department ? `Needs a place · probably ${r.department}` : "Needs a place"}</span>}
                   </button>

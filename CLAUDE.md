@@ -326,6 +326,16 @@ and qwen2.5vl:7b at 8.0 GB (4096 context), 14.1 GB together, so a survey's sign 
 model loaded (measured: both resident after a read). A third model (another client, a dev server set to
 qwen3:14b at 10 GB) would evict the least recently used one: keep the dev server on qwen3:8b.
 
+**The waitlist** (`src/waitlist.ts`, `POST /waitlist`, the project page's form): only from the project page's origin
+(`WAITLIST_ORIGIN`, default `https://grosher.pages.dev`; localhost in dev), its own per-IP limit (`WAITLIST_LIMITER`,
+5 a minute), an email (≤ 254, one plain address) and a Turnstile token verified with Cloudflare's siteverify
+(`TURNSTILE_SECRET` secret; the visitor's IP goes to that check only). It stores `{email (lower-cased), list
+(updates | pilot), created_at}` in D1 (`grosher-waitlist`, binding `WAITLIST`, `migrations/0001_waitlist.sql`),
+`INSERT OR IGNORE`, and answers `{ok: true}` for a new and an already-listed address alike. No IP, no user agent.
+Remove an address on request: `npx wrangler d1 execute grosher-waitlist --remote --command "DELETE FROM waitlist WHERE
+email = '…'"`. A double opt-in email would need a sending provider and a domain of our own with SPF and DKIM (a
+pages.dev address cannot send); none is set up.
+
 The gate only passes `POST /api/chat` and `GET /api/ps` with the exact bearer token
 (constant-time compare, 64 KB bodies); everything else is 404 / 401. Set `ALLOWED_ORIGIN` in `wrangler.toml`
 to the Pages origin before deploying for real (the `*` is for local dev only; the worker returns 403 to any
@@ -573,6 +583,15 @@ centred 430px column.
   guess colour ("probably A4 · cereal"), brand suggestion chips, "Tell me where" opening `PickerSheet` (the
   flat map, tap a shelf), the Lists pill and sheet, the gear opening `SettingsSheet` (resolver provider,
   URL, model), the usual-trip row, hold-to-speak (`lib/speech.ts`) and the lime Route CTA.
+- The list keeps what was typed: a row shows the shopper's own words ("toor dal", never the catalog's "Dal"); the
+  shelf it resolved to is the chip's. An empty list offers **Try a sample list** (a hero list, Weekly staples) and
+  the Route button is plainly inactive (glass, not a faded lime). The add pill's placeholder fits 375 px ("Add items
+  or hold to speak") and its focus ring is the global one drawn on the pill (`data-focus-host`; the contrast gate
+  measures the ring there). The header's pills are Lists and Store, with the same light fill.
+- **A list in the URL** (`lib/deepLink.ts`): `?list=a,b,c` (commas, semicolons or new lines; 40 items of 60
+  characters at most) or `?sample=<hero list id or name>` loads the list and starts the trip once every item is
+  placed against the full catalog (results computed after the index landed, so a restored trip finds every stop),
+  then drops the parameters from the URL. The project page's "Open this in the app" links here.
 - `lib/trip.ts` is the pure trip state: `gotIt` / `skipStop` / `addItem` reroute from the last checked-off
   node; `summarize` compares walked + to-go against `routeForOrder` of the collected items; snapshots (ids
   only) persist across reloads.
@@ -611,8 +630,9 @@ gzipped). The store stays 2D; the scene maps `(x, y) → (x, 0, y)`.
   unmount. Never `createPortal` DOM from inside the Canvas: R3F's reconciler rejects it.
 - `CameraRig.tsx`: 42° **horizontal** field (`verticalFov(aspect)`, clamped 42–80°), tilt 58°, yaw −18°.
   `solveFraming` works in screen space on a scratch camera: fits the leg (padded 15%) into the area the
-  trip screen measures between the progress strip and the sheet, next stop at that area's upper third, the
-  you-dot at its lower third when the leg has the depth; both endpoints are hard constraints; the floor is
+  trip screen measures between the progress strip and the sheet, centred there (the route ahead: this leg and the
+  next two, the stops that have cards; it was the leg alone with the next stop at the upper third, which parked
+  the route in a corner over empty floor); this leg's endpoints are hard constraints; the floor is
   a 30 m visible span (≈39 m); slack slides the store up first, then toward the footprint. Zoom 12–90 m,
   eases 480 ms. Drag pans, shift-drag or two-finger twist orbits ±25°, pinch/wheel zooms, flatten tweens to
   top-down and persists in `localStorage`.
@@ -1048,6 +1068,20 @@ download kilobytes are CI's own (larger on CI's renderer and build: `ci: true` i
 skipped, so take them from the run's `docs-numbers` artifact with `--ci`. Timings (solve, load, ready ms) vary
 run to run: they are not keyed and carry their date and machine. A new cited number gets a key in `KEYS`.
 Update the timings by hand when they move.
+
+**Try it** (`src/project-demo/demo.ts`, built by `vite.demo.config.ts` into `dist/project/demo/` as the build's last
+step): under the hero, a list box (five items prefilled), Route, a flat SVG map of Grosher with the walk and the
+stops numbered, the visit order with each shelf's sign, and "In your order X m → Grosher Y m (Z% shorter)". It is the
+app's own resolver (the base rows and the signs at once, the full catalog's index once it lands, built by the app's
+index worker and shared with the app through IndexedDB; no model) and its own solver, in the page. `project.js`
+imports it on the first focus, tap or click in the block, so a visit that never touches it never downloads it
+(Lighthouse never does). **Get notified** (before the footer): email only, a choice of updates or the Story Rd
+pilot, Cloudflare Turnstile (its script loads when the form is first focused), posted to the resolver Worker's
+`POST /waitlist` (below); the section needs `data-sitekey` (the widget's site key) or it must ship `hidden`. The
+footer's "Work with me" line mails atishaypahadiya3@gmail.com. The stills carry inline placeholders
+(`scripts/lqip.mjs`, run after the captures: a 24 px WebP of each, a few hundred bytes) and are fetched in the
+background once the page has loaded and gone idle, so a fast scroll on a phone never shows a blank green frame (it
+did in Close-ups: three lazy 3× AVIFs stacked, each the frame's green until decoded).
 
 **Media** (`capture-kit.mjs`, shared by the two scripts): captured on this Mac's GPU (ANGLE on Metal; elsewhere it
 warns and falls back to SwiftShader, soft and slow), against `vite preview` of a fresh build, with the app's capture

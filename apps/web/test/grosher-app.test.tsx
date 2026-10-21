@@ -48,8 +48,31 @@ describe("Grosher, the default store", () => {
     expect(chip(/ice cream/i)).toMatch(/Frozen · last/);
     // the sign answers first ("A12 · Red wine"); the catalog's own row, once the full catalog is in, names the shelf
     await waitFor(() => expect(chip(/red wine/i)).toMatch(/A12 · beer & wine/), { timeout: 10_000 });
-    expect(chip(/bouquet/i)).toMatch(/Floral/);
+    // the row reads what was typed ("flowers"), not the catalog's "Flower bouquet"; the chip names the shelf
+    expect(chip(/^flowers$/i)).toMatch(/Floral/);
     expect(screen.getByRole("button", { name: /route 9 items/i })).toBeTruthy();
+  });
+
+  test("the list keeps what was typed: toor dal, moong dal and dal stay as written, the shelf in the chip", async () => {
+    render(<App />);
+    const input = await screen.findByLabelText(/add items/i);
+    fireEvent.change(input, { target: { value: "toor dal, moong dal, dal" } });
+    fireEvent.submit(input.closest("form")!);
+    expect(await find(/3 items · 3 placed/i)).toBeTruthy();
+    const rows = within(screen.getByRole("list")).getAllByRole("listitem");
+    // the name's own text (the source glyph before it carries a label of its own)
+    const names = rows.map((r) => r.querySelector(".name")?.lastChild?.textContent?.trim());
+    expect(names).toEqual(["toor dal", "moong dal", "dal"]);
+    for (const r of rows) expect(r.querySelector(".chip")?.textContent).toMatch(/A\d+|Bulk/);
+  });
+
+  test("an empty list offers a sample list and does not offer to route nothing", async () => {
+    render(<App />);
+    const route = await screen.findByRole("button", { name: /route 0 items/i });
+    expect((route as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(await screen.findByRole("button", { name: /try a sample list/i }));
+    expect(await find(/11 items · 11 placed/i)).toBeTruthy();
+    await waitFor(() => expect((screen.getByRole("button", { name: /route 11 items/i }) as HTMLButtonElement).disabled).toBe(false), { timeout: 10_000 });
   });
 
   test("a trip in progress is saved under Grosher's own key", async () => {

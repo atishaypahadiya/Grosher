@@ -111,6 +111,8 @@ h1, h2, h3 { margin: 0; font-weight: 300; }
 /* Phones */
 .bezel { border-radius: 44px; padding: 9px; background: var(--soil); border: 1px solid var(--glass-border); }
 .bezel picture { display: block; }
+/* the inline placeholder (scripts/lqip.mjs) fills the frame until the still has loaded and decoded */
+.bezel img, .step-shot img { background-size: cover !important; background-position: center; }
 .bezel img, .bezel video { width: 100%; height: auto; aspect-ratio: 390 / 844; border-radius: 35px; background: var(--moss); object-fit: cover; }
 .badge { display: block; margin: 14px auto 0; width: fit-content; padding: 7px 14px; border-radius: 999px; background: rgba(15,42,26,.72); border: 1px solid var(--glass-border); font-size: 14px; font-weight: 500; color: #fff; }
 
@@ -135,10 +137,40 @@ h1, h2, h3 { margin: 0; font-weight: 300; }
 .phone { width: min(280px, 100%); margin: 0; }
 .app-caption { margin-top: 30px; font-size: 15px; }
 
+/* 1a. Try it: on the mango; the cards are the warm deep glass (white ink holds 4.5:1) */
+.s-try { background: linear-gradient(180deg, var(--lime-green) 0%, var(--lime-green) 100%); }
+.s-try .sect-head { color: var(--ink-warm); }
+.s-try .sect-head .eyebrow { color: var(--ink-warm-muted); }
+.try { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.try .card { background: rgba(15,42,26,.56); }
+.try-input { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+.try-input .eyebrow { color: #fff; }
+.try-input textarea { width: 100%; box-sizing: border-box; min-height: 150px; resize: vertical; border-radius: 18px; border: 1px solid var(--glass-border); background: rgba(255,255,255,.1); color: #fff; font: inherit; font-size: 16px; line-height: 1.5; padding: 12px 14px; }
+.try-note { margin: 0; font-size: 14px; color: #fff; }
+.try-map svg { display: block; width: 100%; height: auto; }
+.try-map figcaption { margin-top: 14px; }
+.try-sum { margin: 0; font-size: 16px; color: #fff; }
+.try-sum .num { font-size: 20px; }
+.try-sum .d-pct { white-space: nowrap; }
+.try-order { margin: 12px 0 0; padding-left: 24px; display: grid; gap: 4px; font-size: 15px; color: #fff; }
+.try-order .d-shelf { margin-left: 8px; font-size: 13px; color: rgba(255,255,255,.85); }
+.try-app { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin-top: 10px; color: #fff; font-weight: 500; text-underline-offset: 4px; }
+.d-floor { fill: rgba(255,255,255,.08); stroke: rgba(255,255,255,.4); stroke-width: .3; }
+.d-path { fill: none; stroke: var(--lime); stroke-width: .9; stroke-linejoin: round; stroke-linecap: round; }
+.d-path-glow { fill: none; stroke: var(--lime); stroke-opacity: .25; stroke-width: 3; stroke-linejoin: round; }
+.d-you { fill: var(--lime); }
+.d-stop { fill: var(--soil); stroke: #fff; stroke-width: .35; }
+.d-stop.d-first { fill: var(--lime); stroke: var(--soil); }
+.d-n { font: 600 2.6px var(--font); fill: #fff; text-anchor: middle; }
+.d-n.d-first { fill: var(--soil); }
+
 /* 2a. Who it's for: on the mango hand-off, so the cards are the warm deep glass (white ink holds 4.5:1) */
 .s-who { background: linear-gradient(180deg, var(--lime-green) 0%, var(--lime-green) 100%); }
 .s-who::before { width: 60vw; max-width: 820px; height: 70%; left: 20%; top: 10%; background: radial-gradient(closest-side, rgba(255,190,120,.35), rgba(255,190,120,0)); }
 .s-who .sect-head { color: var(--ink-warm); }
+/* the line under the hero opens the section, in warm ink on the mango */
+.quote.quote-lead { margin: 0 0 56px; color: var(--ink-warm); }
+.quote.quote-lead::before { border-top-color: rgba(42, 15, 6, 0.4); }
 .s-who .sect-head .eyebrow { color: var(--ink-warm-muted); }
 .who { margin: 36px 0 0; padding: 0; list-style: none; display: grid; grid-template-columns: 1fr; gap: 12px; }
 .who .card { background: rgba(15,42,26,.56); display: flex; flex-direction: column; gap: 14px; }
@@ -270,7 +302,21 @@ td .num { font-size: 17px; }
 .limits strong { font-weight: 500; font-size: 16px; }
 .limits span { font-size: 15px; color: var(--ink-muted); }
 
+/* 9a. Get notified, on the limits' green */
+.s-notify { background: linear-gradient(180deg, #235F39 0%, #235F39 100%); }
+.notify { max-width: 560px; display: flex; flex-direction: column; gap: 12px; }
+.notify .eyebrow { color: #fff; }
+.notify input[type="email"] { box-sizing: border-box; width: 100%; min-height: 48px; border-radius: 999px; border: 1px solid var(--glass-border); background: rgba(255,255,255,.1); color: #fff; font: inherit; font-size: 16px; padding: 0 18px; }
+.notify input[type="email"]::placeholder { color: rgba(255,255,255,.72); }
+.notify-lists { border: 0; margin: 0; padding: 0; display: grid; gap: 8px; }
+.notify-lists label { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; color: #fff; }
+.notify-lists input { accent-color: var(--lime); margin-top: 4px; }
+.notify-status { margin: 0; min-height: 1.4em; font-size: 15px; color: #fff; }
+.notify-privacy { margin: 0; font-size: 13px; color: #fff; }
+.notify-privacy a, .work-with a { color: #fff; text-underline-offset: 3px; }
+
 /* 10. Footer, on the lighter leaf: full white only (muted white is too faint on leaf) */
+.work-with { margin: 0 0 22px; font-size: 16px; color: #fff; }
 .s-foot { padding-bottom: 56px; }
 .foot-row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 14px 24px; align-items: center; padding-top: 32px; border-top: 1px solid var(--rule); }
 .foot-row > a { display: inline-flex; align-items: center; min-height: 44px; text-underline-offset: 4px; }
@@ -287,6 +333,7 @@ td .num { font-size: 17px; }
   :root { --gutter: 32px; --half-gap: 60px; }
   .phones { grid-template-columns: repeat(3, 1fr); align-items: start; gap: 28px; }
   .who { grid-template-columns: repeat(3, 1fr); }
+  .try { grid-template-columns: 380px 1fr; align-items: start; }
   .phone { width: 100%; max-width: 300px; }
   .goals { grid-template-columns: repeat(4, 1fr); }
   .how { grid-template-columns: 1fr 380px; gap: 12px 32px; align-items: start; }
@@ -366,9 +413,41 @@ td .num { font-size: 17px; }
 
 <main id="main">
 
+<!-- 1a. Try it: src/project-demo/demo.ts, the app's own resolver (catalog only, no model) and solver, built by
+     vite.demo.config.ts into /project/demo/ and imported by project.js on the first interaction with the block -->
+<section class="sect s-try" aria-labelledby="try-title">
+  <div class="wrap">
+    <div class="sect-head">
+      <span class="eyebrow">Try it</span>
+      <h2 id="try-title" class="title">Type a list. Grosher routes it.</h2>
+    </div>
+    <div class="try sect-body" data-demo>
+      <div class="card try-input">
+        <label class="eyebrow" for="demo-list">Your list: one item a line, or commas</label>
+        <textarea id="demo-list" data-demo-list rows="6" spellcheck="false">bananas
+toor dal
+greek yogurt
+coffee
+paper towels</textarea>
+        <button type="button" class="pill lime" data-demo-route>Route</button>
+        <p class="try-note" data-demo-note>It runs here in your browser: the app's own resolver, from the catalog only (no model), and its solver, on the Grosher store.</p>
+      </div>
+      <figure class="card try-map" style="margin:0">
+        <svg data-demo-map viewBox="0 0 89 74" role="img" aria-label="A flat map of the Grosher store; after Route, the walk drawn in lime with the stops numbered in visit order"></svg>
+        <figcaption>
+          <p class="try-sum" data-demo-summary aria-live="polite">Press Route to draw the walk.</p>
+          <ol class="try-order" data-demo-order></ol>
+          <a class="try-app" data-demo-app href="https://grosher.pages.dev/?list=bananas%2Ctoor%20dal%2Cgreek%20yogurt%2Ccoffee%2Cpaper%20towels">Open this in the app <span aria-hidden="true">→</span></a>
+        </figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
 <!-- 2a. Who it's for. "Today" lists only what the current build does (and its tests or gates check); "Next" is not built. The solver time is the bench's median (packages/core/bench, --store grosher), checked by scripts/docs-numbers.mjs on the machine it names; the saving is the bench's 30-stop row. -->
 <section class="sect s-who" aria-labelledby="who-title">
   <div class="wrap">
+    <blockquote class="quote quote-lead"><p>Walmart's app knows where everything is. It will never show you the fastest way out.</p></blockquote>
     <div class="sect-head">
       <span class="eyebrow">Who it's for</span>
       <h2 id="who-title" class="title">Three kinds of shopper the store's layout fails.</h2>
@@ -412,7 +491,7 @@ td .num { font-size: 17px; }
     <ul class="phones">
       <li>
         <figure class="phone" style="margin:0">
-          <div class="bezel"><picture><source type="image/avif" srcset="/project/img/list-1x.avif 1x, /project/img/list-2x.avif 2x, /project/img/list-3x.avif 3x"><source type="image/webp" srcset="/project/img/list-1x.webp 1x, /project/img/list-2x.webp 2x, /project/img/list-3x.webp 3x"><img src="/project/img/list-1x.png" srcset="/project/img/list-1x.png 1x, /project/img/list-2x.png 2x, /project/img/list-3x.png 3x" width="342" height="740" loading="lazy" decoding="async" alt="The list screen in Grosher with 14 items, each placed on a shelf: Greek yogurt in dairy, picked last; Paper Towel in A8, household; Bananas in produce; Dal in A4, world foods; Frozen pizza in frozen, picked last; Coffee in A1, breakfast. A lime button at the bottom reads Route 14 items, 438 metres, 7 minutes, 45% shorter than walking the list in order."></picture></div>
+          <div class="bezel"><picture><source type="image/avif" srcset="/project/img/list-1x.avif 1x, /project/img/list-2x.avif 2x, /project/img/list-3x.avif 3x"><source type="image/webp" srcset="/project/img/list-1x.webp 1x, /project/img/list-2x.webp 2x, /project/img/list-3x.webp 3x"><img src="/project/img/list-1x.png" srcset="/project/img/list-1x.png 1x, /project/img/list-2x.png 2x, /project/img/list-3x.png 3x" width="342" height="740" loading="lazy" decoding="async" alt="The list screen in Grosher with 14 items, each placed on a shelf: Greek yogurt in dairy, picked last; Paper Towel in A8, household; Bananas in produce; Dal in A4, world foods; Frozen pizza in frozen, picked last; Coffee in A1, breakfast. A lime button at the bottom reads Route 14 items, 438 metres, 7 minutes, 45% shorter than walking the list in order." style="background-image:url(data:image/webp;base64,UklGRgQBAABXRUJQVlA4IPgAAACQBgCdASoYADQAPvVop1AqpqOiu/bYAVAeiWpg607i9v5YFUTWn6nn22PbEgyi/zzb73MZGRJqAPykf4dAAP7hoELXP4Do3Bgko1a+LdK0amfXmeB+u36k/eZNE9hVjo5lnk9y7mhqxLX9SQeacptp+vG7olTpQQoERUfG7b3C8E9c2ofYy/msQdBvERM+gSdQN8Hien2ZwuSUt1yp0bCz+DW5ln2tlp+WRuGR4BQKFIVC5uk/kU7BtXU9vvq0DuaK3cy+uiugEHMuNdeze4nIniItg+dmXkIJ1Gnb3bnIFm2xaNUx2JLMcyjCGuyYRc9sjSX22AAAAA==)"></picture></div>
           <figcaption class="badge">List</figcaption>
         </figure>
       </li>
@@ -430,7 +509,7 @@ td .num { font-size: 17px; }
       </li>
       <li>
         <figure class="phone" style="margin:0">
-          <div class="bezel"><picture><source type="image/avif" srcset="/project/img/checkout-1x.avif 1x, /project/img/checkout-2x.avif 2x, /project/img/checkout-3x.avif 3x"><source type="image/webp" srcset="/project/img/checkout-1x.webp 1x, /project/img/checkout-2x.webp 2x, /project/img/checkout-3x.webp 3x"><img src="/project/img/checkout-1x.png" srcset="/project/img/checkout-1x.png 1x, /project/img/checkout-2x.png 2x, /project/img/checkout-3x.png 3x" width="342" height="740" loading="lazy" decoding="async" alt="The checkout screen after the same trip: a trip card reading 6:35, 14 of 14 items, self-checkout, walked 438 metres with 7 aisles never entered, 45% shorter than walking the list in order, about 6 minutes saved."></picture></div>
+          <div class="bezel"><picture><source type="image/avif" srcset="/project/img/checkout-1x.avif 1x, /project/img/checkout-2x.avif 2x, /project/img/checkout-3x.avif 3x"><source type="image/webp" srcset="/project/img/checkout-1x.webp 1x, /project/img/checkout-2x.webp 2x, /project/img/checkout-3x.webp 3x"><img src="/project/img/checkout-1x.png" srcset="/project/img/checkout-1x.png 1x, /project/img/checkout-2x.png 2x, /project/img/checkout-3x.png 3x" width="342" height="740" loading="lazy" decoding="async" alt="The checkout screen after the same trip: a trip card reading 6:35, 14 of 14 items, self-checkout, walked 438 metres with 7 aisles never entered, 45% shorter than walking the list in order, about 6 minutes saved." style="background-image:url(data:image/webp;base64,UklGRtgAAABXRUJQVlA4IMwAAADwBQCdASoYADQAPwVqqlArpiOit/gIAXAgiWIAvntHgnaLh147z/YwUDWLVnXEaTEJlfMrcB1IAAD+rrnhnz75Fl1+KPBszCn2G1TSb6SARvg1zSTJ7vZSVulNi4pVvjp5eeZv5sDv1J8E2Pg1kxcyOdHkMRggiYNybSAw7q18pZZgCPcZsjuU55nJMycdVSNcYT2rTf3C0ilDBNNiJ01sKTKDnv1pmY539i6OksnxOnAmR1XQt8RZdiXazMzF4Nfx9NGkljj/eaBwAAA=)"></picture></div>
           <figcaption class="badge">Checkout card</figcaption>
         </figure>
       </li>
@@ -449,19 +528,19 @@ td .num { font-size: 17px; }
     <ul class="phones closeups">
       <li>
         <figure class="phone" style="margin:0">
-          <div class="bezel"><picture><source type="image/avif" srcset="/project/img/closeup-bulk-1x.avif 1x, /project/img/closeup-bulk-2x.avif 2x, /project/img/closeup-bulk-3x.avif 3x"><source type="image/webp" srcset="/project/img/closeup-bulk-1x.webp 1x, /project/img/closeup-bulk-2x.webp 2x, /project/img/closeup-bulk-3x.webp 3x"><img src="/project/img/closeup-bulk-1x.png" srcset="/project/img/closeup-bulk-1x.png 1x, /project/img/closeup-bulk-2x.png 2x, /project/img/closeup-bulk-3x.png 3x" width="342" height="740" loading="lazy" decoding="async" alt="Eye level in Bulk: the toor dal gravity bin lit in lime, its tag reading Toor dal, beside moong dal, on square-steel shelving with pine planks; packs of urad dal, kabuli chana and kala chana below. The bottom card reads Bulk toor dal, 55 metres."></picture></div>
+          <div class="bezel"><picture><source type="image/avif" srcset="/project/img/closeup-bulk-1x.avif 1x, /project/img/closeup-bulk-2x.avif 2x, /project/img/closeup-bulk-3x.avif 3x"><source type="image/webp" srcset="/project/img/closeup-bulk-1x.webp 1x, /project/img/closeup-bulk-2x.webp 2x, /project/img/closeup-bulk-3x.webp 3x"><img src="/project/img/closeup-bulk-1x.png" srcset="/project/img/closeup-bulk-1x.png 1x, /project/img/closeup-bulk-2x.png 2x, /project/img/closeup-bulk-3x.png 3x" width="342" height="740" loading="lazy" decoding="async" alt="Eye level in Bulk: the toor dal gravity bin lit in lime, its tag reading Toor dal, beside moong dal, on square-steel shelving with pine planks; packs of urad dal, kabuli chana and kala chana below. The bottom card reads Bulk toor dal, 55 metres." style="background-image:url(data:image/webp;base64,UklGRk4BAABXRUJQVlA4IEIBAABQCACdASoYADQAPxF0tFSsJiSjKBgMAYAiCWQAuzPkDCir8VD75xpK2/Y5xvFhsWdMtxqAzuJ5iE9Lw/Ho5hGjK2FCOhv3dJ+nIAAA748PL3aBbatruFSpbscFskPfQThPptJ5a5EaB2Pb1c1NDMNqIEQLHRoS2dZOkcjfVWwLUorcSHs+aM4CEbjhD30E2lK/xfyF/Vxj0AzOe9qG4cnMIC6Tr3Puervfm+JARRFHqa39i1iFGhlBeXyN2VBywucx++Uu6m3J5AJQF6V5pzbcP0nhq2q+f/uWsMKBCdqBe0bl5xjnKlHGLLYObxXvNOC0rhgzhjTzcZKfcVjOrN1xIdS8FyLi0yqbv/2jcncrhYuo83TiIHKYGWEbK4e/dWk8fdcv7wM7Y6E/Bv4Of0DUqvhPHWQssjDhHPy+HTdAcuAA)"></picture></div>
           <figcaption><strong>Bulk, a hand-built aisle</strong>From a procedural shelf kit in code: square-steel shelving, gravity bins with grain drawn at its real size, jute sacks and a stone chakki, under 31 lights shaded per pixel.<span class="budget">At eye level: <span class="num" data-n="closeup.bulkEye.calls">47</span> draw calls, <span class="num" data-n="closeup.bulkEye.triangles">190k</span> triangles (budget 70, 250k).</span></figcaption>
         </figure>
       </li>
       <li>
         <figure class="phone" style="margin:0">
-          <div class="bezel"><picture><source type="image/avif" srcset="/project/img/closeup-produce-1x.avif 1x, /project/img/closeup-produce-2x.avif 2x, /project/img/closeup-produce-3x.avif 3x"><source type="image/webp" srcset="/project/img/closeup-produce-1x.webp 1x, /project/img/closeup-produce-2x.webp 2x, /project/img/closeup-produce-3x.webp 3x"><img src="/project/img/closeup-produce-1x.png" srcset="/project/img/closeup-produce-1x.png 1x, /project/img/closeup-produce-2x.png 2x, /project/img/closeup-produce-3x.png 3x" width="342" height="740" loading="lazy" decoding="async" alt="Landing in Produce under the skylight's opening: the produce wall behind, and ahead an island of wooden crates of bananas, one crate lit in lime. The bottom card reads Bananas, 45 metres."></picture></div>
+          <div class="bezel"><picture><source type="image/avif" srcset="/project/img/closeup-produce-1x.avif 1x, /project/img/closeup-produce-2x.avif 2x, /project/img/closeup-produce-3x.avif 3x"><source type="image/webp" srcset="/project/img/closeup-produce-1x.webp 1x, /project/img/closeup-produce-2x.webp 2x, /project/img/closeup-produce-3x.webp 3x"><img src="/project/img/closeup-produce-1x.png" srcset="/project/img/closeup-produce-1x.png 1x, /project/img/closeup-produce-2x.png 2x, /project/img/closeup-produce-3x.png 3x" width="342" height="740" loading="lazy" decoding="async" alt="Landing in Produce under the skylight's opening: the produce wall behind, and ahead an island of wooden crates of bananas, one crate lit in lime. The bottom card reads Bananas, 45 metres." style="background-image:url(data:image/webp;base64,UklGRmwBAABXRUJQVlA4IGABAACwCACdASoYADQAPxF+s1QsKCQjKBgMAYAiCWQAsSAUR4Hvy4zFVQFXv5B61cX039faTDEDI+9HT8TjJpIswV5n0JMfqzd2LGolU8YgMgAA/uqSG1GYWIkFJPVYESEkEa+GNB3hx3h6iTZZAI4/JPI6n2QayPKgr26vULKFE86btEpHJTo7/OgYShAmM7kfENrjK5VtDPqQJBtg4Pz8XQRde64NS5a+gRJKkr/0cPwsHtaYLJygECQgdKTgve9CqXrxXufSbDZqwyFNaxQ25cCB53qvBo11GOWhxIcSujiLw5Wyv1fWmzq+pXcnxd1fVYrKCOG3a+8hlgkUPxeFhN9l+Q0eXHULjb2K7NSfwR3pVKar1W9TfERqS1rjtUbn7GsuIJlacB6o4nVm75PuDWvi80UGQVVwTJLBzmZZ/PTnL84ZUUV2muQMMbD/YSFyFC6VkzTNLeyHdGMb7C5AMAAA)"></picture></div>
           <figcaption><strong>Produce, under the skylight</strong>The one room lit by day: 93 kinds of fruit and vegetable, each piece packed into its crate one by one, the sun's patches cut by the skylight's mullions.<span class="budget">Arriving: <span class="num" data-n="closeup.produce.calls">51</span> draw calls, <span class="num" data-n="closeup.produce.triangles">168k</span> triangles at the worst frame.</span></figcaption>
         </figure>
       </li>
       <li>
         <figure class="phone" style="margin:0">
-          <div class="bezel"><picture><source type="image/avif" srcset="/project/img/closeup-juice-1x.avif 1x, /project/img/closeup-juice-2x.avif 2x, /project/img/closeup-juice-3x.avif 3x"><source type="image/webp" srcset="/project/img/closeup-juice-1x.webp 1x, /project/img/closeup-juice-2x.webp 2x, /project/img/closeup-juice-3x.webp 3x"><img src="/project/img/closeup-juice-1x.png" srcset="/project/img/closeup-juice-1x.png 1x, /project/img/closeup-juice-2x.png 2x, /project/img/closeup-juice-3x.png 3x" width="342" height="740" loading="lazy" decoding="async" alt="The juice wall in Produce: rows of Grosher Press juices in clear glass bottles with steel caps and white labels, and below them deli tubs of energy balls on a stainless chilled shelf, lit in lime. The bottom card reads Juice, 47 metres."></picture></div>
+          <div class="bezel"><picture><source type="image/avif" srcset="/project/img/closeup-juice-1x.avif 1x, /project/img/closeup-juice-2x.avif 2x, /project/img/closeup-juice-3x.avif 3x"><source type="image/webp" srcset="/project/img/closeup-juice-1x.webp 1x, /project/img/closeup-juice-2x.webp 2x, /project/img/closeup-juice-3x.webp 3x"><img src="/project/img/closeup-juice-1x.png" srcset="/project/img/closeup-juice-1x.png 1x, /project/img/closeup-juice-2x.png 2x, /project/img/closeup-juice-3x.png 3x" width="342" height="740" loading="lazy" decoding="async" alt="The juice wall in Produce: rows of Grosher Press juices in clear glass bottles with steel caps and white labels, and below them deli tubs of energy balls on a stainless chilled shelf, lit in lime. The bottom card reads Juice, 47 metres." style="background-image:url(data:image/webp;base64,UklGRj4BAABXRUJQVlA4IDIBAADwBgCdASoYADQAPxF4sFEsJ6SisBgKAYAiCUAYMoECPli3otlaCAS3cuZHZ7j8iTivxqa2L7XldzfGYJekZIgAAPKZdF+TgTFQOh7h2fISwk6PcBGJZQBypB9vtLDCxo9CuwDyWWsrLsncfN1tMCfV7GgtsJhAlbhCd5cRbk84q6Hq0WFHxlp+LL0w0BxFdpD72C56E5fQIfu7dRCIyDgAdxjbDAdgRzchHea3LQn2Kqtz8vujcckQUAGdUOC+2n/vAy7jhEADdvKaaTZvOWYFuSKHjvPTR3hoOKbaG4NbHwe64e4W5FCUQyn19M3GNhq7fYpDz8EXGoOsfKupDKqGcvj9cHGOayJ8Zpsh2IEUtRX0BhlOR02G3VDdCSc08FUDDUhmRKwUqvDkvQpb2T+AAAA=)"></picture></div>
           <figcaption><strong>The juice wall</strong>21 juices and plant milks in clear glass with ribbed steel caps, each label drawn at its bottle's real aspect; energy balls in deli tubs below.<span class="budget">The wet wall: <span class="num" data-n="closeup.wetWall.calls">50</span> draw calls, <span class="num" data-n="closeup.wetWall.triangles">180k</span> triangles.</span></figcaption>
         </figure>
       </li>
@@ -478,7 +557,6 @@ td .num { font-size: 17px; }
       <h2 id="why-title" class="title">Stores are laid out to make you wander.</h2>
     </div>
     <p class="prose">The milk is at the back so you pass everything else on the way. Grosher takes your list, finds each item's shelf, and gives you one route, entrance to exit, with the cold things last.</p>
-    <blockquote class="quote"><p>Walmart's app knows where everything is. It will never show you the fastest way out.</p></blockquote>
     <ul class="goals">
       <li class="card tile">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19c4 0 4-6 8-6s4-6 8-6"/><circle cx="4" cy="19" r="1.6"/><circle cx="20" cy="7" r="1.6"/></svg>
@@ -536,7 +614,7 @@ td .num { font-size: 17px; }
             <!-- apps/web/src/map3d/ (CameraRig.tsx, LitSlot.tsx, Ribbon.tsx), apps/web/src/lib/trip.ts (gotIt, skipStop reroute from the last checked-off node); close-ups: apps/web/src/hero (Bulk, Produce, standard/); the guard: apps/web/src/lib/guard.ts -->
             <p>The 3D map frames the current leg and lights the exact bay and shelf of the next item; when it becomes next, the camera comes down to eye level and walks you to the shelf. Got it or Not here re-solves the remaining stops from where you stand. If you drift well off the route, a quiet card says how far the next item is, counted from your steps alone.</p>
             <!-- the off-list guard's card, from the demo walk (?demo=walk): apps/web/scripts/capture-project.mjs -->
-            <figure class="step-shot"><picture><source type="image/avif" srcset="/project/img/guard-1x.avif 1x, /project/img/guard-2x.avif 2x, /project/img/guard-3x.avif 3x"><source type="image/webp" srcset="/project/img/guard-1x.webp 1x, /project/img/guard-2x.webp 2x, /project/img/guard-3x.webp 3x"><img src="/project/img/guard-1x.png" srcset="/project/img/guard-1x.png 1x, /project/img/guard-2x.png 2x, /project/img/guard-3x.png 3x" width="342" height="740" loading="lazy" decoding="async" alt="The off-list guard's card over the 3D map: Nothing on your list here. Chips is 18 metres ahead. A lime Back on route button and a glass I'm grabbing something button."></picture><figcaption>The off-list guard, in the demo walk</figcaption></figure>
+            <figure class="step-shot"><picture><source type="image/avif" srcset="/project/img/guard-1x.avif 1x, /project/img/guard-2x.avif 2x, /project/img/guard-3x.avif 3x"><source type="image/webp" srcset="/project/img/guard-1x.webp 1x, /project/img/guard-2x.webp 2x, /project/img/guard-3x.webp 3x"><img src="/project/img/guard-1x.png" srcset="/project/img/guard-1x.png 1x, /project/img/guard-2x.png 2x, /project/img/guard-3x.png 3x" width="342" height="740" loading="lazy" decoding="async" alt="The off-list guard's card over the 3D map: Nothing on your list here. Chips is 18 metres ahead. A lime Back on route button and a glass I'm grabbing something button." style="background-image:url(data:image/webp;base64,UklGRiYBAABXRUJQVlA4IBoBAACwBwCdASoYADQAPwl2rlArqCQisBv8AXAhCWoAuzOcwd/eArzo7ER1lFuoAmCe4kw/bkDYyaUrz+fYyH28JhmWfakHn36AAP3J5JTit4igZYVHaFcgp75BbhNQXLtsfNqdm20RfttF2FaVbPg/1qSl5e9Kylagz/O1MsI+S0asJyhGX6jF/AjqpXPpifhAcv7jpMAI2cGzSqwlndwMSIZ+WjEXXfUghEOHW1fh7FrK4KoTEmwyNhj18BslDyN5CitTLRbso5YT75QZ3NDAApfW6jLAPsS4q1+tA8/sWGsaGG92Sj2AKCcI3wucjdqji2q/HKQ9Wth6eCGHQZN5WAHPZFnxhkaqn4wL1tUF5BjWHMglC4tg9yswAAA=)"></picture><figcaption>The off-list guard, in the demo walk</figcaption></figure>
           </div>
         </li>
         <li class="card">
@@ -553,7 +631,7 @@ td .num { font-size: 17px; }
             <h3>Map a real store</h3>
             <!-- apps/web/src/survey; the step detector's held-out traces: test/survey-steps.test.ts; still: apps/web/scripts/capture-project.mjs (sensors mocked by scripts/survey-driver.mjs) -->
             <p>Survey mode maps a store in one walk: steps from the accelerometer, directions from the compass, and a photo of each aisle sign, read later by a vision model on the Mac. The draft map that comes out is fixed in the editor on a desktop.</p>
-            <figure class="step-shot"><picture><source type="image/avif" srcset="/project/img/survey-1x.avif 1x, /project/img/survey-2x.avif 2x, /project/img/survey-3x.avif 3x"><source type="image/webp" srcset="/project/img/survey-1x.webp 1x, /project/img/survey-2x.webp 2x, /project/img/survey-3x.webp 3x"><img src="/project/img/survey-1x.png" srcset="/project/img/survey-1x.png 1x, /project/img/survey-2x.png 2x, /project/img/survey-3x.png 3x" width="342" height="740" loading="lazy" decoding="async" alt="Survey mode walking aisle 1: a step count of 27 and a heading of 30 degrees, quick tags for the aisle number, End cap and One side only, the captured events with a sign photo waiting for a connection, and buttons for Sign photo, Pin and End aisle."></picture><figcaption>Survey mode, walking an aisle</figcaption></figure>
+            <figure class="step-shot"><picture><source type="image/avif" srcset="/project/img/survey-1x.avif 1x, /project/img/survey-2x.avif 2x, /project/img/survey-3x.avif 3x"><source type="image/webp" srcset="/project/img/survey-1x.webp 1x, /project/img/survey-2x.webp 2x, /project/img/survey-3x.webp 3x"><img src="/project/img/survey-1x.png" srcset="/project/img/survey-1x.png 1x, /project/img/survey-2x.png 2x, /project/img/survey-3x.png 3x" width="342" height="740" loading="lazy" decoding="async" alt="Survey mode walking aisle 1: a step count of 27 and a heading of 30 degrees, quick tags for the aisle number, End cap and One side only, the captured events with a sign photo waiting for a connection, and buttons for Sign photo, Pin and End aisle." style="background-image:url(data:image/webp;base64,UklGRrgAAABXRUJQVlA4IKwAAAAQBQCdASoYADQAPxFyrVEsJqQis/M6qYAiCWdqN1wnBQhqE5oRrTJgsxdjd7qH/wQAAP7vSN/tGqYJvAAqACRj06g8E0SQjNmJqCvM1Y0VB19E2nlwi7Z2y88Akb+LaA8N7Au9Ca+bnCGwjMNohjWYfh4g1ar7S++QNZMuBp3RQHgL/uHWAgIDXvn9QM6I+avPqgfOFAUpCC3wsJ8PmlTLC9ZuB+krJPIboAAA)"></picture><figcaption>Survey mode, walking an aisle</figcaption></figure>
           </div>
         </li>
       </ol>
@@ -1059,11 +1137,37 @@ td .num { font-size: 17px; }
   </div>
 </section>
 
+<!-- 9a. Get notified: apps/resolver/src/waitlist.ts (POST /waitlist: Turnstile, then D1; no IP kept). data-sitekey
+     is the Turnstile widget's site key (without one the section must ship hidden); project.js loads Turnstile's script
+     only when someone starts filling the form in. -->
+<section class="sect s-notify" aria-labelledby="notify-title" data-waitlist data-sitekey="0x4AAAAAAFegJUvb6uGusymx" data-endpoint="https://grosher-resolver.atishaypahadiya3.workers.dev/waitlist">
+  <div class="wrap">
+    <div class="sect-head">
+      <span class="eyebrow">Get notified</span>
+      <h2 id="notify-title" class="title">Hear when Grosher reaches a real store.</h2>
+    </div>
+    <form class="card notify sect-body" data-waitlist-form novalidate>
+      <label class="eyebrow" for="wl-email">Email</label>
+      <input id="wl-email" name="email" type="email" autocomplete="email" inputmode="email" required maxlength="254" placeholder="you@example.com">
+      <fieldset class="notify-lists">
+        <legend class="sr-only">What to hear about</legend>
+        <label><input type="radio" name="list" value="updates" checked> Updates: new stores and releases</label>
+        <label><input type="radio" name="list" value="pilot"> Join the Story Rd pilot: help test the first surveyed store, a Walmart on Story Rd</label>
+      </fieldset>
+      <div class="notify-check" data-turnstile></div>
+      <button type="submit" class="pill lime">Notify me</button>
+      <p class="notify-status" data-waitlist-status role="status" aria-live="polite"></p>
+      <p class="notify-privacy">Used only for Grosher updates, never shared. To be removed, email <a href="mailto:atishaypahadiya3@gmail.com">atishaypahadiya3@gmail.com</a> and it is deleted.</p>
+    </form>
+  </div>
+</section>
+
 </main>
 
 <!-- 10. Footer -->
 <footer class="sect s-foot">
   <div class="wrap">
+    <p class="work-with">Building for delivery shoppers, accessibility, or big-format stores? <a href="mailto:atishaypahadiya3@gmail.com?subject=Grosher">Get in touch.</a></p>
     <div class="foot-row">
       <span class="wordmark"><i class="dot" aria-hidden="true"></i>Grosher · built by Atishay</span>
       <a href="https://github.com/atishaypahadiya/Grosher" rel="noopener">Source and full README on GitHub <span aria-hidden="true">↗</span></a>

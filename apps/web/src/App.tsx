@@ -16,6 +16,7 @@ import { ListsSheet } from "./components/ListsSheet.tsx";
 import { SettingsSheet } from "./components/SettingsSheet.tsx";
 import { loadSettings, resetSettings, saveSettings } from "./lib/settings.ts";
 import { DEMO_LIST, demoWalkOn } from "./lib/demoWalk.ts";
+import { linkedList, withoutLink } from "./lib/deepLink.ts";
 import { requestSensors } from "./survey/sensors.ts";
 import { providerFor } from "./lib/resolver.ts";
 import { useLists } from "./lib/useLists.ts";
@@ -128,26 +129,37 @@ export function App({ bundle = DEFAULT_STORE }: { bundle?: StoreBundle } = {}) {
     />
   );
 
-  // ?demo=walk: the off-list guard on a desk (lib/demoWalk.ts): load "Friday night in", start the trip once
-  // every item is placed; the trip screen replays the walk
+  // A list that routes itself: ?demo=walk (the off-list guard on a desk, lib/demoWalk.ts: "Friday night in",
+  // the trip screen replays the walk) or a link (?sample=<hero list> / ?list=a,b,c, lib/deepLink.ts: the project
+  // page's "Open this in the app"). Load it, start the trip once every item is placed.
   const demo = useMemo(() => demoWalkOn(), []);
-  const demoStage = useRef<"list" | "route" | "done">("list");
+  const linked = useMemo(() => (demo ? bundle.lists?.find((l) => l.name === DEMO_LIST)?.items ?? null : typeof location === "undefined" ? null : linkedList(location.search, bundle.lists)), [demo, bundle]);
+  const autoStage = useRef<"list" | "route" | "done">("list");
+  // the results in hand when the full catalog landed: the list re-resolves against it a moment later, and the trip
+  // must start from that (stops resolved from the signs alone carry ids a restored trip cannot find again)
+  const resultsAtReady = useRef<unknown>(undefined);
+  if (res.catalogReady && resultsAtReady.current === undefined) resultsAtReady.current = res.results;
   useEffect(() => {
-    if (!demo) return;
-    const list = bundle.lists?.find((l) => l.name === DEMO_LIST);
-    if (!list) return;
-    if (demoStage.current === "list" && listsState.loaded) {
-      demoStage.current = "route";
-      setItems(list.items);
+    if (!linked) return;
+    if (autoStage.current === "list" && listsState.loaded) {
+      autoStage.current = "route";
+      setItems(linked);
       return;
     }
-    if (demoStage.current === "route" && !trip && res.catalogReady && items.length === list.items.length && stops.length + notFound.length >= list.items.length && !res.asking) {
-      demoStage.current = "done";
-      const t = window.setTimeout(() => setTrip(startTrip(router, stops, notFound)), 1200);
+    if (autoStage.current === "route" && res.catalogReady && res.results !== resultsAtReady.current && items.length === linked.length && stops.length + notFound.length >= linked.length && !res.asking) {
+      autoStage.current = "done";
+      const t = window.setTimeout(
+        () => {
+          setPaused(false);
+          setTrip(startTrip(router, stops, notFound));
+          if (!demo) history.replaceState(null, "", withoutLink(location.href));
+        },
+        demo ? 1200 : 300,
+      );
       return () => clearTimeout(t);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [demo, listsState.loaded, res.catalogReady, stops.length, notFound.length, items.length, res.asking, trip]);
+  }, [linked, listsState.loaded, res.catalogReady, res.results, stops.length, notFound.length, items.length, res.asking]);
 
   const addItems = (names: string[]) =>
     setItems((cur) => {
@@ -273,6 +285,7 @@ export function App({ bundle = DEFAULT_STORE }: { bundle?: StoreBundle } = {}) {
       <Ground />
       <ListScreen
         store={store}
+        sample={bundle.lists?.find((l) => l.id === "weekly-staples") ?? bundle.lists?.[0]}
         items={items}
         results={res.results}
         plan={plan}

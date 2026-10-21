@@ -16,10 +16,11 @@ import { cors } from "hono/cors";
 import Anthropic from "@anthropic-ai/sdk";
 import { classify, type ClassifyRequest, type Guess } from "./classify.ts";
 import { classifyOllama, probeOllama, readSignOllama } from "./ollama.ts";
+import { waitlist, type WaitlistEnv } from "./waitlist.ts";
 
 export type Provider = "anthropic" | "ollama";
 
-export interface Env {
+export interface Env extends WaitlistEnv {
   /** which upstream answers; wrangler.toml sets "ollama" */
   PROVIDER?: Provider | string;
   ANTHROPIC_API_KEY?: string;
@@ -119,6 +120,9 @@ export function createApp(classifier?: Classifier, fetchImpl: typeof fetch = (..
       return c.json({ words: [], degraded: true });
     }
   });
+  // the project page's "Get notified" form (src/waitlist.ts): its own origin check and limit, not the resolver's
+  app.post("/waitlist", (c) => waitlist(c, fetchImpl));
+
   app.post("/resolve", async (c) => {
     const denied = await guard(c);
     if (denied) return denied;

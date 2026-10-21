@@ -159,7 +159,10 @@ const collect = () => {
     .map((el, i) => {
       el.dataset.contrastId = String(i);
       const r = el.getBoundingClientRect();
-      return r.width > 0 && r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth && onTop(el, r) ? { kind: "focus", where: "ui", id: String(i), text: label(el), cls: String(el.className).split(" ")[0], need: 3, box: [r.left, r.top, r.right, r.bottom] } : null;
+      // a control inside a ring host (the add pill's input) shows the ring on the host: measure it there
+      const host = el.closest("[data-focus-host]");
+      const hr = host ? host.getBoundingClientRect() : r;
+      return r.width > 0 && r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth && onTop(el, r) ? { kind: "focus", where: "ui", id: String(i), text: label(el), cls: String(el.className).split(" ")[0], need: 3, box: [hr.left, hr.top, hr.right, hr.bottom] } : null;
     })
     .filter(Boolean);
   return { texts, icons, focus };
@@ -373,6 +376,27 @@ try {
     await gctx.close();
   }
 
+  // ---- the gradient zones at both phone widths: an empty list (the footer links and the sample button sit over
+  // the mid-gradient) and a short one (the footer just below the rows), at 375 and 390
+  for (const w of [375, 390]) {
+    const zctx = await browser.newContext({ viewport: { width: w, height: 812 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
+    const zp = await zctx.newPage();
+    zp.on("pageerror", (e) => errors.push(e.message));
+    await zp.goto(`${BASE}/`, { waitUntil: "load" });
+    await zp.waitForFunction(() => !!window.__grosherIndex, null, { timeout: 120_000 });
+    await zp.evaluate(() => document.fonts.ready);
+    await zp.waitForTimeout(500);
+    all.push(...(await measure(zp, `list empty ${w}`)));
+    const zi = zp.getByLabel(/add items/i);
+    await zi.fill("toor dal, moong dal, dal");
+    await zi.press("Enter");
+    await zp.getByText(/3 items · 3 placed/i).waitFor({ timeout: 60_000 });
+    await zp.evaluate(() => document.activeElement instanceof HTMLElement && document.activeElement.blur());
+    await zp.waitForTimeout(400);
+    all.push(...(await measure(zp, `list short ${w}`)));
+    await zctx.close();
+  }
+
   // ---- the sheets, and a list with an unknown item (no model answers here, so it stays unknown)
   const sctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
   const sp = await sctx.newPage();
@@ -429,6 +453,11 @@ try {
     await pp.setViewportSize({ width: w, height: await pp.evaluate(() => document.documentElement.scrollHeight) });
     await pp.waitForTimeout(500);
     all.push(...(await measure(pp, `project ${w}`)));
+    // the Try it block, routed: the summary, the stop list and the numbered stops over the flat map
+    await pp.locator("[data-demo-route]").click();
+    await pp.waitForFunction(() => document.querySelector("[data-demo]")?.dataset.routed === "true", null, { timeout: 60_000 });
+    await pp.waitForTimeout(400);
+    all.push(...(await measure(pp, `project ${w} (Try it routed)`)));
     await pc.close();
   }
   await plain.close();

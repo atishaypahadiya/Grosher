@@ -61,7 +61,7 @@ for (const [category, item] of Object.entries(ZONES[zone])) {
   const bin = await page.evaluate(() => window.__grosherCloseUp.bin);
   // the image is the shelf alone: no header, strip, sheet or back pill; the bin sits in the middle band
   // visibility, not display: the sheet keeps its size, so the camera keeps the bin where the app puts it
-  await page.addStyleTag({ content: ".trip-head, .progress-strip, .trip-sheet, .closeup-back, .trip-vignette { visibility: hidden !important; }" });
+  await page.addStyleTag({ content: ".trip-head, .progress-strip, .trip-sheet, .trip-vignette { visibility: hidden !important; }" });
   await page.waitForTimeout(300);
   const png = join(TMP, `${category}.png`);
   await page.getByTestId("map3d").screenshot({ path: png });

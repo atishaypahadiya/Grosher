@@ -163,3 +163,32 @@ describe("resolver worker", () => {
     expect((tool.input_schema as { properties: { results: { items: { properties: { cat: { enum: unknown[] } } } } } }).properties.results.items.properties.cat.enum).toEqual(["dairy", "dry", null]);
   });
 });
+
+describe("POST /waitlist", () => {
+  const rows: unknown[][] = [];
+  const db = { prepare: () => ({ bind: (...v: unknown[]) => ({ run: async () => rows.push(v) }) }) };
+  const verify = (ok: boolean) => (async () => new Response(JSON.stringify({ success: ok }))) as unknown as typeof fetch;
+  const post = (app: ReturnType<typeof createApp>, body: unknown, env: Record<string, unknown>, origin = "https://grosher.pages.dev") =>
+    app.request("/waitlist", { method: "POST", body: JSON.stringify(body), headers: { "content-type": "application/json", origin } }, env);
+  const env = { TURNSTILE_SECRET: "s", WAITLIST: db };
+
+  test("stores the address, lower-cased, once; the same answer for a repeat", async () => {
+    const app = createApp(undefined, verify(true));
+    const r = await post(app, { email: "  Shopper@Example.com ", token: "t", list: "pilot" }, env);
+    expect(r.status).toBe(200);
+    expect(await r.json()).toEqual({ ok: true });
+    expect(rows.at(-1)!.slice(0, 2)).toEqual(["shopper@example.com", "pilot"]);
+    expect((await post(app, { email: "shopper@example.com", token: "t" }, env)).status).toBe(200);
+  });
+
+  test("refuses a bad address, a missing or failed check, a foreign origin, too many tries, and runs only when configured", async () => {
+    const ok = createApp(undefined, verify(true));
+    expect((await post(ok, { email: "not an email", token: "t" }, env)).status).toBe(400);
+    expect((await post(ok, { email: "a@b.co" }, env)).status).toBe(400);
+    expect((await post(createApp(undefined, verify(false)), { email: "a@b.co", token: "t" }, env)).status).toBe(403);
+    expect((await post(ok, { email: "a@b.co", token: "t" }, env, "https://evil.example")).status).toBe(403);
+    expect((await post(ok, { email: "a@b.co", token: "t" }, { ...env, WAITLIST_LIMITER: { limit: async () => ({ success: false }) } })).status).toBe(429);
+    expect((await post(ok, { email: "a@b.co", token: "t" }, { WAITLIST: db })).status).toBe(503);
+    expect((await post(ok, { email: "a@b.co", token: "t" }, env, "http://localhost:4173")).status).toBe(200);
+  });
+});

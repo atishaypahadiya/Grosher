@@ -21,3 +21,18 @@ name = "RATE_LIMITER"
 type = "ratelimit"
 namespace_id = "1001"
 simple = { limit = 30, period = 60 }
+
+# The project page's "Get notified" list (src/waitlist.ts, migrations/0001_waitlist.sql). The Turnstile secret is a
+# secret: npx wrangler secret put TURNSTILE_SECRET (the widget's site key goes in public/project/index.html).
+[[d1_databases]]
+binding = "WAITLIST"
+database_name = "grosher-waitlist"
+database_id = "95772c4a-b4a3-46ae-9297-9b0754e3058e"
+migrations_dir = "migrations"
+
+# The waitlist's own per-IP limit: 5 sign-ups a minute.
+[[unsafe.bindings]]
+name = "WAITLIST_LIMITER"
+type = "ratelimit"
+namespace_id = "1002"
+simple = { limit = 5, period = 60 }

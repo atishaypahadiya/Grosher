@@ -5,7 +5,7 @@ import { DEFAULT_SAFE, DEFAULT_TILT, DEFAULT_YAW, minFramingDistance, solveFrami
 const aspect = 390 / 844;
 const ndcTop = 1 - 2 * DEFAULT_SAFE.top;
 const ndcBot = -1 + 2 * DEFAULT_SAFE.bottom;
-const third = (ndcTop - ndcBot) / 3;
+const mid = (ndcTop + ndcBot) / 2;
 const padY = ((ndcTop - ndcBot) * 0.15) / 2;
 
 function ndcOf(p: { x: number; y: number }, f: { tx: number; tz: number; distance: number }, flat: boolean) {
@@ -33,32 +33,39 @@ describe("camera framing", () => {
     expect(f.distance).toBeCloseTo(minFramingDistance(), 3);
   });
 
-  test("a 30 m leg: next stop in the upper third band, you below it, both inside the padded area", () => {
+  test("a 30 m leg: centred in the band between the strip and the card, both ends inside", () => {
     const you = { x: 30, y: 50 };
     const next = { x: 34, y: 20 };
     const f = solveFraming({ you, next }, false, aspect);
     const yn = ndcOf(next, f, false);
     const yy = ndcOf(you, f, false);
-    expect(Math.abs(yn.y - (ndcTop - third))).toBeLessThan(third / 2 + 1e-3);
+    expect(Math.abs((yn.y + yy.y) / 2 - mid)).toBeLessThan(0.05);
     expect(yy.y).toBeLessThan(yn.y - 0.2);
     expect(inside(yn)).toBe(true);
     expect(inside(yy)).toBe(true);
   });
 
-  test("a deep leg puts you in the lower third", () => {
-    const you = { x: 30, y: 66 };
-    const next = { x: 30, y: 12 };
-    const f = solveFraming({ you, next }, false, aspect);
-    expect(ndcOf(next, f, false).y).toBeGreaterThan(0.2);
-    expect(ndcOf(you, f, false).y).toBeLessThan(ndcBot + third + 0.05);
+  test("the route ahead (this leg and the next two) is fitted and centred, not the leg alone", () => {
+    const you = { x: 30, y: 60 };
+    const next = { x: 30, y: 50 };
+    const ahead = [you, next, { x: 50, y: 50 }, { x: 50, y: 20 }, { x: 10, y: 20 }];
+    const legOnly = solveFraming({ you, next }, false, aspect);
+    const f = solveFraming({ you, next, points: ahead }, false, aspect);
+    expect(f.distance).toBeGreaterThan(legOnly.distance);
+    const qs = ahead.map((p) => ndcOf(p, f, false));
+    for (const q of qs) expect(inside(q)).toBe(true);
+    const ys = qs.map((q) => q.y);
+    const xs = qs.map((q) => q.x);
+    expect(Math.abs((Math.min(...ys) + Math.max(...ys)) / 2 - mid)).toBeLessThan(0.05);
+    expect(Math.abs((Math.min(...xs) + Math.max(...xs)) / 2)).toBeLessThan(0.05);
   });
 
-  test("a leg with no depth keeps both points in the upper third band", () => {
+  test("a leg with no depth: the closest framing, both points inside", () => {
     const you = { x: 10, y: 20 };
     const next = { x: 14, y: 20 };
     const f = solveFraming({ you, next }, false, aspect);
     expect(f.distance).toBeCloseTo(minFramingDistance(), 3);
-    expect(ndcOf(next, f, false).y).toBeGreaterThan(0.2);
+    expect(inside(ndcOf(next, f, false))).toBe(true);
     expect(inside(ndcOf(you, f, false))).toBe(true);
   });
 
@@ -80,27 +87,30 @@ describe("camera framing", () => {
     const you = { x: 10, y: 60 };
     const next = { x: 20, y: 20 };
     const f = solveFraming({ you, next }, true, aspect);
-    expect(ndcOf(next, f, true).y).toBeGreaterThan(0.2);
-    expect(ndcOf(you, f, true).y).toBeLessThan(0.15);
-    expect(inside(ndcOf(you, f, true))).toBe(true);
+    const yn = ndcOf(next, f, true);
+    const yy = ndcOf(you, f, true);
+    expect(yn.y).toBeGreaterThan(yy.y);
+    expect(Math.abs((yn.y + yy.y) / 2 - mid)).toBeLessThan(0.05);
+    expect(inside(yy)).toBe(true);
+    expect(inside(yn)).toBe(true);
   });
 });
 
 describe("footprint slide", () => {
-  test("a short leg near the back wall: store fills the width as far as the leg's padding allows, next stays in its band", () => {
+  test("a short leg near the back wall: store fills the width as far as the leg's padding allows", () => {
     const you = { x: 10, y: 20 };
     const next = { x: 14, y: 20 };
     const footprint = { x: 31, z: 38, w: 66, d: 62 };
     const focus = { you, next, points: [you, { x: 10, y: 12 }, { x: 14, y: 12 }, next] };
     const plain = solveFraming(focus, false, aspect);
     const biased = solveFraming({ ...focus, footprint }, false, aspect);
-    const n = ndcOf(next, biased, false);
-    expect(Math.abs(n.y - (ndcTop - third))).toBeLessThan(third / 2 + 1e-3);
+    expect(inside(ndcOf(next, biased, false))).toBe(true);
     expect(inside(ndcOf(you, biased, false))).toBe(true);
     const left = ndcOf({ x: footprint.x - footprint.w / 2, y: 20 }, biased, false).x;
     const plainLeft = ndcOf({ x: footprint.x - footprint.w / 2, y: 20 }, plain, false).x;
     expect(ndcOf({ x: footprint.x + footprint.w / 2, y: 20 }, biased, false).x).toBeGreaterThan(0.95);
-    expect(left).toBeLessThan(plainLeft - 0.1);
+    // the route is centred first, so the slack is what the leg's padding leaves on each side
+    expect(left).toBeLessThan(plainLeft - 0.05);
   });
 
   test("vertical slack is used upward: a small store behind a short leg is lifted toward the strip", () => {

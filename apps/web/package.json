@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && tsc --noEmit -p tsconfig.sw.json && vite build",
+    "build": "tsc --noEmit && tsc --noEmit -p tsconfig.sw.json && vite build && vite build -c vite.demo.config.ts --logLevel warn",
     "preview": "vite preview",
     "perf-gate": "node scripts/perf-gate.mjs",
     "contrast-gate": "node scripts/contrast-gate.mjs",

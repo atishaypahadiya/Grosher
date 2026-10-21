@@ -77,6 +77,7 @@ export function TripScreen({ bundle, router, trip, flat, onFlatChange, onGotIt, 
   const webgl = useMemo(() => webglAvailable(), []);
   // a hero close-up is open: the header sits over the zone's dark ceiling, not the sky
   const [closeUp, setCloseUp] = useState(false);
+  const leaveCloseUp = useRef<(() => void) | null>(null);
   // without WebGL the hero zone's flat shelf image stands in for the close-up (closed per stop)
   const [shelfOpenFor, setShelfOpenFor] = useState<string | null>(null);
   const perf = typeof location !== "undefined" && new URLSearchParams(location.search).has("perf");
@@ -150,7 +151,7 @@ export function TripScreen({ bundle, router, trip, flat, onFlatChange, onGotIt, 
         {webgl ? (
           <FallbackBoundary name="3D map" fallback={<>{flatMap}{vignette}</>}>
             <Suspense fallback={flatMap}>
-              <TripMap3D bundle={bundle} trip={trip} flat={flat} onFlatChange={onFlatChange} nextLabel={nextLabel} checkoutLabel={checkoutLabel} perf={perf} safe={mapSafe} onCloseUpChange={setCloseUp} onAnimatingChange={setAnimating} />
+              <TripMap3D bundle={bundle} trip={trip} flat={flat} onFlatChange={onFlatChange} nextLabel={nextLabel} checkoutLabel={checkoutLabel} perf={perf} safe={mapSafe} onCloseUpChange={setCloseUp} onAnimatingChange={setAnimating} backRef={leaveCloseUp} />
             </Suspense>
           </FallbackBoundary>
         ) : (
@@ -174,16 +175,27 @@ export function TripScreen({ bundle, router, trip, flat, onFlatChange, onGotIt, 
       </div>
 
       <header className="trip-head">
-        <button type="button" className="pill circle" aria-label="Back to the list" onClick={onBack}>
-          <IconArrowLeft />
-        </button>
-        <div className="pill trip-title">
-          <span className="trip-store">{store.name ?? store.storeId}</span>
-          <Num value={clock(elapsedMs(trip))} />
-        </div>
-        <button type="button" className="pill circle" aria-label={flat ? "Tilt the map" : "Flatten the map"} aria-pressed={flat} onClick={() => onFlatChange(!flat)}>
-          <IconLayers />
-        </button>
+        {closeUp ? (
+          // in a close-up the bar is one way back: to the map (leaving the trip and flattening are the map's)
+          <button type="button" className="pill trip-title closeup-back" onClick={() => leaveCloseUp.current?.()}>
+            <IconArrowLeft />
+            <span className="trip-store">Back to the map</span>
+            <Num value={clock(elapsedMs(trip))} />
+          </button>
+        ) : (
+          <>
+            <button type="button" className="pill circle" aria-label="Back to the list" onClick={onBack}>
+              <IconArrowLeft />
+            </button>
+            <div className="pill trip-title">
+              <span className="trip-store">{store.name ?? store.storeId}</span>
+              <Num value={clock(elapsedMs(trip))} />
+            </div>
+            <button type="button" className="pill circle" aria-label={flat ? "Tilt the map" : "Flatten the map"} aria-pressed={flat} onClick={() => onFlatChange(!flat)}>
+              <IconLayers />
+            </button>
+          </>
+        )}
       </header>
       <div className="progress-strip" role="progressbar" aria-valuemin={0} aria-valuemax={total} aria-valuenow={doneCount} aria-label="Trip progress">
         {Array.from({ length: total }, (_, i) => (

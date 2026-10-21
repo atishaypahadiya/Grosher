@@ -10,7 +10,6 @@ import { Scene, type CloseUpState } from "./Scene.tsx";
 import { closeUpAt, type HeroTargetInfo } from "../hero/index.ts";
 import type { CloseUpCameraHandle } from "../hero/CloseUpCamera.tsx";
 import { DebugPerf, debugPerfOn } from "./DebugPerf.tsx";
-import { IconArrowLeft } from "../components/Icons.tsx";
 import type { CameraRigHandle } from "./CameraRig.tsx";
 import { fixtureBox, fixtureForLocation } from "./layout.ts";
 import { slotFor } from "@grosher/stores";
@@ -32,6 +31,8 @@ export interface TripMap3DProps {
   safe?: SafeArea;
   /** a hero close-up opened or closed (the trip header turns to plates over the zone's dark ceiling) */
   onCloseUpChange?: (open: boolean) => void;
+  /** the trip screen's top bar calls this to leave a close-up (its "Back to the map" pill) */
+  backRef?: { current: (() => void) | null };
   /** a close-up is loading, arriving or on its way out (the off-list guard waits) */
   onAnimatingChange?: (animating: boolean) => void;
 }
@@ -78,7 +79,7 @@ export function footprintOf(store: StoreGraph) {
 export const HOLD_MS = 1100;
 const PRELOAD_DELAY_MS = 1200;
 
-export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel, checkoutLabel, perf = false, className, safe = { top: 0.16, bottom: 0.36 }, onCloseUpChange, onAnimatingChange }: TripMap3DProps) {
+export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel, checkoutLabel, perf = false, className, safe = { top: 0.16, bottom: 0.36 }, onCloseUpChange, onAnimatingChange, backRef }: TripMap3DProps) {
   const { store } = bundle;
   const graph = useMemo(() => new WalkGraph(store), [store]);
   const nodes = graph.nodes;
@@ -229,10 +230,17 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
     () => ({
       you: youNode ? { x: youNode.x, y: youNode.y } : { x: 0, y: 0 },
       next: nextNode ? { x: nextNode.x, y: nextNode.y } : undefined,
-      points: (current?.path ?? []).map((id) => nodes.get(id)).filter((n): n is NonNullable<typeof n> => !!n).map((n) => ({ x: n.x, y: n.y })),
+      // the route ahead: this leg and the next two (the stops that carry cards), so the camera frames where the
+      // shopper is going, not one leg parked in a corner
+      points: legs
+        .slice(0, 3)
+        .flatMap((l) => l.path)
+        .map((id) => nodes.get(id))
+        .filter((n): n is NonNullable<typeof n> => !!n)
+        .map((n) => ({ x: n.x, y: n.y })),
       footprint,
     }),
-    [youNode, nextNode, current, nodes, footprint],
+    [youNode, nextNode, legs, nodes, footprint],
   );
 
   const registry = useRef<OverlayRegistry>(new Map()).current;
@@ -379,6 +387,14 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
   };
   const debugPerf = useMemo(() => debugPerfOn(), []);
   useEffect(() => onCloseUpChange?.(inside), [inside, onCloseUpChange]);
+  // "Back to the map" lives in the trip screen's top bar (it used to float over the scene, on the stop's card)
+  useEffect(() => {
+    if (!backRef) return;
+    backRef.current = () => leaveCloseUp(true);
+    return () => {
+      backRef.current = null;
+    };
+  });
   // the arrival and the way out are moving pictures: nothing should pop up over them
   const phase = closeUp ? (closeUp.exiting ? "leaving" : closeUp.target ? "open" : "loading") : "none";
   useEffect(() => {
@@ -466,12 +482,6 @@ export default function TripMap3D({ bundle, trip, flat, onFlatChange, nextLabel,
       <div className={inside ? "m-overlay-hidden" : undefined}>
         <OverlayDom items={items} registry={registry} />
       </div>
-      {closeUp && !closeUp.exiting && (
-        <button type="button" className="pill closeup-back" onClick={() => leaveCloseUp(true)} onPointerDown={(e) => e.stopPropagation()}>
-          <IconArrowLeft />
-          Back to the map
-        </button>
-      )}
       {flatShelf && (
         <figure className="flat-shelf" data-testid="flat-shelf" onPointerDown={(e) => e.stopPropagation()}>
           <img src={flatShelf.image} alt={`The shelf where ${flatShelf.name} is, lit in lime`} />

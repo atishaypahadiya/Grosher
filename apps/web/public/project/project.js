@@ -67,6 +67,11 @@ const settled = new Promise((resolve) => {
   if (document.readyState === "complete") idle();
   else addEventListener("load", idle, { once: true });
 });
+// the stills below the fold are lazy; once the page has loaded and gone idle, fetch them all, so a fast scroll on a
+// phone never outruns them (the placeholders cover the moment before)
+settled.then(() => {
+  for (const img of document.querySelectorAll('img[loading="lazy"]')) img.loading = "eager";
+});
 for (const video of document.querySelectorAll("video[data-autoplay]")) {
   let onScreen = false;
   let ready = false;
@@ -101,3 +106,73 @@ for (const video of document.querySelectorAll("video[data-autoplay]")) {
   ).observe(video);
   reduce.addEventListener("change", sync);
 }
+
+// ---------------------------------------------------------------- the Try it block
+// The demo (the app's resolver and solver, src/project-demo/demo.ts → /project/demo/demo.js) loads on the first
+// focus, tap or click inside the block: a visit that never touches it never downloads it.
+const demo = document.querySelector("[data-demo]");
+if (demo) {
+  let loading = null;
+  const load = (andRun) => {
+    loading ??= import("/project/demo/demo.js").then((m) => m.mount(demo));
+    loading.then((run) => andRun && run()).catch(() => {
+      const note = demo.querySelector("[data-demo-note]");
+      if (note) note.textContent = "The demo could not load here; the app itself still works.";
+    });
+  };
+  demo.addEventListener("focusin", () => load(false), { once: true });
+  demo.addEventListener("pointerdown", () => load(false), { once: true });
+  demo.querySelector("[data-demo-route]")?.addEventListener("click", () => {
+    if (!demo.dataset.ready) load(true);
+  });
+}
+
+// ---------------------------------------------------------------- the waitlist form
+// apps/resolver/src/waitlist.ts. Turnstile's script loads when someone first focuses the form; the token it gives is
+// sent with the email and checked by the Worker, which keeps only the address, the list and the date.
+const wl = document.querySelector("[data-waitlist]");
+const wlForm = wl?.querySelector("[data-waitlist-form]");
+if (wl && wlForm && wl.dataset.sitekey) {
+  const status = wl.querySelector("[data-waitlist-status]");
+  let token = "";
+  let widget = null;
+  let loading = null;
+  const turnstile = () =>
+    (loading ??= new Promise((resolve, reject) => {
+      window.__onTurnstile = () => resolve(window.turnstile);
+      const s = document.createElement("script");
+      s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=__onTurnstile";
+      s.async = true;
+      s.onerror = reject;
+      document.head.appendChild(s);
+    }).then((t) => {
+      widget = t.render(wl.querySelector("[data-turnstile]"), { sitekey: wl.dataset.sitekey, theme: "dark", callback: (v) => (token = v), "expired-callback": () => (token = "") });
+      return t;
+    }));
+  wlForm.addEventListener("focusin", () => turnstile().catch(() => (status.textContent = "The check could not load; try again later.")), { once: true });
+  wlForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = wlForm.elements.email.value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+      status.textContent = "That does not look like an email address.";
+      return;
+    }
+    await turnstile().catch(() => null);
+    if (!token) {
+      status.textContent = "One moment: finish the check above, then send again.";
+      return;
+    }
+    status.textContent = "Sending…";
+    try {
+      const r = await fetch(wl.dataset.endpoint, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email, token, list: wlForm.elements.list.value }) });
+      const body = await r.json().catch(() => ({}));
+      status.textContent = r.ok ? "You are on the list. Thank you." : body.error ? `Not sent: ${body.error}.` : "Not sent; try again.";
+      if (r.ok) wlForm.reset();
+    } catch {
+      status.textContent = "Not sent: the network did not answer; try again.";
+    }
+    token = "";
+    if (widget !== null) window.turnstile?.reset(widget);
+  });
+}
+

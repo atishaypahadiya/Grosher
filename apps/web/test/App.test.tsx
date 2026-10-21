@@ -30,8 +30,11 @@ describe("list screen", () => {
     expect(rows).toHaveLength(3);
     expect(rows[0].getAttribute("data-source")).toBe("exact");
     expect(within(rows[0]).getByText(/dairy · last/i)).toBeTruthy();
-    expect(rows[1].getAttribute("data-source")).toBe("fuzzy"); // egs → Eggs
-    expect(within(rows[1]).getByText(/^Eggs$/)).toBeTruthy();
+    expect(rows[1].getAttribute("data-source")).toBe("fuzzy"); // egs → Eggs, on the dairy shelf
+    // the row keeps what was typed; the shelf it resolved to is the chip's
+    expect(within(rows[1]).getByText(/^egs$/)).toBeTruthy();
+    expect(within(rows[1]).queryByText(/^Eggs$/)).toBeNull();
+    expect(within(rows[1]).getByText(/dairy/i)).toBeTruthy();
     expect(rows[2].getAttribute("data-source")).toBe("unknown");
     expect(within(rows[2]).getByText(/needs a place/i, { selector: ".sub" })).toBeTruthy();
     expect(screen.getByRole("button", { name: /route 2 items/i })).toBeTruthy();
