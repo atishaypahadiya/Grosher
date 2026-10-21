@@ -1122,7 +1122,10 @@ inside a box it hides and that box's border turns lime) and play-while-visible f
 `img/` for the media, `capture.json` for the share card's numbers. Linked from the README's top and the list
 screen's footer ("About"). Sections: hero (two columns from 1100 px: text, and the close-up arrival video in a
 large phone above the fold), who it's for, the app (three phones: the list, the reroute loop, the checkout),
-close-ups, why (with the pull quote), how it works (five steps, pipeline diagram, two rules), decisions (six Problem / Choice / Result cards,
+close-ups, cook mode (dishes in → one list in store units → route, four facts keyed `meals.*` from the dish table
+and the recorded model answers, beside one still of the review sheet mid-plan: `scripts/capture-cook.mjs`, carbonara
+as qwen3:8b's recorded answer, beef rendang held mid-estimate; a dark bloom behind the text, a lime one dropped the
+white flow text to 4.3:1 at 1440), why (with the pull quote), how it works (five steps, pipeline diagram, two rules), decisions (six Problem / Choice / Result cards,
 each with one number, three over three), architecture (an inline SVG,
 a wide variant from 1000 px and a tall one below), results (a bento: bench beside solver over not-measured;
 resolution beside performance), interface (the share card live, equal height with the map legend), limits,
@@ -1139,7 +1142,8 @@ page that a gate or a test measures carries a key, `<!--n:perf.calls-->48<!--/n-
 comment, invisible on GitHub) and `data-n="perf.calls"` on the page (a budget bar `data-bar="perf.calls/70"`, its
 width checked too). The values come from the gates' `--json` files (`apps/web/.numbers/`, git-ignored: the perf
 and close-up gates write them; `--run` runs the bench and the offline eval for theirs) and the hero-route
-snapshot (its `savedPct` is the test's own rounding). A key that reads anything else fails CI with the key, the
+snapshot (its `savedPct` is the test's own rounding), and cook mode's dish table and recorded model answers
+(`meals.*`: dishes, Indian, the unseen set's core score and per-dish seconds). A key that reads anything else fails CI with the key, the
 two values and the fix; `--write` rewrites the docs from the measurements. The close-up gate's megabytes and
 download kilobytes are CI's own (larger on CI's renderer and build: `ci: true` in `KEYS`): off CI they are
 skipped, so take them from the run's `docs-numbers` artifact with `--ci`. Timings (solve, load, ready ms) vary
@@ -1192,7 +1196,7 @@ and desktop depends on it: the hero poster at 780 px (106 KB) read mobile perfor
   inline video goes in once uploaded.
 
 The page's sections, in order: hero, who it's for (three audiences: "Today" only what the build does, "Next"
-labelled not built), the app, close-ups (three stills, each with how it is built and its keyed budget), why, how it
+labelled not built), the app, close-ups (three stills, each with how it is built and its keyed budget), cook mode, why, how it
 works (five steps; the guard's still in step 03, survey mode's in step 05), decisions, architecture, results,
 interface, limits, footer.
 

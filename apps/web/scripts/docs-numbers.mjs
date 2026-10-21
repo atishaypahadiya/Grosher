@@ -10,7 +10,8 @@
 //   bench.json     packages/core bench --store grosher --json
 //   eval-grosher.json / eval-demo.json   packages/stores eval:everyday --offline [--store grosher] --json
 // plus the hero-route snapshot packages/stores/test/fixtures/grosher-hero-routes.json (the stores test keeps it
-// current), and capture.json (the trip the share card shows, apps/web/scripts/capture-project.mjs). Timings vary
+// current), cook mode's dish table and its recorded model answers (packages/stores: src/meals, test/fixtures/
+// dishes-model.json, as CI's test scores them), and capture.json (the trip the share card shows, apps/web/scripts/capture-project.mjs). Timings vary
 // run to run and from machine to machine: most are cited with their date, unkeyed; the one keyed (the solver's
 // 30-stop median, `timing` below) is checked within ±35% on the machine the docs name (an Apple-silicon Mac) and
 // skipped on CI's, whose processors are slower.
@@ -51,7 +52,20 @@ const src = {
   demo: read("eval-demo.json"),
   routes: JSON.parse(readFileSync(join(ROOT, "packages", "stores", "test", "fixtures", "grosher-hero-routes.json"), "utf8")),
   capture: JSON.parse(readFileSync(join(ROOT, "apps", "web", "public", "project", "capture.json"), "utf8")),
+  meals: await mealsNumbers(),
 };
+
+/** cook mode: the dish table (packages/stores/src/meals) and the local model's recorded answers for the ten unseen
+ *  dishes (packages/stores/test/fixtures/dishes-model.json, scored by test/dish-score.ts as CI scores it) */
+async function mealsNumbers() {
+  const stores = join(ROOT, "packages", "stores");
+  const { DISHES } = await import(join(stores, "src", "meals", "index.ts"));
+  const { scoreRecording } = await import(join(stores, "test", "dish-score.ts"));
+  const rec = JSON.parse(readFileSync(join(stores, "test", "fixtures", "dishes-model.json"), "utf8"));
+  const score = scoreRecording(rec);
+  const secs = rec.calls.map((c) => c.ms / 1000);
+  return { dishes: DISHES.length, indian: DISHES.filter((d) => d.cuisine === "indian").length, unseen: rec.calls.length, core: score.coreFound, coreTotal: score.coreTotal, minS: Math.min(...secs), maxS: Math.max(...secs), totalS: rec.totalMs / 1000 };
+}
 const REFERENCE_MACHINE = process.platform === "darwin" && process.arch === "arm64";
 
 const int = (v) => v.toLocaleString("en-US");
@@ -103,6 +117,14 @@ const KEYS = {
   "card.walkedCaption": ["capture", () => src.capture.card.tiles[0].caption, (v) => v],
   "card.saved": ["capture", () => src.capture.card.tiles[1].value, (v) => v],
   "card.savedCaption": ["capture", () => src.capture.card.tiles[1].caption, (v) => v],
+  "meals.dishes": ["meals", () => src.meals.dishes, int],
+  "meals.indian": ["meals", () => src.meals.indian, int],
+  "meals.unseen": ["meals", () => src.meals.unseen, int],
+  "meals.core": ["meals", () => src.meals.core, int],
+  "meals.coreTotal": ["meals", () => src.meals.coreTotal, int],
+  "meals.minS": ["meals", () => src.meals.minS, (v) => v.toFixed(1)],
+  "meals.maxS": ["meals", () => src.meals.maxS, (v) => v.toFixed(1)],
+  "meals.totalS": ["meals", () => src.meals.totalS, (v) => String(Math.round(v))],
   "bench.range14.p10": ["bench", () => src.bench.range14.p10, int],
   "bench.range14.p90": ["bench", () => src.bench.range14.p90, int],
 };

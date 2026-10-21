@@ -2,7 +2,8 @@
 
 [![CI](https://github.com/atishaypahadiya/Grosher/actions/workflows/ci.yml/badge.svg)](https://github.com/atishaypahadiya/Grosher/actions/workflows/ci.yml)
 
-**[Read the project write-up](https://grosher.pages.dev/project/)** · [Open the app](https://grosher.pages.dev)
+**[Read the project write-up](https://grosher.pages.dev/project/)** · [Open the app](https://grosher.pages.dev) ·
+[Try it on the page](https://grosher.pages.dev/project/#try-title) · [Get notified or get in touch](https://grosher.pages.dev/project/#notify-title)
 
 A shopping list in, the shortest walk through the store out: every item placed on its shelf, the route
 re-solved each time you check one off, and every stop opening at eye level when you get there.
@@ -85,7 +86,7 @@ flowchart LR
   sells: "Onions × 4", "Toor dal 500 g", "Paneer 2 × 400 g". Every line says which dishes it is for, and you can
   edit or remove it. Salt, oil and the everyday spices sit under "You probably have", unticked. Nothing reaches
   your list until you tap Add, and then the resolver places it and Route works as usual.
-- **A dish table first.** 110 dishes, 64 of them Indian home staples, each written by hand for two servings
+- **A dish table first.** <!--n:meals.dishes-->110<!--/n--> dishes, <!--n:meals.indian-->64<!--/n--> of them Indian home staples, each written by hand for two servings
   with its core ingredients, scaled by the number of people and rounded up to whole packs once, after the
   merge. A test checks that every dish lists its core ingredients, that no quantity is out of bounds, and that
   every ingredient line lands on a Grosher shelf without the model.
@@ -96,8 +97,8 @@ flowchart LR
   category's bound is capped, and the sheet says which), cached on the device, and tagged "estimated" in amber.
   When the Mac is asleep, the table's dishes still work and the others say they need the laptop's model.
 - **How good and how fast the model is** (21 Oct 2026, ten dishes not in the table, recorded so CI scores it
-  without a model): 30 of 37 core ingredients named, 2.4–4.9 s a dish on an M-series Mac; through the deployed
-  Worker, Funnel and gate 3.7–5.4 s a dish, and five at once all in in 15 s (49 s in the first version, which
+  without a model): <!--n:meals.core-->30<!--/n--> of <!--n:meals.coreTotal-->37<!--/n--> core ingredients named, <!--n:meals.minS-->2.4<!--/n-->–<!--n:meals.maxS-->4.9<!--/n--> s a dish on an M-series Mac; through the deployed
+  Worker, Funnel and gate 3.7–5.4 s a dish, and five asked at once all back within 15 s (49 s in the first version, which
   asked for long indented answers and one dish after another). Carbonara, stroganoff,
   ratatouille, jambalaya and moussaka come back complete. It made rogan josh with chicken and coconut milk, and
   sarson ka saag without spinach or makki atta. Those misses are why the table comes first and why every model
@@ -290,12 +291,22 @@ address (a fixed public HTTPS name on the tailnet) → a small token gate on `12
   LAN or the tailnet can reach it: the gate is its one client, and only the gate is on the Funnel. The gate
   passes two routes, and only with the exact bearer token. The Ollama app's "Expose Ollama to the network"
   setting must stay off, because it overrides that; `chain:status` fails if anything listens beyond loopback.
-- **Two models can stay resident** (`OLLAMA_MAX_LOADED_MODELS=2`, `OLLAMA_KEEP_ALIVE=24h`): `qwen3:8b` for the
-  list (6.1 GB loaded) and `qwen2.5vl:7b` for survey mode's sign photos (8.0 GB). The vision model loads on the
-  first sign read, and from then on both fit together (14.1 GB within the 24 GB Mac's 17.8 GiB GPU budget), so a sign
-  read never evicts the list's model. A third model loaded by anything else would evict one of them.
+- **Two models can stay resident, three requests at a time each** (`OLLAMA_MAX_LOADED_MODELS=2`,
+  `OLLAMA_NUM_PARALLEL=3`, `OLLAMA_KEEP_ALIVE=24h`): `qwen3:8b` for the list and cook mode (7.9 GB loaded with three
+  slots) and `qwen2.5vl:7b` for survey mode's sign photos (8.5 GB). The vision model loads on the first sign read,
+  and from then on both fit together (16.4 GB within the 24 GB Mac's 17.8 GiB GPU budget), so a sign read never
+  evicts the list's model. Three slots let cook mode's dishes run side by side, so a slow one holds up no other. A
+  third model loaded by anything else would evict one of them.
 - **When the Mac sleeps**, the Worker answers every item as unknown with `degraded: true`. The app shows
   "Resolver offline · unknown items need a tap", and everything the catalog and memory can place still works.
+- **The waitlist goes through the same Worker.** The project page's "Get notified" form posts to `POST /waitlist`,
+  which accepts only the page's origin, has its own per-IP limit (5 a minute), and verifies a Cloudflare Turnstile
+  token before writing anything. It stores the email, the list (updates or the Story Rd pilot) and the time in D1,
+  with a UNIQUE constraint on (email, list): nothing else, no IP address, no user agent. A new sign-up and a repeat
+  get the identical answer, status and timing (the reply waits out 400 ms from the insert), so the form cannot tell
+  anyone who is on the list. Removing an address is one `wrangler d1 execute` (the command is in `CLAUDE.md`).
+- **Deploys are checked.** The app's build writes `/version.json` with its commit, and a workflow on every push to
+  `main` fails if the live app has not reported that commit within 10 minutes.
 - **Secrets stay in the Worker.** The Funnel address and the token are Worker secrets, and the token file on the
   Mac is readable by its owner only. Nothing secret ships in the app (the bundle test checks).
 

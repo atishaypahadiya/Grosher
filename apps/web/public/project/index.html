@@ -188,6 +188,23 @@ h1, h2, h3 { margin: 0; font-weight: 300; }
 .closeups figcaption { margin-top: 14px; font-size: 15px; color: #fff; max-width: 300px; }
 .closeups figcaption strong { display: block; font-weight: 500; font-size: 17px; margin-bottom: 4px; }
 .closeups .budget { display: block; margin-top: 8px; font-size: 14px; }
+/* 2c. Cook mode, on the same leaf as the close-ups */
+.s-cook { background: linear-gradient(180deg, var(--leaf) 0%, var(--leaf) 100%); }
+/* a dark bloom behind the text (a lime one lifted the leaf under the white flow text to 4.3:1) */
+.s-cook::before { width: 70vw; max-width: 980px; height: 80%; left: -12vw; top: 8%; background: radial-gradient(closest-side, rgba(10,50,28,.42), rgba(10,50,28,0)); }
+.cook { display: grid; grid-template-columns: 1fr; gap: 36px; }
+.flow { margin: 30px 0 0; padding: 0; list-style: none; display: grid; gap: 18px; max-width: var(--prose); }
+.flow li { display: grid; grid-template-columns: auto 1fr; gap: 16px; }
+.flow .n { font-size: 26px; padding-top: 2px; }
+.flow h3 { font-weight: 500; font-size: 18px; }
+.flow p { margin-top: 6px; font-size: 15px; color: #fff; }
+.cook-facts { margin: 28px 0 0; display: grid; grid-template-columns: 1fr; gap: 10px; max-width: var(--prose); }
+.cook-facts div { border-radius: 18px; padding: 14px 16px; background: var(--glass-deep); border: 1px solid var(--glass-border); }
+.cook-facts dt { font-weight: 500; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #fff; }
+.cook-facts dd { margin: 6px 0 0; font-size: 15px; line-height: 1.45; color: #fff; }
+.cook-facts .num { font-size: 1.15em; }
+.cook-phone { margin: 0 auto; width: min(300px, 100%); }
+.cook-phone figcaption { margin-top: 14px; font-size: 15px; color: #fff; }
 
 /* 3. Why */
 .quote { margin: 40px 0 0; padding: 0; max-width: 900px; font-weight: 200; font-size: clamp(30px, 5vw, 52px); line-height: 1.1; letter-spacing: -.02em; }
@@ -333,6 +350,9 @@ td .num { font-size: 17px; }
   :root { --gutter: 32px; --half-gap: 60px; }
   .phones { grid-template-columns: repeat(3, 1fr); align-items: start; gap: 28px; }
   .who { grid-template-columns: repeat(3, 1fr); }
+  .cook { grid-template-columns: 1fr 300px; gap: 56px; align-items: start; }
+  .cook-facts { grid-template-columns: 1fr 1fr; max-width: none; }
+  .cook-phone { position: sticky; top: 24px; }
   .try { grid-template-columns: 380px 1fr; align-items: start; }
   .phone { width: 100%; max-width: 300px; }
   .goals { grid-template-columns: repeat(4, 1fr); }
@@ -465,7 +485,7 @@ paper towels</textarea>
         <h3>Blind and low-vision shoppers</h3>
         <p class="problem">Aisle signs and shelf tags they cannot read, in a store they cannot scan.</p>
         <dl>
-          <div><dt>Today</dt><dd>The list by voice in Safari: hold the mic, speak, release. Every screen's text, icons and focus rings measured for contrast on every change (4.5:1 for text, 3:1 for icons and focus).</dd></div>
+          <div><dt>Today</dt><dd>The list by voice in Safari: hold the mic, speak, release. Or name the dishes instead of every item and get the list back in store units, to review before it is added. Every screen's text, icons and focus rings measured for contrast on every change (4.5:1 for text, 3:1 for icons and focus).</dd></div>
           <div class="next"><dt>Next</dt><dd>An accessibility mode: spoken turn-by-turn directions, full VoiceOver support, a large-type view and audio cues on arrival, designed and tested with blind users.</dd></div>
         </dl>
       </li>
@@ -546,6 +566,36 @@ paper towels</textarea>
       </li>
     </ul>
     <p class="app-caption">The other 304 shelves get a standard close-up generated from the store's own data. The next close-up is prepared while you are at the current stop, and only one zone's textures are on the GPU at a time.</p>
+  </div>
+</section>
+
+<!-- 2c. Cook mode: apps/web/src/components/MealSheet.tsx, lib/meals.ts; the table packages/stores/src/meals; the model's
+     recorded answers packages/stores/test/fixtures/dishes-model.json (keyed: docs-numbers.mjs meals.*); the timings
+     through the Worker, Funnel and gate measured 21 Oct 2026 (/tmp lat.sh, five unseen dishes, not keyed). Still:
+     apps/web/scripts/capture-cook.mjs (carbonara is qwen3:8b's recorded answer; beef rendang held mid-estimate). -->
+<section class="sect s-cook" aria-labelledby="cook-title">
+  <div class="wrap cook">
+    <div class="cook-text">
+      <div class="sect-head">
+        <span class="eyebrow">Cook mode</span>
+        <h2 id="cook-title" class="title">Name the dishes. Get the list in what the store sells.</h2>
+      </div>
+      <ol class="flow">
+        <li><span class="num n" aria-hidden="true">01</span><div><h3>Dishes in</h3><p>"Dal chawal, rajma, pasta arrabbiata", and how many are eating.</p></div></li>
+        <li><span class="num n" aria-hidden="true">02</span><div><h3>One list in store units</h3><p>Every dish's ingredients scaled from two servings, merged across dishes and rounded up once to whole packs: "Onions × 4", "Toor dal 500 g". Each line says which dishes it is for and can be edited or removed; salt, oil and spices sit under "You probably have", unticked.</p></div></li>
+        <li><span class="num n" aria-hidden="true">03</span><div><h3>Route it</h3><p>Nothing reaches the list until you add it; then every line is placed on a shelf and routed like any list.</p></div></li>
+      </ol>
+      <dl class="cook-facts">
+        <div><dt>The table first</dt><dd><span class="num" data-n="meals.dishes">110</span> dishes written by hand, <span class="num" data-n="meals.indian">64</span> of them Indian home staples, each with its core ingredients.</dd></div>
+        <div><dt>A local model for the rest</dt><dd>qwen3:8b on my Mac, never a cloud model: one short line an ingredient, <span class="num" data-n="meals.minS">2.4</span>–<span class="num" data-n="meals.maxS">4.9</span> s a dish on the Mac, 3.7–5.4 s through the Worker and Funnel (21 Oct 2026). Its lines are marked estimated.</dd></div>
+        <div><dt>Each dish as it lands</dt><dd>The table's dishes show at once; each model dish says "Estimating…" with a Cancel until it arrives, three asked at a time, so a slow one holds up no other.</dd></div>
+        <div><dt>How good the model is</dt><dd><span class="num" data-n="meals.core">30</span> of <span class="num" data-n="meals.coreTotal">37</span> core ingredients on <span class="num" data-n="meals.unseen">10</span> dishes not in the table; it made rogan josh with chicken, so rogan josh is in the table now.</dd></div>
+      </dl>
+    </div>
+    <figure class="phone cook-phone" style="margin:0">
+      <div class="bezel"><picture><source type="image/avif" srcset="/project/img/cook-1x.avif 1x, /project/img/cook-2x.avif 2x, /project/img/cook-3x.avif 3x"><source type="image/webp" srcset="/project/img/cook-1x.webp 1x, /project/img/cook-2x.webp 2x, /project/img/cook-3x.webp 3x"><img src="/project/img/cook-1x.png" srcset="/project/img/cook-1x.png 1x, /project/img/cook-2x.png 2x, /project/img/cook-3x.png 3x" width="342" height="740" loading="lazy" decoding="async" alt="The Plan meals sheet for three dishes and two people. Dal chawal, from the dish table, lists toor dal, basmati rice, onions, tomatoes and more. Pasta carbonara is tagged estimated: spaghetti, eggs, parmesan, guanciale, black pepper. Beef rendang reads Estimating with the local model, with a Cancel button. Below, To buy: Green chilies × 2, Onions × 1, Tomatoes × 2, each for Dal chawal and ticked. The lime button reads Add 12 now, still estimating." style="background-image:url(data:image/webp;base64,UklGRvQAAABXRUJQVlA4IOgAAADwBgCdASoYADQAPwVurlArpqQis/maqXAgiWQAwRVBWIAKNV3rqsvYTietPke/gO78wdpDuDf0hbQIanfwr1zAANM2ECi0sgIh2sYEDi7c+bkv1lv37Jx2HZ6KOFYPxEjG46MoTrHZWmHWOikADmAVyWeyqBWvd9/HaGW6Ybuze8f9TxrGM2vzYto97/jNgLbfDU7nSb1sSswtTSvqJG03uPXnob11a+F/ElFV7bL7CktTMiX0kyi0n9feRvc5ROits24x1CivoGyhLUZp6gQBa7wru4mpu369oqsO9MZNslFPlYgQAAAA)"></picture></div>
+      <figcaption>Mid-plan: dal chawal from the table, carbonara as the model answered it, rendang still on its way.</figcaption>
+    </figure>
   </div>
 </section>
 
@@ -1132,6 +1182,7 @@ paper towels</textarea>
       <li><strong>Tap to advance, no live dot</strong><span>Position moves when you tap Got it or Not here; there is no indoor positioning yet.</span></li>
       <li><strong>The guard is tuned on synthetic walks</strong><span>The off-list guard counts steps against the leg's length. Its thresholds come from simulated walks and the demo; they have not been tuned on real trips yet.</span></li>
       <li><strong>Close-ups not timed on a phone</strong><span>The close-ups meet their draw-call, triangle and texture budgets in CI, but CI renders in software; frame rate on an iPhone is still to be measured. Two aisles, Bulk and Produce, are hand-built; the rest are generated.</span></li>
+      <li><strong>Cook mode's quantities are estimates</strong><span>Written for normal home servings, scaled from two and rounded up to whole packs, so check them against how you cook. A dish the table does not know comes from the local model and can miss an ingredient (<span data-n="meals.core">30</span> of <span data-n="meals.coreTotal">37</span> on the unseen set); its lines are marked estimated.</span></li>
       <li><strong>One store</strong><span>The app opens one map today: Grosher.</span></li>
     </ul>
   </div>
