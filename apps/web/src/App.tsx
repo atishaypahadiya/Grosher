@@ -1,5 +1,5 @@
 import { usePrepareFirstStop } from "./hero/usePrepareFirst.ts";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Router, WalkGraph, type Stop } from "@grosher/core";
 import { DEFAULT_STORE, demoSupercenter, type StoreBundle } from "@grosher/stores";
 import { Ground } from "./components/Ground.tsx";
@@ -14,8 +14,9 @@ import { toStop } from "@grosher/core";
 import { PickerSheet } from "./components/PickerSheet.tsx";
 import { ListsSheet } from "./components/ListsSheet.tsx";
 import { SettingsSheet } from "./components/SettingsSheet.tsx";
-import { MealSheet } from "./components/MealSheet.tsx";
-import { dishAskerFor, mergeIntoList } from "./lib/meals.ts";
+import { mergeIntoList } from "./lib/mealsMerge.ts";
+// cook mode's sheet and its dish table load when "Plan meals" is first tapped
+const MealSheet = lazy(() => import("./components/MealSheet.tsx").then((m) => ({ default: m.MealSheet })));
 import { loadSettings, resetSettings, saveSettings } from "./lib/settings.ts";
 import { DEMO_LIST, demoWalkOn } from "./lib/demoWalk.ts";
 import { linkedList, withoutLink } from "./lib/deepLink.ts";
@@ -91,7 +92,6 @@ export function App({ bundle = DEFAULT_STORE }: { bundle?: StoreBundle } = {}) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const provider = useMemo(() => providerFor(settings), [settings]);
   const [mealsOpen, setMealsOpen] = useState(false);
-  const dishAsker = useMemo(() => dishAskerFor(settings), [settings]);
   const res = useResolution(bundle, items, provider);
   useEffect(() => {
     if (restored.current || !res.catalogReady) return;
@@ -348,14 +348,16 @@ export function App({ bundle = DEFAULT_STORE }: { bundle?: StoreBundle } = {}) {
         />
       )}
       {mealsOpen && (
-        <MealSheet
-          asker={dishAsker}
-          onAdd={(lines) => {
-            setItems((cur) => mergeIntoList(cur, lines));
-            setMealsOpen(false);
-          }}
-          onClose={() => setMealsOpen(false)}
-        />
+        <Suspense fallback={null}>
+          <MealSheet
+            settings={settings}
+            onAdd={(lines) => {
+              setItems((cur) => mergeIntoList(cur, lines));
+              setMealsOpen(false);
+            }}
+            onClose={() => setMealsOpen(false)}
+          />
+        </Suspense>
       )}
       {settingsOpen && (
         <SettingsSheet

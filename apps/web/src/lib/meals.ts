@@ -20,8 +20,6 @@ import {
   parseDishAnswer,
   parseDishJson,
   splitDishes,
-  stripQuantity,
-  singularize,
   type Checked,
   type DishReply,
   type IngredientInfo,
@@ -29,14 +27,14 @@ import {
   type PlannedDish,
   type ShoppingLine,
 } from "@grosher/core";
-import { DISHES, INGREDIENTS } from "@grosher/stores";
+import { DISHES, INGREDIENTS } from "@grosher/stores/meals";
 import { dbGet, dbSet } from "./db.ts";
 import type { ResolverSettings } from "./settings.ts";
 
 /** one dish straight to Ollama: ~10 s warm on an M-series Mac; a cold load of the model on top */
 export const DISH_TIMEOUT_MS = 45_000;
-/** the worker asks for each dish in turn, up to its own 80 s deadline */
-export const DISHES_TIMEOUT_MS = 90_000;
+/** the worker asks for each dish in turn, up to its own 90 s deadline (under Cloudflare's 100 s) */
+export const DISHES_TIMEOUT_MS = 100_000;
 
 export interface DishAsker {
   name: ResolverSettings["provider"];
@@ -210,23 +208,3 @@ export async function resolveUnknown(
 }
 
 export const planLines = (planned: PlannedDish[], people: number, adHoc: IngredientInfo[]): ShoppingLine[] => aggregate(planned, people, INGREDIENTS, adHoc);
-
-// ---------------------------------------------------------------- into the list
-
-const itemKey = (s: string) => singularize(stripQuantity(s));
-
-/**
- * The reviewed lines into the current list: a plain item already there for the same thing ("onions") gives way to
- * the line with its quantity ("Onions × 6"); an item with a quantity of its own stays, and the line is not added twice.
- */
-export function mergeIntoList(current: string[], lines: string[]): string[] {
-  const out = [...current];
-  for (const line of lines) {
-    const k = itemKey(line);
-    if (!k) continue;
-    const at = out.findIndex((n) => itemKey(n) === k);
-    if (at < 0) out.push(line);
-    else if (normalize(out[at]) === k || singularize(normalize(out[at])) === k) out[at] = line;
-  }
-  return out;
-}

@@ -4,7 +4,7 @@
 
 import { readFileSync } from "node:fs";
 import { checkModelIngredients, parseDishAnswer, parseDishJson, type Checked } from "@grosher/core";
-import { INGREDIENTS } from "../src/index.ts";
+import { INGREDIENTS } from "../src/meals/index.ts";
 
 export interface Recording {
   model: string;

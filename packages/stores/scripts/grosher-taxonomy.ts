@@ -123,6 +123,7 @@ export const CATEGORY_PATCHES: Record<string, { name?: string; add?: string[]; r
   "cold-flu": { add: ["cold and flu medicine", "cold medicine", "throat lozenges", "lozenges", "flu medicine"] },
   // cook mode's ingredient lines (src/meals/ingredients.ts), so every one is placed without the model
   "basmati-indian-rice": { add: ["sabudana", "tapioca pearls"] },
+  "atta-flours": { add: ["makki atta", "makki ka atta", "maize flour"] },
   "paneer-indian-dairy": { add: ["idli batter", "dosa batter", "idli dosa batter"] },
   "indian-spices": { add: ["ajwain", "carom seeds", "amchur", "dry mango powder", "kasuri methi", "dried fenugreek leaves"] },
   "fresh-herbs": { add: ["fenugreek leaves", "methi leaves", "fresh methi", "fresh mint", "fresh chives"] },
@@ -306,6 +307,8 @@ export const REHOME: { from: string[]; to: string; match: RegExp; not?: RegExp }
   { from: ["party-trays", "prepared-salads", "asian-noodles-rice"], to: "sushi", match: /\b(sushi|california roll|tuna roll|salmon roll|roll special|sashimi|nigiri)\b/i, not: /\b(nori|rice|ginger|wasabi|mat|vinegar|soy sauce|panko|mirin|flakes)\b/i },
   { from: ["rotisserie"], to: "soups", match: /\bsoup\b/i },
   { from: ["prepared-salads", "party-trays"], to: "salad-bar", match: /\bsalad bar\b/i },
+  // Instacart filed its mustard greens with the bananas (cook mode's sarson ka saag found them there)
+  { from: ["bananas"], to: "salad-greens", match: /\b(mustard|collard|turnip) greens\b/i },
   { from: ["indian-snacks"], to: "papad", match: /\b(papad|papadum|pappadam|poppadom|appalam)\b/i },
   { from: ["food-storage", "storage-containers", "disposable-plates", "sponges-gloves"], to: "cookware", match: /\b(skillet|frying pan|fry pan|saucepan|sauce pan|stockpot|baking sheet|cake pan|muffin pan|loaf pan|roasting pan|casserole dish|dutch oven)\b/i },
   { from: ["food-storage", "storage-containers", "disposable-plates", "sponges-gloves"], to: "kitchen-utensils", match: /\b(spatula|whisk|tongs|ladle|peeler|can opener|measuring cups?|measuring spoons?|cutting board|chopping board|colander|grater|rolling pin|bamboo mat)\b/i },

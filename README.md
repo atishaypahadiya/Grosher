@@ -85,7 +85,7 @@ flowchart LR
   sells: "Onions × 4", "Toor dal 500 g", "Paneer 2 × 400 g". Every line says which dishes it is for, and you can
   edit or remove it. Salt, oil and the everyday spices sit under "You probably have", unticked. Nothing reaches
   your list until you tap Add, and then the resolver places it and Route works as usual.
-- **A dish table first.** 88 dishes, 42 of them Indian home staples, each written by hand for two servings
+- **A dish table first.** 110 dishes, 64 of them Indian home staples, each written by hand for two servings
   with its core ingredients, scaled by the number of people and rounded up to whole packs once, after the
   merge. A test checks that every dish lists its core ingredients, that no quantity is out of bounds, and that
   every ingredient line lands on a Grosher shelf without the model.
@@ -98,7 +98,7 @@ flowchart LR
   model): 29 of 37 core ingredients named, about 10 s a dish on an M-series Mac. Carbonara, stroganoff,
   ratatouille, jambalaya and moussaka come back complete. It made rogan josh with chicken and coconut milk, and
   sarson ka saag without spinach or makki atta. Those misses are why the table comes first and why every model
-  line is marked as an estimate.
+  line is marked as an estimate; both dishes, with malai kofta, dhokla and 18 more, are in the table now.
 
 ### The route
 

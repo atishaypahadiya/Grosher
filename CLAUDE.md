@@ -430,7 +430,7 @@ contrast gate's guard card (map and close-up) and detour line.
 `packages/core/src/meals/`; 20 Oct 2026). "Plan meals" under the add pill: dishes (free text; commas, and "and" only
 when the whole phrase is not a dish: "mac and cheese" stays one) and people (default 2, 1–12) → a review sheet → Add to
 list. **Local model only: never Claude or any cloud model** (the worker's `POST /dishes` answers every dish
-unanswered under the anthropic provider). Sources in order: (1) the dish table (`DISHES`, 88, 42 Indian, each per two
+unanswered under the anthropic provider). Sources in order: (1) the dish table (`DISHES`, 110, 64 Indian, each per two
 servings with its `core` keys; `matchDish`: a name or alias exactly, else the resolver's `similarity` ≥ .8); (2) the
 cache (IndexedDB `dish:<normalised name>:2`, a `SCHEMAS` entry: the model's raw lines, validated again on every use);
 (3) the model, **one call a dish** (asked for several in one answer, qwen3:8b wrote the first and closed the JSON),
@@ -438,7 +438,8 @@ sequentially (two at once took as long: Ollama runs one at a time), compact one-
 ingredient, one line ~26; the prompt's format example has no real ingredient names: with "basmati rice" in it, basmati
 turned up in a ratatouille), `format` = `dishSchema()` (units from `UNITS`, ≤ 20 ingredients), `DISH_MAX_TOKENS`, a
 cut-off answer keeps its whole ingredients (`parseDishJson`). Dev: straight to Ollama (45 s a dish); the worker: one
-`POST /dishes` (≤ 6 dishes × 60 chars, 4 KB), each dish through the gate's `/api/chat` (30 s), an 80 s deadline (dishes
+`POST /dishes` (≤ 6 dishes × 60 chars, 4 KB), each dish through the gate's `/api/chat` (40 s: rogan josh took 22 s
+through the deployed chain on 21 Oct, 20.6 s of it at the gate), a 90 s deadline (the app waits 100 s; dishes
 not reached are unanswered), the Mac unreachable → every dish unanswered at once. **Validation**
 (`checkModelIngredients`): no name, an unknown unit or no positive quantity → dropped; water and "garnish" skipped; a
 name matched to `INGREDIENTS` (aliases, then similarity ≥ .85) or made ad hoc (its own name; spoon-measured → a 50 g
@@ -458,7 +459,11 @@ fish, canned beans by name, fresh mint; `text.ts` QTY strips "1 bunch" and "pack
 (`npm run eval:dishes -w @grosher/stores`, ten dishes not in the table, `test/fixtures/dishes-unseen.json`, written
 before asking; the raw answers recorded in `dishes-model.json`, which CI scores with no model): 29 / 37 core
 ingredients, ~10 s a dish (97 s for ten), nothing clamped; rogan josh came back with chicken and coconut milk, sarson
-ka saag without spinach or makki atta, malai kofta without potato or cream. Never tune against it. Tests: core
+ka saag without spinach or makki atta, malai kofta without potato or cream. Those four (with dhokla) went into the
+table on 21 Oct with 18 more Indian dishes, so the model sees only the long tail; the eval still asks it for all ten.
+Never tune against it. The table and the ingredients are their own entry point (`@grosher/stores/meals`), imported
+only by `lib/meals.ts` and the sheet, and the sheet is `lazy` in App: none of it is in the first bundle (the merge
+into the list is `lib/mealsMerge.ts`, which needs no table). A recipe's bare "pasta" is the generic Pasta, not a shape. Tests: core
 `test/meals.test.ts` (units, conversion, packs, aggregation and scaling, matching, validation, parsing), stores
 `test/meals.test.ts` (the table's coverage and bounds, every line placed, the pinned example) and
 `meals-model.test.ts`, web `test/meals.test.tsx` (the cache, the providers, the merge, the sheet), the worker's
@@ -507,7 +512,7 @@ import stripped pack sizes from names, so canned multipacks mostly cannot be tol
 model's guess keeps its own tags. The demo Supercenter keeps its old tags (tests only).
 - **Catalog carry-over** (`src/carry.ts`): Grosher's full catalog is the demo's `catalog.json` moved onto
   Grosher's shelves at load time through the shared category ids (the 7 MB file ships once), plus
-  `grosher/rehome.json` (964 rows the Walmart taxonomy had to shelve wrong: Instacart's beer, wine and spirits
+  `grosher/rehome.json` (965 rows the Walmart taxonomy had to shelve wrong: Instacart's beer, wine and spirits
   were on the bar mixers, its flowers among the batteries, prepared sushi in party trays; name rules in
   `REHOME`, the product's own words only) and 71 base rows (`catalog.base.json`: the demo's 30 with their
   stable ids, then Grosher's own for bulk, flowers, cookware, the food hall and café, fresh green chilies and

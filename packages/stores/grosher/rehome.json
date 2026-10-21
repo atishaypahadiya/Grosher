@@ -17,6 +17,7 @@
   "rotisserie → soups": 3,
   "sponges-gloves → kitchen-utensils": 2,
   "asian-noodles-rice → sushi": 1,
+  "bananas → salad-greens": 1,
   "batteries-lightbulbs → plants": 1,
   "prepared-salads → salad-bar": 1,
   "indian-snacks → papad": 2
@@ -1671,6 +1672,9 @@
   },
   "ic-prohibition-ale": {
    "mixers": "beer"
+  },
+  "ic-mustard-green": {
+   "bananas": "salad-greens"
   },
   "ic-watermelon-vodka": {
    "mixers": "spirits"

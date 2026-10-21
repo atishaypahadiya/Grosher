@@ -23,8 +23,6 @@ export * from "./resolveContext.ts";
 export { reconcile, catalogKey, isBaseRow, type CatalogRow } from "./reconcile.ts";
 export { carryCatalog, type Rehome } from "./carry.ts";
 export { handlingTags, HANDLING_TAGS, MULTIPACK, MULTIPACK_SHELVES } from "./handling.ts";
-export { INGREDIENTS, INGREDIENT_BY_KEY } from "./meals/ingredients.ts";
-export { DISHES, DISH_BY_ID } from "./meals/dishes.ts";
 
 /** textures.json: one entry per department that has a photo (or placeholder). */
 export type TextureManifest = Record<string, { file: string; w: number; h: number; shotAt: string | null; repeatMeters: number }>;

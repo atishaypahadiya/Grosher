@@ -2,17 +2,20 @@
 // one deep-glass sheet. The review: each dish with where its ingredients came from (the table, or the local model,
 // tagged "estimated" in the guess colour), then the merged lines rounded up to whole packs, each editable and
 // removable with the dishes it is for, then "You probably have" (salt, oil, the everyday spices), unticked. Nothing
-// reaches the list until "Add to list".
+// reaches the list until "Add to list". Loaded lazily (App), with the dish table: none of it is in the first bundle.
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import type { IngredientInfo, PlannedDish, ShoppingLine } from "@grosher/core";
-import { INGREDIENT_BY_KEY } from "@grosher/stores";
-import { parseDishes, planLines, resolveUnknown, tableFirst, type DishAsker, type DishState } from "../lib/meals.ts";
+import { INGREDIENT_BY_KEY } from "@grosher/stores/meals";
+import { dishAskerFor, parseDishes, planLines, resolveUnknown, tableFirst, type DishAsker, type DishState } from "../lib/meals.ts";
+import type { ResolverSettings } from "../lib/settings.ts";
 import { Num } from "./Num.tsx";
 import { IconClose } from "./Icons.tsx";
 
 export interface MealSheetProps {
-  asker: DishAsker;
+  /** the resolver settings pick the model's path (Ollama on the Mac, or the worker); a test passes its own asker */
+  settings: ResolverSettings;
+  asker?: DishAsker;
   onAdd: (lines: string[]) => void;
   onClose: () => void;
 }
@@ -25,7 +28,8 @@ interface Edit {
 
 const PEOPLE_MAX = 12;
 
-export function MealSheet({ asker, onAdd, onClose }: MealSheetProps) {
+export function MealSheet({ settings, asker: given, onAdd, onClose }: MealSheetProps) {
+  const asker = useMemo(() => given ?? dishAskerFor(settings), [given, settings]);
   const [text, setText] = useState("");
   const [people, setPeople] = useState(2);
   const [states, setStates] = useState<DishState[] | null>(null);

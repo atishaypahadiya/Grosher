@@ -147,6 +147,73 @@ export const DISHES: Dish[] = [
   d("sabudana-khichdi", "Sabudana khichdi", "indian", ["sabudana", "sago khichdi"], ["sabudana", "peanuts"], [
     ["sabudana", 150, "g"], ["potato", 1, "piece"], ["peanuts", 60, "g"], ["green-chili", 2, "piece"], ["lemon", 1, "piece"], ["cilantro", 0.25, "bunch", "opt"], ["ghee", 1, "tbsp"], ["cumin", 1, "tsp"], ["salt", 1, "tsp"],
   ]),
+  // added 21 Oct 2026, so the model handles only the long tail (rogan josh and sarson ka saag after it got them wrong)
+  d("rogan-josh", "Rogan josh", "indian", ["roghan josh", "rogan gosht", "lamb rogan josh", "mutton rogan josh"], ["lamb", "yogurt", "chili-powder"], [
+    ["lamb", 600, "g"], ["yogurt", 150, "g"], ["onion", 2, "piece"], ["ginger", 15, "g"], ["garlic", 5, "clove"], ["chili-powder", 2, "tsp"], ["fennel-seeds", 1, "tsp"], ["cardamom", 4, "piece"], ["cinnamon", 1, "piece"], ["bay-leaves", 2, "piece"], ["whole-spices", 4, "piece"], ["garam-masala", 1, "tsp"], ["ghee", 3, "tbsp"], ["salt", 1, "tsp"],
+  ]),
+  d("sarson-ka-saag", "Sarson ka saag", "indian", ["sarson da saag", "saag", "makki di roti sarson da saag", "sarson ka saag makki ki roti"], ["mustard-greens", "spinach", "makki-atta"], [
+    ["mustard-greens", 400, "g"], ["spinach", 200, "g"], ["makki-atta", 230, "g"], ["onion", 1, "piece"], ["ginger", 15, "g"], ["garlic", 5, "clove"], ["green-chili", 3, "piece"], ["tomato", 1, "piece", "opt"], ["ghee", 2, "tbsp"], ["butter", 20, "g", "opt"], ["salt", 1, "tsp"],
+  ]),
+  d("malai-kofta", "Malai kofta", "indian", ["malai kofta curry", "kofta curry"], ["paneer", "potato", "cream", "tomato"], [
+    ["paneer", 200, "g"], ["potato", 2, "piece"], ["cream", 100, "ml"], ["cashews", 30, "g"], ["tomato", 3, "piece"], ["onion", 1, "piece"], ["ginger", 10, "g"], ["cornstarch", 2, "tbsp"], ["kasuri-methi", 1, "tsp"], ["garam-masala", 1, "tsp"], ["chili-powder", 1, "tsp"], ["oil", 300, "ml"], ["salt", 1, "tsp"],
+  ]),
+  d("kadai-paneer", "Kadai paneer", "indian", ["karahi paneer", "kadhai paneer"], ["paneer", "bell-pepper", "onion"], [
+    ["paneer", 250, "g"], ["bell-pepper", 2, "piece"], ["onion", 2, "piece"], ["tomato", 3, "piece"], ["ginger", 10, "g"], ["garlic", 4, "clove"], ["coriander-powder", 2, "tsp"], ["chili-flakes", 1, "tsp"], ["kasuri-methi", 1, "tsp"], ["garam-masala", 0.5, "tsp"], ["oil", 2, "tbsp"], ["cilantro", 0.25, "bunch", "opt"], ["salt", 1, "tsp"],
+  ]),
+  d("shahi-paneer", "Shahi paneer", "indian", ["paneer shahi korma", "paneer korma"], ["paneer", "cream", "cashews"], [
+    ["paneer", 250, "g"], ["cream", 100, "ml"], ["yogurt", 100, "g"], ["cashews", 30, "g"], ["onion", 1, "piece"], ["tomato", 2, "piece"], ["ginger", 10, "g"], ["cardamom", 3, "piece"], ["garam-masala", 0.5, "tsp"], ["ghee", 2, "tbsp"], ["saffron", 1, "pinch", "opt"], ["sugar", 1, "tsp"], ["salt", 1, "tsp"],
+  ]),
+  d("paneer-tikka", "Paneer tikka", "indian", ["paneer tikka skewers", "tandoori paneer"], ["paneer", "yogurt", "tandoori-masala"], [
+    ["paneer", 300, "g"], ["yogurt", 150, "g"], ["bell-pepper", 1, "piece"], ["red-onion", 1, "piece"], ["besan", 20, "g"], ["tandoori-masala", 1, "tbsp"], ["lemon", 1, "piece"], ["oil", 1, "tbsp"], ["salt", 1, "tsp"],
+  ]),
+  d("chicken-tikka-masala", "Chicken tikka masala", "indian", ["tikka masala", "chicken tikka"], ["chicken", "yogurt", "tomato", "cream"], [
+    ["chicken", 500, "g"], ["yogurt", 150, "g"], ["tomato", 4, "piece"], ["cream", 100, "ml"], ["onion", 1, "piece"], ["ginger", 15, "g"], ["garlic", 5, "clove"], ["tandoori-masala", 1, "tbsp"], ["garam-masala", 1, "tsp"], ["kasuri-methi", 1, "tsp"], ["butter", 30, "g"], ["salt", 1, "tsp"],
+  ]),
+  d("chicken-korma", "Chicken korma", "indian", ["korma", "murgh korma"], ["chicken", "yogurt", "cashews"], [
+    ["chicken", 500, "g"], ["yogurt", 150, "g"], ["cashews", 40, "g"], ["onion", 2, "piece"], ["cream", 50, "ml", "opt"], ["ginger", 15, "g"], ["garlic", 5, "clove"], ["cardamom", 4, "piece"], ["garam-masala", 1, "tsp"], ["ghee", 2, "tbsp"], ["salt", 1, "tsp"],
+  ]),
+  d("mutton-curry", "Mutton curry", "indian", ["mutton masala", "lamb curry", "goat curry", "kosha mangsho"], ["lamb", "onion", "yogurt"], [
+    ["lamb", 600, "g"], ["onion", 3, "piece"], ["tomato", 2, "piece"], ["yogurt", 100, "g"], ["ginger", 20, "g"], ["garlic", 6, "clove"], ["green-chili", 2, "piece"], ["garam-masala", 1, "tsp"], ["coriander-powder", 1, "tsp"], ["bay-leaves", 2, "piece"], ["oil", 3, "tbsp"], ...tadka,
+  ]),
+  d("keema-matar", "Keema matar", "indian", ["keema", "kheema matar", "mince and peas"], ["lamb", "peas", "onion"], [
+    ["lamb", 400, "g"], ["peas", 150, "g"], ["onion", 2, "piece"], ["tomato", 2, "piece"], ["ginger", 15, "g"], ["garlic", 5, "clove"], ["green-chili", 2, "piece"], ["garam-masala", 1, "tsp"], ["oil", 2, "tbsp"], ["cilantro", 0.25, "bunch", "opt"], ...tadka,
+  ]),
+  d("aloo-matar", "Aloo matar", "indian", ["aloo mutter", "potato peas curry"], ["potato", "peas"], [
+    ["potato", 3, "piece"], ["peas", 150, "g"], ["onion", 1, "piece"], ["tomato", 2, "piece"], ["ginger", 10, "g"], ["green-chili", 1, "piece"], ["oil", 2, "tbsp"], ["garam-masala", 0.5, "tsp"], ["cilantro", 0.25, "bunch", "opt"], ...tadka,
+  ]),
+  d("dum-aloo", "Dum aloo", "indian", ["kashmiri dum aloo", "dum aloo curry"], ["potato", "yogurt"], [
+    ["potato", 4, "piece"], ["yogurt", 150, "g"], ["onion", 1, "piece"], ["tomato", 2, "piece"], ["ginger", 10, "g"], ["garlic", 3, "clove"], ["fennel-seeds", 1, "tsp"], ["garam-masala", 1, "tsp"], ["chili-powder", 1, "tsp"], ["oil", 3, "tbsp"], ["salt", 1, "tsp"],
+  ]),
+  d("jeera-aloo", "Jeera aloo", "indian", ["aloo jeera", "cumin potatoes"], ["potato", "cumin"], [
+    ["potato", 3, "piece"], ["cumin", 2, "tsp"], ["green-chili", 2, "piece"], ["amchur", 1, "tsp"], ["cilantro", 0.25, "bunch"], ["oil", 2, "tbsp"], ["turmeric", 0.5, "tsp"], ["salt", 1, "tsp"],
+  ]),
+  d("gobi-paratha", "Gobi paratha", "indian", ["gobhi paratha", "cauliflower paratha"], ["atta", "cauliflower"], [
+    ["atta", 250, "g"], ["cauliflower", 0.5, "piece"], ["green-chili", 2, "piece"], ["cilantro", 0.25, "bunch"], ["ginger", 10, "g"], ["ajwain", 0.5, "tsp"], ["ghee", 2, "tbsp"], ["yogurt", 200, "g", "opt"], ["salt", 1, "tsp"],
+  ]),
+  d("dal-palak", "Dal palak", "indian", ["palak dal", "spinach dal", "dal with spinach"], ["toor-dal", "spinach"], [
+    ["toor-dal", 150, "g"], ["spinach", 200, "g"], ["onion", 1, "piece"], ["tomato", 1, "piece"], ["garlic", 4, "clove"], ["green-chili", 1, "piece"], ["ghee", 1, "tbsp"], ...tadka,
+  ]),
+  d("rasam", "Rasam", "indian", ["tomato rasam", "rasam rice", "saaru"], ["toor-dal", "tomato", "tamarind"], [
+    ["toor-dal", 50, "g"], ["tomato", 2, "piece"], ["tamarind", 20, "g"], ["rasam-powder", 1, "tbsp"], ["garlic", 4, "clove"], ["curry-leaves", 0.5, "bunch"], ["cilantro", 0.25, "bunch"], ["mustard-seeds", 1, "tsp"], ["hing", 1, "pinch"], ["ghee", 1, "tbsp"], ["rice", 180, "g"], ["salt", 1, "tsp"],
+  ]),
+  d("bisi-bele-bath", "Bisi bele bath", "indian", ["bisibelebath", "bisi bele bhath"], ["toor-dal", "rice", "tamarind"], [
+    ["toor-dal", 75, "g"], ["rice", 120, "g"], ["tamarind", 20, "g"], ["sambar-powder", 2, "tbsp"], ["carrot", 1, "piece"], ["green-beans", 75, "g"], ["peas", 50, "g"], ["onion", 1, "piece"], ["curry-leaves", 0.5, "bunch"], ["peanuts", 20, "g"], ["ghee", 2, "tbsp"], ["mustard-seeds", 1, "tsp"], ["salt", 1, "tsp"],
+  ]),
+  d("ven-pongal", "Ven pongal", "indian", ["pongal", "khara pongal", "ghee pongal"], ["rice", "moong-dal", "ghee"], [
+    ["rice", 120, "g"], ["moong-dal", 60, "g"], ["ghee", 3, "tbsp"], ["black-pepper", 1, "tsp"], ["cumin", 1, "tsp"], ["ginger", 10, "g"], ["cashews", 20, "g"], ["curry-leaves", 0.5, "bunch"], ["hing", 1, "pinch"], ["salt", 1, "tsp"],
+  ]),
+  d("dhokla", "Dhokla", "indian", ["khaman dhokla", "khaman"], ["besan", "yogurt", "baking-soda"], [
+    ["besan", 150, "g"], ["yogurt", 100, "g"], ["baking-soda", 1, "tsp"], ["lemon", 1, "piece"], ["green-chili", 2, "piece"], ["ginger", 10, "g"], ["mustard-seeds", 1, "tsp"], ["curry-leaves", 0.5, "bunch"], ["sugar", 1, "tbsp"], ["oil", 2, "tbsp"], ["cilantro", 0.25, "bunch", "opt"], ["turmeric", 0.25, "tsp"], ["salt", 1, "tsp"],
+  ]),
+  d("besan-chilla", "Besan chilla", "indian", ["chilla", "besan cheela", "gram flour pancakes"], ["besan"], [
+    ["besan", 150, "g"], ["onion", 1, "piece"], ["tomato", 1, "piece"], ["green-chili", 2, "piece"], ["cilantro", 0.25, "bunch"], ["ajwain", 0.5, "tsp"], ["turmeric", 0.25, "tsp"], ["oil", 2, "tbsp"], ["salt", 1, "tsp"],
+  ]),
+  d("aloo-tikki", "Aloo tikki", "indian", ["aloo tikki chaat", "potato patties", "tikki"], ["potato"], [
+    ["potato", 4, "piece"], ["peas", 75, "g"], ["cornstarch", 2, "tbsp"], ["green-chili", 2, "piece"], ["cilantro", 0.25, "bunch"], ["ginger", 10, "g"], ["chaat-masala", 1, "tsp"], ["yogurt", 150, "g", "opt"], ["tamarind", 30, "g", "opt"], ["oil", 4, "tbsp"], ["salt", 1, "tsp"],
+  ]),
+  d("egg-bhurji", "Egg bhurji", "indian", ["anda bhurji", "masala scrambled eggs", "bhurji"], ["eggs", "onion"], [
+    ["eggs", 4, "piece"], ["onion", 1, "piece"], ["tomato", 1, "piece"], ["green-chili", 1, "piece"], ["cilantro", 0.25, "bunch"], ["butter", 20, "g"], ["pav", 4, "piece", "opt"], ["turmeric", 0.25, "tsp"], ["chili-powder", 0.5, "tsp"], ["salt", 0.5, "tsp"],
+  ]),
 
   // ---------------------------------------------------------------- Western and global
   d("pasta-arrabbiata", "Pasta arrabbiata", "global", ["arrabbiata", "penne arrabbiata", "arrabiata", "penne all'arrabbiata"], ["penne", "canned-tomatoes", "garlic"], [

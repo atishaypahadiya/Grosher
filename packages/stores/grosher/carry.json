@@ -1,6 +1,6 @@
 {
   "note": "identity of the carried catalog (scripts/gen-grosher.ts): the source catalog hash, Grosher's shelves and re-home table, the store version",
   "sourceHash": "47612-f5f297680d26dadd",
-  "shelves": "52d31142dccd",
-  "key": "47612-f5f297680d26dadd:52d31142dccd:v3"
+  "shelves": "8a70ee5c02d7",
+  "key": "47612-f5f297680d26dadd:8a70ee5c02d7:v3"
 }

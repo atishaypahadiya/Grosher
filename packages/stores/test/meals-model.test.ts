@@ -7,7 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { aggregate, BOUNDS, toBase } from "@grosher/core";
-import { INGREDIENTS, INGREDIENT_BY_KEY } from "../src/index.ts";
+import { INGREDIENTS, INGREDIENT_BY_KEY } from "../src/meals/index.ts";
 import { fixture, printScore, scoreRecording, type Recording } from "./dish-score.ts";
 
 test("the recorded model answers: every dish answered, scored, and validated inside the bounds", () => {

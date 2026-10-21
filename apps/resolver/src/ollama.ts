@@ -71,11 +71,12 @@ export async function classifyOllama(up: OllamaUpstream, req: ClassifyRequest, f
   return parseLlmResults(raw, items, ids);
 }
 
-/** one dish: ~10 s warm on the Mac (qwen3:8b, ~30 output tokens a second, ~350 tokens), plus the Funnel */
-export const DISH_TIMEOUT_MS = 30_000;
+/** one dish: ~10 s warm on the Mac (qwen3:8b, ~30 output tokens a second, ~350 tokens), plus the Funnel; measured
+ *  21 Oct 2026 through the deployed chain, rogan josh took 22 s end to end (20.6 s at the gate), hence the margin */
+export const DISH_TIMEOUT_MS = 40_000;
 /** the whole request: Ollama answers one call at a time (measured: two at once took as long as one after the other),
  *  so the dishes are asked in turn, and those not reached by then come back unanswered ("try later") */
-export const DISHES_DEADLINE_MS = 80_000;
+export const DISHES_DEADLINE_MS = 90_000;
 
 /**
  * Cook mode: each dish's ingredients from the local model, one call a dish, in turn, through the gate's /api/chat.

@@ -5,7 +5,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { aggregate, BOUNDS, matchDish, purchase, resolveItem, splitDishes, toBase, type PlannedDish } from "@grosher/core";
-import { DISHES, INGREDIENTS, INGREDIENT_BY_KEY, grosher } from "../src/index.ts";
+import { grosher } from "../src/index.ts";
+import { DISHES, INGREDIENTS, INGREDIENT_BY_KEY } from "../src/meals/index.ts";
 
 test("the dish table: about eighty dishes, about half Indian home staples", () => {
   assert.ok(DISHES.length >= 80, `${DISHES.length} dishes`);

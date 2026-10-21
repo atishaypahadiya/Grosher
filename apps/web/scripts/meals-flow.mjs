@@ -58,11 +58,24 @@ try {
   const page = await ctx.newPage();
   page.setDefaultTimeout(120_000);
   page.on("pageerror", (e) => errors.push(String(e)));
+  // the dish table comes with the sheet: nothing of it is fetched before "Plan meals" (the service worker is blocked
+  // here; in the app it precaches the chunk for offline after the first load, off the page's critical path)
+  const sheetChunk = [];
+  page.on("request", (r) => /\/assets\/MealSheet-[^/]+\.js$/.test(r.url()) && sheetChunk.push(r.url()));
   await page.goto(`${BASE}/?closeup=0`, { waitUntil: "load" });
   await page.waitForFunction(() => !!window.__grosherIndex, null, { timeout: 120_000 });
+  await page.waitForTimeout(1500);
+  expect(sheetChunk.length === 0, `the meal sheet's chunk was fetched before the sheet opened: ${sheetChunk.join(", ")}`);
+  const entry = await page.evaluate(async () => {
+    const src = document.querySelector('script[type="module"][src*="/assets/index-"]')?.getAttribute("src");
+    return src ? (await (await fetch(src)).text()).includes("Sarson ka saag") : null;
+  });
+  expect(entry === false, `the dish table is in the entry bundle (${entry})`);
 
   // ---- dishes in
   await page.getByTestId("plan-meals").click();
+  await page.getByLabel("Dishes").waitFor();
+  expect(sheetChunk.length === 1, `the meal sheet's chunk on opening: ${sheetChunk.length} requests`);
   await page.getByLabel("Dishes").fill("dal chawal, rajma, poha, pasta arrabbiata, pasta carbonara");
   await shot(page, "1-dishes");
   await page.getByRole("button", { name: "Make the list" }).click();

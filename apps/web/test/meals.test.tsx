@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, test } from "vitest";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { dbClearMemoryFallback, dbGet } from "../src/lib/db.ts";
-import { cachedDish, dishAskerFor, dishKey, mergeIntoList, parseDishes, resolveUnknown, tableFirst, type DishAsker } from "../src/lib/meals.ts";
+import { cachedDish, dishAskerFor, dishKey, parseDishes, resolveUnknown, tableFirst, type DishAsker } from "../src/lib/meals.ts";
+import { mergeIntoList } from "../src/lib/mealsMerge.ts";
 import { DEFAULT_SETTINGS } from "../src/lib/settings.ts";
 import { MealSheet } from "../src/components/MealSheet.tsx";
 
@@ -86,7 +87,7 @@ describe("cook mode: the providers (local model only)", () => {
 describe("cook mode: the sheet", () => {
   test("dishes → review (by dish, merged, pantry unticked, model lines estimated) → edited lines onto the list", async () => {
     let added: string[] = [];
-    render(<MealSheet asker={fakeAsker((d) => (/carbonara/i.test(d) ? CARBONARA : null))} onAdd={(l) => (added = l)} onClose={() => {}} />);
+    render(<MealSheet settings={DEFAULT_SETTINGS} asker={fakeAsker((d) => (/carbonara/i.test(d) ? CARBONARA : null))} onAdd={(l) => (added = l)} onClose={() => {}} />);
     fireEvent.change(screen.getByLabelText("Dishes"), { target: { value: "dal chawal, pasta carbonara, beef rendang" } });
     fireEvent.click(screen.getByRole("button", { name: "More people" }));
     fireEvent.click(screen.getByRole("button", { name: "Make the list" }));
