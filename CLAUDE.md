@@ -330,8 +330,10 @@ qwen3:14b at 10 GB) would evict the least recently used one: keep the dev server
 (`WAITLIST_ORIGIN`, default `https://grosher.pages.dev`; localhost in dev), its own per-IP limit (`WAITLIST_LIMITER`,
 5 a minute), an email (≤ 254, one plain address) and a Turnstile token verified with Cloudflare's siteverify
 (`TURNSTILE_SECRET` secret; the visitor's IP goes to that check only). It stores `{email (lower-cased), list
-(updates | pilot), created_at}` in D1 (`grosher-waitlist`, binding `WAITLIST`, `migrations/0001_waitlist.sql`),
-`INSERT OR IGNORE`, and answers `{ok: true}` for a new and an already-listed address alike. No IP, no user agent.
+(updates | pilot), created_at}` in D1 (`grosher-waitlist`, binding `WAITLIST`, `migrations/0001_waitlist.sql`, then
+`0002`: UNIQUE (email, list), so an address can be on both lists but never twice on one), inserting with ON CONFLICT
+DO NOTHING; a repeat answers `{ok: true, already: true}` and the form says "You're already on the list" (each try
+still needs a fresh Turnstile token, so the list cannot be checked in bulk). No IP, no user agent.
 Remove an address on request: `npx wrangler d1 execute grosher-waitlist --remote --command "DELETE FROM waitlist WHERE
 email = '…'"`. A double opt-in email would need a sending provider and a domain of our own with SPF and DKIM (a
 pages.dev address cannot send); none is set up.

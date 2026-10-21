@@ -166,7 +166,7 @@ if (wl && wlForm && wl.dataset.sitekey) {
     try {
       const r = await fetch(wl.dataset.endpoint, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email, token, list: wlForm.elements.list.value }) });
       const body = await r.json().catch(() => ({}));
-      status.textContent = r.ok ? "You are on the list. Thank you." : body.error ? `Not sent: ${body.error}.` : "Not sent; try again.";
+      status.textContent = r.ok ? (body.already ? "You're already on the list." : "You are on the list. Thank you.") : body.error ? `Not sent: ${body.error}.` : "Not sent; try again.";
       if (r.ok) wlForm.reset();
     } catch {
       status.textContent = "Not sent: the network did not answer; try again.";

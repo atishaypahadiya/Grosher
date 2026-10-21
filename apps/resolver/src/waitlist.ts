@@ -1,9 +1,10 @@
 // POST /waitlist: the project page's "Get notified" form. Email only, behind Cloudflare Turnstile, stored in D1.
 //
 //   request   {email, token, list?: "updates" | "pilot"}   (token: the Turnstile widget's response)
-//   stored    waitlist(email, list, created_at)             (no IP address, no user agent, nothing else)
-//   answers   200 {ok: true} for a new or an already-listed address alike (the form cannot be used to check who is
-//             on the list); 400 a bad email or a missing token; 403 a foreign origin or a failed Turnstile check;
+//   stored    waitlist(email, list, created_at), UNIQUE (email, list)   (no IP address, no user agent, nothing else)
+//   answers   200 {ok: true} for a new sign-up, 200 {ok: true, already: true} for an address already on that list
+//             (the form says so; each try still costs a fresh Turnstile token, so the list cannot be checked in bulk);
+//             400 a bad email or a missing token; 403 a foreign origin or a failed Turnstile check;
 //             429 over the per-IP limit (WAITLIST_LIMITER, 5 a minute); 503 not configured (no secret or no database)
 //
 // Deleting an address on request: npx wrangler d1 execute grosher-waitlist --remote --command
@@ -12,7 +13,7 @@
 import type { Context } from "hono";
 
 export interface D1Like {
-  prepare(sql: string): { bind(...values: unknown[]): { run(): Promise<unknown> } };
+  prepare(sql: string): { bind(...values: unknown[]): { run(): Promise<{ meta?: { changes?: number } }> } };
 }
 
 export interface WaitlistEnv {
@@ -73,6 +74,7 @@ export async function waitlist(c: Context<{ Bindings: WaitlistEnv }>, fetchImpl:
     return c.json({ error: "the check could not be verified; try again" }, 503);
   }
   if (!verified) return c.json({ error: "the check failed; try again" }, 403);
-  await env.WAITLIST.prepare("INSERT OR IGNORE INTO waitlist (email, list, created_at) VALUES (?, ?, ?)").bind(email, list, new Date().toISOString()).run();
-  return c.json({ ok: true });
+  // UNIQUE (email, list): a repeat changes no row, and says so
+  const r = await env.WAITLIST.prepare("INSERT INTO waitlist (email, list, created_at) VALUES (?, ?, ?) ON CONFLICT (email, list) DO NOTHING").bind(email, list, new Date().toISOString()).run();
+  return c.json(r.meta?.changes === 0 ? { ok: true, already: true } : { ok: true });
 }

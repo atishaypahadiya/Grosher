@@ -166,19 +166,35 @@ describe("resolver worker", () => {
 
 describe("POST /waitlist", () => {
   const rows: unknown[][] = [];
-  const db = { prepare: () => ({ bind: (...v: unknown[]) => ({ run: async () => rows.push(v) }) }) };
+  // like D1 with UNIQUE (email, list): a repeat changes nothing
+  const db = {
+    prepare: () => ({
+      bind: (...v: unknown[]) => ({
+        run: async () => {
+          if (rows.some((r) => r[0] === v[0] && r[1] === v[1])) return { meta: { changes: 0 } };
+          rows.push(v);
+          return { meta: { changes: 1 } };
+        },
+      }),
+    }),
+  };
   const verify = (ok: boolean) => (async () => new Response(JSON.stringify({ success: ok }))) as unknown as typeof fetch;
   const post = (app: ReturnType<typeof createApp>, body: unknown, env: Record<string, unknown>, origin = "https://grosher.pages.dev") =>
     app.request("/waitlist", { method: "POST", body: JSON.stringify(body), headers: { "content-type": "application/json", origin } }, env);
   const env = { TURNSTILE_SECRET: "s", WAITLIST: db };
 
-  test("stores the address, lower-cased, once; the same answer for a repeat", async () => {
+  test("stores the address, lower-cased, once per list; a repeat is told it is already on the list", async () => {
     const app = createApp(undefined, verify(true));
     const r = await post(app, { email: "  Shopper@Example.com ", token: "t", list: "pilot" }, env);
     expect(r.status).toBe(200);
     expect(await r.json()).toEqual({ ok: true });
     expect(rows.at(-1)!.slice(0, 2)).toEqual(["shopper@example.com", "pilot"]);
-    expect((await post(app, { email: "shopper@example.com", token: "t" }, env)).status).toBe(200);
+    const again = await post(app, { email: "SHOPPER@example.com", token: "t", list: "pilot" }, env);
+    expect(again.status).toBe(200);
+    expect(await again.json()).toEqual({ ok: true, already: true });
+    // the other list is a separate sign-up
+    expect(await (await post(app, { email: "shopper@example.com", token: "t", list: "updates" }, env)).json()).toEqual({ ok: true });
+    expect(rows.filter((r) => r[0] === "shopper@example.com")).toHaveLength(2);
   });
 
   test("refuses a bad address, a missing or failed check, a foreign origin, too many tries, and runs only when configured", async () => {
