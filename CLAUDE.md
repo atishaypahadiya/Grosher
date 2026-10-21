@@ -16,6 +16,13 @@ list plus a seeded remainder), which resolves most everyday items at aisle preci
 half and are kept as drawn: for colour, ink and plates `DESIGN.md` is the reference, and the README shows
 screenshots of the app as built (`apps/web/public/project/img/`), not the boards.
 
+## Commits and PRs
+
+No Claude attribution, in this repo or any other: commit messages and PR descriptions carry no
+`Co-Authored-By: Claude …` trailer, no "Generated with Claude Code" line and no `Claude-Session:` line. The
+user-level `~/.claude/settings.json` turns it off (`attribution: {commit: "", pr: "", sessionUrl: false}`, and
+`includeCoAuthoredBy: false` for older versions); the history was rewritten on 20 Oct 2026 to remove the old ones.
+
 ## Layout
 
 ```
@@ -163,7 +170,7 @@ anything): pending catalog entries at locations the map lacks are re-placed by c
 they ask); memory rows are re-placed by category at guess confidence (≤ .49) or kept as they are (they
 resolve as "Needs a place"); model answers naming a category the store lacks are dropped so the item is
 asked again; lists (names) are never touched. Why: on 16 Oct the model picked a *department* and the app
-cached that department's first location (oat milk → `DAIRY-8`, map v2); map v3 (17 Oct, `81b01d5`) renamed
+cached that department's first location (oat milk → `DAIRY-8`, map v2); map v3 (17 Oct, `0c1c70a`) renamed
 every location (`DAIRY-L1`…), and a confirmed (≥ .6) stale entry that answered before the full index was in
 made the solver throw at startup ("stop llm:oatmilk: unknown location DAIRY-8"). `test/stale-locations.test.tsx`
 and boot-resilience G / H keep it fixed.
