@@ -14,6 +14,8 @@ import { toStop } from "@grosher/core";
 import { PickerSheet } from "./components/PickerSheet.tsx";
 import { ListsSheet } from "./components/ListsSheet.tsx";
 import { SettingsSheet } from "./components/SettingsSheet.tsx";
+import { MealSheet } from "./components/MealSheet.tsx";
+import { dishAskerFor, mergeIntoList } from "./lib/meals.ts";
 import { loadSettings, resetSettings, saveSettings } from "./lib/settings.ts";
 import { DEMO_LIST, demoWalkOn } from "./lib/demoWalk.ts";
 import { linkedList, withoutLink } from "./lib/deepLink.ts";
@@ -88,6 +90,8 @@ export function App({ bundle = DEFAULT_STORE }: { bundle?: StoreBundle } = {}) {
   const [settings, setSettings] = useState(loadSettings);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const provider = useMemo(() => providerFor(settings), [settings]);
+  const [mealsOpen, setMealsOpen] = useState(false);
+  const dishAsker = useMemo(() => dishAskerFor(settings), [settings]);
   const res = useResolution(bundle, items, provider);
   useEffect(() => {
     if (restored.current || !res.catalogReady) return;
@@ -302,6 +306,7 @@ export function App({ bundle = DEFAULT_STORE }: { bundle?: StoreBundle } = {}) {
         onLoadUsual={() => usualToday && listsState.loadList(usualToday.id)}
         onOpenLists={() => setListsOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
+        onPlanMeals={() => setMealsOpen(true)}
         reset={
           reset.visible && reset.flag
             ? {
@@ -340,6 +345,16 @@ export function App({ bundle = DEFAULT_STORE }: { bundle?: StoreBundle } = {}) {
             setViewing(r);
           }}
           onClose={() => setListsOpen(false)}
+        />
+      )}
+      {mealsOpen && (
+        <MealSheet
+          asker={dishAsker}
+          onAdd={(lines) => {
+            setItems((cur) => mergeIntoList(cur, lines));
+            setMealsOpen(false);
+          }}
+          onClose={() => setMealsOpen(false)}
         />
       )}
       {settingsOpen && (

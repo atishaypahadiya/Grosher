@@ -83,6 +83,13 @@ jobs:
           for i in $(seq 1 40); do curl -sf http://localhost:4173/ > /dev/null && break; sleep 0.5; done
           node scripts/survey-flow.mjs http://localhost:4173
 
+      - name: Cook mode end to end (dishes → review → list → route, the local model mocked)
+        working-directory: apps/web
+        run: |
+          curl -sf http://localhost:4173/ > /dev/null || (npx vite preview --port 4173 --strictPort &)
+          for i in $(seq 1 40); do curl -sf http://localhost:4173/ > /dev/null && break; sleep 0.5; done
+          node scripts/meals-flow.mjs http://localhost:4173
+
       - name: Off-list guard demo walk (fires on the detour, quiet at the counters)
         working-directory: apps/web
         run: |

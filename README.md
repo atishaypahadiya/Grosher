@@ -78,6 +78,28 @@ flowchart LR
   a suggestion ("yogurt" → "Chobani greek yogurt?"). Three misses in one aisle, or a quarter of a trip, flag
   the store as possibly reset and open that aisle in the editor.
 
+### Cook mode
+
+- **Dishes in, a list out.** "Plan meals" takes dishes ("dal chawal, rajma, poha, pasta arrabbiata") and how
+  many people are eating. A review sheet shows each dish's ingredients, then one merged list in what the store
+  sells: "Onions × 4", "Toor dal 500 g", "Paneer 2 × 400 g". Every line says which dishes it is for, and you can
+  edit or remove it. Salt, oil and the everyday spices sit under "You probably have", unticked. Nothing reaches
+  your list until you tap Add, and then the resolver places it and Route works as usual.
+- **A dish table first.** 88 dishes, 42 of them Indian home staples, each written by hand for two servings
+  with its core ingredients, scaled by the number of people and rounded up to whole packs once, after the
+  merge. A test checks that every dish lists its core ingredients, that no quantity is out of bounds, and that
+  every ingredient line lands on a Grosher shelf without the model.
+- **The local model for the rest, never a cloud one.** A dish the table does not know goes to `qwen3:8b` on the
+  Mac, one call a dish, with a strict JSON schema. Its answer is validated (a line with no usable unit is
+  dropped, a quantity past its category's bound is capped, and the sheet says which), cached on the device,
+  and tagged "estimated" in amber. When the Mac is asleep, the table's dishes still work and the others say
+  they need the laptop's model.
+- **How good the model is** (20 Oct 2026, ten dishes not in the table, recorded so CI scores it without a
+  model): 29 of 37 core ingredients named, about 10 s a dish on an M-series Mac. Carbonara, stroganoff,
+  ratatouille, jambalaya and moussaka come back complete. It made rogan josh with chicken and coconut milk, and
+  sarson ka saag without spinach or makki atta. Those misses are why the table comes first and why every model
+  line is marked as an estimate.
+
 ### The route
 
 - **Exact up to 13 stops.** `packages/core` (no dependencies) runs Dijkstra over a graph of corridors in metres,
@@ -223,6 +245,7 @@ Every push to `main` runs `.github/workflows/ci.yml`:
 | close-up gate | any close-up over its call, triangle, GPU-texture or download budget; a close-up fetched when it should not be; a next stop not prepared ahead |
 | contrast gate | text under 4.5:1, or an icon or focus ring under 3:1, against the pixels actually behind it, on every screen including the 3D scene and the project page |
 | survey flow | survey mode end to end with mocked sensors: calibrate, three aisles, offline sign photos, build, export, import |
+| cook mode | dishes → review → list → route with the model mocked: the table's lines, the model's dish tagged, pantry unticked, edits kept; the Mac asleep; the cache |
 | guard demo | the off-list guard firing anywhere but the demo's one detour, or speaking during a counter wait |
 | boot resilience | a stale service worker, old saved state, missing chunks or a render error leaving a blank screen |
 | docs numbers | a number in this README or on the project page that the gates above did not measure |

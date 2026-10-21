@@ -1,7 +1,7 @@
 // Text normalisation for item resolution: case, punctuation, quantities,
 // plurals; trigram and Damerau–Levenshtein similarity.
 
-const QTY = /\b(\d+(?:[.,]\d+)?\s*(?:x\s*)?(?:pack|pk|ct|count|lb|lbs|oz|kg|g|l|ml|gal|gallon|litre|liter|dozen|pcs?|rolls?|bottles?|cans?)|pack of \d+|\d+-pack|\d+pk|x\d+|large|small|medium|xl|family size|value pack)\b/g;
+const QTY = /\b(\d+(?:[.,]\d+)?\s*(?:x\s*)?(?:pack|pk|ct|count|lb|lbs|oz|kg|g|l|ml|gal|gallon|litre|liter|dozen|pcs?|rolls?|bottles?|cans?|bunch(?:es)?)|packs? of \d+|\d+-pack|\d+pk|x\d+|large|small|medium|xl|family size|value pack)\b/g;
 
 export function normalize(s: string): string {
   return s

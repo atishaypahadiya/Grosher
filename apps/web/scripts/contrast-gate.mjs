@@ -107,7 +107,19 @@ const withStyle = async (page, css, fn) => {
 const collect = () => {
   const seen = new Set();
   const visible = (el) => el.checkVisibility({ visibilityProperty: true, opacityProperty: true });
+  // partly scrolled out of a scrolling box (a sheet's list): the clipped part is not on screen, and what lies outside
+  // the box (its header, the button under it) is not its background; the rows fully inside are measured instead
+  const clipped = (el, r) => {
+    for (let e = el.parentElement; e && e !== document.body; e = e.parentElement) {
+      const cs = getComputedStyle(e);
+      if (!/auto|scroll/.test(cs.overflowY + cs.overflowX)) continue;
+      const c = e.getBoundingClientRect();
+      if (r.top < c.top - 1 || r.bottom > c.bottom + 1 || r.left < c.left - 1 || r.right > c.right + 1) return true;
+    }
+    return false;
+  };
   const onTop = (el, r) => {
+    if (clipped(el, r)) return false;
     const x = Math.min(innerWidth - 1, Math.max(0, (r.left + r.right) / 2));
     const y = Math.min(innerHeight - 1, Math.max(0, (r.top + r.bottom) / 2));
     const hit = document.elementFromPoint(x, y);
@@ -356,8 +368,10 @@ try {
   // ---- the off-list guard (lib/guard.ts), from the demo walk: its card above the bottom card on the map, and
   // docked at the top in a close-up; then the checkout's detour line
   for (const [query, label, finish] of [
-    ["?demo=walk&speed=12&perf=1&closeup=0", "guard card (map)", true],
-    ["?demo=walk&speed=12&perf=1&tier=hi", "guard card (close-up)", false],
+    // card=60: the card stays up while it is measured (the demo taps Back on route after 4 s otherwise, and three
+    // software-rendered screenshots can take longer: the text was once measured against the scene behind a card gone)
+    ["?demo=walk&speed=12&perf=1&closeup=0&card=60", "guard card (map)", true],
+    ["?demo=walk&speed=12&perf=1&tier=hi&card=60", "guard card (close-up)", false],
   ]) {
     const gctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
     const gp = await gctx.newPage();
@@ -368,6 +382,8 @@ try {
     await gp.getByTestId("guard-card").waitFor({ timeout: 300_000 });
     await gp.waitForTimeout(500);
     all.push(...(await measure(gp, label)));
+    // measured: tap Back on route as the shopper would, rather than wait out the held card
+    await gp.getByRole("button", { name: "Back on route" }).click({ timeout: 5_000 }).catch(() => {});
     if (finish) {
       await gp.getByTestId("detours").waitFor({ timeout: 300_000 });
       await gp.waitForTimeout(600);
@@ -421,6 +437,28 @@ try {
   await sheet(where, "picker sheet");
   await sheet(sp.getByRole("button", { name: /^settings$/i }), "settings");
   await sheet(sp.getByRole("button", { name: /^lists$/i }).first(), "lists sheet");
+  // cook mode's sheet (components/MealSheet): the dishes step, then the review with one dish from the model (mocked:
+  // its "estimated" tags in the guess colour), at the top and scrolled to "You probably have"
+  await sp.route("**/api/chat", async (route) => {
+    const body = JSON.parse(route.request().postData() ?? "{}");
+    if (!body.format?.properties?.ingredients) return route.abort();
+    const line = (name, quantity, unit, pantryStaple = false) => ({ name, quantity, unit, optional: false, pantryStaple });
+    await route.fulfill({ json: { message: { content: JSON.stringify({ ingredients: [line("spaghetti", 200, "g"), line("egg yolk", 3, "piece"), line("parmesan cheese", 50, "g"), line("pancetta", 150, "g"), line("black pepper", 1, "tsp", true)] }) } } });
+  });
+  await sp.route("**/dishes", (route) => route.abort());
+  await sp.getByTestId("plan-meals").click();
+  await sp.getByLabel("Dishes").fill("dal chawal, rajma, pasta carbonara");
+  await sp.waitForTimeout(500);
+  all.push(...(await measure(sp, "meal sheet (dishes)")));
+  await sp.getByRole("button", { name: "Make the list" }).click();
+  await sp.waitForFunction(() => !document.querySelector('[data-status="asking"]'), null, { timeout: 60_000 });
+  await sp.waitForTimeout(500);
+  all.push(...(await measure(sp, "meal sheet (review)")));
+  await sp.locator(".meal-scroll").evaluate((e) => (e.scrollTop = e.scrollHeight));
+  await sp.waitForTimeout(300);
+  all.push(...(await measure(sp, "meal sheet (pantry)")));
+  await sp.getByRole("button", { name: /^close$/i }).first().click();
+  await sp.waitForTimeout(500);
   // the error plate (index.html's boot guard), raised by a render error on purpose
   await sp.goto(`${BASE}/#/__crash`, { waitUntil: "load" });
   await sp.locator(".boot-fail").waitFor({ timeout: 30_000 });

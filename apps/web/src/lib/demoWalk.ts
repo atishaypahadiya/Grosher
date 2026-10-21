@@ -20,8 +20,12 @@ export const DEMO_DETOUR_LEG = 2;
 const detourSteps = (legSteps: number) => GUARD.wanderFactor * legSteps + GUARD.wanderExtraSteps + 40;
 /** the long wait at a counter or the food hall: inside its allowance (dwell + the walk) */
 const COUNTER_WAIT_S = 150;
-/** seconds (real) the guard's card stays up before the demo taps Back on route */
-const CARD_REAL_S = 4;
+/** seconds (real) the guard's card stays up before the demo taps Back on route (?card=N, 1–600: the contrast gate
+ *  holds it while it measures, which on a software renderer can take longer than 4 s) */
+const CARD_REAL_S = (() => {
+  const q = typeof location !== "undefined" ? Number(new URLSearchParams(location.search).get("card")) : NaN;
+  return Number.isFinite(q) && q >= 1 ? Math.min(600, q) : 4;
+})();
 const CADENCE = 1.8;
 
 export interface DemoEvent {

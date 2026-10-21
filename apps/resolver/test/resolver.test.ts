@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { classifierFor, createApp } from "../src/index.ts";
 import { buildTool, classify, type Guess } from "../src/classify.ts";
-import { classifyOllama, probeOllama } from "../src/ollama.ts";
+import { classifyOllama, dishesOllama, probeOllama } from "../src/ollama.ts";
 
 describe("resolver worker", () => {
   test("POST /resolve validates and returns the classifier's guesses", async () => {
@@ -109,6 +109,53 @@ describe("resolver worker", () => {
     expect(await probeOllama({ url: "https://m", token: "t" }, (async () => new Response(JSON.stringify({ models: [] }))) as typeof fetch)).toMatchObject({ ok: true, modelLoaded: false });
     // anthropic is not probed (a probe would be a paid call)
     expect(await (await createApp().request("/health", {}, { ANTHROPIC_API_KEY: "x" })).json()).toEqual({ ok: true, provider: "anthropic", upstream: "not probed" });
+  });
+
+  test("POST /dishes: one local-model call a dish through the gate, unanswered dishes flagged, never Claude", async () => {
+    const env = { PROVIDER: "ollama", OLLAMA_UPSTREAM: "https://mac.example.ts.net", OLLAMA_TOKEN: "t0k" };
+    const sent: Record<string, unknown>[] = [];
+    const line = (name: string) => ({ name, quantity: 1, unit: "piece", optional: false, pantryStaple: false });
+    const up = (async (url: RequestInfo | URL, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body));
+      sent.push({ url: String(url), auth: (init?.headers as Record<string, string>).authorization, ...body });
+      const dish = body.messages[1].content as string;
+      if (dish.includes("Broken")) return new Response(JSON.stringify({ message: { content: "not json" } }));
+      return new Response(JSON.stringify({ message: { content: JSON.stringify({ ingredients: [line(`${dish} thing`)] }) } }));
+    }) as typeof fetch;
+    const post = (app: ReturnType<typeof createApp>, body: unknown, e: object = env) => app.request("/dishes", { method: "POST", body: JSON.stringify(body) }, e);
+    const ok = await post(createApp(undefined, up), { dishes: ["Ratatouille", " ratatouille ", "Moussaka", 3] });
+    const json = (await ok.json()) as { results: { dish: string; ingredients: { name: string }[] | null }[]; degraded?: boolean };
+    expect(json.degraded).toBeUndefined();
+    expect(json.results.map((r) => [r.dish, r.ingredients?.[0].name])).toEqual([
+      ["Ratatouille", "Dish: Ratatouille thing"],
+      ["ratatouille", "Dish: ratatouille thing"],
+      ["Moussaka", "Dish: Moussaka thing"],
+    ]);
+    expect(sent[0]).toMatchObject({ url: "https://mac.example.ts.net/api/chat", auth: "Bearer t0k", model: "qwen3:8b", think: false, stream: false, format: { required: ["ingredients"] } });
+    // a dish the model botched is unanswered, the rest stand
+    const partial = (await (await post(createApp(undefined, up), { dishes: ["Broken pie", "Moussaka"] })).json()) as typeof json;
+    expect(partial).toMatchObject({ degraded: true, results: [{ dish: "Broken pie", ingredients: null }, { dish: "Moussaka" }] });
+    // the Mac asleep: every dish unanswered at once, not one timeout after another
+    let calls = 0;
+    const gone = (async () => {
+      calls++;
+      throw new TypeError("fetch failed");
+    }) as typeof fetch;
+    const asleep = (await (await post(createApp(undefined, gone), { dishes: ["A", "B", "C"] })).json()) as typeof json;
+    expect(asleep).toEqual({ degraded: true, results: [{ dish: "A", ingredients: null }, { dish: "B", ingredients: null }, { dish: "C", ingredients: null }] });
+    expect(calls).toBe(1);
+    // the deadline: dishes not reached come back unanswered
+    expect(await dishesOllama({ url: "https://m", token: "t" }, ["A", "B"], up, 0)).toEqual([{ dish: "A", ingredients: null }, { dish: "B", ingredients: null }]);
+    // local only: the anthropic provider never answers a dish, and no request leaves
+    sent.length = 0;
+    expect(await (await post(createApp(undefined, up), { dishes: ["A"] }, { PROVIDER: "anthropic", ANTHROPIC_API_KEY: "x" })).json()).toEqual({ degraded: true, results: [{ dish: "A", ingredients: null }] });
+    expect(sent).toHaveLength(0);
+    // caps and shape
+    expect((await post(createApp(undefined, up), { dishes: "Ratatouille" })).status).toBe(400);
+    expect((await post(createApp(undefined, up), { dishes: ["x".repeat(5000)] })).status).toBe(413);
+    const many = (await (await post(createApp(undefined, up), { dishes: Array.from({ length: 12 }, (_, i) => `Dish ${i} ${"y".repeat(80)}`) })).json()) as typeof json;
+    expect(many.results).toHaveLength(6);
+    expect(many.results[0].dish).toHaveLength(60);
   });
 
   test("POST /sign: one photo to the vision model through the gate; degraded, never an error", async () => {

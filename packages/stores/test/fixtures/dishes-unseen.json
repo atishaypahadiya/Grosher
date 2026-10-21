@@ -1,0 +1,15 @@
+{
+  "note": "Cook mode's model fixture: ten dishes NOT in the dish table (src/meals/dishes.ts), each with the core ingredients a cook would not make it without, as alternatives (any one name matches, case-insensitive, as a substring of an ingredient the model named). Written before the model was asked; never tuned against. scripts/eval-dishes.ts asks the local model and records its raw answers in dishes-model.json; test/meals-model.test.ts scores the recording.",
+  "dishes": [
+    { "dish": "Pasta carbonara", "core": [["spaghetti", "pasta", "linguine", "rigatoni"], ["egg"], ["pancetta", "guanciale", "bacon"], ["parmesan", "pecorino", "parmigiano"]] },
+    { "dish": "Beef stroganoff", "core": [["beef", "steak", "sirloin"], ["mushroom"], ["sour cream", "cream"], ["onion", "shallot"]] },
+    { "dish": "Ratatouille", "core": [["eggplant", "aubergine"], ["zucchini", "courgette"], ["pepper", "capsicum"], ["tomato"]] },
+    { "dish": "Chicken pot pie", "core": [["chicken"], ["pastry", "pie crust", "dough", "crust"], ["carrot"], ["pea"]] },
+    { "dish": "Jambalaya", "core": [["rice"], ["sausage", "andouille", "chorizo"], ["bell pepper", "green pepper", "pepper"], ["celery", "onion"]] },
+    { "dish": "Malai kofta", "core": [["paneer"], ["potato"], ["cream", "malai"], ["tomato"]] },
+    { "dish": "Rogan josh", "core": [["lamb", "mutton", "goat"], ["yogurt", "curd"], ["onion"]] },
+    { "dish": "Sarson ka saag", "core": [["mustard green", "sarson", "mustard leaves"], ["spinach", "palak", "bathua"], ["makki", "cornmeal", "maize flour", "corn flour"]] },
+    { "dish": "Dhokla", "core": [["besan", "gram flour", "chickpea flour"], ["yogurt", "curd"], ["eno", "baking soda", "fruit salt"]] },
+    { "dish": "Moussaka", "core": [["eggplant", "aubergine"], ["lamb", "beef"], ["tomato"], ["milk", "bechamel", "béchamel"]] }
+  ]
+}

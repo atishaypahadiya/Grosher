@@ -29,6 +29,8 @@ export interface ListScreenProps {
   onLoadUsual: () => void;
   onOpenLists: () => void;
   onOpenSettings?: () => void;
+  /** cook mode: dishes in, their ingredients onto the list (components/MealSheet) */
+  onPlanMeals?: () => void;
   /** the "possibly reset" banner, when a recent trip missed enough */
   reset?: { text: string; onReview: () => void; onDismiss: () => void } | null;
   onTellWhere: (name: string) => void;
@@ -44,7 +46,7 @@ export const splitItems = (text: string) =>
     .map((s) => s.trim())
     .filter(Boolean);
 
-export function ListScreen({ store, sample, items, results, plan, baselineM, usual, asking, warming, offline, offlineNote, onAdd, onRemove, onReplace, memory, onLoadUsual, onOpenLists, onOpenSettings, reset, onTellWhere, onRoute, resume }: ListScreenProps) {
+export function ListScreen({ store, sample, items, results, plan, baselineM, usual, asking, warming, offline, offlineNote, onAdd, onRemove, onReplace, memory, onLoadUsual, onOpenLists, onOpenSettings, onPlanMeals, reset, onTellWhere, onRoute, resume }: ListScreenProps) {
   const [draft, setDraft] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
@@ -164,6 +166,14 @@ export function ListScreen({ store, sample, items, results, plan, baselineM, usu
           </button>
         )}
       </form>
+      {onPlanMeals && (
+        <div className="meal-entry">
+          <button type="button" className="pill soil-ghost" data-testid="plan-meals" onClick={onPlanMeals}>
+            Plan meals
+          </button>
+          <span className="caption-line muted on-haze">Dishes in, ingredients on the list</span>
+        </div>
+      )}
       {hint && <p className="caption-line muted on-haze">{hint}</p>}
       {voice && (
         <p className="caption-line muted on-haze voice-hint" data-testid="voice-hint">

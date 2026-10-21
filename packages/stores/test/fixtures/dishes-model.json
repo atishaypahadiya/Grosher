@@ -1,0 +1,78 @@
+{
+ "model": "qwen3:8b",
+ "recordedAt": "2026-10-20",
+ "concurrency": 1,
+ "totalMs": 96956,
+ "calls": [
+  {
+   "dish": "Pasta carbonara",
+   "ms": 4698,
+   "outputTokens": 165,
+   "generationMs": 4431,
+   "content": "{\"ingredients\":[{\"name\":\"egg yolk\",\"quantity\":2,\"unit\":\"piece\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"parmesan cheese\",\"quantity\":50,\"unit\":\"g\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"guanciale\",\"quantity\":150,\"unit\":\"g\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"egg white\",\"quantity\":2,\"unit\":\"piece\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"black pepper\",\"quantity\":1,\"unit\":\"tsp\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"pasta\",\"quantity\":200,\"unit\":\"g\",\"optional\":false,\"pantryStaple\":false}]}"
+  },
+  {
+   "dish": "Beef stroganoff",
+   "ms": 8303,
+   "outputTokens": 298,
+   "generationMs": 8107,
+   "content": "{\"ingredients\":[{\"name\":\"beef sirloin\",\"quantity\":300,\"unit\":\"g\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"onion\",\"quantity\":1,\"unit\":\"piece\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"mushroom\",\"quantity\":200,\"unit\":\"g\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"egg\",\"quantity\":2,\"unit\":\"piece\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"sour cream\",\"quantity\":100,\"unit\":\"g\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"garlic\",\"quantity\":2,\"unit\":\"clove\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"paprika\",\"quantity\":1,\"unit\":\"tsp\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"salt\",\"quantity\":1,\"unit\":\"tsp\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"black pepper\",\"quantity\":1,\"unit\":\"tsp\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"olive oil\",\"quantity\":2,\"unit\":\"tbsp\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"fresh dill\",\"quantity\":1,\"unit\":\"bunch\",\"optional\":false,\"pantryStaple\":false}]}"
+  },
+  {
+   "dish": "Ratatouille",
+   "ms": 8050,
+   "outputTokens": 290,
+   "generationMs": 7853,
+   "content": "{\"ingredients\":[{\"name\":\"eggplant\",\"quantity\":300,\"unit\":\"g\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"zucchini\",\"quantity\":300,\"unit\":\"g\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"bell pepper\",\"quantity\":2,\"unit\":\"piece\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"onion\",\"quantity\":150,\"unit\":\"g\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"garlic\",\"quantity\":3,\"unit\":\"clove\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"tomato\",\"quantity\":2,\"unit\":\"piece\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"olive oil\",\"quantity\":3,\"unit\":\"tbsp\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"salt\",\"quantity\":5,\"unit\":\"g\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"black pepper\",\"quantity\":1,\"unit\":\"tsp\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"thyme\",\"quantity\":1,\"unit\":\"bunch\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"bay leaf\",\"quantity\":1,\"unit\":\"piece\",\"optional\":false,\"pantryStaple\":true}]}"
+  },
+  {
+   "dish": "Chicken pot pie",
+   "ms": 9588,
+   "outputTokens": 343,
+   "generationMs": 9391,
+   "content": "{\"ingredients\":[{\"name\":\"chicken breast\",\"quantity\":400,\"unit\":\"g\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"carrot\",\"quantity\":2,\"unit\":\"piece\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"celery stalk\",\"quantity\":2,\"unit\":\"piece\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"onion\",\"quantity\":1,\"unit\":\"piece\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"garlic clove\",\"quantity\":2,\"unit\":\"clove\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"flour\",\"quantity\":50,\"unit\":\"g\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"salt\",\"quantity\":1,\"unit\":\"tsp\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"pepper\",\"quantity\":1,\"unit\":\"tsp\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"butter\",\"quantity\":50,\"unit\":\"g\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"egg\",\"quantity\":1,\"unit\":\"piece\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"pie crust\",\"quantity\":1,\"unit\":\"piece\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"milk\",\"quantity\":100,\"unit\":\"ml\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"thyme bunch\",\"quantity\":1,\"unit\":\"bunch\",\"optional\":false,\"pantryStaple\":true}]}"
+  },
+  {
+   "dish": "Jambalaya",
+   "ms": 10493,
+   "outputTokens": 376,
+   "generationMs": 10301,
+   "content": "{\"ingredients\":[{\"name\":\"rice\",\"quantity\":200,\"unit\":\"g\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"chicken breast\",\"quantity\":300,\"unit\":\"g\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"shrimp\",\"quantity\":200,\"unit\":\"g\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"andouille sausage\",\"quantity\":150,\"unit\":\"g\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"onion\",\"quantity\":1,\"unit\":\"piece\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"green bell pepper\",\"quantity\":1,\"unit\":\"piece\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"celery stalk\",\"quantity\":2,\"unit\":\"piece\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"garlic\",\"quantity\":2,\"unit\":\"clove\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"tomato puree\",\"quantity\":100,\"unit\":\"ml\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"thyme\",\"quantity\":1,\"unit\":\"bunch\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"bay leaf\",\"quantity\":1,\"unit\":\"piece\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"black pepper\",\"quantity\":1,\"unit\":\"tsp\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"salt\",\"quantity\":1,\"unit\":\"tsp\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"vegetable oil\",\"quantity\":50,\"unit\":\"ml\",\"optional\":false,\"pantryStaple\":true}]}"
+  },
+  {
+   "dish": "Malai kofta",
+   "ms": 12920,
+   "outputTokens": 463,
+   "generationMs": 12722,
+   "content": "{\"ingredients\":[{\"name\":\"paneer\",\"quantity\":200,\"unit\":\"g\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"onion\",\"quantity\":1,\"unit\":\"piece\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"tomato\",\"quantity\":1,\"unit\":\"piece\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"peas\",\"quantity\":150,\"unit\":\"g\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"ginger garlic paste\",\"quantity\":1,\"unit\":\"tbsp\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"chickpea flour\",\"quantity\":2,\"unit\":\"tbsp\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"coriander powder\",\"quantity\":1,\"unit\":\"tbsp\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"cumin powder\",\"quantity\":1,\"unit\":\"tbsp\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"turmeric\",\"quantity\":0.5,\"unit\":\"tsp\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"red chili powder\",\"quantity\":1,\"unit\":\"tsp\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"garam masala\",\"quantity\":0.5,\"unit\":\"tsp\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"salt\",\"quantity\":1,\"unit\":\"tsp\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"oil\",\"quantity\":50,\"unit\":\"ml\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"water\",\"quantity\":100,\"unit\":\"ml\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"coriander leaves\",\"quantity\":1,\"unit\":\"bunch\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"lemon juice\",\"quantity\":1,\"unit\":\"tbsp\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"garnish\",\"quantity\":1,\"unit\":\"piece\",\"optional\":true,\"pantryStaple\":false}]}"
+  },
+  {
+   "dish": "Rogan josh",
+   "ms": 12501,
+   "outputTokens": 446,
+   "generationMs": 12307,
+   "content": "{\"ingredients\":[{\"name\":\"chicken thighs\",\"quantity\":500,\"unit\":\"g\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"onion\",\"quantity\":2,\"unit\":\"piece\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"tomato\",\"quantity\":2,\"unit\":\"piece\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"coconut milk\",\"quantity\":400,\"unit\":\"ml\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"ginger\",\"quantity\":1,\"unit\":\"piece\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"garlic\",\"quantity\":4,\"unit\":\"clove\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"cumin seeds\",\"quantity\":1,\"unit\":\"piece\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"cardamom\",\"quantity\":3,\"unit\":\"piece\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"bay leaf\",\"quantity\":1,\"unit\":\"piece\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"turmeric\",\"quantity\":1,\"unit\":\"tsp\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"coriander powder\",\"quantity\":1,\"unit\":\"tsp\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"cinnamon stick\",\"quantity\":1,\"unit\":\"piece\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"pepper\",\"quantity\":1,\"unit\":\"tsp\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"oil\",\"quantity\":50,\"unit\":\"ml\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"salt\",\"quantity\":5,\"unit\":\"g\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"coriander leaves\",\"quantity\":1,\"unit\":\"bunch\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"lime\",\"quantity\":1,\"unit\":\"piece\",\"optional\":true,\"pantryStaple\":false}]}"
+  },
+  {
+   "dish": "Sarson ka saag",
+   "ms": 9795,
+   "outputTokens": 347,
+   "generationMs": 9597,
+   "content": "{\"ingredients\":[{\"name\":\"mustard greens\",\"quantity\":300,\"unit\":\"g\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"onion\",\"quantity\":1,\"unit\":\"piece\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"tomato\",\"quantity\":2,\"unit\":\"piece\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"ginger\",\"quantity\":1,\"unit\":\"piece\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"garlic\",\"quantity\":3,\"unit\":\"clove\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"chili pepper\",\"quantity\":2,\"unit\":\"piece\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"pepper\",\"quantity\":1,\"unit\":\"piece\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"cumin seeds\",\"quantity\":1,\"unit\":\"tsp\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"turmeric powder\",\"quantity\":1,\"unit\":\"tsp\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"salt\",\"quantity\":1,\"unit\":\"tsp\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"oil\",\"quantity\":50,\"unit\":\"ml\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"coriander leaves\",\"quantity\":1,\"unit\":\"bunch\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"garam masala\",\"quantity\":0.5,\"unit\":\"tsp\",\"optional\":false,\"pantryStaple\":true}]}"
+  },
+  {
+   "dish": "Dhokla",
+   "ms": 9156,
+   "outputTokens": 323,
+   "generationMs": 8953,
+   "content": "{\"ingredients\":[{\"name\":\"gram flour\",\"quantity\":150,\"unit\":\"g\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"curd\",\"quantity\":200,\"unit\":\"g\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"green chilli\",\"quantity\":1,\"unit\":\"piece\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"ginger paste\",\"quantity\":1,\"unit\":\"tbsp\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"cumin seeds\",\"quantity\":1,\"unit\":\"tsp\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"turmeric powder\",\"quantity\":1,\"unit\":\"tsp\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"salt\",\"quantity\":1,\"unit\":\"tsp\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"water\",\"quantity\":200,\"unit\":\"ml\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"coriander leaves\",\"quantity\":1,\"unit\":\"bunch\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"mustard seeds\",\"quantity\":1,\"unit\":\"tsp\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"pepper\",\"quantity\":1,\"unit\":\"tsp\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"oil\",\"quantity\":2,\"unit\":\"tbsp\",\"optional\":false,\"pantryStaple\":true}]}"
+  },
+  {
+   "dish": "Moussaka",
+   "ms": 11449,
+   "outputTokens": 403,
+   "generationMs": 11247,
+   "content": "{\"ingredients\":[{\"name\":\"eggplant\",\"quantity\":400,\"unit\":\"g\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"ground beef\",\"quantity\":300,\"unit\":\"g\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"onion\",\"quantity\":1,\"unit\":\"piece\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"tomato puree\",\"quantity\":400,\"unit\":\"ml\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"milk\",\"quantity\":200,\"unit\":\"ml\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"breadcrumbs\",\"quantity\":50,\"unit\":\"g\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"garlic\",\"quantity\":2,\"unit\":\"clove\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"black pepper\",\"quantity\":1,\"unit\":\"tsp\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"salt\",\"quantity\":1,\"unit\":\"tsp\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"oregano\",\"quantity\":1,\"unit\":\"tsp\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"olive oil\",\"quantity\":30,\"unit\":\"ml\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"paprika\",\"quantity\":1,\"unit\":\"tsp\",\"optional\":false,\"pantryStaple\":true},{\"name\":\"flour\",\"quantity\":50,\"unit\":\"g\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"butter\",\"quantity\":50,\"unit\":\"g\",\"optional\":false,\"pantryStaple\":false},{\"name\":\"grated cheese\",\"quantity\":100,\"unit\":\"g\",\"optional\":false,\"pantryStaple\":false}]}"
+  }
+ ]
+}

@@ -778,7 +778,13 @@
       "everest",
       "hing",
       "asafoetida",
-      "methi"
+      "methi",
+      "ajwain",
+      "carom seeds",
+      "amchur",
+      "dry mango powder",
+      "kasuri methi",
+      "dried fenugreek leaves"
     ]
   },
   {
@@ -1084,7 +1090,9 @@
       "idli rice",
       "poha",
       "flattened rice",
-      "royal basmati"
+      "royal basmati",
+      "sabudana",
+      "tapioca pearls"
     ]
   },
   {
@@ -1173,7 +1181,9 @@
       "masoor dal",
       "rajma",
       "chana",
-      "kabuli chana"
+      "kabuli chana",
+      "whole urad dal",
+      "sabut urad"
     ]
   },
   {
@@ -1433,7 +1443,9 @@
       "miso",
       "curry paste",
       "sesame oil",
-      "rice vinegar"
+      "rice vinegar",
+      "thai green curry paste",
+      "green curry paste"
     ]
   },
   {
@@ -1700,7 +1712,11 @@
       "chickpeas",
       "garbanzo",
       "kidney beans",
-      "refried beans"
+      "refried beans",
+      "canned chickpeas",
+      "canned kidney beans",
+      "canned black beans",
+      "canned cannellini beans"
     ]
   },
   {
@@ -4025,7 +4041,12 @@
       "mint",
       "curry leaves",
       "parsley",
-      "basil"
+      "basil",
+      "fenugreek leaves",
+      "methi leaves",
+      "fresh methi",
+      "fresh mint",
+      "fresh chives"
     ]
   },
   {
@@ -5222,7 +5243,9 @@
       "tilapia",
       "shrimp",
       "cod",
-      "catfish"
+      "catfish",
+      "white fish",
+      "fish fillets"
     ]
   },
   {
@@ -5594,7 +5617,10 @@
       "amul",
       "indian cheese",
       "queso fresco",
-      "labneh"
+      "labneh",
+      "idli batter",
+      "dosa batter",
+      "idli dosa batter"
     ]
   },
   {
@@ -6761,7 +6787,10 @@
     "aliases": [
       "hamburger buns",
       "hot dog buns",
-      "dinner rolls"
+      "dinner rolls",
+      "pav",
+      "pav buns",
+      "ladi pav"
     ]
   },
   {

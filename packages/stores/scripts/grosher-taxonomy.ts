@@ -121,6 +121,16 @@ export const CATEGORY_PATCHES: Record<string, { name?: string; add?: string[]; r
   "cut-fruit-juice": { add: ["cut fruit", "fruit cups", "cut melon", "fruit tubs"] },
   // cold & flu: the way people write it
   "cold-flu": { add: ["cold and flu medicine", "cold medicine", "throat lozenges", "lozenges", "flu medicine"] },
+  // cook mode's ingredient lines (src/meals/ingredients.ts), so every one is placed without the model
+  "basmati-indian-rice": { add: ["sabudana", "tapioca pearls"] },
+  "paneer-indian-dairy": { add: ["idli batter", "dosa batter", "idli dosa batter"] },
+  "indian-spices": { add: ["ajwain", "carom seeds", "amchur", "dry mango powder", "kasuri methi", "dried fenugreek leaves"] },
+  "fresh-herbs": { add: ["fenugreek leaves", "methi leaves", "fresh methi", "fresh mint", "fresh chives"] },
+  "buns-rolls": { add: ["pav", "pav buns", "ladi pav"] },
+  seafood: { add: ["white fish", "fish fillets"] },
+  "dal-lentils": { add: ["whole urad dal", "sabut urad"] },
+  "canned-beans": { add: ["canned chickpeas", "canned kidney beans", "canned black beans", "canned cannellini beans"] },
+  "asian-sauces": { add: ["thai green curry paste", "green curry paste"] },
 };
 
 export interface Face {

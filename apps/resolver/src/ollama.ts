@@ -4,7 +4,25 @@
 // front of Ollama). Same prompt, schema and parser as the web client's
 // direct provider, so the rows are identical whichever path answered.
 
-import { llmMaxTokens, llmResultSchema, llmSystemPrompt, llmUserMessage, parseLlmResults, parseSignWords, SIGN_DEFAULT_MODEL, SIGN_MAX_TOKENS, SIGN_PROMPT, SIGN_SCHEMA } from "@grosher/core";
+import {
+  DISH_MAX_TOKENS,
+  dishSchema,
+  dishSystemPrompt,
+  dishUserMessage,
+  llmMaxTokens,
+  llmResultSchema,
+  llmSystemPrompt,
+  llmUserMessage,
+  parseDishAnswer,
+  parseDishJson,
+  parseLlmResults,
+  parseSignWords,
+  SIGN_DEFAULT_MODEL,
+  SIGN_MAX_TOKENS,
+  SIGN_PROMPT,
+  SIGN_SCHEMA,
+  type DishReply,
+} from "@grosher/core";
 import type { ClassifyRequest, Guess } from "./classify.ts";
 
 export const OLLAMA_DEFAULT_MODEL = "qwen3:8b";
@@ -51,6 +69,59 @@ export async function classifyOllama(up: OllamaUpstream, req: ClassifyRequest, f
     throw new Error("ollama upstream: response is not JSON");
   }
   return parseLlmResults(raw, items, ids);
+}
+
+/** one dish: ~10 s warm on the Mac (qwen3:8b, ~30 output tokens a second, ~350 tokens), plus the Funnel */
+export const DISH_TIMEOUT_MS = 30_000;
+/** the whole request: Ollama answers one call at a time (measured: two at once took as long as one after the other),
+ *  so the dishes are asked in turn, and those not reached by then come back unanswered ("try later") */
+export const DISHES_DEADLINE_MS = 80_000;
+
+/**
+ * Cook mode: each dish's ingredients from the local model, one call a dish, in turn, through the gate's /api/chat.
+ * A dish that fails, times out or is not reached by the deadline is answered with null; never rejects.
+ */
+export async function dishesOllama(up: OllamaUpstream, dishes: string[], fetchImpl: typeof fetch = fetch, deadlineMs = DISHES_DEADLINE_MS): Promise<DishReply[]> {
+  const end = Date.now() + deadlineMs;
+  const out: DishReply[] = [];
+  for (const dish of dishes) {
+    const left = end - Date.now();
+    if (left < 3_000) {
+      out.push({ dish, ingredients: null });
+      continue;
+    }
+    try {
+      const res = await fetchImpl(`${up.url.replace(/\/$/, "")}/api/chat`, {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${up.token}` },
+        signal: AbortSignal.timeout(Math.min(DISH_TIMEOUT_MS, left)),
+        body: JSON.stringify({
+          model: up.model || OLLAMA_DEFAULT_MODEL,
+          stream: false,
+          think: false,
+          keep_alive: OLLAMA_KEEP_ALIVE,
+          format: dishSchema(),
+          options: { temperature: 0, num_predict: DISH_MAX_TOKENS },
+          messages: [
+            { role: "system", content: dishSystemPrompt() },
+            { role: "user", content: dishUserMessage(dish) },
+          ],
+        }),
+      });
+      if (!res.ok) throw new Error(`ollama upstream ${res.status}`);
+      const content = ((await res.json()) as { message?: { content?: string } }).message?.content;
+      out.push({ dish, ingredients: typeof content === "string" ? parseDishAnswer(parseDishJson(content)) : null });
+    } catch (e) {
+      console.error("dish unanswered", e instanceof Error ? e.message : e);
+      out.push({ dish, ingredients: null });
+      // the upstream is not there at all: the rest would fail the same way, and each would wait out its timeout
+      if (e instanceof TypeError || (e instanceof Error && /ollama upstream (401|404|502|503)/.test(e.message))) {
+        for (const d of dishes.slice(out.length)) out.push({ dish: d, ingredients: null });
+        break;
+      }
+    }
+  }
+  return out;
 }
 
 /** a vision model reading one 1024 px sign: a cold load (~6 GB) plus the read fits, a hung Mac does not */

@@ -1,4 +1,6 @@
 // POST /resolve  {items: string[], categories: {id, name}[]} → {results: Guess[], degraded?: true}
+// POST /dishes   {dishes: string[]} → {results: {dish, ingredients | null}[], degraded?: true}  (cook mode: each dish's
+//                ingredients for two servings from the local model, one call a dish; ollama provider only, never Claude)
 // POST /sign     {image: base64 JPEG} → {words: string[], degraded?: true}  (survey mode's aisle signs,
 //                read by the vision model OLLAMA_VISION_MODEL on the Mac; ollama provider only)
 // Two upstreams, chosen by the PROVIDER var: "ollama" forwards to the Mac's
@@ -15,7 +17,8 @@ import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
 import Anthropic from "@anthropic-ai/sdk";
 import { classify, type ClassifyRequest, type Guess } from "./classify.ts";
-import { classifyOllama, probeOllama, readSignOllama } from "./ollama.ts";
+import { DISH_MAX, DISH_MAX_CHARS, type DishReply } from "@grosher/core";
+import { classifyOllama, dishesOllama, probeOllama, readSignOllama } from "./ollama.ts";
 import { waitlist, type WaitlistEnv } from "./waitlist.ts";
 
 export type Provider = "anthropic" | "ollama";
@@ -47,6 +50,8 @@ export const MAX_BODY_BYTES = 48 * 1024;
 export const MAX_SIGN_BYTES = 1_500_000;
 
 export type Classifier = (req: ClassifyRequest) => Promise<Guess[]>;
+/** cook mode's dish answers (injectable for tests) */
+export type DishAsker = (dishes: string[]) => Promise<DishReply[]>;
 
 export const providerOf = (env: Env | undefined): Provider => (env?.PROVIDER === "ollama" ? "ollama" : "anthropic");
 
@@ -77,7 +82,7 @@ async function guard(c: Context<{ Bindings: Env }>): Promise<Response | null> {
 }
 
 /** The app, with the classifier and the health probe's fetch injectable for tests. */
-export function createApp(classifier?: Classifier, fetchImpl: typeof fetch = (...a) => fetch(...a), waitlistMinMs?: number) {
+export function createApp(classifier?: Classifier, fetchImpl: typeof fetch = (...a) => fetch(...a), waitlistMinMs?: number, dishAsker?: DishAsker) {
   const app = new Hono<{ Bindings: Env }>();
   app.use("*", async (c, next) => cors({ origin: c.env?.ALLOWED_ORIGIN ?? "*", allowMethods: ["GET", "POST", "OPTIONS"] })(c, next));
   app.get("/health", async (c) => {
@@ -119,6 +124,29 @@ export function createApp(classifier?: Classifier, fetchImpl: typeof fetch = (..
       console.error("sign degraded", e instanceof Error ? e.message : e);
       return c.json({ words: [], degraded: true });
     }
+  });
+  // cook mode: the dishes the app's table does not know, each answered by the local model on the Mac. Local only by
+  // design: with the anthropic provider every dish comes back unanswered, and the app says the laptop's model is needed
+  app.post("/dishes", async (c) => {
+    const denied = await guard(c);
+    if (denied) return denied;
+    let body: { dishes?: unknown };
+    try {
+      const text = await c.req.text();
+      if (text.length > 4096) return c.json({ error: "body too large" }, 413);
+      body = JSON.parse(text);
+    } catch {
+      return c.json({ error: "body must be JSON" }, 400);
+    }
+    if (!Array.isArray(body.dishes)) return c.json({ error: "dishes must be strings" }, 400);
+    const dishes = [...new Set(body.dishes.filter((s): s is string => typeof s === "string").map((s) => s.trim().replace(/\s+/g, " ").slice(0, DISH_MAX_CHARS)).filter(Boolean))].slice(0, DISH_MAX);
+    if (!dishes.length) return c.json({ results: [] });
+    const none = () => dishes.map((dish) => ({ dish, ingredients: null }));
+    const url = c.env?.OLLAMA_UPSTREAM;
+    const token = c.env?.OLLAMA_TOKEN;
+    const ask = dishAsker ?? (providerOf(c.env) === "ollama" && url && token ? (d: string[]) => dishesOllama({ url, token, model: c.env?.OLLAMA_MODEL }, d, fetchImpl) : null);
+    const results = ask ? await ask(dishes).catch(none) : none();
+    return c.json(results.some((r) => !r.ingredients) ? { results, degraded: true } : { results });
   });
   // the project page's "Get notified" form (src/waitlist.ts): its own origin check and limit, not the resolver's
   app.post("/waitlist", (c) => waitlist(c, fetchImpl, waitlistMinMs));

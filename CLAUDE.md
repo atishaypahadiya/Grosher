@@ -64,6 +64,8 @@ cd packages/core && node --test test/resolution-fixture.test.ts   # prints the p
 npm run dev -w @grosher/resolver         # wrangler dev on :8787 (anthropic provider only; needs .dev.vars)
 npm run chain:status -w @grosher/resolver   # the Mac → worker chain, one ✓ / ✗ line per link with the fix
 cd apps/web && node scripts/boot-resilience.mjs     # stale worker + old state + a deploy → the app renders (CI runs it)
+cd apps/web && node scripts/meals-flow.mjs http://localhost:4173 [--shots /tmp/m]   # cook mode end to end, model mocked (CI runs it)
+npm run eval:dishes -w @grosher/stores   # cook mode: ten unseen dishes through the local model, scored, recorded (--recorded: score the recording)
 cd apps/web && node scripts/survey-flow.mjs http://localhost:4173 --shots /tmp/s   # survey mode end to end, mocked sensors (CI runs it)
 node apps/web/scripts/docs-numbers.mjs --run          # the README's and the project page's numbers against the gates (CI runs it last)
 gh run download <run> -n docs-numbers -D /tmp/dn && node apps/web/scripts/docs-numbers.mjs --dir /tmp/dn --ci --write   # take CI's numbers into the docs
@@ -423,6 +425,45 @@ with a "demo walk" badge; it checks stops off without writing memory; what happe
 checkout queue, arrived-and-stuck, no motion, the first minute, an arrival, Gentle vs Strict, Off, the line,
 stop kinds, standing still), `scripts/guard-demo.mjs` in CI (once, on the detour, quiet at the counters), and the
 contrast gate's guard card (map and close-up) and detour line.
+
+**Cook mode** (`components/MealSheet.tsx`, `lib/meals.ts`; data in `packages/stores/src/meals/`, arithmetic in
+`packages/core/src/meals/`; 20 Oct 2026). "Plan meals" under the add pill: dishes (free text; commas, and "and" only
+when the whole phrase is not a dish: "mac and cheese" stays one) and people (default 2, 1–12) → a review sheet → Add to
+list. **Local model only: never Claude or any cloud model** (the worker's `POST /dishes` answers every dish
+unanswered under the anthropic provider). Sources in order: (1) the dish table (`DISHES`, 88, 42 Indian, each per two
+servings with its `core` keys; `matchDish`: a name or alias exactly, else the resolver's `similarity` ≥ .8); (2) the
+cache (IndexedDB `dish:<normalised name>:2`, a `SCHEMAS` entry: the model's raw lines, validated again on every use);
+(3) the model, **one call a dish** (asked for several in one answer, qwen3:8b wrote the first and closed the JSON),
+sequentially (two at once took as long: Ollama runs one at a time), compact one-line JSON (indented was ~45 tokens an
+ingredient, one line ~26; the prompt's format example has no real ingredient names: with "basmati rice" in it, basmati
+turned up in a ratatouille), `format` = `dishSchema()` (units from `UNITS`, ≤ 20 ingredients), `DISH_MAX_TOKENS`, a
+cut-off answer keeps its whole ingredients (`parseDishJson`). Dev: straight to Ollama (45 s a dish); the worker: one
+`POST /dishes` (≤ 6 dishes × 60 chars, 4 KB), each dish through the gate's `/api/chat` (30 s), an 80 s deadline (dishes
+not reached are unanswered), the Mac unreachable → every dish unanswered at once. **Validation**
+(`checkModelIngredients`): no name, an unknown unit or no positive quantity → dropped; water and "garnish" skipped; a
+name matched to `INGREDIENTS` (aliases, then similarity ≥ .85) or made ad hoc (its own name; spoon-measured → a 50 g
+jar, by the bunch → a bunch, else loose or by the piece); the same ingredient twice adds up; past its category's
+`BOUNDS` for two servings → capped; pantry is the table's word for a known ingredient (the model called butter a
+staple), the model's for an ad-hoc one. The sheet names what was dropped or capped. **Aggregation** (`aggregate`):
+scaled by people ÷ 2, converted to each ingredient's base (g, ml or pieces: `eachG`, `density`, `bunchG`,
+`partsPerUnit` for garlic cloves and bread slices), merged across dishes, then rounded up once (`purchase`: the
+smallest pack that holds it, else n × the biggest; pieces; bunches; loose in steps), lines like "Onions × 6", "Paneer
+2 × 400 g", "Tortillas pack of 8". Pantry only when every dish says so, optional only when every dish does; optional
+and pantry lines start unticked. A model dish's lines carry "estimated" (the guess colour); a dish the model could not
+answer says "Needs your laptop's model · add its ingredients by hand or try later", with Try again. **Into the list**
+(`mergeIntoList`): a plain item for the same thing ("onions") gives way to the line ("Onions × 6"); an item with its
+own quantity stays and the line is not added. Every ingredient line is placed on a Grosher shelf offline (stores
+test; a few needed `CATEGORY_PATCHES` aliases: sabudana, idli / dosa batter, pav, ajwain, amchur, kasuri methi, white
+fish, canned beans by name, fresh mint; `text.ts` QTY strips "1 bunch" and "packs of 8"). **The model's score**
+(`npm run eval:dishes -w @grosher/stores`, ten dishes not in the table, `test/fixtures/dishes-unseen.json`, written
+before asking; the raw answers recorded in `dishes-model.json`, which CI scores with no model): 29 / 37 core
+ingredients, ~10 s a dish (97 s for ten), nothing clamped; rogan josh came back with chicken and coconut milk, sarson
+ka saag without spinach or makki atta, malai kofta without potato or cream. Never tune against it. Tests: core
+`test/meals.test.ts` (units, conversion, packs, aggregation and scaling, matching, validation, parsing), stores
+`test/meals.test.ts` (the table's coverage and bounds, every line placed, the pinned example) and
+`meals-model.test.ts`, web `test/meals.test.tsx` (the cache, the providers, the merge, the sheet), the worker's
+`/dishes` test, `scripts/meals-flow.mjs` in CI (Playwright, the model mocked: five dishes, edits, add, route; the Mac
+asleep; the cache) and the contrast gate's three sheet shots. v2, not built: a weekly planner, pantry memory.
 
 **Voice entry** (`lib/speech.ts`). Hold the mic, release to stop: Web Speech API (`SpeechRecognition` or
 `webkitSpeechRecognition`), `interimResults` and `continuous` on; interim words show in the add pill in
