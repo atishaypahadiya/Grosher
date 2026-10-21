@@ -221,7 +221,7 @@ The two tuned regression fixtures (`packages/core/test/fixtures`, 60 and 30 item
 | check | measured | budget |
 | --- | --- | --- |
 | overview, worst of three framings (`scripts/perf-gate.mjs`) | <!--n:perf.calls-->48<!--/n--> draw calls, <!--n:perf.instances-->7,924<!--/n--> product instances | ≤ 70 calls, ≤ 12,000 instances |
-| close-ups, worst arrival frame (`scripts/hero-gate.mjs`) | Bulk <!--n:closeup.bulk.calls-->61<!--/n--> calls / <!--n:closeup.bulk.triangles-->205k<!--/n--> triangles; Produce <!--n:closeup.produce.calls-->51<!--/n--> / <!--n:closeup.produce.triangles-->168k<!--/n-->; standard A4-R16 <!--n:closeup.standard.calls-->46<!--/n--> / <!--n:closeup.standard.triangles-->179k<!--/n--> | ≤ 70 calls, ≤ 250k triangles |
+| close-ups, worst arrival frame (`scripts/hero-gate.mjs`) | Bulk <!--n:closeup.bulk.calls-->61<!--/n--> calls / <!--n:closeup.bulk.triangles-->205k<!--/n--> triangles; Produce <!--n:closeup.produce.calls-->54<!--/n--> / <!--n:closeup.produce.triangles-->169k<!--/n-->; standard A4-R16 <!--n:closeup.standard.calls-->46<!--/n--> / <!--n:closeup.standard.triangles-->179k<!--/n--> | ≤ 70 calls, ≤ 250k triangles |
 | close-up GPU textures, peak across four close-ups in a row | <!--n:closeup.peakMB-->13.7<!--/n--> MB | ≤ 16 MB |
 | close-up download | Bulk <!--n:closeup.download.bulk-->2,306<!--/n--> KB · standard <!--n:closeup.download.standard-->1,527<!--/n--> KB · Produce <!--n:closeup.download.produce-->1,476<!--/n--> KB | ≤ 2,500 KB |
 | next close-up, prepared during the stop before: asked for → ready | within the limit at every hand-over | ≤ 2 frames or 400 ms |

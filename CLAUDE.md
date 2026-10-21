@@ -954,10 +954,10 @@ freed, off the GPU the moment it is left.
   energy balls and their lid label, far rows), `mounds` 1024 × 512, `foliage` 1024² RGBA (leaves, fronds, a pineapple's crown, blooms). Chalk and
   foliage are ETC1S at full quality (`etc1s-hq`): as UASTC the chalk was 1.8 MB, its slate's noise defeating
   compression. Hi 1.11 MB, lo 0.42 MB.
-- **Numbers** (close-up gate, SwiftShader, 390 × 844, 20 Oct 2026): arriving 51 calls / 163k triangles, an
-  island stop at eye level 43 / 159k, down the zone 42 / 133k, the wet wall 46 / 175k, along it 43 / 175k;
-  9.0 MB of textures with both environments; 1,426 KB download (chunk 63 KB gzip, textures 1,110 KB, the
-  transcoder). The flat images add 800 KB to the precache, the textures 1.5 MB (both tiers). The combined walk floral → Produce → Bulk →
+- **Numbers** (close-up gate, SwiftShader, 390 × 844, 21 Oct 2026; CI reads the same calls and triangles):
+  arriving 54 calls / 169k triangles (51 / 168k on 20 Oct; it moved between `9543b69` and `cbea630`, most likely with the trip framing change in `2cf48cf`, not bisected), an island stop at
+  eye level 43 / 165k, down the zone 42 / 138k, the wet wall 50 / 180k, along it 40 / 110k; 7.3 MB of textures;
+  1,472 KB download (chunks 64 KB gzip, textures 1,155 KB, the transcoder 254 KB). The flat images add 800 KB to the precache, the textures 1.5 MB (both tiers). The combined walk floral → Produce → Bulk →
   dairy holds one zone at a time (8.0 · 9.0 · 9.1 · 8.0 MB). On the M4 Pro's GPU (Metal, 390 × 844 × 3, uncapped):
   2.7 ms a frame median at an island (3.4 p95), 2.8 at the wet wall (4.1 p95), Bulk 2.7 in the same run. Tests:
   `test/produce-zone.test.ts`.
