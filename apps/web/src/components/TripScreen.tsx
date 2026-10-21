@@ -129,7 +129,9 @@ export function TripScreen({ bundle, router, trip, flat, onFlatChange, onGotIt, 
   const slot = loc ? slotFor(store, loc) : undefined;
   const sideWord = loc?.side === "R" ? "Right" : loc?.side === "E" ? "Endcap" : "Left";
   const slotLine = slot ? `${sideWord} · bay ${slot.bay} · shelf ${slot.shelf + 1}` : undefined;
-  const nextLabel = leg && stop ? { eyebrow: `${eyebrowParts.join(" · ")} · ${position} of ${total}`, name: stop.name, distance: `${Math.round(leg.distanceM)} m`, slot: slotLine } : null;
+  // what the shopper typed ("toor dal"), as on the list; the catalog's name where nothing was typed (a restored trip)
+  const shownName = stop ? stop.query?.trim() || stop.name : "";
+  const nextLabel = leg && stop ? { eyebrow: `${eyebrowParts.join(" · ")} · ${position} of ${total}`, name: shownName, distance: `${Math.round(leg.distanceM)} m`, slot: slotLine } : null;
   const checkoutLabel = lane ? { eyebrow: `Checkout · ${laneName(lane.nodeId)}`, line: `${Math.max(1, Math.round(remainingM / WALK_MPS / 60))} min walk (${Math.round(remainingM)} m)` } : null;
 
   const flatMap = (
@@ -163,7 +165,7 @@ export function TripScreen({ bundle, router, trip, flat, onFlatChange, onGotIt, 
               <figure className="flat-shelf" data-testid="flat-shelf">
                 <img src={shelfImage} alt={`The shelf where ${stop?.name ?? "it"} is, lit in lime`} />
                 <figcaption>
-                  <span>{stop?.name}</span>
+                  <span>{shownName}</span>
                   <button type="button" className="pill closeup-back-inline" onClick={() => setShelfOpenFor(leg?.stopId ?? null)}>
                     Close
                   </button>
@@ -279,7 +281,7 @@ export function TripScreen({ bundle, router, trip, flat, onFlatChange, onGotIt, 
           </span>
           <div className="trip-row">
             <div>
-              <h2 className="title">{stop.name}</h2>
+              <h2 className="title">{shownName}</h2>
               <p className="muted trip-where">{locationLine}</p>
               {band(stop.confidence ?? 1) === "guess" && (
                 <p className="trip-guess" data-testid="trip-guess">
