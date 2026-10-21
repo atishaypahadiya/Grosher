@@ -302,8 +302,9 @@ export function checkModelIngredients(lines: ModelIngredient[], known: Ingredien
       continue;
     }
     if (adHoc) out.adHoc.push(info);
-    // pantry: the table's word for an ingredient it knows (the model called butter and flour staples), the model's for one it does not
-    acc.set(info.key, { info, base, optional: !!l.optional, pantry: adHoc ? !!l.pantryStaple : !!info.pantry });
+    // pantry: the table's word for an ingredient it knows (the model called butter and flour staples); for one it does
+    // not, a spoonful of something (a dried spice, a flavouring) is a staple
+    acc.set(info.key, { info, base, optional: !!l.optional, pantry: adHoc ? !!l.pantryStaple || info.category === "spices" : !!info.pantry });
   }
   for (const { info, base, optional, pantry } of acc.values()) {
     const max = BOUNDS[info.category][info.base];

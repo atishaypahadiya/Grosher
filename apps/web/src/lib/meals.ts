@@ -23,7 +23,6 @@ import {
   parseDishJson,
   splitDishes,
   type Checked,
-  type DishReply,
   type IngredientInfo,
   type ModelIngredient,
   type PlannedDish,
@@ -33,28 +32,30 @@ import { DISH_TABLE_HASH, DISHES, INGREDIENTS } from "@grosher/stores/meals";
 import { dbGet, dbSet } from "./db.ts";
 import type { ResolverSettings } from "./settings.ts";
 
-/** one dish straight to Ollama: ~10 s warm on an M-series Mac; a cold load of the model on top */
+/** one dish, a ceiling: ~4 s warm on the Mac (qwen3:8b, the compact format), longer while it shares the GPU with
+ *  other dishes; through the worker its own 40 s ceiling plus the Funnel */
 export const DISH_TIMEOUT_MS = 45_000;
-/** the worker asks for each dish in turn, up to its own 90 s deadline (under Cloudflare's 100 s) */
-export const DISHES_TIMEOUT_MS = 100_000;
+/** dishes asked at once: Ollama's slots on the Mac (OLLAMA_NUM_PARALLEL); the rest wait their turn here */
+export const DISH_CONCURRENCY = 3;
 
 export interface DishAsker {
   name: ResolverSettings["provider"];
-  /** every dish answered or null; never rejects */
-  ask(dishes: string[]): Promise<DishReply[]>;
+  /** one dish's lines, or null (unreachable, a timeout, nothing usable); never rejects. `signal` cancels it */
+  askOne(dish: string, signal?: AbortSignal): Promise<ModelIngredient[] | null>;
 }
 
-const none = (dishes: string[]): DishReply[] => dishes.map((dish) => ({ dish, ingredients: null }));
-
-async function post(fetchImpl: typeof fetch, url: string, body: unknown, timeoutMs: number): Promise<unknown> {
+async function post(fetchImpl: typeof fetch, url: string, body: unknown, signal?: AbortSignal): Promise<unknown> {
   const ctl = new AbortController();
-  const timer = setTimeout(() => ctl.abort(), timeoutMs);
+  const timer = setTimeout(() => ctl.abort(), DISH_TIMEOUT_MS);
+  const stop = () => ctl.abort();
+  signal?.addEventListener("abort", stop);
   try {
     const res = await fetchImpl(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body), signal: ctl.signal });
     if (!res.ok) throw new Error(`${res.status}`);
     return await res.json();
   } finally {
     clearTimeout(timer);
+    signal?.removeEventListener("abort", stop);
   }
 }
 
@@ -63,16 +64,14 @@ export function dishAskerFor(s: ResolverSettings, fetchImpl: typeof fetch = (...
     const base = s.workerUrl.replace(/\/$/, "");
     return {
       name: "worker",
-      async ask(dishes) {
+      // one dish a request, so each arrives on its own and a slow one holds up no other
+      async askOne(dish, signal) {
         try {
-          const body = (await post(fetchImpl, `${base}/dishes`, { dishes }, DISHES_TIMEOUT_MS)) as { results?: { dish?: unknown; ingredients?: unknown }[] };
-          const rows = Array.isArray(body.results) ? body.results : [];
-          return dishes.map((dish, k) => {
-            const r = rows.find((x) => x?.dish === dish) ?? rows[k];
-            return { dish, ingredients: r ? parseDishAnswer({ ingredients: r.ingredients }) : null };
-          });
+          const body = (await post(fetchImpl, `${base}/dishes`, { dishes: [dish] }, signal)) as { results?: { ingredients?: unknown }[] };
+          const r = Array.isArray(body.results) ? body.results[0] : null;
+          return r ? parseDishAnswer({ ingredients: r.ingredients }) : null;
         } catch {
-          return none(dishes);
+          return null;
         }
       },
     };
@@ -80,34 +79,29 @@ export function dishAskerFor(s: ResolverSettings, fetchImpl: typeof fetch = (...
   const base = s.ollamaUrl.replace(/\/$/, "");
   return {
     name: "ollama",
-    async ask(dishes) {
-      const out: DishReply[] = [];
-      for (const dish of dishes) {
-        try {
-          const body = (await post(
-            fetchImpl,
-            `${base}/api/chat`,
-            {
-              model: s.model,
-              stream: false,
-              think: false,
-              keep_alive: "24h",
-              format: dishSchema(),
-              options: { temperature: 0, num_predict: DISH_MAX_TOKENS },
-              messages: [
-                { role: "system", content: dishSystemPrompt() },
-                { role: "user", content: dishUserMessage(dish) },
-              ],
-            },
-            DISH_TIMEOUT_MS,
-          )) as { message?: { content?: string } };
-          out.push({ dish, ingredients: parseDishAnswer(parseDishJson(body.message?.content ?? "")) });
-        } catch {
-          // unreachable: the rest would fail the same way
-          return [...out, ...none(dishes.slice(out.length))];
-        }
+    async askOne(dish, signal) {
+      try {
+        const body = (await post(
+          fetchImpl,
+          `${base}/api/chat`,
+          {
+            model: s.model,
+            stream: false,
+            think: false,
+            keep_alive: "24h",
+            format: dishSchema(),
+            options: { temperature: 0, num_predict: DISH_MAX_TOKENS },
+            messages: [
+              { role: "system", content: dishSystemPrompt() },
+              { role: "user", content: dishUserMessage(dish) },
+            ],
+          },
+          signal,
+        )) as { message?: { content?: string } };
+        return parseDishAnswer(parseDishJson(body.message?.content ?? ""));
+      } catch {
+        return null;
       }
-      return out;
     },
   };
 }
@@ -145,10 +139,12 @@ export type DishStatus =
   | "table"
   /** the model's answer, now or from the cache */
   | "model"
-  /** being asked */
+  /** being asked (or waiting its turn) */
   | "asking"
   /** the model could not answer: by hand, or later */
-  | "unanswered";
+  | "unanswered"
+  /** the shopper stopped it */
+  | "cancelled";
 
 export interface DishState {
   query: string;
@@ -193,32 +189,65 @@ export function fromModel(query: string, lines: ModelIngredient[]): { state: Dis
   return { state: { query, name, status: "model", checked }, planned: { query, name, source: "model", items: checked.items }, adHoc: checked.adHoc };
 }
 
+export type DishOutcome = ReturnType<typeof fromModel> | "unanswered" | "cancelled";
+
+export interface UnknownRun {
+  /** stop asking for one dish: off the queue, or its request aborted; it settles as "cancelled" */
+  cancel(query: string): void;
+  /** stop them all (the sheet closed, or the dishes changed): nothing settles after this */
+  cancelAll(): void;
+  /** every dish settled */
+  done: Promise<void>;
+}
+
 /**
- * The unknown dishes: the cache first, then one request to the model for the rest (at most DISH_MAX); every answer
- * is cached. `onUpdate` gets each dish as it settles.
+ * The unknown dishes: the cache first, then the model, DISH_CONCURRENCY at a time, each settling on its own as it
+ * arrives (`onSettle`), so a slow dish holds up no other. Every answer is cached. At most DISH_MAX are asked; any
+ * beyond settle unanswered at once.
  */
-export async function resolveUnknown(
-  unknown: string[],
-  asker: DishAsker,
-  onUpdate: (query: string, result: ReturnType<typeof fromModel> | null) => void,
-): Promise<void> {
-  const ask: string[] = [];
-  for (const q of unknown) {
+export function startUnknown(unknown: string[], asker: DishAsker, onSettle: (query: string, outcome: DishOutcome) => void): UnknownRun {
+  const ctls = new Map<string, AbortController>();
+  const cancelled = new Set<string>();
+  let stopped = false;
+  const settle = (q: string, o: DishOutcome) => {
+    if (!stopped) onSettle(q, o);
+  };
+  const queue: string[] = [];
+  const one = async (q: string) => {
     const hit = await cachedDish(q).catch(() => null);
-    const r = hit ? fromModel(q, hit.ingredients) : null;
-    if (r) onUpdate(q, r);
-    else ask.push(q);
-  }
-  if (!ask.length) return;
-  const batch = ask.slice(0, DISH_MAX);
-  for (const q of ask.slice(DISH_MAX)) onUpdate(q, null);
-  const replies = await asker.ask(batch);
-  for (const [k, q] of batch.entries()) {
-    const lines = replies[k]?.ingredients ?? null;
+    const cached = hit ? fromModel(q, hit.ingredients) : null;
+    if (cached) return settle(q, cached);
+    if (cancelled.has(q)) return;
+    const ctl = new AbortController();
+    ctls.set(q, ctl);
+    const lines = await asker.askOne(q, ctl.signal);
+    ctls.delete(q);
+    if (cancelled.has(q)) return;
     const r = lines ? fromModel(q, lines) : null;
     if (r && lines) void cacheDish(q, lines).catch(() => {});
-    onUpdate(q, r);
-  }
+    settle(q, r ?? "unanswered");
+  };
+  const asked = unknown.slice(0, DISH_MAX);
+  for (const q of unknown.slice(DISH_MAX)) settle(q, "unanswered");
+  queue.push(...asked);
+  const worker = async () => {
+    for (let q = queue.shift(); q !== undefined; q = queue.shift()) if (!cancelled.has(q)) await one(q);
+  };
+  const done = Promise.all(Array.from({ length: Math.min(DISH_CONCURRENCY, asked.length) }, worker)).then(() => {});
+  return {
+    cancel(q) {
+      if (cancelled.has(q)) return;
+      cancelled.add(q);
+      ctls.get(q)?.abort();
+      settle(q, "cancelled");
+    },
+    cancelAll() {
+      stopped = true;
+      for (const q of asked) cancelled.add(q);
+      for (const c of ctls.values()) c.abort();
+    },
+    done,
+  };
 }
 
 export const planLines = (planned: PlannedDish[], people: number, adHoc: IngredientInfo[]): ShoppingLine[] => aggregate(planned, people, INGREDIENTS, adHoc);

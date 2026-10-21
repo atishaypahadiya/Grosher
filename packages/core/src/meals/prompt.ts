@@ -8,11 +8,11 @@
 
 import { UNITS, type ModelIngredient } from "./plan.ts";
 
-/** dishes in one request from the app */
+/** dishes in one request from the app (the app sends one a request, so they arrive one by one) */
 export const DISH_MAX = 6;
 export const DISH_MAX_CHARS = 60;
-/** a dish's ingredient list is cut off here (schema and parser) */
-export const DISH_MAX_INGREDIENTS = 20;
+/** a dish's ingredient list is cut off here (schema and parser): the dishes measured run 5–14 */
+export const DISH_MAX_INGREDIENTS = 15;
 
 export const dishSystemPrompt = () =>
   [
@@ -20,15 +20,18 @@ export const dishSystemPrompt = () =>
     "List the ingredients of the traditional, everyday version of the dish, and only those: nothing from other dishes, no sides unless the dish is served on them.",
     "Each ingredient once, by its plain name as a grocery shop sells it, without brands, and never water.",
     "Units: g or ml for things weighed or measured, piece for whole vegetables, fruit and eggs, clove for garlic, bunch for leafy herbs, tsp or tbsp for spices and oil.",
-    "pantryStaple is true only for salt, sugar, cooking oil and common dried spices; optional is true only for garnishes.",
-    // measured on qwen3:8b: indented JSON is ~45 tokens an ingredient, one line ~26. The example shows the format
-    // only: with real ingredient names in the prompt, they turned up in unrelated dishes (basmati rice in a ratatouille)
-    'Write the JSON on one single line with no line breaks or indentation, like {"ingredients":[{"name":"…","quantity":1,"unit":"g","optional":false,"pantryStaple":false}]}; names keep their normal spaces.',
+    "Most important first, and stop when the dish is complete.",
+    // measured on qwen3:8b (21 Oct 2026, ten dishes): the answer is the whole cost (thinking is off). Indented
+    // objects with two flags were ~30 tokens a line, 12.5 s for a 17-line dish; this, ~10 tokens a line, 3.7 s a
+    // dish. The example shows the format only: real names in it turned up in unrelated dishes (basmati rice in a
+    // ratatouille). Garnish and pantry flags are gone: the model left "optional" empty for every dish, and the
+    // ingredient table knows the staples.
+    'Write the JSON on one single line with no line breaks or indentation, like {"ingredients":[{"name":"…","amount":"200 g"}]}; names keep their normal spaces.',
   ].join(" ");
 
 export const dishUserMessage = (dish: string) => `Dish: ${dish}`;
 
-/** the structured-output schema for one dish: its ingredients, each with a unit from the fixed list */
+/** the structured-output schema for one dish: each ingredient a name and an amount, "200 g", in a unit from the fixed list */
 export const dishSchema = () => ({
   type: "object",
   properties: {
@@ -39,20 +42,17 @@ export const dishSchema = () => ({
         type: "object",
         properties: {
           name: { type: "string" },
-          quantity: { type: "number" },
-          unit: { type: "string", enum: [...UNITS] },
-          optional: { type: "boolean" },
-          pantryStaple: { type: "boolean" },
+          amount: { type: "string", pattern: `^[0-9]{1,4}(\\.[0-9]{1,2})? (${UNITS.join("|")})$` },
         },
-        required: ["name", "quantity", "unit", "optional", "pantryStaple"],
+        required: ["name", "amount"],
       },
     },
   },
   required: ["ingredients"],
 });
 
-/** output tokens for one dish: up to 20 ingredients at ~26 tokens each, plus the frame; a cut-off answer keeps its whole ingredients */
-export const DISH_MAX_TOKENS = 40 + 26 * DISH_MAX_INGREDIENTS;
+/** output tokens for one dish: 15 lines at ~13 tokens (the longest measured, 14 lines, took 165), and the frame */
+export const DISH_MAX_TOKENS = 240;
 
 /**
  * The model's text as JSON. An answer cut off by the token budget keeps every ingredient it finished: the text is
@@ -75,14 +75,26 @@ export function parseDishJson(text: string): unknown {
   return null;
 }
 
-/** one dish's answer (parsed JSON) → its ingredient lines, or null when it is not an answer */
+/** "200 g" → [200, "g"] */
+const AMOUNT = /^\s*([0-9]+(?:\.[0-9]+)?)\s*([a-z]+)\.?\s*$/i;
+
+/**
+ * One dish's answer (parsed JSON) → its ingredient lines, or null when it is not an answer. Reads this format
+ * ({name, amount: "200 g"}) and the one before it ({name, quantity, unit, optional, pantryStaple}), which cached
+ * answers and the worker's replies carry.
+ */
 export function parseDishAnswer(raw: unknown): ModelIngredient[] | null {
   const list = (raw as { ingredients?: unknown })?.ingredients;
   if (!Array.isArray(list)) return null;
   return list
-    .slice(0, DISH_MAX_INGREDIENTS)
+    .slice(0, 20)
     .filter((i): i is Record<string, unknown> => !!i && typeof i === "object")
-    .map((i) => ({ name: String(i.name ?? ""), quantity: Number(i.quantity), unit: String(i.unit ?? ""), optional: i.optional === true, pantryStaple: i.pantryStaple === true }));
+    .map((i) => {
+      const m = typeof i.amount === "string" ? AMOUNT.exec(i.amount) : null;
+      const quantity = m ? Number(m[1]) : Number(i.quantity);
+      const unit = m ? m[2] : String(i.unit ?? "");
+      return { name: String(i.name ?? ""), quantity, unit, optional: i.optional === true, pantryStaple: i.pantryStaple === true };
+    });
 }
 
 /** what a provider answers for each dish asked: its lines, or null (not answered: the model was unreachable, or said nothing usable) */

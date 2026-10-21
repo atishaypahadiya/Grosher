@@ -7,7 +7,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import type { IngredientInfo, PlannedDish, ShoppingLine } from "@grosher/core";
 import { INGREDIENT_BY_KEY } from "@grosher/stores/meals";
-import { dishAskerFor, forgetCached, parseDishes, planLines, resolveUnknown, tableFirst, type DishAsker, type DishState } from "../lib/meals.ts";
+import { dishAskerFor, forgetCached, parseDishes, planLines, startUnknown, tableFirst, type DishAsker, type DishState, type UnknownRun } from "../lib/meals.ts";
 import type { ResolverSettings } from "../lib/settings.ts";
 import { Num } from "./Num.tsx";
 import { IconClose } from "./Icons.tsx";
@@ -36,27 +36,35 @@ export function MealSheet({ settings, asker: given, onAdd, onClose }: MealSheetP
   const [planned, setPlanned] = useState<PlannedDish[]>([]);
   const [adHoc, setAdHoc] = useState<IngredientInfo[]>([]);
   const [edits, setEdits] = useState<Record<string, Edit>>({});
-  // a newer plan (or closing) outdates answers still on their way
-  const run = useRef(0);
-  useEffect(() => () => void run.current++, []);
+  // the model's dishes in flight, by query: a newer plan, Change or closing stops them all, Cancel one
+  const runs = useRef(new Map<string, UnknownRun>());
+  const stopAll = () => {
+    for (const r of new Set(runs.current.values())) r.cancelAll();
+    runs.current.clear();
+  };
+  useEffect(() => stopAll, []);
 
+  // each dish lands on its own as it arrives: a slow one holds up no other
   const ask = (queries: string[]) => {
-    const id = run.current;
-    void resolveUnknown(queries, asker, (q, r) => {
-      if (run.current !== id) return;
-      setStates((cur) => cur?.map((s) => (s.query !== q ? s : r ? r.state : { ...s, status: "unanswered" })) ?? cur);
-      if (r) {
-        setPlanned((cur) => [...cur.filter((p) => p.query !== q), r.planned]);
-        setAdHoc((cur) => [...cur, ...r.adHoc.filter((a) => !cur.some((c) => c.key === a.key))]);
+    const run = startUnknown(queries, asker, (q, o) => {
+      runs.current.delete(q);
+      if (o === "unanswered" || o === "cancelled") {
+        setStates((cur) => cur?.map((s) => (s.query === q ? { ...s, status: o } : s)) ?? cur);
+        return;
       }
+      if (!o) return;
+      setStates((cur) => cur?.map((s) => (s.query === q ? o.state : s)) ?? cur);
+      setPlanned((cur) => [...cur.filter((p) => p.query !== q), o.planned]);
+      setAdHoc((cur) => [...cur, ...o.adHoc.filter((a) => !cur.some((c) => c.key === a.key))]);
     });
+    for (const q of queries) runs.current.set(q, run);
   };
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
     const queries = parseDishes(text);
     if (!queries.length) return;
-    run.current++;
+    stopAll();
     const t = tableFirst(queries);
     setStates(t.states);
     setPlanned(t.planned);
@@ -78,7 +86,7 @@ export function MealSheet({ settings, asker: given, onAdd, onClose }: MealSheetP
   const pantry = shown.filter((l) => l.pantry);
   const chosen = shown.filter((l) => ticked(l) && labelOf(l).trim());
   const asking = states?.some((s) => s.status === "asking") ?? false;
-  const unanswered = states?.filter((s) => s.status === "unanswered") ?? [];
+  const unanswered = states?.filter((s) => s.status === "unanswered" || s.status === "cancelled") ?? [];
   const estimated = states?.some((s) => s.status === "model") ?? false;
   const nameOf = (key: string) => (INGREDIENT_BY_KEY.get(key)?.name ?? adHoc.find((a) => a.key === key)?.name ?? key).toLowerCase();
 
@@ -158,7 +166,7 @@ export function MealSheet({ settings, asker: given, onAdd, onClose }: MealSheetP
                 <button type="button" className="pill circle ghost" aria-label="More people" disabled={people >= PEOPLE_MAX} onClick={() => setPeople((n) => Math.min(PEOPLE_MAX, n + 1))}>
                   +
                 </button>
-                <button type="button" className="pill ghost" onClick={() => (run.current++, setStates(null))}>
+                <button type="button" className="pill ghost" onClick={() => (stopAll(), setStates(null))}>
                   Change
                 </button>
               </div>
@@ -173,8 +181,16 @@ export function MealSheet({ settings, asker: given, onAdd, onClose }: MealSheetP
                         <span className="meal-dish-name">{s.name}</span>
                         {s.status === "model" && <span className="meal-tag guess">estimated</span>}
                       </div>
-                      {s.status === "asking" && <p className="meal-dish-note">Asking the local model…</p>}
+                      {s.status === "asking" && (
+                        <div className="meal-dish-asking">
+                          <p className="meal-dish-note">Estimating… with the local model</p>
+                          <button type="button" className="pill ghost meal-cancel" aria-label={`Stop estimating ${s.name}`} onClick={() => runs.current.get(s.query)?.cancel(s.query)}>
+                            Cancel
+                          </button>
+                        </div>
+                      )}
                       {s.status === "unanswered" && <p className="meal-dish-note warn">Needs your laptop's model · add its ingredients by hand or try later</p>}
+                      {s.status === "cancelled" && <p className="meal-dish-note">Stopped · add its ingredients by hand, or try again</p>}
                       {p && <p className="meal-dish-items">{p.items.map((i) => nameOf(i.key)).join(", ")}</p>}
                       {s.checked && (s.checked.dropped.length > 0 || s.checked.clamped.length > 0) && (
                         <p className="meal-dish-note">
@@ -186,7 +202,7 @@ export function MealSheet({ settings, asker: given, onAdd, onClose }: MealSheetP
                   );
                 })}
               </ul>
-              {unanswered.length > 0 && !asking && (
+              {unanswered.length > 0 && (
                 <button
                   type="button"
                   className="pill ghost meal-retry"
@@ -218,7 +234,7 @@ export function MealSheet({ settings, asker: given, onAdd, onClose }: MealSheetP
               </p>
             </div>
             <button type="button" className="pill lime meal-go" data-testid="meal-add" disabled={!chosen.length} onClick={() => onAdd(chosen.map(labelOf).map((s) => s.trim()))}>
-              {asking ? `Add ${chosen.length} now · still asking` : `Add ${chosen.length} to list`}
+              {asking ? `Add ${chosen.length} now · still estimating` : `Add ${chosen.length} to list`}
             </button>
           </>
         )}

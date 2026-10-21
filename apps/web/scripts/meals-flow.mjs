@@ -17,30 +17,35 @@ const SHOTS = shotsAt > 0 ? process.argv[shotsAt + 1] : null;
 if (SHOTS) mkdirSync(SHOTS, { recursive: true });
 const shot = async (page, name) => SHOTS && page.screenshot({ path: join(SHOTS, `${name}.png`) });
 
-/** the model's answer for pasta carbonara, two servings, as qwen3:8b gave it (test/fixtures/dishes-model.json) */
+/** the model's answer for pasta carbonara, two servings, in the format it answers in (one line each, an amount and
+ *  a unit), with one line no unit fits (validation leaves it out and says so) */
 const CARBONARA = { ingredients: [
-  { name: "spaghetti", quantity: 200, unit: "g", optional: false, pantryStaple: false },
-  { name: "egg yolk", quantity: 3, unit: "piece", optional: false, pantryStaple: false },
-  { name: "parmesan cheese", quantity: 50, unit: "g", optional: false, pantryStaple: false },
-  { name: "pancetta", quantity: 150, unit: "g", optional: false, pantryStaple: false },
-  { name: "black pepper", quantity: 1, unit: "tsp", optional: false, pantryStaple: true },
-  { name: "garlic", quantity: 12, unit: "handful", optional: false, pantryStaple: false },
+  { name: "spaghetti", amount: "200 g" },
+  { name: "egg yolk", amount: "3 piece" },
+  { name: "parmesan cheese", amount: "50 g" },
+  { name: "pancetta", amount: "150 g" },
+  { name: "black pepper", amount: "1 tsp" },
+  { name: "garlic", amount: "12 handful" },
 ] };
 
-/** answer cook mode's dish calls (one dish a call, or the worker's batch); refuse everything else (the item resolver) */
-async function mockModel(ctx, { up }) {
+/** answer cook mode's dish calls (straight to Ollama, or the worker's POST /dishes), each after its dish's delay;
+ *  refuse everything else (the item resolver) */
+async function mockModel(ctx, { up, delays = {} }) {
   const calls = { dish: 0 };
+  const wait = (dish) => new Promise((r) => setTimeout(r, delays[dish.toLowerCase()] ?? 0));
   await ctx.route("**/api/chat", async (route) => {
     const body = JSON.parse(route.request().postData() ?? "{}");
     if (!up || !body.format?.properties?.ingredients) return route.abort();
     calls.dish++;
-    await route.fulfill({ json: { message: { content: JSON.stringify(CARBONARA) } } });
+    await wait(String(body.messages?.[1]?.content ?? "").replace(/^Dish: /, ""));
+    await route.fulfill({ json: { message: { content: JSON.stringify(CARBONARA) } } }).catch(() => {});
   });
   await ctx.route("**/dishes", async (route) => {
     if (!up) return route.abort();
     const { dishes } = JSON.parse(route.request().postData() ?? "{}");
     calls.dish += dishes.length;
-    await route.fulfill({ json: { results: dishes.map((dish) => ({ dish, ingredients: CARBONARA.ingredients })) } });
+    await wait(dishes[0]);
+    await route.fulfill({ json: { results: dishes.map((dish) => ({ dish, ingredients: CARBONARA.ingredients })) } }).catch(() => {});
   });
   await ctx.route("**/resolve", (route) => route.abort());
   return calls;
@@ -142,6 +147,32 @@ try {
   await page.locator(".trip-screen, [data-testid='trip']").first().waitFor({ timeout: 120_000 }).catch(() => expect(false, "the trip did not open"));
   await shot(page, "5-trip");
   await ctx.close();
+
+  // ---- progressive: the table's dish at once, each model dish as it lands, a slow one cancelled without holding
+  // up the others (the slow dish's answer is held 8 s)
+  const prog = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, serviceWorkers: "block" });
+  const pc = await mockModel(prog, { up: true, delays: { "beef rendang": 8000, laksa: 300 } });
+  const pp = await prog.newPage();
+  pp.on("pageerror", (e) => errors.push(String(e)));
+  await pp.goto(`${BASE}/?closeup=0`, { waitUntil: "load" });
+  await pp.waitForFunction(() => !!window.__grosherIndex, null, { timeout: 120_000 });
+  await pp.getByTestId("plan-meals").click();
+  await pp.getByLabel("Dishes").fill("dal chawal, beef rendang, laksa");
+  await pp.getByRole("button", { name: "Make the list" }).click();
+  const statusOf = () => pp.getByTestId("meal-dish").evaluateAll((els) => els.map((e) => e.dataset.status));
+  const first = await statusOf();
+  expect(JSON.stringify(first) === JSON.stringify(["table", "asking", "asking"]), `at once: ${first}`);
+  expect((await pp.getByTestId("meal-line").count()) > 8, "the table's lines did not show before the model answered");
+  await pp.waitForFunction(() => document.querySelectorAll('[data-status="model"]').length === 1, null, { timeout: 7_000 }).catch(() => {});
+  const mid = await statusOf();
+  expect(JSON.stringify(mid) === JSON.stringify(["table", "asking", "model"]), `laksa should land while rendang is still estimating: ${mid}`);
+  expect(pc.dish === 2, `the two model dishes were not asked together (${pc.dish} asked)`);
+  await shot(pp, "7-estimating");
+  await pp.getByRole("button", { name: "Stop estimating Beef rendang" }).click();
+  const stopped = await statusOf();
+  expect(JSON.stringify(stopped) === JSON.stringify(["table", "cancelled", "model"]), `after Cancel: ${stopped}`);
+  expect(/^Add \d+ to list$/.test(await pp.getByTestId("meal-add").innerText()), "the Add button still says estimating");
+  await prog.close();
 
   // ---- the Mac asleep: the table still answers, the unknown dish says what it needs; the cache answers a dish seen before
   const asleep = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, serviceWorkers: "block" });

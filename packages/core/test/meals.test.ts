@@ -8,6 +8,7 @@ import {
   matchDish,
   parseDishJson,
   parseDishAnswer,
+  dishSchema,
   purchase,
   splitDishes,
   toBase,
@@ -175,7 +176,13 @@ test("ingredient names: aliases and near spellings, never a loose guess", () => 
   assert.equal(ingredientFor("tofu", KNOWN), null);
 });
 
-test("the model's JSON: one dish's ingredient lines, anything else null", () => {
+test("the model's JSON: one dish's lines, in this format and the one before; anything else null", () => {
+  assert.deepEqual(parseDishAnswer({ ingredients: [{ name: "spaghetti", amount: "300 g" }, { name: "butter", amount: "1.5 tbsp" }, { name: "x", amount: "a lot" }] }), [
+    { name: "spaghetti", quantity: 300, unit: "g", optional: false, pantryStaple: false },
+    { name: "butter", quantity: 1.5, unit: "tbsp", optional: false, pantryStaple: false },
+    { name: "x", quantity: Number.NaN, unit: "", optional: false, pantryStaple: false },
+  ]);
+  // the format before (cached answers, the worker's replies): quantity and unit apart, and the two flags
   const raw = { ingredients: [{ name: "x", quantity: "2", unit: "g", optional: true }, "junk", { name: "y" }] };
   assert.deepEqual(parseDishAnswer(raw), [
     { name: "x", quantity: 2, unit: "g", optional: true, pantryStaple: false },
@@ -183,6 +190,9 @@ test("the model's JSON: one dish's ingredient lines, anything else null", () => 
   ]);
   assert.equal(parseDishAnswer("nonsense"), null);
   assert.equal(parseDishAnswer({ ingredients: "no" }), null);
+  // the schema the model answers to: an amount is a number and a known unit, nothing else
+  const amount = new RegExp((dishSchema().properties.ingredients.items.properties.amount as { pattern: string }).pattern);
+  assert.deepEqual(["200 g", "1.5 tbsp", "2 piece", "3 cups", "200g", "1 tsp garnish"].map((x) => amount.test(x)), [true, true, true, false, false, false]);
 });
 
 test("a cut-off answer keeps the ingredients it finished", () => {

@@ -17,7 +17,11 @@ log() { echo "$(/bin/date -u +%Y-%m-%dT%H:%M:%SZ) $*"; }
 /bin/launchctl unsetenv OLLAMA_ORIGINS
 /bin/launchctl setenv OLLAMA_KEEP_ALIVE 24h
 /bin/launchctl setenv OLLAMA_MAX_LOADED_MODELS 2
-log "environment set: OLLAMA_HOST=127.0.0.1 OLLAMA_KEEP_ALIVE=24h OLLAMA_MAX_LOADED_MODELS=2 (OLLAMA_ORIGINS unset)"
+# Three requests at once per model: cook mode asks for each unknown dish separately, and one at a time a slow dish
+# held up the rest (two dishes took twice as long as one). Each slot is its own 4,096-token context, ~0.6 GB for
+# qwen3:8b and ~0.25 GB for qwen2.5vl:7b, so both models with three slots stay inside the 17.8 GiB budget.
+/bin/launchctl setenv OLLAMA_NUM_PARALLEL 3
+log "environment set: OLLAMA_HOST=127.0.0.1 OLLAMA_KEEP_ALIVE=24h OLLAMA_MAX_LOADED_MODELS=2 OLLAMA_NUM_PARALLEL=3 (OLLAMA_ORIGINS unset)"
 
 # a server started with other settings (before this ran, or by an older version of it) is restarted to read
 # these: one listening beyond loopback, or one whose environment differs
@@ -27,6 +31,7 @@ if /usr/sbin/lsof -nP -iTCP:11434 -sTCP:LISTEN 2>/dev/null | /usr/bin/awk 'NR > 
 if [ -n "$serve" ]; then
   envs=$(/bin/ps eww -o command= -p "$serve" | /usr/bin/tr ' ' '\n')
   echo "$envs" | /usr/bin/grep -q '^OLLAMA_MAX_LOADED_MODELS=2$' || stale=1
+  echo "$envs" | /usr/bin/grep -q '^OLLAMA_NUM_PARALLEL=3$' || stale=1
   echo "$envs" | /usr/bin/grep -q '^OLLAMA_ORIGINS=' && stale=1
 fi
 if /usr/bin/pgrep -xq Ollama && [ "$stale" = 1 ]; then

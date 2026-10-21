@@ -18,6 +18,23 @@ const sha = () => {
   }
 };
 process.env.VITE_BUILD_ID ||= process.env.CF_PAGES_COMMIT_SHA?.slice(0, 7) || sha() || String(Date.now());
+// /version.json: the commit this build is, for CI's deploy check (.github/workflows/deploy-check.yml waits for the
+// live app to report main's commit). Full sha from Pages, else the checkout's; never precached, never cached.
+const fullSha = () => {
+  try {
+    return execSync("git rev-parse HEAD", { stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
+  } catch {
+    return "";
+  }
+};
+const versionFile = {
+  name: "version-json",
+  generateBundle(this: { emitFile(f: { type: "asset"; fileName: string; source: string }): void }) {
+    const commit = process.env.CF_PAGES_COMMIT_SHA || fullSha();
+    const version = { commit, build: process.env.VITE_BUILD_ID, branch: process.env.CF_PAGES_BRANCH ?? null, builtAt: new Date().toISOString() };
+    this.emitFile({ type: "asset", fileName: "version.json", source: JSON.stringify(version) + "\n" });
+  },
+};
 
 // The service worker devices installed until 18 Oct 2026 (generateSW: navigations answered cache-first from
 // the precache). Only scripts/boot-resilience.mjs builds it, to test that a device on it gets out.
@@ -36,6 +53,7 @@ const precache = {
 export default defineConfig({
   plugins: [
     react(),
+    versionFile,
     // the legacy shell had no boot guard either
     LEGACY_SW && { name: "legacy-shell", transformIndexHtml: (html: string) => html.replace(/<!-- boot-guard -->[\s\S]*?<!-- \/boot-guard -->/, "") },
     VitePWA({

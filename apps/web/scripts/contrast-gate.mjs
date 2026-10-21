@@ -442,18 +442,22 @@ try {
   await sp.route("**/api/chat", async (route) => {
     const body = JSON.parse(route.request().postData() ?? "{}");
     if (!body.format?.properties?.ingredients) return route.abort();
-    const line = (name, quantity, unit, pantryStaple = false) => ({ name, quantity, unit, optional: false, pantryStaple });
-    await route.fulfill({ json: { message: { content: JSON.stringify({ ingredients: [line("spaghetti", 200, "g"), line("egg yolk", 3, "piece"), line("parmesan cheese", 50, "g"), line("pancetta", 150, "g"), line("black pepper", 1, "tsp", true)] }) } } });
+    // one dish is held, so the review is measured with its "Estimating…" row and Cancel button showing
+    if (/rendang/i.test(body.messages?.[1]?.content ?? "")) await new Promise((r) => setTimeout(r, 120_000));
+    const line = (name, amount) => ({ name, amount });
+    await route.fulfill({ json: { message: { content: JSON.stringify({ ingredients: [line("spaghetti", "200 g"), line("egg yolk", "3 piece"), line("parmesan cheese", "50 g"), line("pancetta", "150 g"), line("black pepper", "1 tsp")] }) } } }).catch(() => {});
   });
   await sp.route("**/dishes", (route) => route.abort());
   await sp.getByTestId("plan-meals").click();
-  await sp.getByLabel("Dishes").fill("dal chawal, rajma, pasta carbonara");
+  await sp.getByLabel("Dishes").fill("dal chawal, rajma, pasta carbonara, beef rendang");
   await sp.waitForTimeout(500);
   all.push(...(await measure(sp, "meal sheet (dishes)")));
   await sp.getByRole("button", { name: "Make the list" }).click();
-  await sp.waitForFunction(() => !document.querySelector('[data-status="asking"]'), null, { timeout: 60_000 });
+  await sp.waitForFunction(() => document.querySelectorAll('[data-status="model"]').length === 1, null, { timeout: 60_000 });
   await sp.waitForTimeout(500);
   all.push(...(await measure(sp, "meal sheet (review)")));
+  await sp.getByRole("button", { name: "Stop estimating Beef rendang" }).click();
+  await sp.waitForTimeout(300);
   await sp.locator(".meal-scroll").evaluate((e) => (e.scrollTop = e.scrollHeight));
   await sp.waitForTimeout(300);
   all.push(...(await measure(sp, "meal sheet (pantry)")));

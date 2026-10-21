@@ -19,6 +19,10 @@
 /index.html
   Cache-Control: no-cache
 
+/version.json
+  Cache-Control: no-store
+  Access-Control-Allow-Origin: *
+
 /
   Cache-Control: no-cache
 

@@ -50,9 +50,10 @@ const version = await get(`${OLLAMA}/api/version`);
 const listening = (run("/usr/sbin/lsof", ["-nP", "-iTCP:11434", "-sTCP:LISTEN"]) ?? "").split("\n").slice(1).map((l) => l.trim().split(/\s+/)[8]).filter(Boolean);
 const exposed = listening.filter((a) => !a.startsWith("127.0.0.1:") && !a.startsWith("[::1]:"));
 const maxModels = run("/bin/launchctl", ["getenv", "OLLAMA_MAX_LOADED_MODELS"]) || "default";
+const parallel = run("/bin/launchctl", ["getenv", "OLLAMA_NUM_PARALLEL"]) || "1";
 if (version.status !== 200) line(false, "Ollama", "not answering on :11434", `${kick("dev.grosher.ollama")}  (log: ~/Library/Logs/grosher-ollama.log)`);
 else if (exposed.length) line(false, "Ollama", `${JSON.parse(version.body).version}, but listening on ${exposed.join(", ")}: open to the network`, `Ollama → Settings: turn off "Expose Ollama to the network" (it overrides OLLAMA_HOST), then ${kick("dev.grosher.ollama")}`);
-else line(true, "Ollama", `${JSON.parse(version.body).version} on 127.0.0.1:11434 only · ${maxModels} models resident at most`);
+else line(true, "Ollama", `${JSON.parse(version.body).version} on 127.0.0.1:11434 only · ${maxModels} models resident at most · ${parallel} requests at once`);
 
 // 2. Model resident
 if (version.status === 200) {

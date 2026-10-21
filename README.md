@@ -90,12 +90,15 @@ flowchart LR
   merge. A test checks that every dish lists its core ingredients, that no quantity is out of bounds, and that
   every ingredient line lands on a Grosher shelf without the model.
 - **The local model for the rest, never a cloud one.** A dish the table does not know goes to `qwen3:8b` on the
-  Mac, one call a dish, with a strict JSON schema. Its answer is validated (a line with no usable unit is
-  dropped, a quantity past its category's bound is capped, and the sheet says which), cached on the device,
-  and tagged "estimated" in amber. When the Mac is asleep, the table's dishes still work and the others say
-  they need the laptop's model.
-- **How good the model is** (20 Oct 2026, ten dishes not in the table, recorded so CI scores it without a
-  model): 29 of 37 core ingredients named, about 10 s a dish on an M-series Mac. Carbonara, stroganoff,
+  Mac, one call a dish, with a strict JSON schema of one short line an ingredient. The table's dishes show at
+  once; each model dish shows "Estimating…" with a Cancel button until it lands, three asked at a time, so a slow
+  one holds up no other. Its answer is validated (a line with no usable unit is dropped, a quantity past its
+  category's bound is capped, and the sheet says which), cached on the device, and tagged "estimated" in amber.
+  When the Mac is asleep, the table's dishes still work and the others say they need the laptop's model.
+- **How good and how fast the model is** (21 Oct 2026, ten dishes not in the table, recorded so CI scores it
+  without a model): 30 of 37 core ingredients named, 2.4–4.9 s a dish on an M-series Mac; through the deployed
+  Worker, Funnel and gate 3.7–5.4 s a dish, and five at once all in in 15 s (49 s in the first version, which
+  asked for long indented answers and one dish after another). Carbonara, stroganoff,
   ratatouille, jambalaya and moussaka come back complete. It made rogan josh with chicken and coconut milk, and
   sarson ka saag without spinach or makki atta. Those misses are why the table comes first and why every model
   line is marked as an estimate; both dishes, with malai kofta, dhokla and 18 more, are in the table now.
@@ -245,7 +248,8 @@ Every push to `main` runs `.github/workflows/ci.yml`:
 | close-up gate | any close-up over its call, triangle, GPU-texture or download budget; a close-up fetched when it should not be; a next stop not prepared ahead |
 | contrast gate | text under 4.5:1, or an icon or focus ring under 3:1, against the pixels actually behind it, on every screen including the 3D scene and the project page |
 | survey flow | survey mode end to end with mocked sensors: calibrate, three aisles, offline sign photos, build, export, import |
-| cook mode | dishes → review → list → route with the model mocked: the table's lines, the model's dish tagged, pantry unticked, edits kept; the Mac asleep; the cache |
+| cook mode | dishes → review → list → route with the model mocked: the table's lines, the model's dish tagged, pantry unticked, edits kept; a slow dish not holding up a fast one, and cancelled; the Mac asleep; the cache; the dish table out of the first bundle |
+| deploy check | the live app not reporting the pushed commit (`/version.json`) 10 minutes after a push to `main` (its own workflow) |
 | guard demo | the off-list guard firing anywhere but the demo's one detour, or speaking during a counter wait |
 | boot resilience | a stale service worker, old saved state, missing chunks or a render error leaving a blank screen |
 | docs numbers | a number in this README or on the project page that the gates above did not measure |

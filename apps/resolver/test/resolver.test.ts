@@ -135,16 +135,28 @@ describe("resolver worker", () => {
     // a dish the model botched is unanswered, the rest stand
     const partial = (await (await post(createApp(undefined, up), { dishes: ["Broken pie", "Moussaka"] })).json()) as typeof json;
     expect(partial).toMatchObject({ degraded: true, results: [{ dish: "Broken pie", ingredients: null }, { dish: "Moussaka" }] });
-    // the Mac asleep: every dish unanswered at once, not one timeout after another
-    let calls = 0;
+    // the Mac asleep: every dish unanswered, none waiting on another
     const gone = (async () => {
-      calls++;
       throw new TypeError("fetch failed");
     }) as typeof fetch;
     const asleep = (await (await post(createApp(undefined, gone), { dishes: ["A", "B", "C"] })).json()) as typeof json;
     expect(asleep).toEqual({ degraded: true, results: [{ dish: "A", ingredients: null }, { dish: "B", ingredients: null }, { dish: "C", ingredients: null }] });
-    expect(calls).toBe(1);
-    // the deadline: dishes not reached come back unanswered
+    // the dishes are asked at once: a slow one does not hold up the others
+    const started: number[] = [];
+    const slowFirst = (async (_u: RequestInfo | URL, init?: RequestInit) => {
+      started.push(Date.now());
+      const dish = JSON.parse(String(init?.body)).messages[1].content as string;
+      await new Promise((r) => setTimeout(r, dish.includes("Slow") ? 300 : 10));
+      return new Response(JSON.stringify({ message: { content: JSON.stringify({ ingredients: [{ name: dish, amount: "1 piece" }] }) } }));
+    }) as typeof fetch;
+    const t0 = Date.now();
+    const both = await dishesOllama({ url: "https://m", token: "t" }, ["Slow stew", "Quick salad"], slowFirst);
+    expect(Math.max(...started) - t0).toBeLessThan(50);
+    expect(both.map((r) => r.ingredients?.[0])).toEqual([
+      { name: "Dish: Slow stew", quantity: 1, unit: "piece", optional: false, pantryStaple: false },
+      { name: "Dish: Quick salad", quantity: 1, unit: "piece", optional: false, pantryStaple: false },
+    ]);
+    // no time left: unanswered
     expect(await dishesOllama({ url: "https://m", token: "t" }, ["A", "B"], up, 0)).toEqual([{ dish: "A", ingredients: null }, { dish: "B", ingredients: null }]);
     // local only: the anthropic provider never answers a dish, and no request leaves
     sent.length = 0;

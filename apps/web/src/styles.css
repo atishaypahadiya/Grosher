@@ -744,3 +744,6 @@ a.pill-s { text-decoration: none; }
 .meal-summary .pill { min-height: 40px; padding: 0 14px; }
 .meal-summary .pill.circle { width: 40px; min-width: 40px; padding: 0; }
 .meal-summary > span { white-space: nowrap; }
+.meal-dish-asking { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 4px; }
+.meal-dish-asking .meal-dish-note { margin: 0; }
+.meal-cancel { min-height: 36px; padding: 0 14px; font-size: 14px; }

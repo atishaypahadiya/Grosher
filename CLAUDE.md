@@ -65,6 +65,7 @@ npm run dev -w @grosher/resolver         # wrangler dev on :8787 (anthropic prov
 npm run chain:status -w @grosher/resolver   # the Mac → worker chain, one ✓ / ✗ line per link with the fix
 cd apps/web && node scripts/boot-resilience.mjs     # stale worker + old state + a deploy → the app renders (CI runs it)
 cd apps/web && node scripts/meals-flow.mjs http://localhost:4173 [--shots /tmp/m]   # cook mode end to end, model mocked (CI runs it)
+gh run list --workflow deploy-check.yml --limit 3   # did the live app reach main's commit (curl https://grosher.pages.dev/version.json)
 npm run eval:dishes -w @grosher/stores   # cook mode: ten unseen dishes through the local model, scored, recorded (--recorded: score the recording)
 cd apps/web && node scripts/survey-flow.mjs http://localhost:4173 --shots /tmp/s   # survey mode end to end, mocked sensors (CI runs it)
 node apps/web/scripts/docs-numbers.mjs --run          # the README's and the project page's numbers against the gates (CI runs it last)
@@ -306,7 +307,7 @@ npm run chain:status -w @grosher/resolver   # ✓ / ✗ per link, with the fix (
 
 | Link | Started by | Notes |
 | --- | --- | --- |
-| Ollama | `~/Library/LaunchAgents/dev.grosher.ollama.plist` → `apps/resolver/scripts/ollama-login.sh` at login | `launchctl setenv OLLAMA_HOST=127.0.0.1 OLLAMA_KEEP_ALIVE=24h OLLAMA_MAX_LOADED_MODELS=2`, `unsetenv OLLAMA_ORIGINS` (setenv does not survive a reboot, hence every login), then `open -ga Ollama` (a server running with other settings, listening beyond loopback or with a different environment, is restarted to read them), waits for `/api/version`, sends one 1-token `qwen3:8b` chat so the first real request is warm. Log `~/Library/Logs/grosher-ollama.log`. |
+| Ollama | `~/Library/LaunchAgents/dev.grosher.ollama.plist` → `apps/resolver/scripts/ollama-login.sh` at login | `launchctl setenv OLLAMA_HOST=127.0.0.1 OLLAMA_KEEP_ALIVE=24h OLLAMA_MAX_LOADED_MODELS=2 OLLAMA_NUM_PARALLEL=3`, `unsetenv OLLAMA_ORIGINS` (setenv does not survive a reboot, hence every login), then `open -ga Ollama` (a server running with other settings, listening beyond loopback or with a different environment, is restarted to read them), waits for `/api/version`, sends one 1-token `qwen3:8b` chat so the first real request is warm. Log `~/Library/Logs/grosher-ollama.log`. |
 | Gate | `~/Library/LaunchAgents/dev.grosher.gate.plist` | `RunAtLoad`, `KeepAlive`, `ThrottleInterval` 5: killed, it is back in under a second (measured 0.3 s). Node by its absolute PATH name (`/opt/homebrew/bin/node`, not the Cellar path). Token from `OLLAMA_TOKEN_FILE` (`~/.config/grosher/ollama-token`; the gate refuses a file others can read). Log `~/Library/Logs/grosher-gate.log`, one timestamped line per request. |
 | Funnel | tailscaled (the Tailscale app at login) | `tailscale funnel --bg` is stored in the node's serve config. |
 | Worker | Cloudflare | `/health` probes the chain, see below. |
@@ -326,7 +327,12 @@ logs a warning and `chain:status` fails if anything listens beyond loopback. **T
 (`OLLAMA_MAX_LOADED_MODELS=2`): on this 24 GB Mac Ollama's Metal budget is 17.8 GiB; qwen3:8b loads at 6.1 GB
 and qwen2.5vl:7b at 8.0 GB (4096 context), 14.1 GB together, so a survey's sign reads leave the resolver
 model loaded (measured: both resident after a read). A third model (another client, a dev server set to
-qwen3:14b at 10 GB) would evict the least recently used one: keep the dev server on qwen3:8b.
+qwen3:14b at 10 GB) would evict the least recently used one: keep the dev server on qwen3:8b. **Three requests at once per model** (`OLLAMA_NUM_PARALLEL=3`,
+21 Oct 2026, for cook mode's one-request-a-dish): each slot is its own 4,096-token context, so qwen3:8b loads at 7.9 GB
+and qwen2.5vl:7b at 8.5 GB, 16.4 GB together of the 19.1 GB budget (measured with both resident). Two caveats seen on
+21 Oct: `launchctl kickstart -k gui/$(id -u)/dev.grosher.ollama` set the variable but did not restart the running
+server (by hand the script's stale check does fire; under launchd it did not), so after a change quit Ollama
+(`killall Ollama`) before kickstarting; and `chain:status` prints the slot count.
 
 **The waitlist** (`src/waitlist.ts`, `POST /waitlist`, the project page's form): only from the project page's origin
 (`WAITLIST_ORIGIN`, default `https://grosher.pages.dev`; localhost in dev), its own per-IP limit (`WAITLIST_LIMITER`,
@@ -436,35 +442,50 @@ cache (IndexedDB `dish:<normalised name>:2`, a `SCHEMAS` entry: the model's raw 
 stamped with `DISH_TABLE_HASH` (cyrb53 over the table and the ingredients): an answer from another table version, or
 from before the stamp, is deleted and the dish asked again; a dish the table knows never reads the cache, and its old
 answer is deleted when it is planned, so a phone that asked the model for rogan josh gets the table's next time);
-(3) the model, **one call a dish** (asked for several in one answer, qwen3:8b wrote the first and closed the JSON),
-sequentially (two at once took as long: Ollama runs one at a time), compact one-line JSON (indented was ~45 tokens an
-ingredient, one line ~26; the prompt's format example has no real ingredient names: with "basmati rice" in it, basmati
-turned up in a ratatouille), `format` = `dishSchema()` (units from `UNITS`, ≤ 20 ingredients), `DISH_MAX_TOKENS`, a
-cut-off answer keeps its whole ingredients (`parseDishJson`). Dev: straight to Ollama (45 s a dish); the worker: one
-`POST /dishes` (≤ 6 dishes × 60 chars, 4 KB), each dish through the gate's `/api/chat` (40 s: rogan josh took 22 s
-through the deployed chain on 21 Oct, 20.6 s of it at the gate), a 90 s deadline (the app waits 100 s; dishes
-not reached are unanswered), the Mac unreachable → every dish unanswered at once. **Validation**
+(3) the model, **one call a dish** (asked for several in one answer, qwen3:8b wrote the first and closed the JSON).
+**The answer is the whole cost** (thinking is off, `think: false`; the prompt prefix is cached): the format is one
+line a `{name, amount}` with `amount` a pattern, "200 g" in a unit from `UNITS` (`dishSchema()`), at most 15
+(`DISH_MAX_INGREDIENTS`), `num_predict` 240 (`DISH_MAX_TOKENS`; the longest measured, 14 lines, took 165), written
+on one line ("most important first, and stop when the dish is complete"). Measured 21 Oct 2026 on the ten-dish
+fixture: indented objects with two flags were ~30 tokens a line (12.5 s for a 17-line dish, 97 s for ten); this is
+~10 (3.7 s a dish locally, 40 s for ten), the core score 29 → 30 of 37. Tried and left: one string a line ("200 g
+spaghetti", 3.8 s) let the name run on and padded every dish to the cap (seven flours in a dhokla); tuples need
+`prefixItems`, which this Ollama rejects; the garnish and pantry flags went (the model left "optional" empty for
+every dish; the ingredient table knows the staples). The format example has no real ingredient names: with "basmati
+rice" in it, basmati turned up in a ratatouille. A cut-off answer keeps its whole ingredients (`parseDishJson`);
+`parseDishAnswer` also reads the format before (`{name, quantity, unit, optional, pantryStaple}`: cached answers, the
+worker's replies). **Each dish on its own** (`startUnknown` in `lib/meals.ts`): one request a dish, three at once
+(`DISH_CONCURRENCY`, Ollama's slots: `OLLAMA_NUM_PARALLEL=3` on the Mac, below), the rest queued in the app, each
+settling as it lands (the sheet shows the table's dishes at once and an "Estimating… with the local model" row with
+Cancel for each model dish; Cancel aborts its request; closing, Change or a new plan stops them all). One at a time,
+Ollama made two dishes take twice as long as one, so a slow dish held up the rest; three at once, each decodes at
+about half speed but none waits (three dishes 12.6 s together against ~19 s in turn). Dev: straight to Ollama; the
+worker: `POST /dishes` (≤ 6 dishes × 60 chars, 4 KB; the app sends one), every dish through the gate's `/api/chat` at
+once, 40 s each (`DISH_TIMEOUT_MS`, a ceiling; the app waits 45 s). Through the deployed chain (21 Oct 2026, five
+dishes not in the table): one at a time 3.7–5.4 s each (7.2–12.6 s before); five at once all done in 15.3 s, the
+first at 5.3 s (one batched request before: 49.2 s, nothing shown until the end). **Validation**
 (`checkModelIngredients`): no name, an unknown unit or no positive quantity → dropped; water and "garnish" skipped; a
 name matched to `INGREDIENTS` (aliases, then similarity ≥ .85) or made ad hoc (its own name; spoon-measured → a 50 g
 jar, by the bunch → a bunch, else loose or by the piece); the same ingredient twice adds up; past its category's
 `BOUNDS` for two servings → capped (meat and fish 900 g: a curry is 300–600 g, bone-in legs 750; an unknown cut
 named by `MEAT` takes it too, not "other"'s 1 kg, which is what capped a live "lamb shoulder" before lamb was an
-ingredient; a piece of meat is 180 g; on the 10-dish fixture no bound fires, the highest meat line 500 g); pantry is the table's word for a known ingredient (the model called butter a
-staple), the model's for an ad-hoc one. The sheet names what was dropped or capped. **Aggregation** (`aggregate`):
+ingredient; a piece of meat is 180 g; on the 10-dish fixture no bound fires, the highest meat line 500 g); pantry is the table's word for a known ingredient, and for an ad-hoc one only
+a spoonful of something (a dried spice). The sheet names what was dropped or capped. **Aggregation** (`aggregate`):
 scaled by people ÷ 2, converted to each ingredient's base (g, ml or pieces: `eachG`, `density`, `bunchG`,
 `partsPerUnit` for garlic cloves and bread slices), merged across dishes, then rounded up once (`purchase`: the
 smallest pack that holds it, else n × the biggest; pieces; bunches; loose in steps), lines like "Onions × 6", "Paneer
 2 × 400 g", "Tortillas pack of 8". Pantry only when every dish says so, optional only when every dish does; optional
 and pantry lines start unticked. A model dish's lines carry "estimated" (the guess colour); a dish the model could not
-answer says "Needs your laptop's model · add its ingredients by hand or try later", with Try again. **Into the list**
+answer says "Needs your laptop's model · add its ingredients by hand or try later", a cancelled one "Stopped", both
+with Try again. **Into the list**
 (`mergeIntoList`): a plain item for the same thing ("onions") gives way to the line ("Onions × 6"); an item with its
 own quantity stays and the line is not added. Every ingredient line is placed on a Grosher shelf offline (stores
 test; a few needed `CATEGORY_PATCHES` aliases: sabudana, idli / dosa batter, pav, ajwain, amchur, kasuri methi, white
 fish, canned beans by name, fresh mint; `text.ts` QTY strips "1 bunch" and "packs of 8"). **The model's score**
 (`npm run eval:dishes -w @grosher/stores`, ten dishes not in the table, `test/fixtures/dishes-unseen.json`, written
-before asking; the raw answers recorded in `dishes-model.json`, which CI scores with no model): 29 / 37 core
-ingredients, ~10 s a dish (97 s for ten), nothing clamped; rogan josh came back with chicken and coconut milk, sarson
-ka saag without spinach or makki atta, malai kofta without potato or cream. Those four (with dhokla) went into the
+before asking; the raw answers recorded in `dishes-model.json`, which CI scores with no model): 30 / 37 core
+ingredients, 2.4–4.9 s a dish (40 s for ten; the first format: 29 / 37, 97 s), nothing dropped or clamped; rogan josh
+came back with chicken and coconut milk, sarson ka saag without spinach or makki atta, malai kofta without cream. Those four (with dhokla) went into the
 table on 21 Oct with 18 more Indian dishes, so the model sees only the long tail; the eval still asks it for all ten.
 Never tune against it. The table and the ingredients are their own entry point (`@grosher/stores/meals`), imported
 only by `lib/meals.ts` and the sheet, and the sheet is `lazy` in App: none of it is in the first bundle (the merge
@@ -1255,6 +1276,14 @@ navigations fall back to `index.html` through the service worker. The build also
 followed by the contrast gate (`apps/web/scripts/contrast-gate.mjs`) and the boot-resilience test.
 `apps/web/.env.local` is git-ignored (it was tracked once): a local Ollama address there would otherwise bake
 into the deployed bundle.
+
+**The deploy check** (`.github/workflows/deploy-check.yml`, every push to `main`, its own workflow, a newer push
+cancels an older check): the build writes `/version.json` (`{commit, build, branch, builtAt}`: the full commit from
+`CF_PAGES_COMMIT_SHA`, else the checkout's; `no-store`, not precached); the job polls the live app every 20 s and
+passes when it reports the pushed commit, and after 10 minutes fails with an annotation naming what is live and the
+Pages build: with the `CLOUDFLARE_API_TOKEN` secret (Pages: Read; not set yet) the deployment for that commit, its
+stage and its URL, without it the project's deployment list. Why: on 21 Oct 2026 the Pages build of `cbea630` failed
+at Cloudflare's "initialize" step, before it cloned the repo, and production silently stayed on the build before.
 
 **Checking the production build as an installed PWA over HTTPS** (Chromium only registers a service worker
 on an origin whose certificate it trusts, so plain `ignoreHTTPSErrors` is not enough):
