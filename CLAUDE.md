@@ -25,7 +25,7 @@ packages/stores       @grosher/stores store data: grosher/ (the default store), 
                       slots, geometry validation, generator scripts.
 apps/web              @grosher/web   Vite + React 19 + TypeScript PWA: list, 3D trip, checkout, editor.
 apps/resolver         @grosher/resolver optional Cloudflare Worker (Hono) that asks Claude for departments.
-docs/superpowers/specs design notes from earlier sessions.
+docs/specs            design notes from earlier sessions.
 ```
 
 Dependency direction: `web → core, stores`; `resolver → core` (the shared LLM prompt); `stores → core`
