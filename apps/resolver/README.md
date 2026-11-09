@@ -57,7 +57,7 @@ npm run chain:status -w @grosher/resolver     # one ✓ / ✗ line per link, wit
   stay loaded together), `unsetenv` OLLAMA_ORIGINS, then opens the Ollama menu-bar app (which reads launchd's
   environment; a server already running with other settings is restarted), waits for it and sends one 1-token
   `qwen3:8b` request so the first real one is warm. The app's own **Settings → Expose Ollama to the network**
-  must stay off: it overrides OLLAMA_HOST with 0.0.0.0 (OLLAMA_ORIGINS `*` comes from a separate app flag, also off; the script logs a warning
+  must stay off: it overrides OLLAMA_HOST with 0.0.0.0 (OLLAMA_ORIGINS `*` comes from a separate app flag, `settings.browser`; the script logs a warning
   and `chain:status` fails the Ollama line if anything listens beyond loopback).
   Log: `~/Library/Logs/grosher-ollama.log`.
 - `dev.grosher.gate` runs the gate with node's absolute path (launchd has no PATH), `RunAtLoad` and `KeepAlive`;
