@@ -314,8 +314,10 @@ catalog and memory can place still works. Lid closed = no resolver: keep the Mac
 **Ollama is loopback only** (`OLLAMA_HOST=127.0.0.1`): the gate is its one client, nothing on the LAN or the
 tailnet reaches :11434 (it has no auth), and no other device can load a model into the Mac's memory; only
 the gate is on the Funnel. The Ollama app's **Settings → Expose Ollama to the network** must stay off: it
-overrides `OLLAMA_HOST` with 0.0.0.0 and `OLLAMA_ORIGINS` with `*` whatever launchd says (it was on, in the
-app's `~/Library/Application Support/Ollama/db.sqlite` `settings.expose`, and is now off); the login script
+overrides `OLLAMA_HOST` with 0.0.0.0 whatever launchd says (it was on, in the app's
+`~/Library/Application Support/Ollama/db.sqlite` `settings.expose`, and is now off). `OLLAMA_ORIGINS=*` comes from
+a separate `settings.browser` flag, which has no switch in Settings and is off; both are applied in Ollama's
+`app/server/server.go`, `cmd` (read 8 Nov 2026); the login script
 logs a warning and `chain:status` fails if anything listens beyond loopback. **Two models resident**
 (`OLLAMA_MAX_LOADED_MODELS=2`): on this 24 GB Mac Ollama's Metal budget is 17.8 GiB; qwen3:8b loads at 6.1 GB
 and qwen2.5vl:7b at 8.0 GB (4096 context), 14.1 GB together, so a survey's sign reads leave the resolver
